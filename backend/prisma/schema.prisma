@@ -1,0 +1,432 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─── RBAC ────────────────────────────────────────────────────────────────────
+
+model Role {
+  id              Int              @id @default(autoincrement())
+  roleName        String           @unique @map("role_name")
+  users           User[]
+  rolePermissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id              Int              @id @default(autoincrement())
+  permissionName  String           @unique @map("permission_name")
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       Int        @map("role_id")
+  permissionId Int        @map("permission_id")
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// ─── Users ───────────────────────────────────────────────────────────────────
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model User {
+  id                 String             @id @default(uuid())
+  firstName          String             @map("first_name")
+  lastName           String             @map("last_name")
+  email              String             @unique
+  phone              String
+  passwordHash       String             @map("password_hash")
+  profilePicture     String?            @map("profile_picture")
+  country            String
+  region             String
+  city               String
+  address            String?
+  gpsLatitude        Float?             @map("gps_latitude")
+  gpsLongitude       Float?             @map("gps_longitude")
+  roleId             Int                @map("role_id")
+  verificationStatus VerificationStatus @default(PENDING) @map("verification_status")
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+
+  role                Role               @relation(fields: [roleId], references: [id])
+  farmerProfile       FarmerProfile?
+  buyerProfile        BuyerProfile?
+  agentProfile        AgentProfile?
+  refreshTokens       RefreshToken[]
+  payments            Payment[]
+  buyerAccess         BuyerAccess[]
+  sentConnections     ConnectionRequest[] @relation("BuyerConnections")
+  receivedConnections ConnectionRequest[] @relation("FarmerConnections")
+  agentConnections    ConnectionRequest[] @relation("AgentConnections")
+  buyerOrders         ProductOrder[]      @relation("BuyerOrders")
+  farmerOrders        ProductOrder[]      @relation("FarmerOrders")
+  buyerFarmAccess     BuyerFarmerAccess[] @relation("BuyerFarmAccess")
+  grantedFarmAccess   BuyerFarmerAccess[] @relation("FarmerFarmAccess")
+  sentMessages        Message[]           @relation("SentMessages")
+  receivedMessages    Message[]           @relation("ReceivedMessages")
+  auditLogs           AuditLog[]
+  agentAssignments    AgentAssignment[]   @relation("AgentUser")
+  ownedAssignments    AgentAssignment[]   @relation("OwnerUser")
+  notifications       Notification[]      @relation("UserNotifications")
+  triggeredNotifications Notification[]   @relation("NotificationActor")
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+// ─── Profiles ────────────────────────────────────────────────────────────────
+
+model FarmerProfile {
+  id                 String             @id @default(uuid())
+  userId             String             @unique @map("user_id")
+  farmName           String             @map("farm_name")
+  farmSize           String?            @map("farm_size")
+  experienceYears    Int?               @map("experience_years")
+  verificationStatus VerificationStatus @default(PENDING) @map("verification_status")
+
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  farmerCommodities FarmerCommodity[]
+  listings          CommodityListing[]
+
+  @@map("farmer_profile")
+}
+
+model BuyerProfile {
+  id       String  @id @default(uuid())
+  userId   String  @unique @map("user_id")
+  company  String?
+  industry String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("buyer_profile")
+}
+
+enum AgentType {
+  FARMER_REPRESENTATIVE
+  BUYER_REPRESENTATIVE
+}
+
+model AgentProfile {
+  id        String    @id @default(uuid())
+  userId    String    @unique @map("user_id")
+  agentType AgentType @map("agent_type")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("agent_profile")
+}
+
+enum RelationshipType {
+  FARMER_REPRESENTATIVE
+  BUYER_REPRESENTATIVE
+}
+
+model AgentAssignment {
+  id               String           @id @default(uuid())
+  agentId          String           @map("agent_id")
+  ownerId          String           @map("owner_id")
+  relationshipType RelationshipType @map("relationship_type")
+  createdAt        DateTime         @default(now()) @map("created_at")
+
+  agent User @relation("AgentUser", fields: [agentId], references: [id], onDelete: Cascade)
+  owner User @relation("OwnerUser", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@unique([agentId, ownerId])
+  @@map("agent_assignment")
+}
+
+// ─── Commodities (dynamic, extensible) ───────────────────────────────────────
+
+model CommodityCategory {
+  id          Int         @id @default(autoincrement())
+  name        String      @unique
+  commodities Commodity[]
+
+  @@map("commodity_category")
+}
+
+model Commodity {
+  id                Int                @id @default(autoincrement())
+  categoryId        Int                @map("category_id")
+  name              String
+  category          CommodityCategory  @relation(fields: [categoryId], references: [id])
+  variants          CommodityVariant[]
+  farmerCommodities FarmerCommodity[]
+  listings          CommodityListing[]
+
+  @@unique([categoryId, name])
+  @@map("commodity")
+}
+
+model CommodityVariant {
+  id          Int    @id @default(autoincrement())
+  commodityId Int    @map("commodity_id")
+  variantName String @map("variant_name")
+  commodity   Commodity @relation(fields: [commodityId], references: [id], onDelete: Cascade)
+
+  @@unique([commodityId, variantName])
+  @@map("commodity_variant")
+}
+
+model FarmerCommodity {
+  id          String  @id @default(uuid())
+  farmerId    String  @map("farmer_id")
+  commodityId Int     @map("commodity_id")
+  quantity    Float   @default(0)
+  unit        String  @default("kg")
+  description String?
+
+  farmer    FarmerProfile @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  commodity Commodity     @relation(fields: [commodityId], references: [id])
+
+  @@unique([farmerId, commodityId])
+  @@map("farmer_commodity")
+}
+
+// ─── Marketplace ─────────────────────────────────────────────────────────────
+
+enum ListingStatus {
+  ACTIVE
+  SOLD
+  ARCHIVED
+}
+
+model CommodityListing {
+  id          String        @id @default(uuid())
+  farmerId    String        @map("farmer_id")
+  commodityId Int           @map("commodity_id")
+  title       String
+  description String?
+  quantity    Float
+  price       Float
+  unit        String        @default("kg")
+  images      Json          @default("[]")
+  location          String?
+  harvestStartDate  DateTime?     @map("harvest_start_date")
+  harvestEndDate    DateTime?     @map("harvest_end_date")
+  status            ListingStatus @default(ACTIVE)
+  createdAt         DateTime      @default(now()) @map("created_at")
+
+  farmer    FarmerProfile @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  commodity Commodity     @relation(fields: [commodityId], references: [id])
+  orders    ProductOrder[]
+
+  @@map("commodity_listing")
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+enum OrderTrackStage {
+  ORDER_RECEIVED
+  PROCESSING
+  DELIVERED
+}
+
+model ProductOrder {
+  id            String          @id @default(uuid())
+  buyerId       String          @map("buyer_id")
+  farmerId      String          @map("farmer_id")
+  listingId     String          @map("listing_id")
+  quantity      Float
+  unitPrice     Float           @map("unit_price")
+  totalAmount   Float           @map("total_amount")
+  unit          String
+  paymentMethod String          @map("payment_method")
+  transactionId String?         @unique @map("transaction_id")
+  status        OrderStatus     @default(PENDING)
+  trackStage    OrderTrackStage @default(ORDER_RECEIVED) @map("track_stage")
+  trackUpdatedAt DateTime?      @map("track_updated_at")
+  createdAt     DateTime        @default(now()) @map("created_at")
+
+  buyer   User             @relation("BuyerOrders", fields: [buyerId], references: [id])
+  farmer  User             @relation("FarmerOrders", fields: [farmerId], references: [id])
+  listing CommodityListing @relation(fields: [listingId], references: [id])
+
+  @@map("product_orders")
+}
+
+// ─── Paid Access ───────────────────────────────────────────────────────────────
+
+model AccessPackage {
+  id           String        @id @default(uuid())
+  name         String
+  price        Float
+  durationDays Int           @map("duration_days")
+  buyerAccess  BuyerAccess[]
+  payments     Payment[]
+
+  @@map("access_package")
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  userId        String        @map("user_id")
+  amount        Float
+  transactionId String?       @unique @map("transaction_id")
+  paymentMethod String        @map("payment_method")
+  status        PaymentStatus @default(PENDING)
+  packageId     String        @map("package_id")
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  user    User          @relation(fields: [userId], references: [id])
+  package AccessPackage @relation(fields: [packageId], references: [id])
+
+  @@map("payments")
+}
+
+enum AccessStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+model BuyerAccess {
+  id        String       @id @default(uuid())
+  buyerId   String       @map("buyer_id")
+  packageId String       @map("package_id")
+  startDate DateTime     @map("start_date")
+  endDate   DateTime     @map("end_date")
+  status    AccessStatus @default(ACTIVE)
+
+  buyer   User          @relation(fields: [buyerId], references: [id])
+  package AccessPackage @relation(fields: [packageId], references: [id])
+
+  @@map("buyer_access")
+}
+
+model BuyerFarmerAccess {
+  id            String        @id @default(uuid())
+  buyerId       String        @map("buyer_id")
+  farmerId      String        @map("farmer_id")
+  amount        Float
+  paymentMethod String        @map("payment_method")
+  transactionId String?       @unique @map("transaction_id")
+  status        PaymentStatus @default(COMPLETED)
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  buyer  User @relation("BuyerFarmAccess", fields: [buyerId], references: [id])
+  farmer User @relation("FarmerFarmAccess", fields: [farmerId], references: [id])
+
+  @@unique([buyerId, farmerId])
+  @@map("buyer_farmer_access")
+}
+
+// ─── Connections & Messaging ───────────────────────────────────────────────────
+
+enum ConnectionStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model ConnectionRequest {
+  id        String           @id @default(uuid())
+  buyerId   String           @map("buyer_id")
+  farmerId  String           @map("farmer_id")
+  agentId   String?          @map("agent_id")
+  status    ConnectionStatus @default(PENDING)
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  buyer  User  @relation("BuyerConnections", fields: [buyerId], references: [id])
+  farmer User  @relation("FarmerConnections", fields: [farmerId], references: [id])
+  agent  User? @relation("AgentConnections", fields: [agentId], references: [id])
+
+  @@unique([buyerId, farmerId])
+  @@map("connection_request")
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  senderId   String   @map("sender_id")
+  receiverId String   @map("receiver_id")
+  message    String
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  sender   User @relation("SentMessages", fields: [senderId], references: [id])
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  @@map("messages")
+}
+
+enum NotificationType {
+  CHAT_MESSAGE
+  NEW_ORDER
+  ORDER_TRACKED
+  CONNECTION_REQUEST
+  CONNECTION_APPROVED
+  CONNECTION_DECLINED
+  FARM_ACCESS_PAID
+  PRODUCT_PURCHASE
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String           @map("user_id")
+  actorId   String?          @map("actor_id")
+  type      NotificationType
+  title     String
+  body      String
+  link      String?
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  user  User  @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  actor User? @relation("NotificationActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([userId, read, createdAt])
+  @@map("notifications")
+}
+
+// ─── Audit ─────────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?  @map("user_id")
+  action    String
+  resource  String?
+  details   Json?
+  ipAddress String?  @map("ip_address")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}

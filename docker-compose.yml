@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ani-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ani_user
+      POSTGRES_PASSWORD: ani_password
+      POSTGRES_DB: ani_platform
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
