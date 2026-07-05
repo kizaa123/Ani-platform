@@ -58,8 +58,10 @@ export const AFRICAN_COUNTRIES = [
 
 export type AfricanCountryName = (typeof AFRICAN_COUNTRIES)[number]["name"];
 
+type AfricanCountry = (typeof AFRICAN_COUNTRIES)[number];
+
 const byName = new Map(AFRICAN_COUNTRIES.map((c) => [c.name, c]));
-const byCode = new Map(AFRICAN_COUNTRIES.map((c) => [c.code, c]));
+const byCode = new Map<string, AfricanCountry>(AFRICAN_COUNTRIES.map((c) => [c.code, c]));
 
 /** PNG flag URL (works on Windows — emoji flags often do not) */
 export function getCountryFlagUrl(code: string, width = 40): string {

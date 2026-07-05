@@ -186,6 +186,14 @@ export function formatListingUnit(unit: string): string {
   return unit;
 }
 
+export function normalizeListingUnit(unit: string | undefined, roleId: number): ListingUnit {
+  const allowed = listingUnitsForRole(roleId);
+  if (unit && (allowed as readonly string[]).includes(unit)) {
+    return unit as ListingUnit;
+  }
+  return defaultListingUnit(roleId);
+}
+
 export function isLivestockFarmer(roleId: number) {
   return roleId === ROLES.LIVESTOCK_FARMER;
 }
@@ -299,8 +307,6 @@ export interface BuyerOrderLineItem {
   title?: string;
   /** @deprecated use farmerLocation */
   farmerRegion?: string;
-  /** @deprecated use farmerLocation */
-  farmerCountry?: string;
 }
 
 export interface BuyerAccessPaymentLineItem {
@@ -529,4 +535,21 @@ export function isFarmerHandler(roleId: number) {
 
 export function isStaff(roleId: number) {
   return roleId === ROLES.ANI_ACCOUNTANT || roleId === ROLES.ADMIN;
+}
+
+export interface AdminStats {
+  users: number;
+  farmers: number;
+  buyers: number;
+  listings: number;
+  totalRevenue: number;
+  activeConnections: number;
+}
+
+export interface PendingVerificationUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: { roleName: string };
 }

@@ -27,7 +27,7 @@ export default function HandlerClientBuyerOrdersPage() {
     if (user && ownerId) {
       Promise.all([api.agents.clientOrders(ownerId), api.agents.clientFarm(ownerId)])
         .then(([orderData, client]) => {
-          setOrders(orderData as BuyerOrderLineItem[]);
+          setOrders(orderData as unknown as BuyerOrderLineItem[]);
           if (client.clientType === "buyer" && client.buyer) {
             setBuyerName(client.buyer.name);
           }

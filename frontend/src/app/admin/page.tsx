@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { isStaff, fullName, type Connection } from "@/lib/types";
+import { isStaff, fullName, type Connection, type AdminStats, type PendingVerificationUser } from "@/lib/types";
 import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { CountryBadge } from "@/components/CountrySelect";
 import { VerificationBadge } from "@/components/VerificationBadge";
@@ -13,10 +13,8 @@ import { formatDate, formatGhc } from "@/lib/format";
 export default function AdminPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const [stats, setStats] = useState<Record<string, number> | null>(null);
-  const [pending, setPending] = useState<
-    Array<{ id: string; firstName: string; lastName: string; email: string; role: { roleName: string } }>
-  >([]);
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [pending, setPending] = useState<PendingVerificationUser[]>([]);
   const [pendingConnections, setPendingConnections] = useState<Connection[]>([]);
 
   const loadConnections = useCallback(() => {
@@ -29,8 +27,8 @@ export default function AdminPage() {
   useEffect(() => {
     if (!loading && !user) router.push("/login");
     if (user && isStaff(user.roleId)) {
-      api.admin.stats().then((res) => setStats(res as Record<string, number>)).catch(console.error);
-      api.admin.pending().then((res) => setPending(res as any)).catch(console.error);
+      api.admin.stats().then(setStats).catch(console.error);
+      api.admin.pending().then(setPending).catch(console.error);
       loadConnections();
     } else if (user) router.push("/dashboard");
   }, [user?.id, loading, router, loadConnections]);

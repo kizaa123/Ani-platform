@@ -89,7 +89,7 @@ export default function FarmSettingsPage() {
     if (!loading && !user) router.push("/login");
     if (
       user &&
-      ![ROLES.CROP_FARMER, ROLES.LIVESTOCK_FARMER].includes(user.roleId)
+      ![ROLES.CROP_FARMER, ROLES.LIVESTOCK_FARMER].includes(user.roleId as 1 | 2)
     ) {
       router.push("/dashboard");
       return;
@@ -177,7 +177,7 @@ export default function FarmSettingsPage() {
   };
 
   const addCommodity = async (commodityId: number) => {
-    if (registeredIds.has(commodityId)) return;
+    if (!user || registeredIds.has(commodityId)) return;
     setMessage("");
     try {
       await api.farm.addCommodity({

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { Listing, fullName, ROLES, defaultListingUnit, listingUnitsForRole, formatListingUnit, isLivestockFarmer } from "@/lib/types";
+import { Listing, fullName, ROLES, defaultListingUnit, listingUnitsForRole, formatListingUnit, isLivestockFarmer, normalizeListingUnit, type ListingUnit } from "@/lib/types";
 import { FarmerAvatar, ProductImage, ProfilePhoto } from "@/components/FarmerAvatar";
 import { CountryBadge } from "@/components/CountrySelect";
 import { VerificationBadge } from "@/components/VerificationBadge";
@@ -84,7 +84,7 @@ export default function FarmPage() {
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
-    if (user && [ROLES.CROP_FARMER, ROLES.LIVESTOCK_FARMER].includes(user.roleId)) {
+    if (user && [ROLES.CROP_FARMER, ROLES.LIVESTOCK_FARMER].includes(user.roleId as 1 | 2)) {
       load().catch(console.error);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- load once per farmer session
@@ -146,7 +146,7 @@ export default function FarmPage() {
       description: listing.description || "",
       quantity: listing.quantity ?? 0,
       price: listing.price ?? 0,
-      unit: listing.unit || defaultListingUnit(user?.roleId ?? ROLES.CROP_FARMER),
+      unit: normalizeListingUnit(listing.unit, user?.roleId ?? ROLES.CROP_FARMER),
       location: listing.location || "",
       images,
       harvestStartDate: listing.harvestStartDate || "",
@@ -399,7 +399,7 @@ export default function FarmPage() {
               setForm({
                 ...form,
                 commodityId,
-                unit: fc?.unit || defaultListingUnit(user?.roleId ?? ROLES.CROP_FARMER),
+                unit: normalizeListingUnit(fc?.unit, user?.roleId ?? ROLES.CROP_FARMER),
               });
             }}
             className="w-full rounded-lg border px-4 py-2 bg-white"
@@ -447,7 +447,7 @@ export default function FarmPage() {
             />
             <select
               value={form.unit}
-              onChange={(e) => setForm({ ...form, unit: e.target.value })}
+              onChange={(e) => setForm({ ...form, unit: e.target.value as ListingUnit })}
               className="rounded-lg border px-4 py-2 bg-white"
             >
               {listingUnitsForRole(user?.roleId ?? ROLES.CROP_FARMER).map((u) => (
@@ -580,11 +580,11 @@ export default function FarmPage() {
                   <h3 className="font-bold text-brand-900">{l.title}</h3>
                   <p className="text-sm text-brand-700 mt-1">
                     {l.quantityLabel ||
-                      `${l.quantity} ${formatListingUnit(l.unit ?? defaultListingUnit(user?.roleId ?? ROLES.CROP_FARMER))}`}
+                      `${l.quantity} ${formatListingUnit(normalizeListingUnit(l.unit, user?.roleId ?? ROLES.CROP_FARMER))}`}
                   </p>
                   <p className="text-lg font-bold text-brand-900">
                     {l.priceLabel ||
-                      `GHC ${l.price}/${formatListingUnit(l.unit ?? defaultListingUnit(user?.roleId ?? ROLES.CROP_FARMER))}`}
+                      `GHC ${l.price}/${formatListingUnit(normalizeListingUnit(l.unit, user?.roleId ?? ROLES.CROP_FARMER))}`}
                   </p>
                   {l.harvestLabel && (
                     <p className="mt-1 text-xs text-brand-700 flex items-center gap-1">

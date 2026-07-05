@@ -13,8 +13,8 @@ interface ProfilePhotoProps {
   onClick?: () => void;
 }
 
-function withCacheBust(url: string, cacheBust?: number) {
-  if (!cacheBust) return url;
+function withCacheBust(url: string, cacheBust?: number | string) {
+  if (cacheBust === undefined || cacheBust === "") return url;
   return `${url}${url.includes("?") ? "&" : "?"}v=${cacheBust}`;
 }
 

@@ -80,7 +80,7 @@ export default function HandlerClientFinancialsPage() {
     if (user && ownerId) {
       api.agents
         .clientFinancialStatement(ownerId)
-        .then(setStatement)
+        .then((res) => setStatement(res as unknown as import("@/lib/types").FinancialStatement))
         .catch((e) => setError(e instanceof Error ? e.message : "Failed to load"));
     }
   }, [user?.id, loading, router, ownerId]);

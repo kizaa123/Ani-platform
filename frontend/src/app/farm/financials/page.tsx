@@ -45,7 +45,7 @@ export default function FinancialStatementPage() {
     if (!loading && !user) router.push("/login");
     if (
       user &&
-      ![ROLES.CROP_FARMER, ROLES.LIVESTOCK_FARMER].includes(user.roleId)
+      ![ROLES.CROP_FARMER, ROLES.LIVESTOCK_FARMER].includes(user.roleId as 1 | 2)
     ) {
       router.push("/dashboard");
       return;

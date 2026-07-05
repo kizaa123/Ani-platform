@@ -268,8 +268,8 @@ class ApiClient {
   };
 
   admin = {
-    stats: () => this.request("/admin/stats"),
-    pending: () => this.request("/admin/pending"),
+    stats: () => this.request<import("./types").AdminStats>("/admin/stats"),
+    pending: () => this.request<import("./types").PendingVerificationUser[]>("/admin/pending"),
     verify: (id: string, status: string) =>
       this.request(`/admin/users/${id}/verify`, { method: "PATCH", body: JSON.stringify({ status }) }),
     auditLogs: () => this.request("/admin/audit-logs"),
