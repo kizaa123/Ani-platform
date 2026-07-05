@@ -14,7 +14,8 @@ export type CreateNotificationInput = {
     | 'CONNECTION_APPROVED'
     | 'CONNECTION_DECLINED'
     | 'FARM_ACCESS_PAID'
-    | 'PRODUCT_PURCHASE';
+    | 'PRODUCT_PURCHASE'
+    | 'RESEARCH_PURCHASE';
   title: string;
   body: string;
   link?: string | null;
@@ -271,6 +272,32 @@ export async function notifyFarmAccessPaid(
 
   await notifyConnectionRequest(farmerId, buyerId, buyerName);
   await notifyAdminsConnectionRequest(buyerId, buyerName, farmerId, farmerName);
+}
+
+export async function notifyResearchPurchase(
+  researcherId: string,
+  studentId: string,
+  studentName: string,
+  publicationTitle: string,
+  amount: number
+) {
+  await createNotification({
+    userId: researcherId,
+    actorId: studentId,
+    type: 'RESEARCH_PURCHASE',
+    title: 'Publication purchased',
+    body: `${studentName} paid GHC ${amount.toFixed(2)} for "${publicationTitle}".`,
+    link: '/researcher/financials',
+  }).catch(() => undefined);
+
+  await createNotification({
+    userId: studentId,
+    actorId: researcherId,
+    type: 'RESEARCH_PURCHASE',
+    title: 'Access granted',
+    body: `You now have access to "${publicationTitle}".`,
+    link: '/library',
+  }).catch(() => undefined);
 }
 
 export async function getUserDisplayName(userId: string) {

@@ -20,12 +20,14 @@ import { updateFarmSchema, addCommoditySchema, updateOrderTrackSchema } from '..
 import { listingSchema, updateListingSchema } from '../services/marketplace.service';
 import { purchaseSchema, packageSchema, purchaseFarmAccessSchema } from '../services/payment.service';
 import { purchaseProductSchema } from '../services/order.service';
+import { publicationSchema, updatePublicationSchema, purchasePublicationSchema } from '../services/researcher.service';
 import { connectionSchema } from '../services/connection.service';
 import { assignmentSchema } from '../services/agent.service';
 import { messageSchema } from '../services/chat.service';
 import { verifyUserSchema } from '../services/admin.service';
 import { uploadController } from '../controllers/upload.controller';
-import { profileUpload, listingImagesUpload, MAX_IMAGE_FILE_SIZE } from '../middleware/upload.middleware';
+import { researcherController } from '../controllers/researcher.controller';
+import { profileUpload, listingImagesUpload, publicationFileUpload, MAX_IMAGE_FILE_SIZE, MAX_DOCUMENT_FILE_SIZE } from '../middleware/upload.middleware';
 import { authRateLimiter } from '../middleware/rate-limit.middleware';
 import { PERMISSIONS } from '../constants/roles';
 
@@ -34,7 +36,16 @@ const router = Router();
 function uploadErrorMessage(err: unknown): string {
   if (err && typeof err === 'object' && 'code' in err && err.code === 'LIMIT_FILE_SIZE') {
     const maxMb = Math.round(MAX_IMAGE_FILE_SIZE / (1024 * 1024));
-    return `Image is too large. Maximum file size is ${maxMb} MB.`;
+    return `File is too large. Maximum image size is ${maxMb} MB.`;
+  }
+  if (err instanceof Error) return err.message;
+  return 'Upload failed';
+}
+
+function publicationUploadErrorMessage(err: unknown): string {
+  if (err && typeof err === 'object' && 'code' in err && err.code === 'LIMIT_FILE_SIZE') {
+    const maxMb = Math.round(MAX_DOCUMENT_FILE_SIZE / (1024 * 1024));
+    return `File is too large. Maximum document size is ${maxMb} MB.`;
   }
   if (err instanceof Error) return err.message;
   return 'Upload failed';
@@ -63,6 +74,18 @@ router.post(
     });
   },
   uploadController.uploadListingImages
+);
+router.post(
+  '/upload/publication-files',
+  authenticate,
+  requirePermission(PERMISSIONS.CREATE_PUBLICATION),
+  (req, res, next) => {
+    publicationFileUpload(req, res, (err) => {
+      if (err) return res.status(400).json({ success: false, error: publicationUploadErrorMessage(err) });
+      next();
+    });
+  },
+  uploadController.uploadPublicationFiles
 );
 
 // Auth
@@ -98,6 +121,41 @@ router.delete('/farm/commodities/:id', authenticate, requirePermission(PERMISSIO
 // Buyer
 router.get('/buyer/financial-statement', authenticate, buyerController.financialStatement);
 router.get('/buyer/orders', authenticate, buyerController.orders);
+
+// Research library
+router.get('/research/browse', authenticate, researcherController.browse);
+router.get('/research/my', authenticate, requirePermission(PERMISSIONS.MANAGE_PUBLICATIONS), researcherController.myPublications);
+router.get('/research/financial-statement', authenticate, requirePermission(PERMISSIONS.MANAGE_PUBLICATIONS), researcherController.financialStatement);
+router.put('/research/profile', authenticate, requirePermission(PERMISSIONS.MANAGE_PUBLICATIONS), researcherController.updateProfile);
+router.get('/research/:id', authenticate, researcherController.getOne);
+router.post('/research/:id/view', authenticate, researcherController.recordView);
+router.post(
+  '/research/:id/purchase',
+  authenticate,
+  requirePermission(PERMISSIONS.PURCHASE_PUBLICATION),
+  validateBody(purchasePublicationSchema),
+  researcherController.purchase
+);
+router.post(
+  '/research',
+  authenticate,
+  requirePermission(PERMISSIONS.CREATE_PUBLICATION),
+  validateBody(publicationSchema),
+  researcherController.create
+);
+router.put(
+  '/research/:id',
+  authenticate,
+  requirePermission(PERMISSIONS.MANAGE_PUBLICATIONS),
+  validateBody(updatePublicationSchema),
+  researcherController.update
+);
+router.delete(
+  '/research/:id',
+  authenticate,
+  requirePermission(PERMISSIONS.MANAGE_PUBLICATIONS),
+  researcherController.remove
+);
 
 // Marketplace
 router.get('/marketplace/browse', authenticate, marketplaceController.browse);

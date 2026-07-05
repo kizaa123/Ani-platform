@@ -34,6 +34,14 @@ export interface UserProfile extends User {
   farmerProfile?: FarmerProfile;
   buyerProfile?: BuyerProfile;
   agentProfile?: AgentProfile;
+  researcherProfile?: ResearcherProfile;
+}
+
+export interface ResearcherProfile {
+  id: string;
+  institution?: string;
+  expertise?: string;
+  bio?: string;
 }
 
 export interface FarmerProfile {
@@ -501,6 +509,7 @@ export const ROLES = {
   BUYER_HANDLER: 5,
   ANI_ACCOUNTANT: 6,
   ADMIN: 7,
+  RESEARCHER: 8,
 } as const;
 
 export function fullName(u: { firstName: string; lastName: string }) {
@@ -577,6 +586,68 @@ export function isFarmerHandler(roleId: number) {
 
 export function isStaff(roleId: number) {
   return roleId === ROLES.ANI_ACCOUNTANT || roleId === ROLES.ADMIN;
+}
+
+export function isResearcher(roleId: number) {
+  return roleId === ROLES.RESEARCHER;
+}
+
+export interface ResearchPublication {
+  id: string;
+  title: string;
+  description?: string | null;
+  fileUrl?: string | null;
+  coverImage?: string | null;
+  price?: number | null;
+  isFree: boolean;
+  viewCount: number;
+  status: string;
+  createdAt: string;
+  hasAccess?: boolean;
+  isLocked?: boolean;
+  researcher: {
+    id: string;
+    name: string;
+    profilePicture?: string | null;
+    verificationStatus?: string;
+  };
+}
+
+export interface ResearcherFinancialStatement {
+  institution?: string | null;
+  researcherName: string;
+  email: string;
+  country: string;
+  region: string;
+  generatedAt: string;
+  summary: {
+    totalPublications: number;
+    freePublications: number;
+    paidPublications: number;
+    totalViews: number;
+    totalSales: number;
+    totalEarnings: number;
+  };
+  lineItems: {
+    id: string;
+    date: string;
+    title: string;
+    isFree: boolean;
+    price?: number | null;
+    viewCount: number;
+    type: string;
+  }[];
+  salesLineItems: {
+    id: string;
+    date: string;
+    title: string;
+    studentName: string;
+    studentEmail: string;
+    amount: number;
+    paymentMethod: string;
+    transactionId?: string | null;
+    type: string;
+  }[];
 }
 
 export interface AdminStats {

@@ -6,6 +6,7 @@ export const ROLES = {
   BUYER_HANDLER: 5,
   ANI_ACCOUNTANT: 6,
   ADMIN: 7,
+  RESEARCHER: 8,
 } as const;
 
 export const ROLE_NAMES: Record<number, string> = {
@@ -16,6 +17,7 @@ export const ROLE_NAMES: Record<number, string> = {
   5: 'Buyer Handler',
   6: 'ANI Accountant',
   7: 'Admin',
+  8: 'Researcher',
 };
 
 export const PERMISSIONS = {
@@ -38,15 +40,23 @@ export const PERMISSIONS = {
   MANAGE_USERS: 'manage_users',
   SEND_MESSAGES: 'send_messages',
   PURCHASE_ACCESS: 'purchase_access',
+  CREATE_PUBLICATION: 'create_publication',
+  MANAGE_PUBLICATIONS: 'manage_publications',
+  VIEW_PUBLICATIONS: 'view_publications',
+  PURCHASE_PUBLICATION: 'purchase_publication',
 } as const;
 
 export const FARMER_ROLES = [ROLES.CROP_FARMER, ROLES.LIVESTOCK_FARMER];
 export const AGENT_ROLES = [ROLES.FARMER_HANDLER, ROLES.BUYER_HANDLER];
 export const STAFF_ROLES = [ROLES.ANI_ACCOUNTANT, ROLES.ADMIN];
-export const VERIFIABLE_ROLE_IDS = [...FARMER_ROLES, ROLES.BUYER, ...AGENT_ROLES];
+export const VERIFIABLE_ROLE_IDS = [...FARMER_ROLES, ROLES.BUYER, ROLES.RESEARCHER, ...AGENT_ROLES];
 
 export function isFarmerRole(roleId: number): boolean {
   return FARMER_ROLES.includes(roleId as typeof ROLES.CROP_FARMER);
+}
+
+export function isResearcherRole(roleId: number): boolean {
+  return roleId === ROLES.RESEARCHER;
 }
 
 export function isStaffRole(roleId: number): boolean {

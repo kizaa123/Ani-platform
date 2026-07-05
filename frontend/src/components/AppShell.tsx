@@ -16,7 +16,9 @@ import { BuyerPortalLayout } from "@/components/BuyerSidebar";
 
 import { StaffPortalLayout } from "@/components/StaffSidebar";
 
-import { isFarmer, isHandler, isBuyer, isStaff } from "@/lib/types";
+import { ResearcherPortalLayout } from "@/components/ResearcherSidebar";
+
+import { isFarmer, isHandler, isBuyer, isStaff, isResearcher } from "@/lib/types";
 
 
 
@@ -113,6 +115,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <PortalWrap>
 
         <BuyerPortalLayout>{children}</BuyerPortalLayout>
+
+      </PortalWrap>
+
+    );
+
+  }
+
+
+
+  if (user && isResearcher(user.roleId)) {
+
+    return (
+
+      <PortalWrap>
+
+        <ResearcherPortalLayout>{children}</ResearcherPortalLayout>
 
       </PortalWrap>
 

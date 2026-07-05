@@ -11,8 +11,11 @@ export const MAX_IMAGE_FILE_SIZE = 20 * 1024 * 1024; // 20 MB
 /** Max product images per upload request. */
 export const MAX_LISTING_IMAGES_PER_UPLOAD = 10;
 
+/** Max upload size per document file (PDF, EPUB, etc.). */
+export const MAX_DOCUMENT_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+
 export function ensureUploadDirs() {
-  for (const dir of ['profiles', 'listings', 'products']) {
+  for (const dir of ['profiles', 'listings', 'products', 'publications']) {
     const full = path.join(UPLOADS_ROOT, dir);
     if (!fs.existsSync(full)) fs.mkdirSync(full, { recursive: true });
   }
@@ -47,6 +50,36 @@ export const listingImagesUpload = multer({
   fileFilter: imageFilter,
 }).array('images', MAX_LISTING_IMAGES_PER_UPLOAD);
 
+const documentFilter: multer.Options['fileFilter'] = (_req, file, cb) => {
+  const allowed = [
+    'application/pdf',
+    'application/epub+zip',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'text/plain',
+  ];
+  if (allowed.includes(file.mimetype) || file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only PDF, EPUB, Word, text, or image files are allowed'));
+  }
+};
+
+export const publicationFileUpload = multer({
+  storage: diskStorage('publications'),
+  limits: { fileSize: MAX_DOCUMENT_FILE_SIZE },
+  fileFilter: documentFilter,
+}).fields([
+  { name: 'file', maxCount: 1 },
+  { name: 'cover', maxCount: 1 },
+]);
+
+export const publicationCoverUpload = multer({
+  storage: diskStorage('publications'),
+  limits: { fileSize: MAX_IMAGE_FILE_SIZE },
+  fileFilter: imageFilter,
+}).single('cover');
+
 export function publicUrl(relativePath: string): string {
   return `/uploads/${relativePath.replace(/\\/g, '/')}`;
 }
@@ -66,7 +99,7 @@ export function normalizePublicAssetUrl(path?: string | null): string | null {
   }
   if (trimmed.startsWith('/uploads/')) return trimmed;
   if (trimmed.startsWith('uploads/')) return `/${trimmed}`;
-  if (trimmed.startsWith('profiles/') || trimmed.startsWith('listings/')) {
+  if (trimmed.startsWith('profiles/') || trimmed.startsWith('listings/') || trimmed.startsWith('publications/')) {
     return publicUrl(trimmed);
   }
   return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;

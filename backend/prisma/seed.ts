@@ -11,6 +11,7 @@ const ROLES = [
   { id: 5, roleName: 'Buyer Handler' },
   { id: 6, roleName: 'ANI Accountant' },
   { id: 7, roleName: 'Admin' },
+  { id: 8, roleName: 'Researcher' },
 ];
 
 const PERMISSIONS = [
@@ -19,16 +20,18 @@ const PERMISSIONS = [
   'manage_listings', 'negotiate_as_farmer', 'represent_farmer', 'search_farmers',
   'negotiate_as_buyer', 'represent_buyer', 'manage_packages', 'view_audit_logs',
   'manage_users', 'send_messages', 'purchase_access',
+  'create_publication', 'manage_publications', 'view_publications', 'purchase_publication',
 ];
 
 const ROLE_PERMS: Record<number, string[]> = {
-  1: ['create_listing', 'manage_commodities', 'view_farmer_preview', 'send_messages'],
-  2: ['create_listing', 'manage_commodities', 'view_farmer_preview', 'send_messages'],
-  3: ['view_farmer_preview', 'view_full_farmer_data', 'manage_listings', 'negotiate_as_farmer', 'represent_farmer', 'send_messages'],
-  4: ['view_farmer_preview', 'view_full_farmer_data', 'request_connection', 'negotiate_as_buyer', 'represent_buyer', 'purchase_access', 'send_messages'],
-  5: ['view_farmer_preview', 'view_full_farmer_data', 'request_connection', 'search_farmers', 'negotiate_as_buyer', 'represent_buyer', 'send_messages'],
-  6: ['manage_payments', 'verify_users', 'manage_packages', 'view_audit_logs', 'approve_connection'],
-  7: ['manage_payments', 'verify_users', 'manage_packages', 'view_audit_logs', 'manage_users', 'view_full_farmer_data', 'approve_connection'],
+  1: ['create_listing', 'manage_commodities', 'view_farmer_preview', 'send_messages', 'view_publications'],
+  2: ['create_listing', 'manage_commodities', 'view_farmer_preview', 'send_messages', 'view_publications'],
+  3: ['view_farmer_preview', 'view_full_farmer_data', 'manage_listings', 'negotiate_as_farmer', 'represent_farmer', 'send_messages', 'view_publications'],
+  4: ['view_farmer_preview', 'view_full_farmer_data', 'request_connection', 'negotiate_as_buyer', 'represent_buyer', 'purchase_access', 'send_messages', 'view_publications', 'purchase_publication'],
+  5: ['view_farmer_preview', 'view_full_farmer_data', 'request_connection', 'search_farmers', 'negotiate_as_buyer', 'represent_buyer', 'send_messages', 'view_publications'],
+  6: ['manage_payments', 'verify_users', 'manage_packages', 'view_audit_logs', 'approve_connection', 'view_publications'],
+  7: ['manage_payments', 'verify_users', 'manage_packages', 'view_audit_logs', 'manage_users', 'view_full_farmer_data', 'approve_connection', 'view_publications'],
+  8: ['create_publication', 'manage_publications', 'view_publications', 'send_messages'],
 };
 
 async function main() {
@@ -319,6 +322,48 @@ async function main() {
     where: { agentId_ownerId: { agentId: kofi.id, ownerId: ama.id } },
     update: {}, create: { agentId: kofi.id, ownerId: ama.id, relationshipType: 'BUYER_REPRESENTATIVE' },
   });
+
+  const akua = await prisma.user.upsert({
+    where: { email: 'akua@research.gh' },
+    update: {},
+    create: {
+      firstName: 'Akua', lastName: 'Mensah', email: 'akua@research.gh', phone: '+233201112233',
+      passwordHash: hash, country: 'Ghana', region: 'Ashanti Region', city: 'Kumasi',
+      roleId: 8, verificationStatus: 'VERIFIED',
+    },
+  });
+  const researcherProfile = await prisma.researcherProfile.upsert({
+    where: { userId: akua.id },
+    update: {},
+    create: { userId: akua.id, institution: 'University of Ghana', expertise: 'Agricultural Economics' },
+  });
+
+  const existingPub = await prisma.researchPublication.findFirst({
+    where: { researcherId: researcherProfile.id },
+  });
+  if (!existingPub) {
+    await prisma.researchPublication.createMany({
+      data: [
+        {
+          researcherId: researcherProfile.id,
+          title: 'Climate-Smart Maize Production in Ghana',
+          description: 'A comprehensive guide to sustainable maize farming practices adapted for Ghanaian agro-ecological zones.',
+          fileUrl: '/uploads/publications/sample-maize-guide.pdf',
+          isFree: true,
+          viewCount: 42,
+        },
+        {
+          researcherId: researcherProfile.id,
+          title: 'Livestock Feed Optimization Study 2025',
+          description: 'Research findings on cost-effective feed formulations for smallholder poultry and cattle farmers.',
+          fileUrl: '/uploads/publications/sample-livestock-study.pdf',
+          price: 25,
+          isFree: false,
+          viewCount: 18,
+        },
+      ],
+    });
+  }
 
   console.log('✅ Seed complete. Password for all demo accounts: Password123!');
 }

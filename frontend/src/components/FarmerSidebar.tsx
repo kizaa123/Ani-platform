@@ -24,6 +24,7 @@ export const FARMER_NAV_LINKS: PortalNavLink[] = [
     icon: "store",
     match: (p) => p.startsWith("/marketplace"),
   },
+  { href: "/library", label: "Research Library", icon: "book", match: (p) => p.startsWith("/library") },
   {
     href: "/connections",
     label: "Connections",

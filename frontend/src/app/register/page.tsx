@@ -17,6 +17,7 @@ const ROLE_OPTIONS = [
   { id: ROLES.FARMER_HANDLER, label: "Farmer Handler" },
   { id: ROLES.BUYER, label: "Buyer" },
   { id: ROLES.BUYER_HANDLER, label: "Buyer Handler" },
+  { id: ROLES.RESEARCHER, label: "Researcher" },
   { id: ROLES.ANI_ACCOUNTANT, label: "ANI Accountant" },
 ];
 
@@ -38,6 +39,8 @@ function buildRegisterPayload(
     farmSize: string;
     experienceYears: number;
     company: string;
+    institution: string;
+    expertise: string;
     handlerId: string;
   },
   selectedCommodities: number[],
@@ -66,6 +69,9 @@ function buildRegisterPayload(
     if (form.experienceYears > 0) payload.experienceYears = form.experienceYears;
   } else if (form.roleId === ROLES.BUYER && form.company.trim()) {
     payload.company = form.company.trim();
+  } else if (form.roleId === ROLES.RESEARCHER) {
+    if (form.institution.trim()) payload.institution = form.institution.trim();
+    if (form.expertise.trim()) payload.expertise = form.expertise.trim();
   }
 
   return payload;
@@ -89,11 +95,13 @@ export default function RegisterPage() {
     firstName: "", lastName: "", email: "", phone: "", password: "",
     country: "", region: "", city: "", address: "",
     roleId: ROLES.BUYER as number, farmName: "", farmSize: "", experienceYears: 0, company: "",
+    institution: "", expertise: "",
     handlerId: "",
   });
 
   const isFarmerRole = form.roleId === ROLES.CROP_FARMER || form.roleId === ROLES.LIVESTOCK_FARMER;
   const isBuyerRole = form.roleId === ROLES.BUYER;
+  const isResearcherRole = form.roleId === ROLES.RESEARCHER;
   const needsHandler = isFarmerRole || isBuyerRole;
   const availableHandlers = isFarmerRole ? farmerHandlers : isBuyerRole ? buyerHandlers : [];
   const handlerLabel = isFarmerRole ? "Choose your Farmer Handler" : "Choose your Buyer Handler";
@@ -176,7 +184,9 @@ export default function RegisterPage() {
         }
       }
 
-      router.push(isFarmerRole ? "/farm" : "/dashboard");
+      router.push(
+        isFarmerRole ? "/farm" : isResearcherRole ? "/researcher/publications" : "/dashboard"
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
@@ -544,6 +554,35 @@ export default function RegisterPage() {
                   className="auth-input"
                 />
               </div>
+            )}
+
+            {form.roleId === ROLES.RESEARCHER && (
+              <>
+                <div className="auth-field">
+                  <label htmlFor="reg-institution" className="auth-label">
+                    Institution
+                  </label>
+                  <input
+                    id="reg-institution"
+                    value={form.institution}
+                    onChange={(e) => setForm({ ...form, institution: e.target.value })}
+                    className="auth-input"
+                    placeholder="University or research organization"
+                  />
+                </div>
+                <div className="auth-field">
+                  <label htmlFor="reg-expertise" className="auth-label">
+                    Area of expertise
+                  </label>
+                  <input
+                    id="reg-expertise"
+                    value={form.expertise}
+                    onChange={(e) => setForm({ ...form, expertise: e.target.value })}
+                    className="auth-input"
+                    placeholder="e.g. Agricultural Economics"
+                  />
+                </div>
+              </>
             )}
 
             {needsHandler && (

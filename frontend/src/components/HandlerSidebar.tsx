@@ -13,6 +13,7 @@ export const HANDLER_NAV_LINKS: PortalNavLink[] = [
     match: (p) => p.startsWith("/agents") && !p.startsWith("/agents/settings"),
   },
   { href: "/marketplace", label: "Marketplace", icon: "store", match: (p) => p.startsWith("/marketplace") },
+  { href: "/library", label: "Research Library", icon: "book", match: (p) => p.startsWith("/library") },
   { href: "/connections", label: "Connections", icon: "handshake", match: (p) => p.startsWith("/connections") },
   {
     href: "/agents/settings",

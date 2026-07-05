@@ -21,8 +21,18 @@ interface PurchaseViewProps {
 }
 
 const PAYMENT_METHODS = [
-  { id: "mobile_money", label: "Mobile Money (MTN / Vodafone)" },
-  { id: "bank_transfer", label: "Bank Transfer" },
+  {
+    id: "mobile_money",
+    label: "Mobile Money",
+    sublabel: "Pay with MTN Mobile Money or Telecel Cash",
+    icon: "coins" as const,
+  },
+  {
+    id: "bank_transfer",
+    label: "Bank Transfer",
+    sublabel: "Transfer directly to farm bank account",
+    icon: "credit-card" as const,
+  },
 ];
 
 export function PurchaseModal({
@@ -46,6 +56,7 @@ export function PurchaseModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const total = Math.round(quantity * unitPrice * 100) / 100;
@@ -62,6 +73,7 @@ export function PurchaseModal({
     setQuantity(Math.min(1, maxQty) || 1);
     setError("");
     setSuccessMsg("");
+    setActiveImageIndex(0);
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, [listing.id, maxQty]);
 
@@ -83,6 +95,8 @@ export function PurchaseModal({
       setSubmitting(false);
     }
   };
+
+  const currentImage = listing.images?.[activeImageIndex] || listing.images?.[0];
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-white">
@@ -116,28 +130,40 @@ export function PurchaseModal({
             </p>
 
             <div className="grid gap-8 lg:grid-cols-2 lg:gap-10 lg:items-start">
-              {/* Large product image */}
-              <div className="overflow-hidden rounded-2xl border border-brand-100 bg-brand-50 shadow-lg">
-                {listing.images?.[0] ? (
-                  <ProductImage
-                    src={listing.images[0]}
-                    alt={listing.title}
-                    className="aspect-[16/10] w-full object-cover lg:aspect-square lg:min-h-[28rem]"
-                  />
-                ) : (
-                  <div className="flex aspect-[16/10] items-center justify-center bg-gradient-to-br from-brand-100 to-brand-200 lg:aspect-square lg:min-h-[28rem]">
-                    <Icon name="wheat" className="h-20 w-20 text-brand-400" />
-                  </div>
-                )}
+              {/* Image gallery layout */}
+              <div className="flex flex-col gap-4">
+                <div className="overflow-hidden rounded-2xl border border-brand-100 bg-brand-50 shadow-md">
+                  {currentImage ? (
+                    <ProductImage
+                      src={currentImage}
+                      alt={listing.title}
+                      className="aspect-[16/10] w-full object-cover lg:aspect-square lg:min-h-[28rem]"
+                    />
+                  ) : (
+                    <div className="flex aspect-[16/10] items-center justify-center bg-gradient-to-br from-brand-100 to-brand-200 lg:aspect-square lg:min-h-[28rem]">
+                      <Icon name="wheat" className="h-20 w-20 text-brand-400" />
+                    </div>
+                  )}
+                </div>
                 {listing.images && listing.images.length > 1 && (
-                  <div className="grid grid-cols-4 gap-2 border-t border-brand-100 bg-white p-3">
-                    {listing.images.slice(0, 4).map((img, i) => (
-                      <ProductImage
+                  <div className="flex flex-wrap gap-2">
+                    {listing.images.map((img, i) => (
+                      <button
                         key={i}
-                        src={img}
-                        alt=""
-                        className="aspect-square w-full rounded-lg object-cover"
-                      />
+                        type="button"
+                        onClick={() => setActiveImageIndex(i)}
+                        className={`relative h-20 w-20 overflow-hidden rounded-xl border bg-brand-50 transition-all ${
+                          activeImageIndex === i
+                            ? "border-brand-600 ring-2 ring-brand-500 ring-offset-2"
+                            : "border-brand-100 opacity-70 hover:opacity-100"
+                        }`}
+                      >
+                        <ProductImage
+                          src={img}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                      </button>
                     ))}
                   </div>
                 )}
@@ -201,40 +227,95 @@ export function PurchaseModal({
                     This product is currently unavailable. Choose another item from this farm below.
                   </p>
                 ) : (
-                  <div className="mt-6 space-y-5">
+                  <div className="mt-6 space-y-6">
+                    {/* Quantity selectors */}
                     <div>
                       <label className="block text-sm font-semibold text-brand-900">
                         Quantity ({unitLabel})
                       </label>
-                      <input
-                        type="number"
-                        min={1}
-                        max={maxQty}
-                        step={1}
-                        value={quantity}
-                        onChange={(e) => setQuantity(Number(e.target.value))}
-                        className="mt-2 w-full rounded-xl border border-brand-200 px-4 py-3 text-lg focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
-                      />
-                      <p className="mt-1.5 text-xs text-gray-500">
+                      <div className="mt-2.5 flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
+                          disabled={quantity <= 1}
+                          className="flex h-12 w-12 items-center justify-center rounded-xl border border-brand-200 text-xl font-semibold text-brand-900 hover:bg-brand-50 active:bg-brand-100 disabled:opacity-40 transition-colors"
+                        >
+                          −
+                        </button>
+                        <input
+                          type="number"
+                          min={1}
+                          max={maxQty}
+                          step={1}
+                          value={quantity}
+                          onChange={(e) => {
+                            const val = Math.max(1, Math.min(maxQty, Number(e.target.value)));
+                            setQuantity(val || 1);
+                          }}
+                          className="h-12 w-28 rounded-xl border border-brand-200 text-center text-lg font-bold focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setQuantity(prev => Math.min(maxQty, prev + 1))}
+                          disabled={quantity >= maxQty}
+                          className="flex h-12 w-12 items-center justify-center rounded-xl border border-brand-200 text-xl font-semibold text-brand-900 hover:bg-brand-50 active:bg-brand-100 disabled:opacity-40 transition-colors"
+                        >
+                          +
+                        </button>
+                        <span className="text-sm text-gray-500">
+                          (Max: {maxQty} {unitLabel})
+                        </span>
+                      </div>
+                      <p className="mt-2 text-xs text-gray-500">
                         GHC {unitPrice} per {unitLabel} — total updates automatically
                       </p>
                     </div>
 
+                    {/* Payment methods */}
                     <div>
                       <label className="block text-sm font-semibold text-brand-900">
-                        Payment method
+                        Payment Method
                       </label>
-                      <select
-                        value={paymentMethod}
-                        onChange={(e) => setPaymentMethod(e.target.value)}
-                        className="mt-2 w-full rounded-xl border border-brand-200 px-4 py-3 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
-                      >
-                        {PAYMENT_METHODS.map((m) => (
-                          <option key={m.id} value={m.id}>
-                            {m.label}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                        {PAYMENT_METHODS.map((m) => {
+                          const isSelected = paymentMethod === m.id;
+                          return (
+                            <button
+                              key={m.id}
+                              type="button"
+                              onClick={() => setPaymentMethod(m.id)}
+                              className={`flex flex-col gap-3 rounded-2xl border p-4 text-left transition-all ${
+                                isSelected
+                                  ? "border-brand-600 bg-brand-50/50 ring-2 ring-brand-500"
+                                  : "border-brand-100 bg-white hover:bg-brand-50/20"
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
+                                    isSelected
+                                      ? "bg-brand-600 text-white"
+                                      : "bg-brand-50 text-brand-700"
+                                  }`}
+                                >
+                                  <Icon name={m.icon} className="h-5 w-5" />
+                                </div>
+                                <div className="flex-1">
+                                  <p className="font-bold text-brand-900 text-sm">{m.label}</p>
+                                </div>
+                                <div className="flex h-5 w-5 items-center justify-center rounded-full border border-brand-300">
+                                  {isSelected && (
+                                    <div className="h-2.5 w-2.5 rounded-full bg-brand-600" />
+                                  )}
+                                </div>
+                              </div>
+                              <p className="text-[11px] text-gray-500 leading-normal">
+                                {m.sublabel}
+                              </p>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
 
                     <div className="rounded-2xl bg-brand-900 p-5 text-white">

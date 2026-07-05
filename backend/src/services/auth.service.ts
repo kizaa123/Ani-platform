@@ -58,13 +58,15 @@ export const registerSchema = z
   address: optionalString(),
   gpsLatitude: z.coerce.number().optional(),
   gpsLongitude: z.coerce.number().optional(),
-  roleId: z.coerce.number().int().min(1).max(7),
+  roleId: z.coerce.number().int().min(1).max(8),
   farmName: optionalString(),
   farmSize: optionalString(),
   experienceYears: z.preprocess(
     emptyToUndefined,
     z.coerce.number().int().min(0).optional()
   ),
+  institution: optionalString(),
+  expertise: optionalString(),
   commodityIds: z.preprocess(
     emptyToUndefined,
     z.array(z.coerce.number().int()).optional()
@@ -228,6 +230,16 @@ export class AuthService {
         });
       }
 
+      if (input.roleId === ROLES.RESEARCHER) {
+        await tx.researcherProfile.create({
+          data: {
+            userId: created.id,
+            institution: input.institution,
+            expertise: input.expertise,
+          },
+        });
+      }
+
       if (input.roleId === ROLES.FARMER_HANDLER) {
         await tx.agentProfile.create({
           data: { userId: created.id, agentType: 'FARMER_REPRESENTATIVE' },
@@ -320,6 +332,7 @@ export class AuthService {
           farmerProfile: { include: { farmerCommodities: { include: { commodity: true } } } },
           buyerProfile: true,
           agentProfile: true,
+          researcherProfile: true,
         },
       }),
       'User not found'
@@ -351,6 +364,7 @@ export class AuthService {
       farmerProfile: user.farmerProfile,
       buyerProfile: user.buyerProfile,
       agentProfile: user.agentProfile,
+      researcherProfile: user.researcherProfile,
       assignedHandler: await this.getAssignedHandler(userId, user.roleId),
     };
   }

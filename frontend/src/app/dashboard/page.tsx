@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
-import { isFarmer, isBuyer, isHandler, isStaff, isBuyerHandler } from "@/lib/types";
+import { isFarmer, isBuyer, isHandler, isStaff, isBuyerHandler, isResearcher } from "@/lib/types";
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
@@ -18,6 +18,10 @@ export default function DashboardPage() {
 
   const cards = [
     { href: "/marketplace", title: "Marketplace", desc: "Browse commodity listings", icon: "🏪", all: true },
+    { href: "/library", title: "Research Library", desc: "Browse books & research publications", icon: "📚", all: true },
+    { href: "/researcher/publications", title: "My Publications", desc: "Upload & manage research files", icon: "📖", show: isResearcher(user.roleId) },
+    { href: "/researcher/financials", title: "Financial Statement", desc: "Earnings from publication sales", icon: "📊", show: isResearcher(user.roleId) },
+    { href: "/researcher/settings", title: "Profile", desc: "Institution & researcher profile", icon: "👤", show: isResearcher(user.roleId) },
     { href: "/farm", title: "My Farm", desc: "Manage products & profile", icon: "🌾", show: isFarmer(user.roleId) },
     { href: "/farm/financials", title: "Financial Statement", desc: "View farm product finances", icon: "📊", show: isFarmer(user.roleId) },
     { href: "/access", title: "Buyer Access", desc: "Pay to access farmer farms", icon: "💳", show: isBuyer(user.roleId) },

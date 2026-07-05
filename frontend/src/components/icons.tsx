@@ -25,7 +25,9 @@ export type IconName =
   | "message"
   | "coins"
   | "leaf"
-  | "chevron-right";
+  | "chevron-right"
+  | "eye"
+  | "book";
 
 type IconProps = SVGProps<SVGSVGElement> & { name: IconName };
 
@@ -157,6 +159,18 @@ const paths: Record<IconName, ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6" />
     </>
   ),
+  eye: (
+    <>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 15a3 3 0 100-6 3 3 0 000 6z" />
+    </>
+  ),
+  book: (
+    <>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 19.5A2.5 2.5 0 016.5 17H20" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
+    </>
+  ),
 };
 
 export function Icon({ name, className = "h-5 w-5", ...props }: IconProps) {
@@ -184,4 +198,5 @@ export const NOTIFICATION_ICONS: Record<string, IconName> = {
   CONNECTION_APPROVED: "check",
   CONNECTION_DECLINED: "x",
   FARM_ACCESS_PAID: "coins",
+  RESEARCH_PURCHASE: "book",
 };

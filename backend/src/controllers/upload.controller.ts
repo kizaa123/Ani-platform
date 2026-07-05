@@ -42,6 +42,26 @@ export class UploadController {
       ApiResponse.error(res, e);
     }
   };
+
+  uploadPublicationFiles = async (req: AuthRequest, res: Response) => {
+    try {
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      const file = files?.file?.[0];
+      const cover = files?.cover?.[0];
+
+      if (!file && !cover) {
+        return res.status(400).json({ success: false, error: 'No files provided' });
+      }
+
+      const result: { fileUrl?: string; coverImage?: string } = {};
+      if (file) result.fileUrl = publicUrl(`publications/${file.filename}`);
+      if (cover) result.coverImage = publicUrl(`publications/${cover.filename}`);
+
+      ApiResponse.success(res, result);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
 }
 
 export const uploadController = new UploadController();

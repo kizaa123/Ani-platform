@@ -13,6 +13,7 @@ const verifiableUserInclude = {
   farmerProfile: { select: { farmName: true, verificationStatus: true } },
   buyerProfile: { select: { company: true } },
   agentProfile: { select: { agentType: true } },
+  researcherProfile: { select: { institution: true, expertise: true } },
 } as const;
 
 export class AdminService {

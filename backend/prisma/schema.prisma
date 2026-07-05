@@ -67,6 +67,7 @@ model User {
   farmerProfile       FarmerProfile?
   buyerProfile        BuyerProfile?
   agentProfile        AgentProfile?
+  researcherProfile   ResearcherProfile?
   refreshTokens       RefreshToken[]
   payments            Payment[]
   buyerAccess         BuyerAccess[]
@@ -84,6 +85,8 @@ model User {
   ownedAssignments    AgentAssignment[]   @relation("OwnerUser")
   notifications       Notification[]      @relation("UserNotifications")
   triggeredNotifications Notification[]   @relation("NotificationActor")
+  researchPurchases      ResearchPurchase[]  @relation("StudentResearchPurchases")
+  researchSales          ResearchPurchase[]  @relation("ResearcherSales")
 
   @@map("users")
 }
@@ -141,6 +144,19 @@ model AgentProfile {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("agent_profile")
+}
+
+model ResearcherProfile {
+  id           String  @id @default(uuid())
+  userId       String  @unique @map("user_id")
+  institution  String?
+  expertise    String?
+  bio          String?
+
+  user         User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  publications ResearchPublication[]
+
+  @@map("researcher_profile")
 }
 
 enum RelationshipType {
@@ -395,6 +411,66 @@ enum NotificationType {
   CONNECTION_DECLINED
   FARM_ACCESS_PAID
   PRODUCT_PURCHASE
+  RESEARCH_PURCHASE
+}
+
+// ─── Research Library ────────────────────────────────────────────────────────
+
+enum PublicationStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+model ResearchPublication {
+  id           String            @id @default(uuid())
+  researcherId String            @map("researcher_id")
+  title        String
+  description  String?
+  fileUrl      String            @map("file_url") @db.Text
+  coverImage   String?           @map("cover_image") @db.Text
+  price        Float?
+  isFree       Boolean           @default(true) @map("is_free")
+  viewCount    Int               @default(0) @map("view_count")
+  status       PublicationStatus @default(ACTIVE)
+  createdAt    DateTime          @default(now()) @map("created_at")
+  updatedAt    DateTime          @updatedAt @map("updated_at")
+
+  researcher ResearcherProfile  @relation(fields: [researcherId], references: [id], onDelete: Cascade)
+  purchases    ResearchPurchase[]
+  views        ResearchView[]
+
+  @@map("research_publications")
+}
+
+model ResearchView {
+  id            String   @id @default(uuid())
+  publicationId String   @map("publication_id")
+  userId        String?  @map("user_id")
+  viewedAt      DateTime @default(now()) @map("viewed_at")
+
+  publication ResearchPublication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+
+  @@index([publicationId])
+  @@map("research_views")
+}
+
+model ResearchPurchase {
+  id            String        @id @default(uuid())
+  publicationId String        @map("publication_id")
+  studentId     String        @map("student_id")
+  researcherId  String        @map("researcher_id")
+  amount        Float
+  paymentMethod String        @map("payment_method")
+  transactionId String?       @unique @map("transaction_id")
+  status        PaymentStatus @default(PENDING)
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  publication ResearchPublication @relation(fields: [publicationId], references: [id])
+  student     User                @relation("StudentResearchPurchases", fields: [studentId], references: [id])
+  researcher  User                @relation("ResearcherSales", fields: [researcherId], references: [id])
+
+  @@unique([studentId, publicationId])
+  @@map("research_purchases")
 }
 
 model Notification {

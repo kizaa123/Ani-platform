@@ -115,6 +115,12 @@ class ApiClient {
       files.forEach((f) => fd.append("images", f));
       return this.uploadRequest<{ urls: string[] }>("/upload/listing-images", fd);
     },
+    publicationFiles: (file?: File, cover?: File) => {
+      const fd = new FormData();
+      if (file) fd.append("file", file);
+      if (cover) fd.append("cover", cover);
+      return this.uploadRequest<{ fileUrl?: string; coverImage?: string }>("/upload/publication-files", fd);
+    },
   };
 
   auth = {
@@ -215,6 +221,31 @@ class ApiClient {
     financialStatement: () =>
       this.request<import("./types").BuyerFinancialStatement>("/buyer/financial-statement"),
     orders: () => this.request<import("./types").BuyerOrderLineItem[]>("/buyer/orders"),
+  };
+
+  research = {
+    browse: (q?: string) =>
+      this.request<import("./types").ResearchPublication[]>(
+        `/research/browse${q ? `?q=${encodeURIComponent(q)}` : ""}`
+      ),
+    my: () => this.request<import("./types").ResearchPublication[]>("/research/my"),
+    get: (id: string) => this.request<import("./types").ResearchPublication>(`/research/${id}`),
+    create: (body: Record<string, unknown>) =>
+      this.request("/research", { method: "POST", body: JSON.stringify(body) }),
+    update: (id: string, body: Record<string, unknown>) =>
+      this.request(`/research/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+    remove: (id: string) => this.request(`/research/${id}`, { method: "DELETE" }),
+    recordView: (id: string) =>
+      this.request<{ viewCount: number }>(`/research/${id}/view`, { method: "POST" }),
+    purchase: (id: string, paymentMethod: string) =>
+      this.request(`/research/${id}/purchase`, {
+        method: "POST",
+        body: JSON.stringify({ paymentMethod }),
+      }),
+    financialStatement: () =>
+      this.request<import("./types").ResearcherFinancialStatement>("/research/financial-statement"),
+    updateProfile: (body: Record<string, unknown>) =>
+      this.request("/research/profile", { method: "PUT", body: JSON.stringify(body) }),
   };
 
   connections = {

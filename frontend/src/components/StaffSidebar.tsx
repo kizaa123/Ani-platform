@@ -7,6 +7,7 @@ import { ROLES, type UserProfile } from "@/lib/types";
 export const STAFF_NAV_LINKS: PortalNavLink[] = [
   { href: "/dashboard", label: "Dashboard", icon: "home", match: (p) => p === "/dashboard" },
   { href: "/marketplace", label: "Marketplace", icon: "store", match: (p) => p.startsWith("/marketplace") },
+  { href: "/library", label: "Research Library", icon: "book", match: (p) => p.startsWith("/library") },
   {
     href: "/connections",
     label: "Connections",
