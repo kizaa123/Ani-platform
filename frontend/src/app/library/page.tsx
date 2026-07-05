@@ -119,9 +119,13 @@ export default function LibraryPage() {
           {loadError}
           {loadError === "Route not found" && (
             <span className="mt-2 block text-sm">
-              Restart the backend server so the research API routes load, then run{" "}
-              <code className="rounded bg-red-100 px-1">npm run db:setup</code> if the database
-              was created before the Research Library feature.
+              The API server is missing Research Library routes — usually because production
+              has not redeployed since the feature was added. Push the latest code and confirm
+              Render&apos;s build succeeds (it runs{" "}
+              <code className="rounded bg-red-100 px-1">prisma db push</code> and{" "}
+              <code className="rounded bg-red-100 px-1">prisma db seed</code> automatically).
+              Locally, restart the backend and run{" "}
+              <code className="rounded bg-red-100 px-1">npm run db:setup</code> if needed.
             </span>
           )}
         </p>

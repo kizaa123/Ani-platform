@@ -56,7 +56,14 @@ export function createApp() {
   );
 
   app.get('/api/health', (_req, res) => {
-    res.json({ success: true, data: { status: 'ok', platform: 'ANI Agricultural Exchange Platform' } });
+    res.json({
+      success: true,
+      data: {
+        status: 'ok',
+        platform: 'ANI Agricultural Exchange Platform',
+        features: ['research-library'],
+      },
+    });
   });
 
   app.use('/api', routes);
