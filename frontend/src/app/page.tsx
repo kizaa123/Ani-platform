@@ -119,17 +119,6 @@ export default function HomePage() {
               </Link>
             </div>
 
-            <div className="mt-12 flex flex-wrap gap-3">
-              {["JWT Secured", "RBAC Permissions", "Escrow Payments", "Audit Logs"].map((badge) => (
-                <span
-                  key={badge}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-medium text-brand-200 backdrop-blur-sm"
-                >
-                  <Icon name="shield" className="h-3 w-3 text-emerald-400" />
-                  {badge}
-                </span>
-              ))}
-            </div>
           </div>
         </div>
       </section>
