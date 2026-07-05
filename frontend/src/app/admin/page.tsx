@@ -4,18 +4,50 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { isStaff, fullName, type Connection, type AdminStats, type PendingVerificationUser } from "@/lib/types";
+import {
+  isStaff,
+  isFarmer,
+  isHandler,
+  isBuyer,
+  fullName,
+  type Connection,
+  type AdminStats,
+  type AdminVerificationUser,
+} from "@/lib/types";
 import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { CountryBadge } from "@/components/CountrySelect";
 import { VerificationBadge } from "@/components/VerificationBadge";
 import { formatDate, formatGhc } from "@/lib/format";
 
+type RoleFilter = "all" | "farmers" | "buyers" | "handlers";
+type StatusFilter = "all" | "PENDING" | "VERIFIED" | "REJECTED";
+
+function matchesRoleFilter(user: AdminVerificationUser, roleFilter: RoleFilter) {
+  if (roleFilter === "all") return true;
+  if (roleFilter === "farmers") return isFarmer(user.roleId);
+  if (roleFilter === "buyers") return isBuyer(user.roleId);
+  if (roleFilter === "handlers") return isHandler(user.roleId);
+  return true;
+}
+
+function userSubtitle(user: AdminVerificationUser) {
+  if (user.farmerProfile?.farmName) return user.farmerProfile.farmName;
+  if (user.buyerProfile?.company) return user.buyerProfile.company;
+  if (user.agentProfile?.agentType) {
+    return user.agentProfile.agentType.replace(/_/g, " ");
+  }
+  return null;
+}
+
 export default function AdminPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [stats, setStats] = useState<AdminStats | null>(null);
-  const [pending, setPending] = useState<PendingVerificationUser[]>([]);
+  const [users, setUsers] = useState<AdminVerificationUser[]>([]);
   const [pendingConnections, setPendingConnections] = useState<Connection[]>([]);
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("PENDING");
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
 
   const loadConnections = useCallback(() => {
     api.connections
@@ -24,24 +56,42 @@ export default function AdminPage() {
       .catch(console.error);
   }, []);
 
+  const loadUsers = useCallback(() => {
+    const params = statusFilter === "all" ? undefined : { status: statusFilter };
+    api.admin
+      .users(params)
+      .then((rows) => setUsers(rows))
+      .catch(console.error);
+  }, [statusFilter]);
+
   useEffect(() => {
     if (!loading && !user) router.push("/login");
     if (user && isStaff(user.roleId)) {
-      api.admin.stats().then((res: any) => setStats(res)).catch(console.error);
-      api.admin.pending().then((res: any) => setPending(res)).catch(console.error);
+      api.admin.stats().then((res: AdminStats) => setStats(res)).catch(console.error);
+      loadUsers();
       loadConnections();
     } else if (user) router.push("/dashboard");
-  }, [user?.id, loading, router, loadConnections]);
+  }, [user?.id, loading, router, loadConnections, loadUsers]);
 
   const verify = async (id: string, status: string) => {
-    await api.admin.verify(id, status);
-    setPending((p) => p.filter((u) => u.id !== id));
+    setVerifyingId(id);
+    try {
+      await api.admin.verify(id, status);
+      loadUsers();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setVerifyingId(null);
+    }
   };
 
   const updateConnection = async (id: string, status: string) => {
     await api.connections.updateStatus(id, status);
     loadConnections();
   };
+
+  const filteredUsers = users.filter((u) => matchesRoleFilter(u, roleFilter));
+  const pendingCount = users.filter((u) => u.verificationStatus === "PENDING").length;
 
   if (loading || !user) return <div className="p-12 text-center">Loading...</div>;
 
@@ -123,38 +173,130 @@ export default function AdminPage() {
         </div>
       )}
 
-      <h2 className="mb-4 text-xl font-bold text-brand-900">Pending Verifications</h2>
-      {pending.length === 0 ? (
-        <p className="text-gray-500">No pending users.</p>
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-bold text-brand-900">User Verification</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Verify buyers, farmers, and handlers. {pendingCount > 0 && `${pendingCount} pending.`}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {(
+            [
+              ["all", "All roles"],
+              ["farmers", "Farmers"],
+              ["buyers", "Buyers"],
+              ["handlers", "Handlers"],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setRoleFilter(value)}
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
+                roleFilter === value
+                  ? "bg-brand-700 text-white"
+                  : "border border-brand-200 text-brand-700"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="mb-4 flex flex-wrap gap-2">
+        {(
+          [
+            ["PENDING", "Pending"],
+            ["VERIFIED", "Verified"],
+            ["REJECTED", "Rejected"],
+            ["all", "All statuses"],
+          ] as const
+        ).map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => setStatusFilter(value)}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
+              statusFilter === value
+                ? "bg-brand-100 text-brand-900"
+                : "text-gray-500 hover:text-brand-700"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {filteredUsers.length === 0 ? (
+        <p className="text-gray-500">No users match the selected filters.</p>
       ) : (
         <div className="space-y-3">
-          {pending.map((u) => (
-            <div
-              key={u.id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-brand-100 bg-white p-4"
-            >
-              <div>
-                <p className="font-bold">{fullName(u)}</p>
-                <p className="text-sm text-gray-500">
-                  {u.email} · {u.role.roleName}
-                </p>
+          {filteredUsers.map((u) => {
+            const subtitle = userSubtitle(u);
+            const busy = verifyingId === u.id;
+            return (
+              <div
+                key={u.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-brand-100 bg-white p-4"
+              >
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-bold text-brand-900">{fullName(u)}</p>
+                    <VerificationBadge status={u.verificationStatus} />
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    {u.email} · {u.role.roleName}
+                    {subtitle ? ` · ${subtitle}` : ""}
+                  </p>
+                  <p className="text-xs text-gray-400">Joined {formatDate(u.createdAt)}</p>
+                </div>
+                <div className="flex shrink-0 flex-wrap gap-2">
+                  {u.verificationStatus !== "VERIFIED" && (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => verify(u.id, "VERIFIED")}
+                      className="rounded-lg bg-green-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                    >
+                      Verify
+                    </button>
+                  )}
+                  {u.verificationStatus === "VERIFIED" && (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => verify(u.id, "PENDING")}
+                      className="rounded-lg border border-yellow-300 px-4 py-2 text-sm font-semibold text-yellow-800 disabled:opacity-50"
+                    >
+                      Unverify
+                    </button>
+                  )}
+                  {u.verificationStatus !== "REJECTED" && (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => verify(u.id, "REJECTED")}
+                      className="rounded-lg border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 disabled:opacity-50"
+                    >
+                      Reject
+                    </button>
+                  )}
+                  {u.verificationStatus === "REJECTED" && (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => verify(u.id, "PENDING")}
+                      className="rounded-lg border border-brand-200 px-4 py-2 text-sm font-semibold text-brand-700 disabled:opacity-50"
+                    >
+                      Reset to Pending
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => verify(u.id, "VERIFIED")}
-                  className="rounded-lg bg-green-700 px-4 py-2 text-sm font-semibold text-white"
-                >
-                  Verify
-                </button>
-                <button
-                  onClick={() => verify(u.id, "REJECTED")}
-                  className="rounded-lg border border-red-200 px-4 py-2 text-sm text-red-600"
-                >
-                  Reject
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

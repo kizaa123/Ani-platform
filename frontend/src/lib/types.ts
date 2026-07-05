@@ -588,10 +588,18 @@ export interface AdminStats {
   activeConnections: number;
 }
 
-export interface PendingVerificationUser {
+export interface AdminVerificationUser {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
+  roleId: number;
+  verificationStatus: string;
+  createdAt: string;
   role: { roleName: string };
+  farmerProfile?: { farmName: string; verificationStatus: string } | null;
+  buyerProfile?: { company: string | null } | null;
+  agentProfile?: { agentType: string } | null;
 }
+
+export type PendingVerificationUser = AdminVerificationUser;

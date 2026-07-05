@@ -51,7 +51,7 @@ model User {
   email              String             @unique
   phone              String
   passwordHash       String             @map("password_hash")
-  profilePicture     String?            @map("profile_picture")
+  profilePicture     String?            @db.Text @map("profile_picture")
   country            String
   region             String
   city               String

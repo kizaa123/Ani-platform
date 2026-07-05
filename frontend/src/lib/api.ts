@@ -270,6 +270,15 @@ class ApiClient {
   admin = {
     stats: () => this.request<import("./types").AdminStats>("/admin/stats"),
     pending: () => this.request<import("./types").PendingVerificationUser[]>("/admin/pending"),
+    users: (params?: { status?: string; roleId?: number }) => {
+      const q = new URLSearchParams();
+      if (params?.status) q.set("status", params.status);
+      if (params?.roleId) q.set("roleId", String(params.roleId));
+      const qs = q.toString();
+      return this.request<import("./types").AdminVerificationUser[]>(
+        `/admin/users${qs ? `?${qs}` : ""}`
+      );
+    },
     verify: (id: string, status: string) =>
       this.request(`/admin/users/${id}/verify`, { method: "PATCH", body: JSON.stringify({ status }) }),
     auditLogs: () => this.request("/admin/audit-logs"),

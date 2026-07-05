@@ -5,7 +5,7 @@ import { connectionService } from '../services/connection.service';
 import { agentService } from '../services/agent.service';
 import { chatService } from '../services/chat.service';
 import { notificationService } from '../services/notification.service';
-import { adminService } from '../services/admin.service';
+import { adminService, verifyUserSchema } from '../services/admin.service';
 import { createAuditLog } from '../middleware/audit.middleware';
 import {
   matchingService,
@@ -238,6 +238,24 @@ export class AdminController {
   pendingUsers = async (_req: AuthRequest, res: Response) => {
     try {
       ApiResponse.success(res, await adminService.getPendingUsers());
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  listUsers = async (req: AuthRequest, res: Response) => {
+    try {
+      const status = req.query.status as string | undefined;
+      const roleId = req.query.roleId ? parseInt(req.query.roleId as string, 10) : undefined;
+      const validStatuses = ['PENDING', 'VERIFIED', 'REJECTED'];
+      const filters: { status?: 'PENDING' | 'VERIFIED' | 'REJECTED'; roleId?: number } = {};
+      if (status && validStatuses.includes(status)) {
+        filters.status = status as 'PENDING' | 'VERIFIED' | 'REJECTED';
+      }
+      if (roleId && !Number.isNaN(roleId)) {
+        filters.roleId = roleId;
+      }
+      ApiResponse.success(res, await adminService.getVerifiableUsers(filters));
     } catch (e) {
       ApiResponse.error(res, e);
     }

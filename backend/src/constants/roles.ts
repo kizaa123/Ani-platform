@@ -43,6 +43,7 @@ export const PERMISSIONS = {
 export const FARMER_ROLES = [ROLES.CROP_FARMER, ROLES.LIVESTOCK_FARMER];
 export const AGENT_ROLES = [ROLES.FARMER_HANDLER, ROLES.BUYER_HANDLER];
 export const STAFF_ROLES = [ROLES.ANI_ACCOUNTANT, ROLES.ADMIN];
+export const VERIFIABLE_ROLE_IDS = [...FARMER_ROLES, ROLES.BUYER, ...AGENT_ROLES];
 
 export function isFarmerRole(roleId: number): boolean {
   return FARMER_ROLES.includes(roleId as typeof ROLES.CROP_FARMER);

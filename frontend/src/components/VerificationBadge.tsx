@@ -19,7 +19,7 @@ export function VerificationBadge({ status, className = "" }: VerificationBadgeP
             : "bg-yellow-100 text-yellow-900"
       } ${className}`}
     >
-      {verified ? "Verified" : status}
+      {verified ? "Verified" : rejected ? "Rejected" : "Pending"}
     </span>
   );
 }

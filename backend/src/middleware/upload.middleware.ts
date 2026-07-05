@@ -5,6 +5,12 @@ import { v4 as uuidv4 } from 'uuid';
 
 const UPLOADS_ROOT = path.join(process.cwd(), 'uploads');
 
+/** Max upload size per image file (profile + listing photos). */
+export const MAX_IMAGE_FILE_SIZE = 20 * 1024 * 1024; // 20 MB
+
+/** Max product images per upload request. */
+export const MAX_LISTING_IMAGES_PER_UPLOAD = 10;
+
 export function ensureUploadDirs() {
   for (const dir of ['profiles', 'listings', 'products']) {
     const full = path.join(UPLOADS_ROOT, dir);
@@ -31,15 +37,15 @@ const imageFilter: multer.Options['fileFilter'] = (_req, file, cb) => {
 
 export const profileUpload = multer({
   storage: diskStorage('profiles'),
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: MAX_IMAGE_FILE_SIZE },
   fileFilter: imageFilter,
 }).single('image');
 
 export const listingImagesUpload = multer({
   storage: diskStorage('listings'),
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: MAX_IMAGE_FILE_SIZE },
   fileFilter: imageFilter,
-}).array('images', 5);
+}).array('images', MAX_LISTING_IMAGES_PER_UPLOAD);
 
 export function publicUrl(relativePath: string): string {
   return `/uploads/${relativePath.replace(/\\/g, '/')}`;

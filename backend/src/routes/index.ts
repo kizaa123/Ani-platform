@@ -23,12 +23,22 @@ import { purchaseProductSchema } from '../services/order.service';
 import { connectionSchema } from '../services/connection.service';
 import { assignmentSchema } from '../services/agent.service';
 import { messageSchema } from '../services/chat.service';
+import { verifyUserSchema } from '../services/admin.service';
 import { uploadController } from '../controllers/upload.controller';
-import { profileUpload, listingImagesUpload } from '../middleware/upload.middleware';
+import { profileUpload, listingImagesUpload, MAX_IMAGE_FILE_SIZE } from '../middleware/upload.middleware';
 import { authRateLimiter } from '../middleware/rate-limit.middleware';
 import { PERMISSIONS } from '../constants/roles';
 
 const router = Router();
+
+function uploadErrorMessage(err: unknown): string {
+  if (err && typeof err === 'object' && 'code' in err && err.code === 'LIMIT_FILE_SIZE') {
+    const maxMb = Math.round(MAX_IMAGE_FILE_SIZE / (1024 * 1024));
+    return `Image is too large. Maximum file size is ${maxMb} MB.`;
+  }
+  if (err instanceof Error) return err.message;
+  return 'Upload failed';
+}
 
 // Uploads
 router.post(
@@ -36,7 +46,7 @@ router.post(
   authenticate,
   (req, res, next) => {
     profileUpload(req, res, (err) => {
-      if (err) return res.status(400).json({ success: false, error: err.message });
+      if (err) return res.status(400).json({ success: false, error: uploadErrorMessage(err) });
       next();
     });
   },
@@ -48,7 +58,7 @@ router.post(
   requirePermission(PERMISSIONS.CREATE_LISTING),
   (req, res, next) => {
     listingImagesUpload(req, res, (err) => {
-      if (err) return res.status(400).json({ success: false, error: err.message });
+      if (err) return res.status(400).json({ success: false, error: uploadErrorMessage(err) });
       next();
     });
   },
@@ -148,7 +158,8 @@ router.patch('/notifications/:id/read', authenticate, notificationController.mar
 // Admin
 router.get('/admin/stats', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), adminController.stats);
 router.get('/admin/pending', authenticate, requirePermission(PERMISSIONS.VERIFY_USERS), adminController.pendingUsers);
-router.patch('/admin/users/:id/verify', authenticate, requirePermission(PERMISSIONS.VERIFY_USERS), adminController.verifyUser);
+router.get('/admin/users', authenticate, requirePermission(PERMISSIONS.VERIFY_USERS), adminController.listUsers);
+router.patch('/admin/users/:id/verify', authenticate, requirePermission(PERMISSIONS.VERIFY_USERS), validateBody(verifyUserSchema), adminController.verifyUser);
 router.get('/admin/audit-logs', authenticate, requirePermission(PERMISSIONS.VIEW_AUDIT_LOGS), adminController.auditLogs);
 
 // AI (future-ready)
