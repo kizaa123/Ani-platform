@@ -546,10 +546,17 @@ export function filterCategoriesForRole(
 ): CommodityCategory[] {
   const kind = farmerCategoryFilter(roleId);
   if (!kind) return [];
-  if (kind === "Livestock") {
-    return categories.filter((c) => c.name === LIVESTOCK_CATEGORY_NAME);
-  }
-  return categories.filter((c) => isCropCategory(c.name));
+  const filtered =
+    kind === "Livestock"
+      ? categories.filter((c) => c.name === LIVESTOCK_CATEGORY_NAME)
+      : categories.filter((c) => isCropCategory(c.name));
+  const order = new Map(CROP_CATEGORY_NAMES.map((name, i) => [name, i]));
+  return [...filtered].sort((a, b) => {
+    const ai = order.get(a.name as (typeof CROP_CATEGORY_NAMES)[number]) ?? 999;
+    const bi = order.get(b.name as (typeof CROP_CATEGORY_NAMES)[number]) ?? 999;
+    if (ai !== bi) return ai - bi;
+    return a.name.localeCompare(b.name);
+  });
 }
 
 export function isBuyer(roleId: number) {

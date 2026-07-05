@@ -78,7 +78,7 @@ export default function AdminPage() {
               className="flex flex-wrap items-start justify-between gap-4 rounded-xl border border-brand-100 bg-white p-4"
             >
               <div className="flex min-w-0 items-start gap-3">
-                <ProfilePhoto src={c.buyer?.profilePicture} name={c.buyer?.firstName} size={48} />
+                <ProfilePhoto src={c.buyer?.profilePicture} name={c.buyer?.firstName} size={56} />
                 <div className="min-w-0">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Buyer</p>
                   <p className="font-bold text-brand-900">

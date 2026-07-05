@@ -90,11 +90,11 @@ function CompactOrderCard({
           <ProductImage
             src={order.productImage}
             alt={order.productName}
-            className="h-20 w-20 shrink-0 rounded-xl object-cover"
+            className="h-28 w-28 shrink-0 rounded-xl object-cover"
           />
         ) : (
-          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-brand-50">
-            <Icon name="wheat" className="h-8 w-8 text-brand-300" />
+          <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-xl bg-brand-50">
+            <Icon name="wheat" className="h-9 w-9 text-brand-300" />
           </div>
         )}
 
@@ -205,11 +205,11 @@ function OrderDetailModal({
               <ProductImage
                 src={order.productImage}
                 alt={order.productName}
-                className="h-24 w-24 shrink-0 rounded-xl object-cover"
+                className="h-32 w-32 shrink-0 rounded-xl object-cover sm:h-36 sm:w-36"
               />
             ) : (
-              <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-xl bg-brand-50">
-                <Icon name="wheat" className="h-10 w-10 text-brand-300" />
+              <div className="flex h-32 w-32 shrink-0 items-center justify-center rounded-xl bg-brand-50 sm:h-36 sm:w-36">
+                <Icon name="wheat" className="h-12 w-12 text-brand-300" />
               </div>
             )}
             <div className="min-w-0 flex-1">
@@ -274,7 +274,7 @@ function OrderDetailModal({
               <>
                 <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Buyer</p>
                 <div className="flex items-start gap-4">
-                  <ProfilePhoto src={order.buyerProfilePicture} name={order.buyerName} size={64} />
+                  <ProfilePhoto src={order.buyerProfilePicture} name={order.buyerName} size={80} />
                   <div className="min-w-0 flex-1">
                     <p className="font-bold text-brand-900">{order.buyerName}</p>
                     {order.buyerEmail && (
@@ -311,7 +311,7 @@ function OrderDetailModal({
                   <ProfilePhoto
                     src={order.farmerProfilePicture}
                     name={order.farmerName}
-                    size={64}
+                    size={80}
                   />
                   <div className="min-w-0 flex-1">
                     <p className="font-bold text-brand-900">{order.farmerName}</p>
@@ -383,11 +383,11 @@ export function SalesOrdersTable({ items }: { items: ProductOrderLineItem[] }) {
                     <ProductImage
                       src={item.productImage}
                       alt={item.productName}
-                      className="h-10 w-10 shrink-0 rounded-lg object-cover"
+                      className="h-12 w-12 shrink-0 rounded-lg object-cover"
                     />
                   ) : (
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-50">
-                      <Icon name="wheat" className="h-5 w-5 text-brand-300" />
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-brand-50">
+                      <Icon name="wheat" className="h-6 w-6 text-brand-300" />
                     </div>
                   )}
                   <span className="font-medium text-brand-900">{item.productName}</span>
@@ -395,7 +395,7 @@ export function SalesOrdersTable({ items }: { items: ProductOrderLineItem[] }) {
               </td>
               <td className="px-4 py-3">
                 <div className="flex items-center gap-2">
-                  <ProfilePhoto src={item.buyerProfilePicture} name={item.buyerName} size={32} />
+                  <ProfilePhoto src={item.buyerProfilePicture} name={item.buyerName} size={40} />
                   <span className="font-medium text-gray-900">{item.buyerName}</span>
                 </div>
               </td>

@@ -104,8 +104,8 @@ export default function FinancialStatementPage() {
         <Link href="/farm" className="text-sm text-brand-600 hover:underline">
           ← Back to My Farm
         </Link>
-        <h1 className="mt-2 text-3xl font-bold text-brand-900">Financial Statement</h1>
-        <p className="text-gray-500">Overview of your farm products and marketplace activity</p>
+        <h1 className="mt-2 text-2xl font-bold text-brand-900">Financial Statement</h1>
+        <p className="text-sm text-gray-500">Overview of your farm products and marketplace activity</p>
       </div>
 
       {/* Statement header */}
@@ -113,7 +113,7 @@ export default function FinancialStatementPage() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">ANI Exchange</p>
-            <h2 className="text-xl font-bold text-brand-900">{statement.farmName}</h2>
+            <h2 className="text-lg font-bold text-brand-900">{statement.farmName}</h2>
             <p className="text-brand-700">{statement.farmerName}</p>
             <p className="text-sm text-gray-500">{statement.email}</p>
             <CountryBadge country={statement.country} region={statement.region} className="mt-2" />
@@ -129,27 +129,27 @@ export default function FinancialStatementPage() {
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase text-gray-500">Listed inventory value</p>
-          <p className="mt-1 text-2xl font-bold text-brand-900">{formatGhc(summary.totalListedValue)}</p>
+          <p className="mt-1 text-xl font-bold text-brand-900">{formatGhc(summary.totalListedValue)}</p>
           <p className="text-xs text-gray-500">{summary.activeListings} active product(s)</p>
         </div>
         <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase text-gray-500">Sales revenue</p>
-          <p className="mt-1 text-2xl font-bold text-green-700">{formatGhc(summary.totalSalesRevenue ?? 0)}</p>
+          <p className="mt-1 text-xl font-bold text-green-700">{formatGhc(summary.totalSalesRevenue ?? 0)}</p>
           <p className="text-xs text-gray-500">{summary.totalSalesCount ?? 0} completed sale(s)</p>
         </div>
         <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase text-gray-500">Sold inventory value</p>
-          <p className="mt-1 text-2xl font-bold text-brand-800">{formatGhc(summary.totalSoldValue)}</p>
+          <p className="mt-1 text-xl font-bold text-brand-800">{formatGhc(summary.totalSoldValue)}</p>
           <p className="text-xs text-gray-500">{summary.soldListings} sold out</p>
         </div>
         <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase text-gray-500">Buyer connections</p>
-          <p className="mt-1 text-2xl font-bold text-brand-900">{summary.acceptedConnections}</p>
+          <p className="mt-1 text-xl font-bold text-brand-900">{summary.acceptedConnections}</p>
           <p className="text-xs text-gray-500">{summary.pendingConnections} pending</p>
         </div>
         <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase text-gray-500">Total products</p>
-          <p className="mt-1 text-2xl font-bold text-brand-900">{summary.totalProducts}</p>
+          <p className="mt-1 text-xl font-bold text-brand-900">{summary.totalProducts}</p>
           <p className="text-xs text-gray-500">All time on your farm</p>
         </div>
       </div>
@@ -159,7 +159,7 @@ export default function FinancialStatementPage() {
         <div className="mb-6 overflow-hidden rounded-2xl border border-green-100 bg-white shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-green-100 bg-green-50/50 px-6 py-4">
             <div>
-              <h3 className="font-bold text-brand-900">Sales & payments received</h3>
+              <h3 className="text-base font-semibold text-brand-900">Sales & payments received</h3>
               <p className="text-sm text-gray-500">Buyer purchases with contact details</p>
             </div>
             <Link href="/farm/orders" className="text-sm font-semibold text-brand-700 hover:underline">
@@ -176,7 +176,7 @@ export default function FinancialStatementPage() {
       {/* Line items table */}
       <div className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
         <div className="border-b border-brand-100 px-6 py-4">
-          <h3 className="font-bold text-brand-900">Product line items</h3>
+          <h3 className="text-base font-semibold text-brand-900">Product line items</h3>
           <p className="text-sm text-gray-500">Each row is a product you listed on the marketplace</p>
         </div>
 

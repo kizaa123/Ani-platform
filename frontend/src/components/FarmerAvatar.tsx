@@ -90,7 +90,7 @@ interface AvatarProps {
   cacheBust?: number;
 }
 
-const avatarSizes = { sm: 40, md: 64, lg: 96, xl: 128 };
+const avatarSizes = { sm: 48, md: 80, lg: 120, xl: 160 };
 
 export function FarmerAvatar({ src, name, size = "sm", cacheBust }: AvatarProps) {
   return (
@@ -133,7 +133,7 @@ export function ProductImage({
     <img
       src={displayUrl}
       alt={alt}
-      className={className || "h-40 w-full rounded-xl object-cover"}
+      className={className || "h-48 w-full rounded-xl object-cover"}
       onError={() => {
         if (triedFallback) {
           setDisplayUrl(null);

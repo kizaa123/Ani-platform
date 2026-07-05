@@ -56,15 +56,15 @@ export default function BuyerFinancialsPage() {
         <Link href="/dashboard" className="text-sm text-brand-600 hover:underline">
           ← Back to Dashboard
         </Link>
-        <h1 className="mt-2 text-3xl font-bold text-brand-900">Financial Statement</h1>
-        <p className="text-gray-500">Spending overview and farm access fees</p>
+        <h1 className="mt-2 text-2xl font-bold text-brand-900">Financial Statement</h1>
+        <p className="text-sm text-gray-500">Spending overview and farm access fees</p>
       </div>
 
       <div className="mb-6 rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">ANI Exchange</p>
-            <h2 className="text-xl font-bold text-brand-900">{statement.buyerName}</h2>
+            <h2 className="text-lg font-bold text-brand-900">{statement.buyerName}</h2>
             {statement.company && <p className="text-brand-700">{statement.company}</p>}
             <p className="text-sm text-gray-500">{statement.email}</p>
             <CountryBadge country={statement.country} region={statement.region} className="mt-2" />
@@ -79,22 +79,22 @@ export default function BuyerFinancialsPage() {
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase text-gray-500">Total spent</p>
-          <p className="mt-1 text-2xl font-bold text-brand-900">{formatGhc(summary.totalSpent)}</p>
+          <p className="mt-1 text-xl font-bold text-brand-900">{formatGhc(summary.totalSpent)}</p>
           <p className="text-xs text-gray-500">Products + farm access</p>
         </div>
         <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase text-gray-500">Product purchases</p>
-          <p className="mt-1 text-2xl font-bold text-green-700">{formatGhc(summary.totalProductSpend)}</p>
+          <p className="mt-1 text-xl font-bold text-green-700">{formatGhc(summary.totalProductSpend)}</p>
           <p className="text-xs text-gray-500">{summary.paidOrders} paid order(s)</p>
         </div>
         <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase text-gray-500">Farm access fees</p>
-          <p className="mt-1 text-2xl font-bold text-brand-800">{formatGhc(summary.totalFarmAccessSpend)}</p>
+          <p className="mt-1 text-xl font-bold text-brand-800">{formatGhc(summary.totalFarmAccessSpend)}</p>
           <p className="text-xs text-gray-500">{summary.farmsAccessed} farm(s) unlocked</p>
         </div>
         <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase text-gray-500">Total orders</p>
-          <p className="mt-1 text-2xl font-bold text-brand-900">{summary.totalOrders}</p>
+          <p className="mt-1 text-xl font-bold text-brand-900">{summary.totalOrders}</p>
           <Link href="/orders" className="mt-1 inline-block text-xs font-semibold text-brand-700 hover:underline">
             View all orders →
           </Link>
@@ -103,7 +103,7 @@ export default function BuyerFinancialsPage() {
 
       <div className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
         <div className="border-b border-brand-100 bg-brand-50/40 px-6 py-4">
-          <h3 className="font-bold text-brand-900">Farm access payments</h3>
+          <h3 className="text-base font-semibold text-brand-900">Farm access payments</h3>
           <p className="text-sm text-gray-500">Fees paid to unlock farmer profiles and products</p>
         </div>
 

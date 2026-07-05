@@ -59,7 +59,7 @@ export function ConnectionChatPanel({
     <div className={embedded ? "" : "mt-4 border-t border-brand-100 pt-4"}>
       {!embedded && (
         <div className="mb-3 flex items-center gap-3">
-          <ProfilePhoto src={partnerPhoto} name={partnerName} size={36} />
+          <ProfilePhoto src={partnerPhoto} name={partnerName} size={44} />
           <p className="text-sm font-semibold text-brand-900">Chat with {partnerName}</p>
         </div>
       )}

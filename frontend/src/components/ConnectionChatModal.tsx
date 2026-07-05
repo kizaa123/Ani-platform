@@ -46,7 +46,7 @@ export function ConnectionChatModal({
       >
         <div className="flex items-center justify-between gap-3 border-b border-brand-100 px-5 py-4">
           <div className="flex min-w-0 items-center gap-3">
-            <ProfilePhoto src={partnerPhoto} name={partnerName} size={40} />
+            <ProfilePhoto src={partnerPhoto} name={partnerName} size={48} />
             <div className="min-w-0">
               <h2 id="connection-chat-title" className="truncate text-lg font-bold text-brand-900">
                 Message {partnerName}

@@ -205,7 +205,7 @@ function ConnectionCard({
           <ProfilePhoto
             src={partner?.profilePicture}
             name={partner?.firstName}
-            size={56}
+            size={72}
           />
           <div className="min-w-0">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">

@@ -418,11 +418,11 @@ export default function FarmPage() {
                     key={`${l.id}-${l.images[0]}`}
                     src={l.images[0]}
                     alt={l.title}
-                    className="h-36 w-full shrink-0 rounded-xl object-cover sm:w-36"
+                    className="h-44 w-full shrink-0 rounded-xl object-cover sm:h-44 sm:w-44"
                     cacheBust={listingImageVersion}
                   />
                 ) : (
-                  <div className="flex h-36 w-full shrink-0 items-center justify-center rounded-xl bg-brand-50 sm:w-36">
+                  <div className="flex h-44 w-full shrink-0 items-center justify-center rounded-xl bg-brand-50 sm:w-44">
                     <Icon name="wheat" className="h-10 w-10 text-brand-300" />
                   </div>
                 )}

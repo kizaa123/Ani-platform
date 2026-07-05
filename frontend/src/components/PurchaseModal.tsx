@@ -97,7 +97,7 @@ export function PurchaseModal({
             ← Back to Marketplace
           </button>
           <div className="flex items-center gap-3">
-            <FarmerAvatar src={farmerPhoto} name={farmerName} size="sm" />
+            <FarmerAvatar src={farmerPhoto} name={farmerName} size="md" />
             <div className="hidden text-right sm:block">
               <p className="text-sm font-semibold text-brand-900">{farmerName}</p>
               <CountryBadge country={country} region={region} />
@@ -122,10 +122,10 @@ export function PurchaseModal({
                   <ProductImage
                     src={listing.images[0]}
                     alt={listing.title}
-                    className="aspect-[4/3] w-full object-cover lg:aspect-square lg:min-h-[22rem]"
+                    className="aspect-[16/10] w-full object-cover lg:aspect-square lg:min-h-[28rem]"
                   />
                 ) : (
-                  <div className="flex aspect-[4/3] items-center justify-center bg-gradient-to-br from-brand-100 to-brand-200 lg:aspect-square lg:min-h-[22rem]">
+                  <div className="flex aspect-[16/10] items-center justify-center bg-gradient-to-br from-brand-100 to-brand-200 lg:aspect-square lg:min-h-[28rem]">
                     <Icon name="wheat" className="h-20 w-20 text-brand-400" />
                   </div>
                 )}

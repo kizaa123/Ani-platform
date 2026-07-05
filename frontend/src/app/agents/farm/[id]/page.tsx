@@ -158,10 +158,10 @@ export default function HandlerClientFarmPage() {
                   <ProductImage
                     src={product.images[0]}
                     alt={product.title}
-                    className="aspect-[4/3] w-full object-cover"
+                    className="aspect-[16/10] min-h-[11rem] w-full object-cover sm:min-h-[12rem]"
                   />
                 ) : (
-                  <div className="flex aspect-[4/3] items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100">
+                  <div className="flex aspect-[16/10] min-h-[11rem] items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100 sm:min-h-[12rem]">
                     <Icon name="wheat" className="h-12 w-12 text-brand-300" />
                   </div>
                 )}

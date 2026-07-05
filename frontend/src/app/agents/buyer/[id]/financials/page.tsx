@@ -57,14 +57,14 @@ export default function HandlerClientBuyerFinancialsPage() {
 
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-brand-900">Financial statement</h1>
-        <p className="text-gray-500">Full spending overview for your assigned buyer</p>
+        <p className="text-sm text-gray-500">Full spending overview for your assigned buyer</p>
       </div>
 
       <div className="mb-6 rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">ANI Exchange</p>
-            <h2 className="text-xl font-bold text-brand-900">{statement.buyerName}</h2>
+            <h2 className="text-lg font-bold text-brand-900">{statement.buyerName}</h2>
             {statement.company && <p className="text-brand-700">{statement.company}</p>}
             <p className="text-sm text-gray-500">{statement.email}</p>
             <CountryBadge country={statement.country} region={statement.region} className="mt-2" />
@@ -93,7 +93,7 @@ export default function HandlerClientBuyerFinancialsPage() {
 
       <div className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
         <div className="border-b border-brand-100 bg-brand-50/40 px-6 py-4">
-          <h3 className="font-bold text-brand-900">Farm access payments</h3>
+          <h3 className="text-base font-semibold text-brand-900">Farm access payments</h3>
           <p className="text-sm text-gray-500">Fees your buyer paid to unlock farmer profiles</p>
         </div>
 
@@ -159,7 +159,7 @@ function SummaryCard({
   return (
     <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
       <p className="text-xs font-semibold uppercase text-gray-500">{label}</p>
-      <p className={`mt-1 text-2xl font-bold ${accent === "green" ? "text-green-700" : "text-brand-900"}`}>
+      <p className={`mt-1 text-xl font-bold ${accent === "green" ? "text-green-700" : "text-brand-900"}`}>
         {value}
       </p>
       <div className="text-xs text-gray-500">{sub}</div>

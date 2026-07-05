@@ -33,7 +33,7 @@ export function ProfileIdentityHeader({ user, photoCacheBust, onEditClick }: Pro
         <ProfilePhoto
           src={user.profilePicture}
           name={user.firstName}
-          size={120}
+          size={128}
           cacheBust={cacheBust}
         />
         <div className="min-w-0 flex-1 text-center sm:text-left">
@@ -62,7 +62,7 @@ export function ProfileIdentityHeader({ user, photoCacheBust, onEditClick }: Pro
               <ProfilePhoto
                 src={user.assignedHandler.profilePicture}
                 name={user.assignedHandler.firstName}
-                size={36}
+                size={44}
                 cacheBust={
                   user.assignedHandler.updatedAt
                     ? new Date(user.assignedHandler.updatedAt).getTime()

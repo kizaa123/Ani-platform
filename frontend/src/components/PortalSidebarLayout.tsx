@@ -63,7 +63,7 @@ function SidebarContent({
         <ProfilePhoto
           src={user.profilePicture}
           name={user.firstName}
-          size={48}
+          size={52}
           cacheBust={photoCacheBust}
         />
         <div className="min-w-0">
@@ -152,7 +152,7 @@ function PortalMobileBar({
           <ProfilePhoto
             src={user.profilePicture}
             name={user.firstName}
-            size={36}
+            size={44}
             cacheBust={photoCacheBust}
           />
         </>

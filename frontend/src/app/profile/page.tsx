@@ -135,7 +135,7 @@ export default function ProfilePage() {
               <ProfilePhoto
                 src={user.profilePicture}
                 name={user.firstName}
-                size={96}
+                size={112}
                 cacheBust={photoCacheBust}
               />
               <div>
