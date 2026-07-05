@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
+import { Icon } from "@/components/icons";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -28,32 +29,77 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="mx-auto max-w-md px-4 py-12">
-      <div className="rounded-2xl border border-brand-100 bg-white p-8 shadow-lg">
-        <h1 className="mb-2 text-2xl font-bold text-brand-900">Welcome Back</h1>
-        <p className="mb-6 text-gray-500">Sign in to ANI Exchange</p>
-        {error && <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="mb-1 block text-sm font-medium">Email</label>
-            <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 px-4 py-3 focus:border-brand-500 focus:outline-none" />
+    <div className="auth-page">
+      <div className="auth-card">
+        <header className="auth-header">
+          <div className="auth-icon-wrap">
+            <Icon name="lock" className="h-7 w-7" />
           </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium">Password</label>
-            <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 px-4 py-3 focus:border-brand-500 focus:outline-none" />
+          <h1 className="auth-title">Welcome Back</h1>
+          <p className="auth-subtitle">Sign in to your ANI Exchange account</p>
+        </header>
+
+        {error && (
+          <div className="auth-error mb-5" role="alert">
+            <Icon name="x" className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{error}</span>
           </div>
-          <button type="submit" disabled={loading}
-            className="w-full rounded-xl bg-brand-700 py-3 font-semibold text-white hover:bg-brand-900 disabled:opacity-50">
+        )}
+
+        <form onSubmit={handleSubmit} className="auth-form">
+          <div className="auth-field">
+            <label htmlFor="login-email" className="auth-label">
+              Email
+            </label>
+            <input
+              id="login-email"
+              type="email"
+              required
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              className="auth-input"
+            />
+          </div>
+
+          <div className="auth-field">
+            <label htmlFor="login-password" className="auth-label">
+              Password
+            </label>
+            <input
+              id="login-password"
+              type="password"
+              required
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              className="auth-input"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="btn-primary auth-nav-btn disabled:cursor-not-allowed disabled:opacity-50"
+          >
             {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>
-        <p className="mt-4 text-center text-sm text-gray-500">
-          No account? <Link href="/register" className="text-brand-700 font-medium">Register</Link>
+
+        <p className="auth-switch">
+          No account?{" "}
+          <Link href="/register" className="auth-switch-link">
+            Create one
+          </Link>
         </p>
-        <div className="mt-6 rounded-lg bg-brand-50 p-4 text-xs text-gray-600">
-          <p className="font-semibold mb-1">Demo (Password123!)</p>
+
+        <div className="auth-info-box mt-6">
+          <p className="mb-1 flex items-center gap-1.5 font-semibold text-brand-800">
+            <Icon name="shield" className="h-3.5 w-3.5" />
+            Demo accounts (Password123!)
+          </p>
           <p>kwame@farm.gh · ama@buyer.gh · admin@ani.gh</p>
         </div>
       </div>

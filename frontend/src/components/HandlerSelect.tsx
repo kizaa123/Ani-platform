@@ -3,6 +3,7 @@
 import { HandlerProfile } from "@/lib/types";
 import { FarmerAvatar } from "@/components/FarmerAvatar";
 import { CountryBadge } from "@/components/CountrySelect";
+import { Icon } from "@/components/icons";
 
 interface HandlerSelectProps {
   handlers: HandlerProfile[];
@@ -66,13 +67,13 @@ export function HandlerSelect({
                 />
               </div>
               <span
-                className={`mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold ${
+                className={`mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
                   selected
                     ? "border-brand-700 bg-brand-700 text-white"
-                    : "border-gray-300 text-transparent"
+                    : "border-gray-300 bg-white"
                 }`}
               >
-                ✓
+                {selected && <Icon name="check" className="h-3 w-3" />}
               </span>
             </button>
           );

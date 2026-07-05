@@ -258,7 +258,12 @@ export class MarketplaceService {
     const accessPackage = await prisma.accessPackage.findFirst({ orderBy: { price: 'asc' } });
 
     const farmerProfiles = await prisma.farmerProfile.findMany({
-      where: { user: { roleId: { in: [...FARMER_ROLES] } } },
+      where: {
+        user: {
+          roleId: { in: [...FARMER_ROLES] },
+          ...(isFarmerRole(roleId) ? { id: userId } : {}),
+        },
+      },
       include: {
         user: {
           select: {
@@ -269,6 +274,7 @@ export class MarketplaceService {
             country: true,
             region: true,
             city: true,
+            verificationStatus: true,
           },
         },
         farmerCommodities: {
@@ -340,6 +346,7 @@ export class MarketplaceService {
         country: profile.user.country,
         region: profile.user.region,
         city: profile.user.city,
+        verificationStatus: profile.user.verificationStatus,
         registeredCommodities,
         connectionStatus: access.connectionStatus,
         hasFarmAccess,
@@ -442,11 +449,12 @@ export class MarketplaceService {
     if (data.quantity !== undefined) {
       assertLivestockQuantity(roleId, data.quantity);
     }
-    const { harvestStartDate, harvestEndDate, ...rest } = data;
+    const { harvestStartDate, harvestEndDate, images, ...rest } = data;
     return prisma.commodityListing.update({
       where: { id: existing.id },
       data: {
         ...rest,
+        ...(images !== undefined ? { images: normalizeImages(images) } : {}),
         ...(harvestStartDate !== undefined || harvestEndDate !== undefined
           ? listingHarvestFields({ harvestStartDate, harvestEndDate })
           : {}),

@@ -10,6 +10,7 @@ import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { CountrySelect } from "@/components/CountrySelect";
 import { HandlerSelect } from "@/components/HandlerSelect";
 import { DEFAULT_COUNTRY } from "@/lib/africanCountries";
+import { ProfileIdentityHeader, ProfileEditSection, ProfileEditActions } from "@/components/ProfileIdentityHeader";
 
 export default function BuyerSettingsPage() {
   const { user, loading, refreshUser } = useAuth();
@@ -19,6 +20,7 @@ export default function BuyerSettingsPage() {
   const [buyerHandlers, setBuyerHandlers] = useState<HandlerProfile[]>([]);
   const [handlerId, setHandlerId] = useState("");
   const [photoCacheBust, setPhotoCacheBust] = useState(0);
+  const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
@@ -55,6 +57,21 @@ export default function BuyerSettingsPage() {
     api.auth.handlers("buyer").then(setBuyerHandlers).catch(console.error);
   }, []);
 
+  const resetForm = () => {
+    if (!user) return;
+    setForm({
+      phone: user.phone || "",
+      country: user.country || DEFAULT_COUNTRY,
+      region: user.region || "",
+      city: user.city || "",
+      address: user.address || "",
+    });
+    setHandlerId(user.assignedHandler?.id || "");
+    setMessage("");
+    setError("");
+    setEditing(false);
+  };
+
   const uploadPhoto = async (file: File) => {
     setUploading(true);
     setError("");
@@ -82,7 +99,8 @@ export default function BuyerSettingsPage() {
       await refreshUser();
       await api.auth.handlers("buyer").then(setBuyerHandlers);
       setPhotoCacheBust(Date.now());
-      setMessage("Settings saved successfully.");
+      setMessage("Profile saved successfully.");
+      setEditing(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to save settings");
     } finally {
@@ -100,9 +118,15 @@ export default function BuyerSettingsPage() {
         <Link href="/dashboard" className="text-sm text-brand-600 hover:underline">
           ← Back to Dashboard
         </Link>
-        <h1 className="mt-2 text-3xl font-bold text-brand-900">Settings</h1>
-        <p className="text-gray-500">Update your profile, location, and buyer handler</p>
+        <h1 className="mt-2 text-3xl font-bold text-brand-900">Profile</h1>
+        <p className="text-gray-500">Your buyer profile, location, and handler</p>
       </div>
+
+      <ProfileIdentityHeader
+        user={user}
+        photoCacheBust={photoCacheBust}
+        onEditClick={!editing ? () => setEditing(true) : undefined}
+      />
 
       {message && (
         <div className="mb-4 rounded-xl bg-green-50 p-3 text-sm text-green-800">{message}</div>
@@ -111,7 +135,8 @@ export default function BuyerSettingsPage() {
         <div className="mb-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</div>
       )}
 
-      <div className="space-y-6">
+      {editing && (
+      <ProfileEditSection>
         <section className="rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-lg font-bold text-brand-900">Profile photo</h2>
           <div className="flex flex-wrap items-center gap-4">
@@ -137,9 +162,6 @@ export default function BuyerSettingsPage() {
               >
                 {uploading ? "Uploading..." : "Change photo"}
               </button>
-              <p className="mt-1 text-xs text-gray-500">
-                Shown on your dashboard and across the platform
-              </p>
             </div>
           </div>
           <p className="mt-3 text-sm text-brand-700">{fullName(user)} · {user.email}</p>
@@ -207,15 +229,14 @@ export default function BuyerSettingsPage() {
           </p>
         </section>
 
-        <button
-          type="button"
-          onClick={saveSettings}
-          disabled={saving || !handlerId}
-          className="w-full rounded-xl bg-brand-700 py-3 font-semibold text-white hover:bg-brand-900 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {saving ? "Saving..." : "Save settings"}
-        </button>
-      </div>
+        <ProfileEditActions
+          onCancel={resetForm}
+          onSave={saveSettings}
+          saving={saving}
+          saveDisabled={!handlerId}
+        />
+      </ProfileEditSection>
+      )}
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { Listing, formatListingUnit } from "@/lib/types";
 import { ProductImage } from "@/components/FarmerAvatar";
+import { Icon } from "@/components/icons";
 
 interface FarmerProductCardProps {
   product: Listing;
@@ -28,7 +29,7 @@ export function FarmerProductCard({ product, onClick, active }: FarmerProductCar
         />
       ) : (
         <div className="flex h-32 items-center justify-center bg-gradient-to-br from-brand-100 to-brand-200">
-          <span className="text-3xl">🌾</span>
+          <Icon name="wheat" className="h-10 w-10 text-brand-400" />
         </div>
       )}
       <div className="p-3">
@@ -54,8 +55,9 @@ export function FarmerProductCard({ product, onClick, active }: FarmerProductCar
           </p>
         )}
         {product.harvestLabel && (
-          <p className="mt-1 text-xs text-brand-700 line-clamp-1">
-            📅 {product.harvestLabel}
+          <p className="mt-1 flex items-center gap-1 text-xs text-brand-700 line-clamp-1">
+            <Icon name="calendar" className="h-3.5 w-3.5 shrink-0" />
+            {product.harvestLabel}
           </p>
         )}
       </div>

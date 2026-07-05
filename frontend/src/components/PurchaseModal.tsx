@@ -6,6 +6,7 @@ import { Listing, formatListingUnit } from "@/lib/types";
 import { FarmerAvatar, ProductImage } from "@/components/FarmerAvatar";
 import { CountryBadge } from "@/components/CountrySelect";
 import { FarmerProductCard } from "@/components/FarmerProductCard";
+import { Icon } from "@/components/icons";
 
 interface PurchaseViewProps {
   listing: Listing;
@@ -125,7 +126,7 @@ export function PurchaseModal({
                   />
                 ) : (
                   <div className="flex aspect-[4/3] items-center justify-center bg-gradient-to-br from-brand-100 to-brand-200 lg:aspect-square lg:min-h-[22rem]">
-                    <span className="text-7xl">🌾</span>
+                    <Icon name="wheat" className="h-20 w-20 text-brand-400" />
                   </div>
                 )}
                 {listing.images && listing.images.length > 1 && (
@@ -169,8 +170,9 @@ export function PurchaseModal({
                     <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">
                       Harvest calendar
                     </p>
-                    <p className="mt-1 text-sm font-medium text-amber-950">
-                      📅 {listing.harvestLabel}
+                    <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-amber-950">
+                      <Icon name="calendar" className="h-4 w-4 shrink-0" />
+                      {listing.harvestLabel}
                     </p>
                   </div>
                 )}

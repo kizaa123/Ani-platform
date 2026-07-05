@@ -22,13 +22,13 @@ const PERMISSIONS = [
 ];
 
 const ROLE_PERMS: Record<number, string[]> = {
-  1: ['create_listing', 'manage_commodities', 'view_farmer_preview', 'approve_connection', 'send_messages'],
-  2: ['create_listing', 'manage_commodities', 'view_farmer_preview', 'approve_connection', 'send_messages'],
-  3: ['view_farmer_preview', 'view_full_farmer_data', 'approve_connection', 'manage_listings', 'negotiate_as_farmer', 'represent_farmer', 'send_messages'],
+  1: ['create_listing', 'manage_commodities', 'view_farmer_preview', 'send_messages'],
+  2: ['create_listing', 'manage_commodities', 'view_farmer_preview', 'send_messages'],
+  3: ['view_farmer_preview', 'view_full_farmer_data', 'manage_listings', 'negotiate_as_farmer', 'represent_farmer', 'send_messages'],
   4: ['view_farmer_preview', 'view_full_farmer_data', 'request_connection', 'negotiate_as_buyer', 'represent_buyer', 'purchase_access', 'send_messages'],
   5: ['view_farmer_preview', 'view_full_farmer_data', 'request_connection', 'search_farmers', 'negotiate_as_buyer', 'represent_buyer', 'send_messages'],
-  6: ['manage_payments', 'verify_users', 'manage_packages', 'view_audit_logs'],
-  7: ['manage_payments', 'verify_users', 'manage_packages', 'view_audit_logs', 'manage_users', 'view_full_farmer_data'],
+  6: ['manage_payments', 'verify_users', 'manage_packages', 'view_audit_logs', 'approve_connection'],
+  7: ['manage_payments', 'verify_users', 'manage_packages', 'view_audit_logs', 'manage_users', 'view_full_farmer_data', 'approve_connection'],
 };
 
 async function main() {

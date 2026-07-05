@@ -10,11 +10,11 @@ export class OrderController {
       const result = await orderService.purchaseProduct(
         req.user!.userId,
         req.user!.roleId,
-        req.params.id,
+        req.params.id as string,
         req.body
       );
       await createAuditLog(req, 'PRODUCT_PURCHASED', 'product_order', {
-        listingId: req.params.id,
+        listingId: req.params.id as string,
         amount: result.totalPaid,
       });
       ApiResponse.success(res, result);

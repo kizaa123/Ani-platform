@@ -9,6 +9,7 @@ import { HandlerClientFarm, formatListingUnit, isHandler } from "@/lib/types";
 import { FarmerAvatar, ProductImage } from "@/components/FarmerAvatar";
 import { HandlerClientNav } from "@/components/HandlerClientNav";
 import { CountryBadge } from "@/components/CountrySelect";
+import { Icon } from "@/components/icons";
 
 export default function HandlerClientFarmPage() {
   const params = useParams();
@@ -140,7 +141,7 @@ export default function HandlerClientFarmPage() {
 
         {products.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-brand-200 bg-brand-50/20 p-12 text-center">
-            <p className="text-4xl">🌾</p>
+            <Icon name="wheat" className="mx-auto h-12 w-12 text-brand-300" />
             <p className="mt-3 font-semibold text-brand-900">No products listed yet</p>
             <p className="mt-1 text-sm text-gray-500">
               This farmer has not added products to their farm.
@@ -160,8 +161,8 @@ export default function HandlerClientFarmPage() {
                     className="aspect-[4/3] w-full object-cover"
                   />
                 ) : (
-                  <div className="flex aspect-[4/3] items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100 text-5xl">
-                    🌾
+                  <div className="flex aspect-[4/3] items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100">
+                    <Icon name="wheat" className="h-12 w-12 text-brand-300" />
                   </div>
                 )}
                 <div className="flex flex-1 flex-col p-4">
@@ -180,8 +181,9 @@ export default function HandlerClientFarmPage() {
                     </p>
                   )}
                   {product.harvestLabel && (
-                    <p className="mt-2 rounded-lg bg-amber-50 px-2 py-1 text-xs text-amber-900">
-                      📅 {product.harvestLabel}
+                    <p className="mt-2 flex items-center gap-1 rounded-lg bg-amber-50 px-2 py-1 text-xs text-amber-900">
+                      <Icon name="calendar" className="h-3.5 w-3.5 shrink-0" />
+                      {product.harvestLabel}
                     </p>
                   )}
                   {product.description && (

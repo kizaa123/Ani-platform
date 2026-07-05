@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthProvider";
 import { isFarmer, isBuyer, isHandler, isStaff, fullName } from "@/lib/types";
 import { FarmerAvatar } from "@/components/FarmerAvatar";
 import { NotificationBell } from "@/components/NotificationBell";
+import { Icon } from "@/components/icons";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard" },
@@ -102,8 +103,9 @@ export function Navbar() {
       return (
         <header className="sticky top-0 z-50 border-b border-brand-200 bg-white/90 backdrop-blur">
           <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-            <Link href="/" className="text-xl font-bold text-brand-900">
-              🌾 ANI Exchange
+            <Link href="/" className="flex items-center gap-2 text-xl font-bold text-brand-900">
+              <Icon name="wheat" className="h-6 w-6 text-brand-700" />
+              ANI Exchange
             </Link>
             <div className="flex gap-2 sm:gap-3">
               <Link
@@ -136,8 +138,14 @@ export function Navbar() {
     return true;
   });
 
-  const profileHref = isBuyer(user.roleId) ? "/settings" : "/profile";
-  const profileLabel = isBuyer(user.roleId) ? "Settings" : "Profile";
+  const profileHref = isBuyer(user.roleId)
+    ? "/settings"
+    : isFarmer(user.roleId)
+      ? "/farm/settings"
+      : isHandler(user.roleId)
+        ? "/agents/settings"
+        : "/profile";
+  const profileLabel = "Profile";
   const photoCacheBust = user.updatedAt ? new Date(user.updatedAt).getTime() : undefined;
 
   const handleLogout = async () => {
@@ -153,9 +161,10 @@ export function Navbar() {
           {/* Brand */}
           <Link
             href="/dashboard"
-            className="shrink-0 text-lg font-bold tracking-tight text-brand-900 transition hover:text-brand-700"
+            className="flex shrink-0 items-center gap-2 text-lg font-bold tracking-tight text-brand-900 transition hover:text-brand-700"
           >
-            🌾 ANI Exchange
+            <Icon name="wheat" className="h-5 w-5 text-brand-700" />
+            ANI Exchange
           </Link>
 
           {/* Center nav */}
@@ -198,8 +207,9 @@ export function Navbar() {
 
         {/* Mobile bar */}
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 lg:hidden">
-          <Link href="/dashboard" className="min-w-0 truncate text-base font-bold text-brand-900">
-            🌾 ANI Exchange
+          <Link href="/dashboard" className="flex min-w-0 items-center gap-2 truncate text-base font-bold text-brand-900">
+            <Icon name="wheat" className="h-5 w-5 shrink-0 text-brand-700" />
+            ANI Exchange
           </Link>
           <div className="flex items-center gap-2">
             <NotificationBell />

@@ -174,7 +174,7 @@ export class PaymentService {
 
       return {
         farmAccess,
-        message: `Payment received — waiting for ${farmer.firstName} ${farmer.lastName} to approve your farm access`,
+        message: `Payment received — waiting for ANI admin to approve your farm access`,
         amountPaid: accessPackage.price,
         farmerName: `${farmer.firstName} ${farmer.lastName}`,
         pendingApproval: true,

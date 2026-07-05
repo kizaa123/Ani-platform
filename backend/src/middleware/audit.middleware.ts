@@ -13,7 +13,7 @@ export async function createAuditLog(
         userId: req.user?.userId,
         action,
         resource,
-        details: details ?? undefined,
+        details: details as any,
         ipAddress: req.ip,
       },
     });

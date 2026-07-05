@@ -138,7 +138,7 @@ export function CountrySelect({ value, onChange, required, className = "" }: Cou
 
         onClick={() => setOpen((o) => !o)}
 
-        className="flex w-full items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 text-left focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+        className="flex w-full items-center gap-3 rounded-xl border border-brand-200 bg-white px-4 py-3 text-left shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
 
       >
 

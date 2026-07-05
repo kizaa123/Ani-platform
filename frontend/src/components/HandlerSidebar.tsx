@@ -5,19 +5,19 @@ import { PortalSidebarLayout, type PortalNavLink } from "@/components/PortalSide
 import { ROLES, isHandler, isBuyerHandler, type UserProfile } from "@/lib/types";
 
 export const HANDLER_NAV_LINKS: PortalNavLink[] = [
-  { href: "/dashboard", label: "Dashboard", icon: "🏠", match: (p) => p === "/dashboard" },
+  { href: "/dashboard", label: "Dashboard", icon: "home", match: (p) => p === "/dashboard" },
   {
     href: "/agents",
     label: "My Clients",
-    icon: "👥",
+    icon: "users",
     match: (p) => p.startsWith("/agents") && !p.startsWith("/agents/settings"),
   },
-  { href: "/marketplace", label: "Marketplace", icon: "🏪", match: (p) => p.startsWith("/marketplace") },
-  { href: "/connections", label: "Connections", icon: "🤝", match: (p) => p.startsWith("/connections") },
+  { href: "/marketplace", label: "Marketplace", icon: "store", match: (p) => p.startsWith("/marketplace") },
+  { href: "/connections", label: "Connections", icon: "handshake", match: (p) => p.startsWith("/connections") },
   {
     href: "/agents/settings",
-    label: "Settings",
-    icon: "⚙️",
+    label: "Profile",
+    icon: "user",
     match: (p) => p.startsWith("/agents/settings"),
   },
 ];
@@ -28,14 +28,14 @@ function handlerNavLinks(roleId: number): PortalNavLink[] {
 
   if (isBuyerHandler(roleId)) {
     return [
-      { href: "/dashboard", label: "Dashboard", icon: "🏠", match: (p) => p === "/dashboard" },
-      { href: "/agents", label: "My Buyers", icon: "👥", match: clientMatch },
-      { href: "/marketplace", label: "Marketplace", icon: "🏪", match: (p) => p.startsWith("/marketplace") },
-      { href: "/connections", label: "Connections", icon: "🤝", match: (p) => p.startsWith("/connections") },
+      { href: "/dashboard", label: "Dashboard", icon: "home", match: (p) => p === "/dashboard" },
+      { href: "/agents", label: "My Buyers", icon: "users", match: clientMatch },
+      { href: "/marketplace", label: "Marketplace", icon: "store", match: (p) => p.startsWith("/marketplace") },
+      { href: "/connections", label: "Connections", icon: "handshake", match: (p) => p.startsWith("/connections") },
       {
         href: "/agents/settings",
-        label: "Settings",
-        icon: "⚙️",
+        label: "Profile",
+        icon: "user",
         match: (p) => p.startsWith("/agents/settings"),
       },
     ];

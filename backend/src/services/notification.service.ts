@@ -1,6 +1,7 @@
 import prisma from '../database/prisma';
 import { assertFound } from '../utils/errors';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
+import { STAFF_ROLES } from '../constants/roles';
 
 export type CreateNotificationInput = {
   userId: string;
@@ -194,10 +195,32 @@ export async function notifyConnectionRequest(
   await notifyFarmerTeam(farmerId, {
     actorId: buyerId,
     type: 'CONNECTION_REQUEST',
-    title: 'New connection request',
-    body: `${buyerName} requested access to your farm. Review and approve on Connections.`,
+    title: 'New farm access request',
+    body: `${buyerName} requested access to your farm. ANI admin will review the request — no action needed from you.`,
     link: '/connections',
   });
+}
+
+export async function notifyAdminsConnectionRequest(
+  buyerId: string,
+  buyerName: string,
+  farmerId: string,
+  farmerName: string
+) {
+  const staff = await prisma.user.findMany({
+    where: { roleId: { in: [...STAFF_ROLES] } },
+    select: { id: true },
+  });
+  await notifyUsers(
+    staff.map((s) => s.id),
+    {
+      actorId: buyerId,
+      type: 'CONNECTION_REQUEST',
+      title: 'Farm access request pending',
+      body: `${buyerName} requested access to ${farmerName}'s farm. Review and approve on Connections or Admin.`,
+      link: '/admin',
+    }
+  );
 }
 
 export async function notifyConnectionApproved(
@@ -209,8 +232,8 @@ export async function notifyConnectionApproved(
     userId: buyerId,
     actorId: farmerId,
     type: 'CONNECTION_APPROVED',
-    title: 'Connection approved',
-    body: `${farmerName} approved your farm access. You can now browse products and message them.`,
+    title: 'Farm access approved',
+    body: `ANI approved your access to ${farmerName}'s farm. You can now browse products and message them.`,
     link: '/connections',
   }).catch(() => undefined);
 }
@@ -224,8 +247,8 @@ export async function notifyConnectionDeclined(
     userId: buyerId,
     actorId: farmerId,
     type: 'CONNECTION_DECLINED',
-    title: 'Connection declined',
-    body: `${farmerName} declined your farm access request.`,
+    title: 'Farm access declined',
+    body: `Your access request for ${farmerName}'s farm was declined by ANI.`,
     link: '/connections',
   }).catch(() => undefined);
 }
@@ -242,11 +265,12 @@ export async function notifyFarmAccessPaid(
     actorId: farmerId,
     type: 'FARM_ACCESS_PAID',
     title: 'Farm access payment',
-    body: `You paid GHC ${amount.toFixed(2)} for access to ${farmerName}. Recorded on your financial statement — awaiting approval.`,
+    body: `You paid GHC ${amount.toFixed(2)} for access to ${farmerName}. Recorded on your financial statement — awaiting ANI admin approval.`,
     link: '/financials',
   }).catch(() => undefined);
 
   await notifyConnectionRequest(farmerId, buyerId, buyerName);
+  await notifyAdminsConnectionRequest(buyerId, buyerName, farmerId, farmerName);
 }
 
 export async function getUserDisplayName(userId: string) {

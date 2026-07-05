@@ -10,11 +10,14 @@ import {
   Listing,
   MarketplaceBrowse,
   isBuyer,
+  isFarmer,
 } from "@/lib/types";
 import { FarmerAvatar } from "@/components/FarmerAvatar";
 import { CountryBadge } from "@/components/CountrySelect";
+import { VerificationBadge } from "@/components/VerificationBadge";
 import { FarmerProductCard } from "@/components/FarmerProductCard";
 import { PurchaseModal } from "@/components/PurchaseModal";
+import { Icon } from "@/components/icons";
 
 function filterFarmers(farmers: FarmerBrowseCard[], query: string): FarmerBrowseCard[] {
   const term = query.trim().toLowerCase();
@@ -22,17 +25,42 @@ function filterFarmers(farmers: FarmerBrowseCard[], query: string): FarmerBrowse
   return farmers.filter((f) => (f.searchTerms ?? "").includes(term));
 }
 
+function filterListings(listings: Listing[], query: string): Listing[] {
+  const term = query.trim().toLowerCase();
+  if (!term) return listings;
+  return listings.filter((l) => {
+    const haystack = [
+      l.title,
+      l.description,
+      l.commodity?.name,
+      l.commodity?.category?.name,
+      l.location,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    return haystack.includes(term);
+  });
+}
+
 export default function MarketplacePage() {
   const { user, loading } = useAuth();
   const [browse, setBrowse] = useState<MarketplaceBrowse | null>(null);
+  const [myListings, setMyListings] = useState<Listing[]>([]);
   const [search, setSearch] = useState("");
   const [purchaseFarmer, setPurchaseFarmer] = useState<FarmerBrowseCard | null>(null);
   const [activeListingId, setActiveListingId] = useState<string | null>(null);
   const router = useRouter();
 
+  const farmerView = user ? isFarmer(user.roleId) : false;
+
   const loadBrowse = useCallback(() => {
+    if (farmerView) {
+      api.marketplace.my().then(setMyListings).catch(console.error);
+      return;
+    }
     api.marketplace.browse().then(setBrowse).catch(console.error);
-  }, []);
+  }, [farmerView]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -45,6 +73,11 @@ export default function MarketplacePage() {
   const filteredFarmers = useMemo(
     () => filterFarmers(browse?.farmers ?? [], search),
     [browse?.farmers, search]
+  );
+
+  const filteredMyListings = useMemo(
+    () => filterListings(myListings, search),
+    [myListings, search]
   );
 
   const openPurchase = (farmer: FarmerBrowseCard, product: Listing) => {
@@ -70,6 +103,84 @@ export default function MarketplacePage() {
 
   if (loading) return <div className="p-12 text-center">Loading...</div>;
 
+  if (farmerView) {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-10">
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-brand-900">Marketplace</h1>
+            <p className="text-gray-500">
+              Your product listings as buyers see them after access is granted
+            </p>
+          </div>
+          <Link
+            href="/farm"
+            className="rounded-xl bg-brand-700 px-5 py-2.5 text-sm font-semibold text-white"
+          >
+            Manage on My Farm
+          </Link>
+        </div>
+
+        <div className="mb-8">
+          <label htmlFor="marketplace-search" className="sr-only">
+            Search your products
+          </label>
+          <div className="relative">
+            <Icon
+              name="search"
+              className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"
+            />
+            <input
+              id="marketplace-search"
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search your products by title or commodity..."
+              className="w-full rounded-2xl border border-brand-200 bg-white py-3.5 pl-12 pr-4 text-brand-900 shadow-sm placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+            />
+          </div>
+          {search.trim() && (
+            <p className="mt-2 text-sm text-gray-500">
+              {filteredMyListings.length} product{filteredMyListings.length !== 1 ? "s" : ""} found
+            </p>
+          )}
+        </div>
+
+        {filteredMyListings.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-brand-200 p-12 text-center text-gray-500">
+            {search.trim() ? (
+              "No products match your search."
+            ) : (
+              <>
+                No products listed yet.{" "}
+                <Link href="/farm" className="font-semibold text-brand-700 hover:underline">
+                  Add your first product
+                </Link>
+              </>
+            )}
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredMyListings.map((product) => (
+              <div
+                key={product.id}
+                className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm"
+              >
+                <FarmerProductCard
+                  product={product}
+                  onClick={() => router.push("/farm")}
+                />
+                <div className="border-t border-brand-50 px-4 py-2 text-xs text-gray-500 capitalize">
+                  Status: {product.status}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
@@ -81,19 +192,8 @@ export default function MarketplacePage() {
         </div>
         <div className="flex gap-2">
           {user && isBuyer(user.roleId) && (
-            <Link
-              href="/access"
-              className="btn-gold px-5 py-2.5"
-            >
+            <Link href="/access" className="btn-gold px-5 py-2.5">
               Buyer Access
-            </Link>
-          )}
-          {user && [1, 2].includes(user.roleId) && (
-            <Link
-              href="/farm"
-              className="rounded-xl bg-brand-700 px-5 py-2.5 text-sm font-semibold text-white"
-            >
-              + Post Product
             </Link>
           )}
         </div>
@@ -104,9 +204,10 @@ export default function MarketplacePage() {
           Search farmers, commodities, or products
         </label>
         <div className="relative">
-          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-            🔍
-          </span>
+          <Icon
+            name="search"
+            className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"
+          />
           <input
             id="marketplace-search"
             type="search"
@@ -144,6 +245,7 @@ export default function MarketplacePage() {
                   <div className="flex-1">
                     <p className="text-lg font-bold text-brand-900">{farmer.farmerName}</p>
                     <p className="text-sm text-brand-700">{farmer.farmName}</p>
+                    <VerificationBadge status={farmer.verificationStatus} className="mt-1" />
                     <CountryBadge country={farmer.country} region={farmer.region} />
                   </div>
                 </div>
@@ -177,7 +279,7 @@ export default function MarketplacePage() {
                     {farmer.hasFarmAccess && farmer.connectionStatus === "PENDING" ? (
                       <>
                         <p className="text-sm font-semibold text-amber-900">
-                          Payment received — waiting for farmer approval
+                          Payment received — waiting for ANI admin approval
                         </p>
                         <Link
                           href="/connections"

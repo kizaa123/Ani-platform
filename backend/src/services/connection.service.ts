@@ -1,12 +1,13 @@
 import { z } from 'zod';
 import prisma from '../database/prisma';
 import { AppError, assertFound, assertAuthorized } from '../utils/errors';
-import { ROLES, isFarmerRole } from '../constants/roles';
+import { ROLES, isFarmerRole, isStaffRole } from '../constants/roles';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import {
   notifyConnectionApproved,
   notifyConnectionDeclined,
   notifyConnectionRequest,
+  notifyAdminsConnectionRequest,
   getUserDisplayName,
 } from './notification.service';
 
@@ -25,6 +26,7 @@ const buyerSelect = {
   city: true,
   country: true,
   profilePicture: true,
+  verificationStatus: true,
 } as const;
 
 const farmerSelect = {
@@ -37,6 +39,7 @@ const farmerSelect = {
   city: true,
   country: true,
   profilePicture: true,
+  verificationStatus: true,
   farmerProfile: { select: { farmName: true } },
 } as const;
 
@@ -50,6 +53,7 @@ type BuyerRow = {
   region: string;
   city: string | null;
   country: string;
+  verificationStatus: string;
 };
 
 type FarmerRow = BuyerRow & {
@@ -67,6 +71,7 @@ function mapBuyerProfile(user: BuyerRow) {
     city: user.city,
     country: user.country,
     profilePicture: normalizePublicAssetUrl(user.profilePicture ?? null),
+    verificationStatus: user.verificationStatus,
   };
 }
 
@@ -103,7 +108,7 @@ export class ConnectionService {
         );
       }
       if (existing.status === 'PENDING') {
-        throw new AppError(409, 'Access request already pending — wait for farmer approval');
+        throw new AppError(409, 'Access request already pending — wait for ANI admin approval');
       }
       throw new AppError(409, 'Farm access was declined — you cannot request again');
     }
@@ -118,7 +123,11 @@ export class ConnectionService {
     });
 
     const buyerName = `${created.buyer.firstName} ${created.buyer.lastName}`;
+    const farmerName = created.farmer
+      ? `${created.farmer.firstName} ${created.farmer.lastName}`
+      : await getUserDisplayName(data.farmerId);
     await notifyConnectionRequest(data.farmerId, buyerId, buyerName);
+    await notifyAdminsConnectionRequest(buyerId, buyerName, data.farmerId, farmerName);
 
     return this.formatConnection(created);
   }
@@ -271,26 +280,13 @@ export class ConnectionService {
     return this.formatConnections(rows);
   }
 
-  async updateStatus(requestId: string, userId: string, roleId: number, status: 'ACCEPTED' | 'REJECTED') {
+  async updateStatus(requestId: string, _userId: string, roleId: number, status: 'ACCEPTED' | 'REJECTED') {
     const request = assertFound(
       await prisma.connectionRequest.findUnique({ where: { id: requestId } }),
       'Connection request not found'
     );
 
-    let canRespond = request.farmerId === userId || roleId === ROLES.ADMIN;
-
-    if (!canRespond && roleId === ROLES.FARMER_HANDLER) {
-      const assignment = await prisma.agentAssignment.findFirst({
-        where: {
-          agentId: userId,
-          ownerId: request.farmerId,
-          relationshipType: 'FARMER_REPRESENTATIVE',
-        },
-      });
-      canRespond = !!assignment;
-    }
-
-    assertAuthorized(canRespond, 'Only the farmer or their handler can respond');
+    assertAuthorized(isStaffRole(roleId), 'Only ANI staff can approve or reject farm access requests');
 
     const updated = await prisma.connectionRequest.update({
       where: { id: requestId },

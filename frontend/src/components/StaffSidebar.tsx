@@ -5,16 +5,16 @@ import { PortalSidebarLayout, type PortalNavLink } from "@/components/PortalSide
 import { ROLES, type UserProfile } from "@/lib/types";
 
 export const STAFF_NAV_LINKS: PortalNavLink[] = [
-  { href: "/dashboard", label: "Dashboard", icon: "🏠", match: (p) => p === "/dashboard" },
-  { href: "/marketplace", label: "Marketplace", icon: "🏪", match: (p) => p.startsWith("/marketplace") },
+  { href: "/dashboard", label: "Dashboard", icon: "home", match: (p) => p === "/dashboard" },
+  { href: "/marketplace", label: "Marketplace", icon: "store", match: (p) => p.startsWith("/marketplace") },
   {
     href: "/connections",
     label: "Connections",
-    icon: "🤝",
+    icon: "handshake",
     match: (p) => p.startsWith("/connections"),
   },
-  { href: "/admin", label: "Admin", icon: "🛡️", match: (p) => p.startsWith("/admin") },
-  { href: "/profile", label: "Profile", icon: "👤", match: (p) => p.startsWith("/profile") },
+  { href: "/admin", label: "Admin", icon: "shield", match: (p) => p.startsWith("/admin") },
+  { href: "/profile", label: "Profile", icon: "user", match: (p) => p.startsWith("/profile") },
 ];
 
 function staffPortalTitle(roleId: number) {

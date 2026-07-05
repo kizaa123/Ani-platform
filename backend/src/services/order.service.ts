@@ -39,7 +39,7 @@ export class OrderService {
     if (!(await buyerHasApprovedFarmAccess(buyerId, farmerUserId))) {
       throw new AppError(
         403,
-        'Farm access required — pay the access fee and wait for the farmer to approve your connection'
+        'Farm access required — pay the access fee and wait for ANI admin to approve your connection'
       );
     }
 

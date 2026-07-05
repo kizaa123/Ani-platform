@@ -8,6 +8,8 @@ import { api } from "@/lib/api";
 import { Listing, fullName, ROLES, defaultListingUnit, listingUnitsForRole, formatListingUnit, isLivestockFarmer } from "@/lib/types";
 import { FarmerAvatar, ProductImage, ProfilePhoto } from "@/components/FarmerAvatar";
 import { CountryBadge } from "@/components/CountrySelect";
+import { VerificationBadge } from "@/components/VerificationBadge";
+import { Icon } from "@/components/icons";
 
 interface FarmProfile {
   farmName: string;
@@ -61,6 +63,7 @@ export default function FarmPage() {
   const [localPicUrl, setLocalPicUrl] = useState<string | null>(null);
   const [pendingPreview, setPendingPreview] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string[]>([]);
+  const [listingImageVersion, setListingImageVersion] = useState(0);
   const [form, setForm] = useState(emptyListingForm(ROLES.CROP_FARMER));
 
   const resetForm = useCallback(() => {
@@ -120,11 +123,18 @@ export default function FarmPage() {
       const { urls } = await api.upload.listingImages(Array.from(files));
       setForm((f) => ({ ...f, images: [...f.images, ...urls] }));
       setImagePreview((p) => [...p, ...urls]);
+      setListingImageVersion((v) => v + 1);
     } catch (e) {
       alert(e instanceof Error ? e.message : "Image upload failed");
     } finally {
+      if (listingImagesRef.current) listingImagesRef.current.value = "";
       setUploading(false);
     }
+  };
+
+  const removeListingImage = (index: number) => {
+    setForm((f) => ({ ...f, images: f.images.filter((_, i) => i !== index) }));
+    setImagePreview((p) => p.filter((_, i) => i !== index));
   };
 
   const startEdit = (listing: Listing) => {
@@ -174,6 +184,7 @@ export default function FarmPage() {
     } else {
       await api.marketplace.create(payload);
     }
+    setListingImageVersion((v) => v + 1);
     resetForm();
     load();
   };
@@ -237,7 +248,7 @@ export default function FarmPage() {
                 disabled={uploading}
                 className="absolute bottom-0 right-0 rounded-full bg-brand-700 px-3 py-1 text-xs font-semibold text-white shadow hover:bg-brand-900 disabled:opacity-50"
               >
-                {uploading ? "..." : "📷"}
+                {uploading ? "..." : <Icon name="camera" className="h-4 w-4" />}
               </button>
             </div>
             <div className="mt-3 text-center sm:mt-0 sm:pb-1 sm:text-left flex-1">
@@ -246,13 +257,7 @@ export default function FarmPage() {
               <p className="text-sm text-gray-500">
                 {profile.user.city}, {profile.user.region} · {profile.farmSize || "—"} · {profile.experienceYears ?? 0} yrs
               </p>
-              <span className={`mt-2 inline-block rounded-full px-3 py-0.5 text-xs font-semibold ${
-                profile.verificationStatus === "VERIFIED"
-                  ? "bg-brand-100 text-brand-800"
-                  : "bg-yellow-100 text-yellow-800"
-              }`}>
-                {profile.verificationStatus}
-              </span>
+              <VerificationBadge status={profile.verificationStatus} className="mt-2" />
             </div>
             <button
               type="button"
@@ -276,7 +281,7 @@ export default function FarmPage() {
             </p>
             <div className="mx-auto max-w-sm overflow-hidden rounded-2xl border border-brand-100 shadow-sm">
               <div className="h-24 bg-gradient-to-br from-brand-100 to-brand-200 flex items-center justify-center">
-                <span className="text-3xl opacity-50">🔒</span>
+                <Icon name="lock" className="h-10 w-10 text-brand-400 opacity-70" />
               </div>
               <div className="p-4">
                 <div className="mb-3 flex items-center gap-3">
@@ -366,7 +371,7 @@ export default function FarmPage() {
         <p className="mb-4 text-sm text-amber-700 bg-amber-50 border border-amber-100 rounded-lg p-3">
           Add commodities in{" "}
           <Link href="/farm/settings" className="font-semibold underline">
-            Settings
+            Profile
           </Link>{" "}
           to post products.
         </p>
@@ -520,7 +525,21 @@ export default function FarmPage() {
             {imagePreview.length > 0 && (
               <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {imagePreview.map((url, i) => (
-                  <ProductImage key={i} src={url} alt={`Product ${i + 1}`} />
+                  <div key={url} className="relative">
+                    <ProductImage
+                      src={url}
+                      alt={`Product ${i + 1}`}
+                      cacheBust={listingImageVersion}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeListingImage(i)}
+                      aria-label={`Remove photo ${i + 1}`}
+                      className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white hover:bg-black/80"
+                    >
+                      <Icon name="x" className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
@@ -545,9 +564,17 @@ export default function FarmPage() {
             <div key={l.id} className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
               <div className="flex flex-col sm:flex-row gap-4">
                 {l.images?.[0] ? (
-                  <ProductImage src={l.images[0]} alt={l.title} className="h-36 w-full sm:w-36 rounded-xl object-cover shrink-0" />
+                  <ProductImage
+                    key={`${l.id}-${l.images[0]}`}
+                    src={l.images[0]}
+                    alt={l.title}
+                    className="h-36 w-full sm:w-36 rounded-xl object-cover shrink-0"
+                    cacheBust={listingImageVersion}
+                  />
                 ) : (
-                  <div className="h-36 w-full sm:w-36 rounded-xl bg-brand-50 flex items-center justify-center text-3xl shrink-0">🌾</div>
+                  <div className="h-36 w-full sm:w-36 rounded-xl bg-brand-50 flex items-center justify-center shrink-0">
+                    <Icon name="wheat" className="h-10 w-10 text-brand-300" />
+                  </div>
                 )}
                 <div className="flex-1">
                   <h3 className="font-bold text-brand-900">{l.title}</h3>
@@ -561,7 +588,7 @@ export default function FarmPage() {
                   </p>
                   {l.harvestLabel && (
                     <p className="mt-1 text-xs text-brand-700 flex items-center gap-1">
-                      <span aria-hidden>📅</span>
+                      <Icon name="calendar" className="h-3.5 w-3.5 shrink-0" />
                       Harvest: {l.harvestLabel}
                     </p>
                   )}

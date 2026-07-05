@@ -110,6 +110,7 @@ export interface FarmerBrowseCard {
   connectionStatus: string;
   hasFarmAccess: boolean;
   canViewProducts: boolean;
+  verificationStatus?: string;
   farmAccessFee?: number | null;
   farmAccessPriceLabel?: string | null;
   products: Listing[];
@@ -459,6 +460,7 @@ export interface ConnectionUser {
   country?: string;
   profilePicture?: string | null;
   farmName?: string | null;
+  verificationStatus?: string;
 }
 
 export interface AppNotification {

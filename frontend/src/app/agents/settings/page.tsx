@@ -9,6 +9,7 @@ import { fullName, isHandler } from "@/lib/types";
 import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { CountrySelect } from "@/components/CountrySelect";
 import { DEFAULT_COUNTRY } from "@/lib/africanCountries";
+import { ProfileIdentityHeader, ProfileEditSection, ProfileEditActions } from "@/components/ProfileIdentityHeader";
 
 export default function HandlerSettingsPage() {
   const { user, loading, refreshUser } = useAuth();
@@ -16,6 +17,7 @@ export default function HandlerSettingsPage() {
   const profilePicRef = useRef<HTMLInputElement>(null);
 
   const [photoCacheBust, setPhotoCacheBust] = useState(0);
+  const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
@@ -47,6 +49,20 @@ export default function HandlerSettingsPage() {
     }
   }, [user?.id, loading, router]);
 
+  const resetForm = () => {
+    if (!user) return;
+    setForm({
+      phone: user.phone || "",
+      country: user.country || DEFAULT_COUNTRY,
+      region: user.region || "",
+      city: user.city || "",
+      address: user.address || "",
+    });
+    setMessage("");
+    setError("");
+    setEditing(false);
+  };
+
   const uploadPhoto = async (file: File) => {
     setUploading(true);
     setError("");
@@ -70,7 +86,8 @@ export default function HandlerSettingsPage() {
       await api.auth.updateProfile(form);
       await refreshUser();
       setPhotoCacheBust(Date.now());
-      setMessage("Settings saved successfully.");
+      setMessage("Profile saved successfully.");
+      setEditing(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to save settings");
     } finally {
@@ -88,9 +105,15 @@ export default function HandlerSettingsPage() {
         <Link href="/dashboard" className="text-sm text-brand-600 hover:underline">
           ← Back to Dashboard
         </Link>
-        <h1 className="mt-2 text-3xl font-bold text-brand-900">Settings</h1>
-        <p className="text-gray-500">Update your profile photo and contact details</p>
+        <h1 className="mt-2 text-3xl font-bold text-brand-900">Profile</h1>
+        <p className="text-gray-500">Your handler profile photo and contact details</p>
       </div>
+
+      <ProfileIdentityHeader
+        user={user}
+        photoCacheBust={photoCacheBust}
+        onEditClick={!editing ? () => setEditing(true) : undefined}
+      />
 
       {message && (
         <div className="mb-4 rounded-xl bg-green-50 p-3 text-sm text-green-800">{message}</div>
@@ -99,7 +122,8 @@ export default function HandlerSettingsPage() {
         <div className="mb-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</div>
       )}
 
-      <div className="space-y-6">
+      {editing && (
+      <ProfileEditSection>
         <section className="rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-lg font-bold text-brand-900">Profile photo</h2>
           <div className="flex flex-wrap items-center gap-4">
@@ -125,9 +149,6 @@ export default function HandlerSettingsPage() {
               >
                 {uploading ? "Uploading..." : "Change photo"}
               </button>
-              <p className="mt-1 text-xs text-gray-500">
-                Shown on your dashboard and when clients select you as their handler
-              </p>
             </div>
           </div>
           <p className="mt-3 text-sm text-brand-700">
@@ -183,15 +204,9 @@ export default function HandlerSettingsPage() {
           </div>
         </section>
 
-        <button
-          type="button"
-          onClick={saveSettings}
-          disabled={saving}
-          className="w-full rounded-xl bg-brand-700 py-3 font-semibold text-white hover:bg-brand-900 disabled:opacity-60"
-        >
-          {saving ? "Saving..." : "Save settings"}
-        </button>
-      </div>
+        <ProfileEditActions onCancel={resetForm} onSave={saveSettings} saving={saving} />
+      </ProfileEditSection>
+      )}
     </div>
   );
 }

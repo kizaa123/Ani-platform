@@ -1,9 +1,15 @@
 const API = "/api";
 
+interface ApiValidationIssue {
+  path: (string | number)[];
+  message: string;
+}
+
 interface ApiResult<T> {
   success: boolean;
   data?: T;
   error?: string;
+  details?: ApiValidationIssue[];
 }
 
 class ApiClient {
@@ -73,7 +79,18 @@ class ApiClient {
       );
     }
 
-    if (!json.success) throw new Error(json.error || "Request failed");
+    if (!json.success) {
+      const detail = json.details?.[0];
+      const message =
+        json.error ||
+        (detail
+          ? detail.path.length
+            ? `${detail.path.join(".")}: ${detail.message}`
+            : detail.message
+          : undefined) ||
+        "Request failed";
+      throw new Error(message);
+    }
     return json.data as T;
   }
 

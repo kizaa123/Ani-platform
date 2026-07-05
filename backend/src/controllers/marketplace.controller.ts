@@ -24,7 +24,7 @@ export class CommodityController {
 
   getByCategory = async (req: Request, res: Response) => {
     try {
-      ApiResponse.success(res, await commodityService.getByCategory(req.params.name));
+      ApiResponse.success(res, await commodityService.getByCategory(req.params.name as string));
     } catch (e) {
       ApiResponse.error(res, e);
     }
@@ -63,7 +63,7 @@ export class MarketplaceController {
 
   getOne = async (req: AuthRequest, res: Response) => {
     try {
-      const listing = await marketplaceService.getListing(req.params.id, req.user!.userId, req.user!.roleId);
+      const listing = await marketplaceService.getListing(req.params.id as string, req.user!.userId, req.user!.roleId);
       ApiResponse.success(res, listing);
     } catch (e) {
       ApiResponse.error(res, e);
@@ -75,7 +75,7 @@ export class MarketplaceController {
       const listing = await marketplaceService.updateListing(
         req.user!.userId,
         req.user!.roleId,
-        req.params.id,
+        req.params.id as string,
         req.body
       );
       await createAuditLog(req, 'LISTING_UPDATED', 'commodity_listing');
@@ -95,8 +95,8 @@ export class MarketplaceController {
 
   remove = async (req: AuthRequest, res: Response) => {
     try {
-      await marketplaceService.deleteListing(req.user!.userId, req.params.id);
-      await createAuditLog(req, 'LISTING_REMOVED', 'commodity_listing', { id: req.params.id });
+      await marketplaceService.deleteListing(req.user!.userId, req.params.id as string);
+      await createAuditLog(req, 'LISTING_REMOVED', 'commodity_listing', { id: req.params.id as string });
       ApiResponse.success(res, { message: 'Product removed from your farm' });
     } catch (e) {
       ApiResponse.error(res, e);

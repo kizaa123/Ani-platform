@@ -4,14 +4,15 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { Connection, ConnectionUser, fullName, isBuyer, isFarmer, ROLES } from "@/lib/types";
+import { Connection, ConnectionUser, fullName, isBuyer, isFarmer, isStaff, ROLES } from "@/lib/types";
 import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { CountryBadge } from "@/components/CountrySelect";
 import { ConnectionChatModal } from "@/components/ConnectionChatModal";
+import { VerificationBadge } from "@/components/VerificationBadge";
 import { formatDate, formatGhc } from "@/lib/format";
 
 function canApproveConnection(roleId: number) {
-  return isFarmer(roleId) || roleId === ROLES.FARMER_HANDLER;
+  return isStaff(roleId);
 }
 
 function statusLabel(status: string) {
@@ -71,14 +72,16 @@ export default function ConnectionsPage() {
       <h1 className="mb-2 text-3xl font-bold text-brand-900">Connections</h1>
       <p className="mb-8 text-gray-500">
         {isFarmer(user.roleId)
-          ? "Buyers who requested farm access — approve to let them view your products"
+          ? "Buyers who requested farm access — ANI admin approves access; you'll be notified when someone requests"
           : isBuyer(user.roleId)
-            ? "Farmers you requested access from — message them once approved"
+            ? "Farmers you requested access from — message them once ANI admin approves"
             : user.roleId === ROLES.FARMER_HANDLER
-              ? "Buyer connections for your farmer clients — each request shows which farm it belongs to"
+              ? "Buyer connections for your farmer clients — view-only; ANI admin approves access"
               : user.roleId === ROLES.BUYER_HANDLER
                 ? "Farmer connections for your buyer clients — see who they connected with and message farmers"
-                : "Client connection requests"}
+                : isStaff(user.roleId)
+                  ? "Pending farm access requests — approve or reject buyer connections"
+                  : "Client connection requests"}
       </p>
 
       {connections.length === 0 ? (
@@ -211,6 +214,9 @@ function ConnectionCard({
             <p className="font-bold text-brand-900">
               {partner ? fullName(partner) : "Unknown"}
             </p>
+            {partner?.verificationStatus && (
+              <VerificationBadge status={partner.verificationStatus} className="mt-1" />
+            )}
             {farmName && (
               <p className="text-sm font-medium text-brand-700">{farmName}</p>
             )}
@@ -261,14 +267,14 @@ function ConnectionCard({
               </p>
             )}
 
-            {c.accessPaid && c.status === "PENDING" && !isBuyerView && (
+            {c.accessPaid && c.status === "PENDING" && !isBuyerView && !canApprove && (
               <p className="mt-2 text-xs font-medium text-amber-800">
-                Awaiting your approval
+                Payment received — awaiting ANI admin approval
               </p>
             )}
             {c.accessPaid && c.status === "PENDING" && isBuyerView && (
               <p className="mt-2 text-xs font-medium text-amber-800">
-                Payment received — waiting for farmer to approve your connection
+                Payment received — waiting for ANI admin to approve your connection
               </p>
             )}
           </div>

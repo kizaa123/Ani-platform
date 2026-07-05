@@ -11,13 +11,13 @@ import {
   HandlerProfile,
   ROLES,
   farmerCategoryFilter,
-  fullName,
   defaultListingUnit,
 } from "@/lib/types";
 import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { CountrySelect } from "@/components/CountrySelect";
 import { HandlerSelect } from "@/components/HandlerSelect";
 import { DEFAULT_COUNTRY } from "@/lib/africanCountries";
+import { ProfileIdentityHeader, ProfileEditSection, ProfileEditActions } from "@/components/ProfileIdentityHeader";
 
 interface FarmProfileData {
   farmName: string;
@@ -32,6 +32,7 @@ export default function FarmSettingsPage() {
   const profilePicRef = useRef<HTMLInputElement>(null);
 
   const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
   const [categories, setCategories] = useState<CommodityCategory[]>([]);
@@ -113,6 +114,27 @@ export default function FarmSettingsPage() {
     api.auth.handlers("farmer").then(setFarmerHandlers).catch(console.error);
   }, []);
 
+  const resetForm = async () => {
+    if (!user) return;
+    setPersonal({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      phone: user.phone || "",
+      country: user.country || DEFAULT_COUNTRY,
+      region: user.region || "",
+      city: user.city || "",
+      address: user.address || "",
+    });
+    setHandlerId(user.assignedHandler?.id || "");
+    setMessage("");
+    setEditing(false);
+    try {
+      await load();
+    } catch {
+      /* keep current farm state on cancel if reload fails */
+    }
+  };
+
   const savePersonalAndFarm = async () => {
     setSaving(true);
     setMessage("");
@@ -131,7 +153,8 @@ export default function FarmSettingsPage() {
       await refreshUser();
       await load();
       await api.auth.handlers("farmer").then(setFarmerHandlers);
-      setMessage("Settings saved successfully.");
+      setMessage("Profile saved successfully.");
+      setEditing(false);
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Save failed");
     } finally {
@@ -182,7 +205,7 @@ export default function FarmSettingsPage() {
   };
 
   if (loading || !user) {
-    return <div className="p-12 text-center text-gray-500">Loading settings...</div>;
+    return <div className="p-12 text-center text-gray-500">Loading profile...</div>;
   }
 
   return (
@@ -191,11 +214,16 @@ export default function FarmSettingsPage() {
         <Link href="/farm" className="text-sm text-brand-600 hover:underline">
           ← Back to My Farm
         </Link>
-        <h1 className="mt-2 text-3xl font-bold text-brand-900">Settings</h1>
+        <h1 className="mt-2 text-3xl font-bold text-brand-900">Profile</h1>
         <p className="text-gray-500">
-          Update your profile, farm details, handler, and commodities for {fullName(user)}
+          Your farmer profile, farm details, handler, and commodities
         </p>
       </div>
+
+      <ProfileIdentityHeader
+        user={user}
+        onEditClick={!editing ? () => setEditing(true) : undefined}
+      />
 
       {message && (
         <div
@@ -209,6 +237,8 @@ export default function FarmSettingsPage() {
         </div>
       )}
 
+      {editing && (
+      <ProfileEditSection>
       {/* Profile photo */}
       <section className="mb-6 rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-lg font-bold text-brand-900">Profile Photo</h2>
@@ -230,7 +260,6 @@ export default function FarmSettingsPage() {
             >
               {uploading ? "Uploading..." : "Change photo"}
             </button>
-            <p className="mt-1 text-xs text-gray-500">Visible to buyers on the marketplace</p>
           </div>
         </div>
       </section>
@@ -348,14 +377,6 @@ export default function FarmSettingsPage() {
             />
           </div>
         </div>
-        <button
-          type="button"
-          onClick={savePersonalAndFarm}
-          disabled={saving || !handlerId}
-          className="mt-4 rounded-xl bg-brand-700 px-6 py-2.5 font-semibold text-white hover:bg-brand-900 disabled:opacity-50"
-        >
-          {saving ? "Saving..." : "Save settings"}
-        </button>
       </section>
 
       {/* Commodities */}
@@ -421,6 +442,15 @@ export default function FarmSettingsPage() {
           </div>
         )}
       </section>
+
+      <ProfileEditActions
+        onCancel={resetForm}
+        onSave={savePersonalAndFarm}
+        saving={saving}
+        saveDisabled={!handlerId}
+      />
+      </ProfileEditSection>
+      )}
     </div>
   );
 }

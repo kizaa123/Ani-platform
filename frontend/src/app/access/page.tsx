@@ -9,6 +9,8 @@ import { FarmerBrowseCard, MarketplaceBrowse, isBuyer } from "@/lib/types";
 import { FarmerAvatar } from "@/components/FarmerAvatar";
 import { CountryBadge } from "@/components/CountrySelect";
 import { FarmAccessPaymentModal } from "@/components/FarmAccessPaymentModal";
+import { VerificationBadge } from "@/components/VerificationBadge";
+import { Icon } from "@/components/icons";
 
 function filterFarmers(farmers: FarmerBrowseCard[], query: string): FarmerBrowseCard[] {
   const term = query.trim().toLowerCase();
@@ -43,7 +45,7 @@ export default function AccessPage() {
 
   const onPaymentSuccess = () => {
     alert(
-      "Payment received! The farmer will review your request on their Connections page. You can view products once they approve."
+      "Payment received! ANI admin will review your access request. You can view products once approved."
     );
     loadBrowse();
   };
@@ -65,9 +67,10 @@ export default function AccessPage() {
 
       <div className="mb-8">
         <div className="relative">
-          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-            🔍
-          </span>
+          <Icon
+            name="search"
+            className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"
+          />
           <input
             type="search"
             value={search}
@@ -98,6 +101,7 @@ export default function AccessPage() {
                 <div className="min-w-0 flex-1">
                   <h3 className="truncate font-bold text-brand-900">{farmer.farmerName}</h3>
                   <p className="truncate text-sm text-brand-700">{farmer.farmName}</p>
+                  <VerificationBadge status={farmer.verificationStatus} className="mt-1" />
                   <CountryBadge country={farmer.country} region={farmer.region} />
                 </div>
               </div>
@@ -143,7 +147,7 @@ export default function AccessPage() {
                 ) : farmer.hasFarmAccess && farmer.connectionStatus === "PENDING" ? (
                   <div className="space-y-2">
                     <span className="block w-full rounded-xl bg-amber-100 py-2.5 text-center text-sm font-semibold text-amber-900">
-                      ⏳ Awaiting farmer approval
+                      ⏳ Awaiting ANI admin approval
                     </span>
                     <Link
                       href="/connections"

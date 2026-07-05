@@ -7,11 +7,12 @@ import { useAuth } from "@/context/AuthProvider";
 import { fullName, type UserProfile } from "@/lib/types";
 import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { NotificationBell } from "@/components/NotificationBell";
+import { Icon, type IconName } from "@/components/icons";
 
 export type PortalNavLink = {
   href: string;
   label: string;
-  icon: string;
+  icon: IconName;
   match: (pathname: string) => boolean;
 };
 
@@ -49,8 +50,9 @@ function SidebarContent({
     <>
       <div className="flex items-center justify-between border-b border-brand-100 p-5">
         <div>
-          <Link href="/dashboard" onClick={onNavigate} className="text-lg font-bold text-brand-900">
-            🌾 ANI Exchange
+          <Link href="/dashboard" onClick={onNavigate} className="flex items-center gap-2 text-lg font-bold text-brand-900">
+            <Icon name="wheat" className="h-5 w-5 text-brand-700" />
+            ANI Exchange
           </Link>
           <p className="mt-1 text-xs text-brand-600">{portalTitle}</p>
         </div>
@@ -84,7 +86,7 @@ function SidebarContent({
                   : "text-gray-600 hover:bg-brand-50 hover:text-brand-800"
               }`}
             >
-              <span className="text-lg">{link.icon}</span>
+              <Icon name={link.icon} className="h-5 w-5 shrink-0" />
               {link.label}
             </Link>
           );

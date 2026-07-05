@@ -6,6 +6,31 @@ import routes from './routes';
 import { ensureUploadDirs } from './middleware/upload.middleware';
 import { apiRateLimiter } from './middleware/rate-limit.middleware';
 
+function isAllowedDevOrigin(origin: string) {
+  if (origin === 'http://localhost:3000') return true;
+  if (origin.endsWith('.loca.lt')) return true;
+  if (/^http:\/\/127\.0\.0\.1:3000$/.test(origin)) return true;
+  if (/^http:\/\/192\.168\.\d+\.\d+:3000$/.test(origin)) return true;
+  if (/^http:\/\/10\.\d+\.\d+\.\d+:3000$/.test(origin)) return true;
+  return false;
+}
+
+function resolveCorsOrigin() {
+  const configured = process.env.FRONTEND_URL?.split(',').map((v) => v.trim()).filter(Boolean) ?? [];
+
+  return (
+    origin: string | undefined,
+    callback: (err: Error | null, allow?: boolean) => void
+  ) => {
+    if (!origin) return callback(null, true);
+    if (configured.includes(origin)) return callback(null, true);
+    if (process.env.NODE_ENV !== 'production' && isAllowedDevOrigin(origin)) {
+      return callback(null, true);
+    }
+    callback(new Error(`Origin not allowed by CORS: ${origin}`));
+  };
+}
+
 export function createApp() {
   ensureUploadDirs();
   const app = express();
@@ -17,7 +42,7 @@ export function createApp() {
   );
   app.use(
     cors({
-      origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+      origin: resolveCorsOrigin(),
       credentials: true,
     })
   );

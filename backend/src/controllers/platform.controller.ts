@@ -36,7 +36,7 @@ export class ConnectionController {
   updateStatus = async (req: AuthRequest, res: Response) => {
     try {
       const updated = await connectionService.updateStatus(
-        req.params.id,
+        req.params.id as string,
         req.user!.userId,
         req.user!.roleId,
         req.body.status
@@ -73,7 +73,7 @@ export class AgentController {
         await agentService.getClientFarm(
           req.user!.userId,
           req.user!.roleId,
-          req.params.ownerId
+          req.params.ownerId as string
         )
       );
     } catch (e) {
@@ -88,7 +88,7 @@ export class AgentController {
         await agentService.getClientOrders(
           req.user!.userId,
           req.user!.roleId,
-          req.params.ownerId
+          req.params.ownerId as string
         )
       );
     } catch (e) {
@@ -100,12 +100,12 @@ export class AgentController {
     try {
       const { buyerId, listingId, trackStage } = req.body;
       const order = await agentService.updateClientOrderTrack(
-        req.user!.userId,
-        req.user!.roleId,
-        req.params.ownerId,
-        buyerId,
-        listingId,
-        trackStage
+          req.user!.userId,
+          req.user!.roleId,
+          req.params.ownerId as string,
+          buyerId,
+          listingId,
+          trackStage
       );
       ApiResponse.success(res, order);
     } catch (e) {
@@ -120,7 +120,7 @@ export class AgentController {
         await agentService.getClientFinancialStatement(
           req.user!.userId,
           req.user!.roleId,
-          req.params.ownerId
+          req.params.ownerId as string
         )
       );
     } catch (e) {
@@ -135,7 +135,7 @@ export class AgentController {
         await agentService.getClientConnections(
           req.user!.userId,
           req.user!.roleId,
-          req.params.ownerId
+          req.params.ownerId as string
         )
       );
     } catch (e) {
@@ -159,7 +159,7 @@ export class AgentController {
 
   removeAssignment = async (req: AuthRequest, res: Response) => {
     try {
-      await agentService.removeAssignment(req.user!.userId, req.params.id);
+      await agentService.removeAssignment(req.user!.userId, req.params.id as string);
       ApiResponse.success(res, { message: 'Assignment removed' });
     } catch (e) {
       ApiResponse.error(res, e);
@@ -181,7 +181,7 @@ export class ChatController {
     try {
       ApiResponse.success(
         res,
-        await chatService.getConversation(req.user!.userId, req.user!.roleId, req.params.partnerId)
+        await chatService.getConversation(req.user!.userId, req.user!.roleId, req.params.partnerId as string)
       );
     } catch (e) {
       ApiResponse.error(res, e);
@@ -210,7 +210,7 @@ export class NotificationController {
     try {
       ApiResponse.success(
         res,
-        await notificationService.markRead(req.params.id, req.user!.userId)
+        await notificationService.markRead(req.params.id as string, req.user!.userId)
       );
     } catch (e) {
       ApiResponse.error(res, e);
@@ -245,7 +245,7 @@ export class AdminController {
 
   verifyUser = async (req: AuthRequest, res: Response) => {
     try {
-      const user = await adminService.verifyUser(req.params.id, req.body.status);
+      const user = await adminService.verifyUser(req.params.id as string, req.body.status);
       await createAuditLog(req, `USER_${req.body.status}`, 'users');
       ApiResponse.success(res, user);
     } catch (e) {

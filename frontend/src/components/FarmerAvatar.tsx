@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { assetUrl, assetUrlFallback } from "@/lib/assetUrl";
+import { Icon } from "@/components/icons";
 
 interface ProfilePhotoProps {
   src?: string | null;
@@ -70,7 +71,7 @@ export function ProfilePhoto({
         />
       ) : (
         <div className="flex h-full w-full flex-col items-center justify-center text-brand-600">
-          <span style={{ fontSize: size * 0.35 }}>👨‍🌾</span>
+          <Icon name="user" className="text-brand-600" style={{ width: size * 0.35, height: size * 0.35 }} />
           {size >= 100 && (
             <span className="mt-1 px-2 text-center text-[10px] font-medium leading-tight text-brand-500">
               Add photo
@@ -102,14 +103,28 @@ export function FarmerAvatar({ src, name, size = "sm", cacheBust }: AvatarProps)
   );
 }
 
-export function ProductImage({ src, alt, className }: { src: string; alt: string; className?: string }) {
-  const [displayUrl, setDisplayUrl] = useState<string | null>(() => assetUrl(src));
+export function ProductImage({
+  src,
+  alt,
+  className,
+  cacheBust,
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+  cacheBust?: number | string;
+}) {
+  const [displayUrl, setDisplayUrl] = useState<string | null>(() => {
+    const url = assetUrl(src);
+    return url ? withCacheBust(url, cacheBust) : null;
+  });
   const [triedFallback, setTriedFallback] = useState(false);
 
   useEffect(() => {
-    setDisplayUrl(assetUrl(src));
+    const url = assetUrl(src);
+    setDisplayUrl(url ? withCacheBust(url, cacheBust) : null);
     setTriedFallback(false);
-  }, [src]);
+  }, [src, cacheBust]);
 
   if (!displayUrl) return null;
 
@@ -127,7 +142,7 @@ export function ProductImage({ src, alt, className }: { src: string; alt: string
         const fallback = assetUrlFallback(src);
         if (fallback) {
           setTriedFallback(true);
-          setDisplayUrl(fallback);
+          setDisplayUrl(withCacheBust(fallback, cacheBust));
         } else {
           setDisplayUrl(null);
         }

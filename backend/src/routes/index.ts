@@ -117,7 +117,7 @@ router.post('/payments/packages', authenticate, requirePermission(PERMISSIONS.MA
 // Connections
 router.get('/connections', authenticate, connectionController.list);
 router.post('/connections', authenticate, requirePermission(PERMISSIONS.REQUEST_CONNECTION), validateBody(connectionSchema), connectionController.create);
-router.patch('/connections/:id/status', authenticate, requirePermission(PERMISSIONS.APPROVE_CONNECTION), connectionController.updateStatus);
+router.patch('/connections/:id/status', authenticate, requirePermission(PERMISSIONS.APPROVE_CONNECTION, PERMISSIONS.VERIFY_USERS), connectionController.updateStatus);
 
 // Agents
 router.get('/agents/profile', authenticate, agentController.profile);

@@ -8,17 +8,7 @@ import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import { AppNotification } from "@/lib/types";
 import { formatDate } from "@/lib/format";
-
-const TYPE_ICONS: Record<string, string> = {
-  CHAT_MESSAGE: "💬",
-  NEW_ORDER: "📦",
-  PRODUCT_PURCHASE: "🛒",
-  ORDER_TRACKED: "🚚",
-  CONNECTION_REQUEST: "🤝",
-  CONNECTION_APPROVED: "✅",
-  CONNECTION_DECLINED: "❌",
-  FARM_ACCESS_PAID: "💰",
-};
+import { Icon, NOTIFICATION_ICONS } from "@/components/icons";
 
 function BellIcon() {
   return (
@@ -188,7 +178,10 @@ export function NotificationBell({ className = "" }: { className?: string }) {
                             !n.read ? "bg-brand-50/40" : ""
                           }`}
                         >
-                          <span className="mt-0.5 text-xl shrink-0">{TYPE_ICONS[n.type] ?? "🔔"}</span>
+                          <Icon
+                            name={NOTIFICATION_ICONS[n.type] ?? "bell"}
+                            className="mt-0.5 h-5 w-5 shrink-0 text-brand-700"
+                          />
                           <div className="min-w-0 flex-1">
                             <div className="flex items-start justify-between gap-2">
                               <p className="font-semibold text-brand-900">{n.title}</p>

@@ -45,7 +45,7 @@ export class FarmController {
 
   removeCommodity = async (req: AuthRequest, res: Response) => {
     try {
-      await farmService.removeCommodity(req.user!.userId, req.params.id);
+      await farmService.removeCommodity(req.user!.userId, req.params.id as string);
       await createAuditLog(req, 'FARMER_COMMODITY_REMOVED', 'farmer_commodity');
       ApiResponse.success(res, { message: 'Commodity removed' });
     } catch (e) {

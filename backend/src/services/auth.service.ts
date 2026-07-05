@@ -13,27 +13,66 @@ import { ROLES, FARMER_ROLES, isFarmerRole, isFarmerHandler, isBuyerHandler } fr
 import { defaultListingUnit } from '../constants/units';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
 
+const emptyToUndefined = (val: unknown) => {
+  if (val === '' || val === null || val === undefined) return undefined;
+  if (typeof val === 'string' && val.trim() === '') return undefined;
+  return val;
+};
+
+const optionalString = () =>
+  z.preprocess(emptyToUndefined, z.string().optional());
+
 export const registerSchema = z
   .object({
-  firstName: z.string().min(2),
-  lastName: z.string().min(2),
-  email: z.string().email(),
-  phone: z.string().min(10),
+  firstName: z.preprocess(
+    (val) => (typeof val === 'string' ? val.trim() : val),
+    z.string().min(2)
+  ),
+  lastName: z.preprocess(
+    (val) => (typeof val === 'string' ? val.trim() : val),
+    z.string().min(2)
+  ),
+  email: z.preprocess(
+    (val) => (typeof val === 'string' ? val.trim().toLowerCase() : val),
+    z.string().email()
+  ),
+  phone: z.preprocess(
+    (val) => (typeof val === 'string' ? val.trim() : val),
+    z.string().min(9)
+  ),
   password: z.string().min(8),
-  profilePicture: z.string().optional(),
-  country: z.string().min(2),
-  region: z.string().min(2),
-  city: z.string().min(2),
-  address: z.string().optional(),
-  gpsLatitude: z.number().optional(),
-  gpsLongitude: z.number().optional(),
-  roleId: z.number().int().min(1).max(7),
-  farmName: z.string().optional(),
-  farmSize: z.string().optional(),
-  experienceYears: z.number().int().optional(),
-  commodityIds: z.array(z.number().int()).optional(),
-  company: z.string().optional(),
-  handlerId: z.string().uuid().optional(),
+  profilePicture: optionalString(),
+  country: z.preprocess(
+    (val) => (typeof val === 'string' ? val.trim() : val),
+    z.string().min(2)
+  ),
+  region: z.preprocess(
+    (val) => (typeof val === 'string' ? val.trim() : val),
+    z.string().min(2)
+  ),
+  city: z.preprocess(
+    (val) => (typeof val === 'string' ? val.trim() : val),
+    z.string().min(2)
+  ),
+  address: optionalString(),
+  gpsLatitude: z.coerce.number().optional(),
+  gpsLongitude: z.coerce.number().optional(),
+  roleId: z.coerce.number().int().min(1).max(7),
+  farmName: optionalString(),
+  farmSize: optionalString(),
+  experienceYears: z.preprocess(
+    emptyToUndefined,
+    z.coerce.number().int().min(0).optional()
+  ),
+  commodityIds: z.preprocess(
+    emptyToUndefined,
+    z.array(z.coerce.number().int()).optional()
+  ),
+  company: optionalString(),
+  handlerId: z.preprocess(
+    emptyToUndefined,
+    z.string().uuid().optional()
+  ),
 })
   .superRefine((data, ctx) => {
     const needsHandler =

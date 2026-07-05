@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { formatDate, formatGhc, orderStatusStyle } from "@/lib/format";
 import { OrderTrackStage } from "@/lib/orderTrack";
 import { BuyerOrderLineItem, formatListingUnit, ProductOrderLineItem } from "@/lib/types";
+import { Icon } from "@/components/icons";
 
 export type OrderListPerspective = "farmer" | "buyer";
 type OrderListItem = ProductOrderLineItem | BuyerOrderLineItem;
@@ -92,8 +93,8 @@ function CompactOrderCard({
             className="h-20 w-20 shrink-0 rounded-xl object-cover"
           />
         ) : (
-          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-3xl">
-            🌾
+          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-brand-50">
+            <Icon name="wheat" className="h-8 w-8 text-brand-300" />
           </div>
         )}
 
@@ -207,8 +208,8 @@ function OrderDetailModal({
                 className="h-24 w-24 shrink-0 rounded-xl object-cover"
               />
             ) : (
-              <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-3xl">
-                🌾
+              <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-xl bg-brand-50">
+                <Icon name="wheat" className="h-10 w-10 text-brand-300" />
               </div>
             )}
             <div className="min-w-0 flex-1">
@@ -385,8 +386,8 @@ export function SalesOrdersTable({ items }: { items: ProductOrderLineItem[] }) {
                       className="h-10 w-10 shrink-0 rounded-lg object-cover"
                     />
                   ) : (
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-lg">
-                      🌾
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-50">
+                      <Icon name="wheat" className="h-5 w-5 text-brand-300" />
                     </div>
                   )}
                   <span className="font-medium text-brand-900">{item.productName}</span>
