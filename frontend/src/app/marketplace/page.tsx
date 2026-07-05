@@ -50,6 +50,7 @@ export default function MarketplacePage() {
   const [search, setSearch] = useState("");
   const [purchaseFarmer, setPurchaseFarmer] = useState<FarmerBrowseCard | null>(null);
   const [activeListingId, setActiveListingId] = useState<string | null>(null);
+  const [orderPlacedMessage, setOrderPlacedMessage] = useState("");
   const router = useRouter();
 
   const farmerView = user ? isFarmer(user.roleId) : false;
@@ -89,6 +90,17 @@ export default function MarketplacePage() {
     setPurchaseFarmer(null);
     setActiveListingId(null);
   };
+
+  const handleOrderSuccess = useCallback(() => {
+    loadBrowse();
+    setOrderPlacedMessage("Order placed successfully!");
+  }, [loadBrowse]);
+
+  useEffect(() => {
+    if (!orderPlacedMessage) return;
+    const timer = window.setTimeout(() => setOrderPlacedMessage(""), 8000);
+    return () => window.clearTimeout(timer);
+  }, [orderPlacedMessage]);
 
   const activeListing = useMemo(() => {
     if (!purchaseFarmer || !activeListingId) return null;
@@ -224,6 +236,16 @@ export default function MarketplacePage() {
         )}
       </div>
 
+      {orderPlacedMessage && (
+        <div
+          role="status"
+          className="mb-6 flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-medium text-green-800"
+        >
+          <Icon name="check" className="h-5 w-5 shrink-0 text-green-600" />
+          {orderPlacedMessage}
+        </div>
+      )}
+
       {filteredFarmers.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-brand-200 p-12 text-center text-gray-500">
           {search.trim() ? "No farmers match your search." : "No farmers registered yet."}
@@ -345,7 +367,7 @@ export default function MarketplacePage() {
           region={purchaseFarmer.region}
           onSelectProduct={(p) => setActiveListingId(p.id)}
           onClose={closePurchase}
-          onSuccess={loadBrowse}
+          onSuccess={handleOrderSuccess}
         />
       )}
     </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { Listing, formatListingUnit } from "@/lib/types";
@@ -75,7 +76,14 @@ export function PurchaseModal({
     setSuccessMsg("");
     setActiveImageIndex(0);
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-  }, [listing.id, maxQty]);
+  }, [listing.id]);
+
+  useEffect(() => {
+    setQuantity((prev) => {
+      if (maxQty <= 0) return prev;
+      return Math.min(Math.max(1, prev), maxQty);
+    });
+  }, [maxQty]);
 
   const handlePurchase = async () => {
     if (!canPurchase) return;
@@ -87,7 +95,10 @@ export function PurchaseModal({
     setError("");
     try {
       await api.marketplace.purchase(listing.id, { quantity, paymentMethod });
-      setSuccessMsg(`Payment successful — GHC ${total.toFixed(2)} for ${quantity} ${unitLabel}.`);
+      setSuccessMsg(
+        `${quantity} ${unitLabel} — GHC ${total.toFixed(2)} paid to ${farmerName}.`
+      );
+      scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
       onSuccess();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Purchase failed");
@@ -95,6 +106,8 @@ export function PurchaseModal({
       setSubmitting(false);
     }
   };
+
+  const orderPlaced = Boolean(successMsg);
 
   const currentImage = listing.images?.[activeImageIndex] || listing.images?.[0];
 
@@ -123,6 +136,32 @@ export function PurchaseModal({
       {/* Scrollable content */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-6xl px-4 py-8">
+          {orderPlaced && (
+            <div
+              role="status"
+              className="mb-8 rounded-2xl border border-green-200 bg-green-50 p-5 shadow-sm"
+            >
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-600 text-white">
+                  <Icon name="check" className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-lg font-bold text-green-900">Order placed successfully</p>
+                  <p className="mt-1 text-sm text-green-800">{successMsg}</p>
+                  <p className="mt-1 text-sm text-green-700">
+                    You can track this order from My Orders.
+                  </p>
+                  <Link
+                    href="/orders"
+                    className="mt-4 inline-block rounded-xl bg-brand-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-800"
+                  >
+                    View my orders
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Purchase section — top */}
           <section className="mb-10">
             <p className="mb-6 text-xs font-semibold uppercase tracking-widest text-brand-600">
@@ -216,17 +255,11 @@ export function PurchaseModal({
                   </p>
                 </div>
 
-                {successMsg && (
-                  <p className="mt-4 rounded-xl bg-green-50 border border-green-200 p-4 text-sm font-medium text-green-800">
-                    {successMsg}
-                  </p>
-                )}
-
-                {!canPurchase ? (
+                {!orderPlaced && !canPurchase ? (
                   <p className="mt-6 rounded-xl bg-red-50 p-4 text-sm text-red-700">
                     This product is currently unavailable. Choose another item from this farm below.
                   </p>
-                ) : (
+                ) : !orderPlaced ? (
                   <div className="mt-6 space-y-6">
                     {/* Quantity selectors */}
                     <div>
@@ -273,49 +306,21 @@ export function PurchaseModal({
 
                     {/* Payment methods */}
                     <div>
-                      <label className="block text-sm font-semibold text-brand-900">
+                      <label htmlFor="payment-method" className="block text-sm font-semibold text-brand-900">
                         Payment Method
                       </label>
-                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                        {PAYMENT_METHODS.map((m) => {
-                          const isSelected = paymentMethod === m.id;
-                          return (
-                            <button
-                              key={m.id}
-                              type="button"
-                              onClick={() => setPaymentMethod(m.id)}
-                              className={`flex flex-col gap-3 rounded-2xl border p-4 text-left transition-all ${
-                                isSelected
-                                  ? "border-brand-600 bg-brand-50/50 ring-2 ring-brand-500"
-                                  : "border-brand-100 bg-white hover:bg-brand-50/20"
-                              }`}
-                            >
-                              <div className="flex items-center gap-3">
-                                <div
-                                  className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
-                                    isSelected
-                                      ? "bg-brand-600 text-white"
-                                      : "bg-brand-50 text-brand-700"
-                                  }`}
-                                >
-                                  <Icon name={m.icon} className="h-5 w-5" />
-                                </div>
-                                <div className="flex-1">
-                                  <p className="font-bold text-brand-900 text-sm">{m.label}</p>
-                                </div>
-                                <div className="flex h-5 w-5 items-center justify-center rounded-full border border-brand-300">
-                                  {isSelected && (
-                                    <div className="h-2.5 w-2.5 rounded-full bg-brand-600" />
-                                  )}
-                                </div>
-                              </div>
-                              <p className="text-[11px] text-gray-500 leading-normal">
-                                {m.sublabel}
-                              </p>
-                            </button>
-                          );
-                        })}
-                      </div>
+                      <select
+                        id="payment-method"
+                        value={paymentMethod}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="mt-2 w-full rounded-xl border border-brand-200 bg-white px-4 py-3 text-brand-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                      >
+                        {PAYMENT_METHODS.map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.label} ({m.id === "mobile_money" ? "MTN / Telecel" : "Direct Transfer"})
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
                     <div className="rounded-2xl bg-brand-900 p-5 text-white">
@@ -343,7 +348,7 @@ export function PurchaseModal({
                       {submitting ? "Processing payment..." : `Pay GHC ${total.toFixed(2)}`}
                     </button>
                   </div>
-                )}
+                ) : null}
               </div>
             </div>
           </section>
