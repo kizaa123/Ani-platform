@@ -511,10 +511,45 @@ export function isFarmer(roleId: number) {
   return roleId === ROLES.CROP_FARMER || roleId === ROLES.LIVESTOCK_FARMER;
 }
 
+/** Crop subcategories seeded for Ghana agriculture (legacy "Crop" for existing DB rows). */
+export const CROP_CATEGORY_NAMES = [
+  "Cereals",
+  "Roots & Tubers",
+  "Vegetables",
+  "Fruits",
+  "Tree Crops",
+  "Legumes",
+  "Spices & Herbs",
+  "Other Crops",
+  "Crop",
+] as const;
+
+export const LIVESTOCK_CATEGORY_NAME = "Livestock";
+
+export function isCropCategory(name: string): boolean {
+  return (CROP_CATEGORY_NAMES as readonly string[]).includes(name);
+}
+
+export function isLivestockCategory(name: string): boolean {
+  return name === LIVESTOCK_CATEGORY_NAME;
+}
+
 export function farmerCategoryFilter(roleId: number): "Crop" | "Livestock" | null {
   if (roleId === ROLES.CROP_FARMER) return "Crop";
   if (roleId === ROLES.LIVESTOCK_FARMER) return "Livestock";
   return null;
+}
+
+export function filterCategoriesForRole(
+  categories: CommodityCategory[],
+  roleId: number
+): CommodityCategory[] {
+  const kind = farmerCategoryFilter(roleId);
+  if (!kind) return [];
+  if (kind === "Livestock") {
+    return categories.filter((c) => c.name === LIVESTOCK_CATEGORY_NAME);
+  }
+  return categories.filter((c) => isCropCategory(c.name));
 }
 
 export function isBuyer(roleId: number) {

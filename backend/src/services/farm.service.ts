@@ -2,6 +2,7 @@ import { z } from 'zod';
 import prisma from '../database/prisma';
 import { assertFound, assertAuthorized, AppError } from '../utils/errors';
 import { isFarmerRole, ROLES } from '../constants/roles';
+import { categoryMatchesFarmerRole } from '../constants/commodities';
 import {
   LISTING_UNITS,
   assertUnitForRole,
@@ -76,13 +77,16 @@ export class FarmService {
 
   async addCommodity(userId: string, roleId: number, data: z.infer<typeof addCommoditySchema>) {
     assertAuthorized(isFarmerRole(roleId), 'Only farmers can add commodities');
-    const requiredCategory = roleId === ROLES.CROP_FARMER ? 'Crop' : 'Livestock';
+    const requiredLabel = roleId === ROLES.CROP_FARMER ? 'crop' : 'livestock';
     const commodity = await prisma.commodity.findUnique({
       where: { id: data.commodityId },
       include: { category: true },
     });
-    if (!commodity || commodity.category.name !== requiredCategory) {
-      throw new AppError(400, `Commodity must belong to ${requiredCategory} category for your farmer role`);
+    if (
+      !commodity ||
+      !categoryMatchesFarmerRole(commodity.category.name, roleId, ROLES.CROP_FARMER, ROLES.LIVESTOCK_FARMER)
+    ) {
+      throw new AppError(400, `Commodity must belong to a ${requiredLabel} category for your farmer role`);
     }
 
     const unit = data.unit ?? defaultListingUnit(roleId);

@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { CommodityCategory, HandlerProfile, ROLES } from "@/lib/types";
+import { CommodityCategory, HandlerProfile, ROLES, farmerCategoryFilter } from "@/lib/types";
 import { CountrySelect } from "@/components/CountrySelect";
 import { HandlerSelect } from "@/components/HandlerSelect";
+import { CommodityPicker } from "@/components/CommodityPicker";
 import { Icon } from "@/components/icons";
 
 const ROLE_OPTIONS = [
@@ -20,12 +21,6 @@ const ROLE_OPTIONS = [
 ];
 
 const STEP_LABELS = ["Account", "Details", "Commodities"] as const;
-
-function categoryForRole(roleId: number): "Crop" | "Livestock" | null {
-  if (roleId === ROLES.CROP_FARMER) return "Crop";
-  if (roleId === ROLES.LIVESTOCK_FARMER) return "Livestock";
-  return null;
-}
 
 function buildRegisterPayload(
   form: {
@@ -105,16 +100,9 @@ export default function RegisterPage() {
   const handlerEmptyMessage = isFarmerRole
     ? "No farmer handlers registered yet. A farmer handler must register first."
     : "No buyer handlers registered yet. A buyer handler must register first.";
-  const categoryFilter = categoryForRole(form.roleId);
+  const categoryFilter = farmerCategoryFilter(form.roleId);
   const totalSteps = isFarmerRole ? 3 : 2;
   const stepLabels = isFarmerRole ? STEP_LABELS : STEP_LABELS.slice(0, 2);
-
-  const selectableCommodities = useMemo(() => {
-    if (!categoryFilter) return [];
-    return categories
-      .filter((c) => c.name === categoryFilter)
-      .flatMap((c) => c.commodities || []);
-  }, [categories, categoryFilter]);
 
   useEffect(() => {
     api.commodities.categories().then(setCategories).catch(() => {});
@@ -126,12 +114,6 @@ export default function RegisterPage() {
     setSelectedCommodities([]);
     setForm((prev) => ({ ...prev, handlerId: "" }));
   }, [form.roleId]);
-
-  const toggleCommodity = (id: number) => {
-    setSelectedCommodities((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
-    );
-  };
 
   const handleProfileSelect = (file: File) => {
     setProfileFile(file);
@@ -204,7 +186,58 @@ export default function RegisterPage() {
 
   return (
     <div className="flex-1 w-full grid lg:grid-cols-12 bg-brand-50">
-      {/* Left Column: Form Container */}
+      {/* Left Column: Platform Overview & Sprout Image */}
+      <div className="hidden lg:col-span-6 lg:flex relative overflow-hidden bg-brand-900 flex-col justify-between p-12 lg:p-16 text-white min-h-[500px]">
+        {/* Background sprout image */}
+        <div className="absolute inset-0 z-0 bg-[url('/login_cover.png')] bg-cover bg-center" />
+        {/* Dark gradient overlay for readability */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-brand-950/95 via-brand-900/60 to-brand-800/10 z-10" />
+
+        {/* Brand logo */}
+        <div className="relative z-20 flex items-center gap-2">
+          <div className="h-10 w-10 bg-brand-500 rounded-xl flex items-center justify-center font-extrabold text-xl text-white shadow-lg shadow-brand-900/40">
+            A
+          </div>
+          <span className="font-extrabold text-2xl tracking-wider uppercase bg-clip-text text-transparent bg-gradient-to-r from-white via-brand-50 to-brand-200">
+            ANI Platform
+          </span>
+        </div>
+
+        {/* Marketing text & stats */}
+        <div className="relative z-20 space-y-6 max-w-xl">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-xs font-semibold text-brand-300 backdrop-blur-md">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            Agricultural Exchange Platform
+          </span>
+          <h2 className="text-4xl lg:text-5xl font-black leading-tight tracking-tight text-white drop-shadow-sm">
+            Connecting African Agriculture to Global Markets
+          </h2>
+          <p className="text-brand-100 text-lg leading-relaxed font-light">
+            Trade commodities securely, connect directly with verified buyers and crop farmers, and request support from expert handlers.
+          </p>
+
+          <div className="grid grid-cols-3 gap-6 pt-8 border-t border-white/10 backdrop-blur-[2px] rounded-xl p-4 bg-white/5">
+            <div>
+              <p className="text-3xl font-extrabold text-gold tracking-tight">10k+</p>
+              <p className="text-[10px] text-brand-200 uppercase tracking-widest font-semibold mt-1">Verified Users</p>
+            </div>
+            <div>
+              <p className="text-3xl font-extrabold text-gold tracking-tight">100%</p>
+              <p className="text-[10px] text-brand-200 uppercase tracking-widest font-semibold mt-1">Secure Escrow</p>
+            </div>
+            <div>
+              <p className="text-3xl font-extrabold text-gold tracking-tight">24/7</p>
+              <p className="text-[10px] text-brand-200 uppercase tracking-widest font-semibold mt-1">Handler Support</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="relative z-20 text-xs text-brand-300 font-medium">
+          © {new Date().getFullYear()} ANI Agricultural Exchange Platform. All rights reserved.
+        </div>
+      </div>
+
+      {/* Right Column: Form Container */}
       <div className="lg:col-span-6 flex items-start justify-center p-6 sm:p-12 lg:p-16 overflow-y-auto">
         <div className="w-full max-w-xl space-y-8 bg-white p-8 rounded-2xl border border-brand-100 shadow-xl">
           <header className="text-center lg:text-left">
@@ -557,54 +590,21 @@ export default function RegisterPage() {
                 <div>
                   <h3 className="auth-section-title">Select {categoryFilter} Commodities</h3>
                   <p className="auth-hint mt-1">
-                    Tick only the {categoryFilter.toLowerCase()} you produce. Buyers will see these on
-                    your profile.
+                    Search and choose the {categoryFilter?.toLowerCase()} you produce. Buyers will see
+                    these on your profile.
                   </p>
                 </div>
               </div>
             </div>
 
-            {selectableCommodities.length === 0 ? (
-              <p className="text-center text-sm text-gray-500">Loading commodities...</p>
-            ) : (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {selectableCommodities.map((commodity) => {
-                  const selected = selectedCommodities.includes(commodity.id);
-                  return (
-                    <button
-                      key={commodity.id}
-                      type="button"
-                      onClick={() => toggleCommodity(commodity.id)}
-                      className={`flex items-center gap-3 rounded-xl border p-4 text-left transition ${
-                        selected
-                          ? "border-brand-600 bg-brand-100 ring-2 ring-brand-500"
-                          : "border-brand-200 bg-white hover:border-brand-300"
-                      }`}
-                    >
-                      <span
-                        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 ${
-                          selected
-                            ? "border-brand-700 bg-brand-700 text-white"
-                            : "border-gray-300 bg-white"
-                        }`}
-                      >
-                        {selected && <Icon name="check" className="h-3.5 w-3.5" />}
-                      </span>
-                      <div className="min-w-0">
-                        <span className="block font-semibold text-brand-900">{commodity.name}</span>
-                        <p className="text-xs text-gray-500">{categoryFilter}</p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {selectedCommodities.length > 0 && (
-              <p className="text-sm font-medium text-brand-700">
-                {selectedCommodities.length} commodity(s) selected
-              </p>
-            )}
+            <CommodityPicker
+              categories={categories}
+              roleId={form.roleId}
+              mode="multi"
+              selectedIds={selectedCommodities}
+              onSelectionChange={setSelectedCommodities}
+              idPrefix="reg-commodity"
+            />
 
             <div className="auth-nav">
               <button
@@ -634,58 +634,7 @@ export default function RegisterPage() {
           </p>
         </div>
       </div>
-
-      {/* Right Column: Platform Overview & Sprout Image */}
-      <div className="hidden lg:col-span-6 lg:flex relative overflow-hidden bg-brand-900 flex-col justify-between p-12 lg:p-16 text-white min-h-[500px]">
-        {/* Background sprout image */}
-        <div className="absolute inset-0 z-0 bg-[url('/login_cover.png')] bg-cover bg-center" />
-        {/* Dark gradient overlay for readability */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-brand-950/95 via-brand-900/60 to-brand-800/10 z-10" />
-
-        {/* Brand logo */}
-        <div className="relative z-20 flex items-center gap-2">
-          <div className="h-10 w-10 bg-brand-500 rounded-xl flex items-center justify-center font-extrabold text-xl text-white shadow-lg shadow-brand-900/40">
-            A
-          </div>
-          <span className="font-extrabold text-2xl tracking-wider uppercase bg-clip-text text-transparent bg-gradient-to-r from-white via-brand-50 to-brand-200">
-            ANI Platform
-          </span>
-        </div>
-
-        {/* Marketing text & stats */}
-        <div className="relative z-20 space-y-6 max-w-xl">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-xs font-semibold text-brand-300 backdrop-blur-md">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-            Agricultural Exchange Platform
-          </span>
-          <h2 className="text-4xl lg:text-5xl font-black leading-tight tracking-tight text-white drop-shadow-sm">
-            Connecting African Agriculture to Global Markets
-          </h2>
-          <p className="text-brand-100 text-lg leading-relaxed font-light">
-            Trade commodities securely, connect directly with verified buyers and crop farmers, and request support from expert handlers.
-          </p>
-
-          <div className="grid grid-cols-3 gap-6 pt-8 border-t border-white/10 backdrop-blur-[2px] rounded-xl p-4 bg-white/5">
-            <div>
-              <p className="text-3xl font-extrabold text-gold tracking-tight">10k+</p>
-              <p className="text-[10px] text-brand-200 uppercase tracking-widest font-semibold mt-1">Verified Users</p>
-            </div>
-            <div>
-              <p className="text-3xl font-extrabold text-gold tracking-tight">100%</p>
-              <p className="text-[10px] text-brand-200 uppercase tracking-widest font-semibold mt-1">Secure Escrow</p>
-            </div>
-            <div>
-              <p className="text-3xl font-extrabold text-gold tracking-tight">24/7</p>
-              <p className="text-[10px] text-brand-200 uppercase tracking-widest font-semibold mt-1">Handler Support</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="relative z-20 text-xs text-brand-300 font-medium">
-          © {new Date().getFullYear()} ANI Agricultural Exchange Platform. All rights reserved.
-        </div>
-      </div>
     </div>
   );
 }
-
+

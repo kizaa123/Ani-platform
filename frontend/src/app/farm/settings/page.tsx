@@ -16,6 +16,7 @@ import {
 import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { CountrySelect } from "@/components/CountrySelect";
 import { HandlerSelect } from "@/components/HandlerSelect";
+import { CommodityPicker } from "@/components/CommodityPicker";
 import { DEFAULT_COUNTRY } from "@/lib/africanCountries";
 import { ProfileIdentityHeader, ProfileEditSection, ProfileEditActions } from "@/components/ProfileIdentityHeader";
 
@@ -57,13 +58,6 @@ export default function FarmSettingsPage() {
   });
 
   const categoryFilter = user ? farmerCategoryFilter(user.roleId) : null;
-
-  const selectableCommodities = useMemo(() => {
-    if (!categoryFilter) return [];
-    return categories
-      .filter((c) => c.name === categoryFilter)
-      .flatMap((c) => c.commodities || []);
-  }, [categories, categoryFilter]);
 
   const registeredIds = useMemo(
     () => new Set(registered.map((r) => r.commodityId ?? r.commodity?.id)),
@@ -412,35 +406,14 @@ export default function FarmSettingsPage() {
         <h3 className="mb-3 text-sm font-semibold text-brand-800">
           Add {categoryFilter} commodities
         </h3>
-        {selectableCommodities.length === 0 ? (
-          <p className="text-sm text-gray-500">Loading catalog...</p>
-        ) : (
-          <div className="grid gap-2 sm:grid-cols-2">
-            {selectableCommodities.map((commodity) => {
-              const already = registeredIds.has(commodity.id);
-              return (
-                <button
-                  key={commodity.id}
-                  type="button"
-                  disabled={already}
-                  onClick={() => addCommodity(commodity.id)}
-                  className={`flex items-center gap-3 rounded-xl border p-3 text-left text-sm transition ${
-                    already
-                      ? "border-brand-200 bg-brand-50 text-brand-600 opacity-60 cursor-default"
-                      : "border-gray-200 bg-white hover:border-brand-400 hover:bg-brand-50"
-                  }`}
-                >
-                  <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded text-xs font-bold ${
-                    already ? "bg-brand-600 text-white" : "border border-gray-300"
-                  }`}>
-                    {already ? "✓" : "+"}
-                  </span>
-                  <span className="font-medium">{commodity.name}</span>
-                </button>
-              );
-            })}
-          </div>
-        )}
+        <CommodityPicker
+          categories={categories}
+          roleId={user.roleId}
+          mode="select-add"
+          excludeIds={registeredIds}
+          onSelectAdd={addCommodity}
+          idPrefix="farm-commodity"
+        />
       </section>
 
       <ProfileEditActions

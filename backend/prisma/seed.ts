@@ -59,50 +59,155 @@ async function main() {
     }
   }
 
-  const cropCat = await prisma.commodityCategory.upsert({
-    where: { name: 'Crop' }, update: {}, create: { name: 'Crop' },
-  });
-  const livestockCat = await prisma.commodityCategory.upsert({
-    where: { name: 'Livestock' }, update: {}, create: { name: 'Livestock' },
-  });
+  const cropCategories: Record<string, Record<string, string[]>> = {
+    Cereals: {
+      Maize: ['White maize', 'Yellow maize'],
+      Rice: ['Local rice', 'Imported rice', 'Jasmine rice', 'Ofada rice'],
+      Millet: ['Pearl millet', 'Finger millet'],
+      Sorghum: ['Red sorghum', 'White sorghum'],
+      Fonio: ['White fonio', 'Black fonio'],
+      Wheat: ['Bread wheat', 'Durum wheat'],
+    },
+    'Roots & Tubers': {
+      Cassava: ['Sweet cassava', 'Industrial cassava'],
+      Yam: ['White yam', 'Water yam', 'Yellow yam', 'Puna yam'],
+      Cocoyam: ['Taro cocoyam', 'Colocasia cocoyam'],
+      Plantain: ['French plantain', 'False horn plantain', 'Apem plantain'],
+      'Sweet Potato': ['Orange flesh', 'White flesh'],
+      'Irish Potato': ['Red skin', 'White skin'],
+      Taro: ['Eddoe taro', 'Dasheen taro'],
+    },
+    Vegetables: {
+      Tomato: ['Roma tomato', 'Cherry tomato', 'Beef tomato'],
+      Pepper: ['Bell pepper', 'Scotch bonnet', "Bird's eye chili", 'Habanero', 'Green bell', 'Red bell'],
+      Onion: ['Red onion', 'White onion', 'Spring onion'],
+      'Garden Eggs': ['White garden egg', 'Green garden egg', 'Purple garden egg'],
+      Okra: ['Green okra', 'Red okra'],
+      Cabbage: ['Green cabbage', 'Red cabbage'],
+      Lettuce: ['Iceberg lettuce', 'Romaine lettuce'],
+      Cucumber: ['Slicing cucumber', 'Pickling cucumber'],
+      Carrot: ['Nantes carrot', 'Chantenay carrot'],
+      Eggplant: ['Long purple', 'Round white'],
+      Spinach: ['English spinach', 'Amaranth leaves'],
+      Kontomire: ['Cocoyam leaves', 'Sweet potato leaves'],
+      'Green Beans': ['French beans', 'Runner beans'],
+    },
+    Fruits: {
+      Mango: ['Keitt mango', 'Kent mango', 'Local mango', 'Alphonso mango'],
+      Pineapple: ['Smooth cayenne', 'Sugar loaf', 'MD2 golden'],
+      Papaya: ['Solo papaya', 'Red lady papaya'],
+      Orange: ['Valencia orange', 'Local sweet orange', 'Navel orange'],
+      Banana: ['Cavendish banana', 'Red banana', 'Apple banana'],
+      Watermelon: ['Crimson sweet', 'Sugar baby'],
+      Coconut: ['Green coconut', 'Dry coconut'],
+      Avocado: ['Hass avocado', 'Local avocado', 'Fuerte avocado'],
+      Cashew: ['Raw cashew nut', 'Roasted cashew nut'],
+      Guava: ['Pink guava', 'White guava'],
+      'Passion Fruit': ['Purple passion fruit', 'Yellow passion fruit'],
+      Lemon: ['Eureka lemon', 'Local lemon'],
+      Lime: ['Key lime', 'Persian lime'],
+      Grapefruit: ['Pink grapefruit', 'White grapefruit'],
+    },
+    'Tree Crops': {
+      Cocoa: ['Fine flavour', 'Bulk grade', 'Organic cocoa'],
+      Coffee: ['Arabica', 'Robusta', 'Excelsa'],
+      'Oil Palm': ['Tenera', 'Dura', 'Pisifera'],
+      Shea: ['Shea nuts', 'Shea butter grade'],
+      Rubber: ['Latex grade', 'Cup lump'],
+    },
+    Legumes: {
+      Groundnut: ['Runner groundnut', 'Virginia groundnut', 'Spanish groundnut'],
+      Cowpea: ['Red cowpea', 'White cowpea', 'Brown cowpea', 'Black-eyed pea'],
+      Soybean: ['Yellow soybean', 'Black soybean'],
+      'Bambara Beans': ['Red bambara', 'White bambara'],
+      'Pigeon Pea': ['Short duration', 'Long duration'],
+      Beans: ['Kidney beans', 'Black beans', 'Navy beans'],
+    },
+    'Spices & Herbs': {
+      Ginger: ['Yellow ginger', 'Black ginger'],
+      Turmeric: ['Fresh turmeric', 'Dried turmeric'],
+      Moringa: ['Moringa leaves', 'Moringa seeds'],
+      'African Nutmeg': ['Whole nutmeg', 'Ground nutmeg'],
+      Garlic: ['Hardneck garlic', 'Softneck garlic'],
+      'Hot Pepper': ['Cayenne pepper', 'Shito pepper'],
+    },
+    'Other Crops': {
+      Sugarcane: ['Chewing cane', 'Industrial cane'],
+      Cotton: ['Upland cotton', 'Long staple cotton'],
+      Kenaf: ['Fibre kenaf', 'Seed kenaf'],
+      Tobacco: ['Virginia tobacco', 'Burley tobacco'],
+      Sesame: ['White sesame', 'Brown sesame'],
+    },
+  };
 
-  const cropData: Record<string, string[]> = {
+  const livestockData: Record<string, string[]> = {
+    Cattle: ['Beef cattle', 'Dairy cattle', 'Dual-purpose cattle'],
+    Goats: ['West African Dwarf', 'Sahelian goat', 'Boer cross'],
+    Sheep: ['West African Dwarf sheep', 'Djallonke sheep', 'Sahelian sheep'],
+    Poultry: ['Broiler', 'Layer', 'Local fowl', 'Guinea fowl'],
+    Pigs: ['Large White', 'Landrace', 'Local pig'],
+    Rabbits: ['New Zealand White', 'California rabbit'],
+    Grasscutter: ['Domesticated grasscutter'],
+    Snails: ['Giant African snail', 'Achatina snail'],
+    Bees: ['Honey bees', 'Stingless bees'],
+    Fish: ['Tilapia', 'Catfish', 'Heterotis'],
+  };
+
+  async function seedCategoryCommodities(
+    categoryName: string,
+    commodities: Record<string, string[]>
+  ) {
+    const category = await prisma.commodityCategory.upsert({
+      where: { name: categoryName },
+      update: {},
+      create: { name: categoryName },
+    });
+    for (const [name, variants] of Object.entries(commodities)) {
+      const c = await prisma.commodity.upsert({
+        where: { categoryId_name: { categoryId: category.id, name } },
+        update: {},
+        create: { categoryId: category.id, name },
+      });
+      for (const v of variants) {
+        await prisma.commodityVariant.upsert({
+          where: { commodityId_variantName: { commodityId: c.id, variantName: v } },
+          update: {},
+          create: { commodityId: c.id, variantName: v },
+        });
+      }
+    }
+  }
+
+  for (const [categoryName, commodities] of Object.entries(cropCategories)) {
+    await seedCategoryCommodities(categoryName, commodities);
+  }
+
+  await seedCategoryCommodities('Livestock', livestockData);
+
+  // Legacy flat "Crop" category — keeps existing farmer links valid on re-seed
+  const legacyCrop = await prisma.commodityCategory.upsert({
+    where: { name: 'Crop' },
+    update: {},
+    create: { name: 'Crop' },
+  });
+  const legacyCommodities: Record<string, string[]> = {
     Maize: ['White maize', 'Yellow maize'],
     Rice: ['Local rice', 'Imported rice'],
     Cocoa: ['Fine flavour', 'Bulk grade'],
     Tomato: ['Roma tomato', 'Cherry tomato'],
     Cassava: ['Sweet cassava', 'Industrial cassava'],
   };
-
-  const livestockData: Record<string, string[]> = {
-    Cattle: ['Beef cattle', 'Dairy cattle'],
-    Goats: ['Meat goats', 'Dairy goats'],
-    Sheep: ['Meat sheep', 'Wool sheep'],
-    Poultry: ['Broiler', 'Layer'],
-  };
-
-  for (const [name, variants] of Object.entries(cropData)) {
+  for (const [name, variants] of Object.entries(legacyCommodities)) {
     const c = await prisma.commodity.upsert({
-      where: { categoryId_name: { categoryId: cropCat.id, name } },
-      update: {}, create: { categoryId: cropCat.id, name },
+      where: { categoryId_name: { categoryId: legacyCrop.id, name } },
+      update: {},
+      create: { categoryId: legacyCrop.id, name },
     });
     for (const v of variants) {
       await prisma.commodityVariant.upsert({
         where: { commodityId_variantName: { commodityId: c.id, variantName: v } },
-        update: {}, create: { commodityId: c.id, variantName: v },
-      });
-    }
-  }
-
-  for (const [name, variants] of Object.entries(livestockData)) {
-    const c = await prisma.commodity.upsert({
-      where: { categoryId_name: { categoryId: livestockCat.id, name } },
-      update: {}, create: { categoryId: livestockCat.id, name },
-    });
-    for (const v of variants) {
-      await prisma.commodityVariant.upsert({
-        where: { commodityId_variantName: { commodityId: c.id, variantName: v } },
-        update: {}, create: { commodityId: c.id, variantName: v },
+        update: {},
+        create: { commodityId: c.id, variantName: v },
       });
     }
   }

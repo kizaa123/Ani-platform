@@ -10,6 +10,7 @@ import {
 } from '../utils/jwt';
 import { AppError, assertFound } from '../utils/errors';
 import { ROLES, FARMER_ROLES, isFarmerRole, isFarmerHandler, isBuyerHandler } from '../constants/roles';
+import { categoryMatchesFarmerRole } from '../constants/commodities';
 import { defaultListingUnit } from '../constants/units';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
 
@@ -141,17 +142,20 @@ export class AuthService {
     const passwordHash = await hashPassword(input.password);
 
     if (FARMER_ROLES.includes(input.roleId as typeof ROLES.CROP_FARMER)) {
-      const requiredCategory = input.roleId === ROLES.CROP_FARMER ? 'Crop' : 'Livestock';
+      const requiredLabel = input.roleId === ROLES.CROP_FARMER ? 'crop' : 'livestock';
       if (!input.commodityIds?.length) {
-        throw new AppError(400, `Select at least one ${requiredCategory.toLowerCase()} commodity`);
+        throw new AppError(400, `Select at least one ${requiredLabel} commodity`);
       }
       for (const commodityId of input.commodityIds) {
         const commodity = await prisma.commodity.findUnique({
           where: { id: commodityId },
           include: { category: true },
         });
-        if (!commodity || commodity.category.name !== requiredCategory) {
-          throw new AppError(400, `Commodity must belong to ${requiredCategory} category for this farmer role`);
+        if (
+          !commodity ||
+          !categoryMatchesFarmerRole(commodity.category.name, input.roleId, ROLES.CROP_FARMER, ROLES.LIVESTOCK_FARMER)
+        ) {
+          throw new AppError(400, `Commodity must belong to a ${requiredLabel} category for this farmer role`);
         }
       }
     }
