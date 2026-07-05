@@ -27,8 +27,8 @@ export default function AdminPage() {
   useEffect(() => {
     if (!loading && !user) router.push("/login");
     if (user && isStaff(user.roleId)) {
-      api.admin.stats().then(setStats).catch(console.error);
-      api.admin.pending().then(setPending).catch(console.error);
+      api.admin.stats().then((res: any) => setStats(res)).catch(console.error);
+      api.admin.pending().then((res: any) => setPending(res)).catch(console.error);
       loadConnections();
     } else if (user) router.push("/dashboard");
   }, [user?.id, loading, router, loadConnections]);
