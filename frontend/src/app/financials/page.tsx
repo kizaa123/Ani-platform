@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import { BuyerFinancialStatement, isBuyer } from "@/lib/types";
-import { CountryBadge } from "@/components/CountrySelect";
 import { formatDate, formatGhc, orderStatusStyle } from "@/lib/format";
 
 export default function BuyerFinancialsPage() {
@@ -58,22 +57,6 @@ export default function BuyerFinancialsPage() {
         </Link>
         <h1 className="mt-2 text-2xl font-bold text-brand-900">Financial Statement</h1>
         <p className="text-sm text-gray-500">Spending overview and farm access fees</p>
-      </div>
-
-      <div className="mb-6 rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">ANI Exchange</p>
-            <h2 className="text-lg font-bold text-brand-900">{statement.buyerName}</h2>
-            {statement.company && <p className="text-brand-700">{statement.company}</p>}
-            <p className="text-sm text-gray-500">{statement.email}</p>
-            <CountryBadge country={statement.country} region={statement.region} className="mt-2" />
-          </div>
-          <div className="text-left text-sm text-gray-500 sm:text-right">
-            <p>Statement generated</p>
-            <p className="font-medium text-brand-900">{formatDate(statement.generatedAt)}</p>
-          </div>
-        </div>
       </div>
 
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

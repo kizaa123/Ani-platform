@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import { FinancialStatement, ROLES } from "@/lib/types";
-import { CountryBadge } from "@/components/CountrySelect";
 import { SalesOrdersTable } from "@/components/ProductOrdersList";
 import { ProductOrderLineItem } from "@/lib/types";
 
@@ -106,23 +105,6 @@ export default function FinancialStatementPage() {
         </Link>
         <h1 className="mt-2 text-2xl font-bold text-brand-900">Financial Statement</h1>
         <p className="text-sm text-gray-500">Overview of your farm products and marketplace activity</p>
-      </div>
-
-      {/* Statement header */}
-      <div className="mb-6 rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">ANI Exchange</p>
-            <h2 className="text-lg font-bold text-brand-900">{statement.farmName}</h2>
-            <p className="text-brand-700">{statement.farmerName}</p>
-            <p className="text-sm text-gray-500">{statement.email}</p>
-            <CountryBadge country={statement.country} region={statement.region} className="mt-2" />
-          </div>
-          <div className="text-left sm:text-right text-sm text-gray-500">
-            <p>Statement generated</p>
-            <p className="font-medium text-brand-900">{formatDate(statement.generatedAt)}</p>
-          </div>
-        </div>
       </div>
 
       {/* Summary cards */}
