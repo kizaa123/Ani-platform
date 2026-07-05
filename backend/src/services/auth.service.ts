@@ -9,7 +9,14 @@ import {
   revokeRefreshToken,
 } from '../utils/jwt';
 import { AppError, assertFound } from '../utils/errors';
-import { ROLES, FARMER_ROLES, isFarmerRole, isFarmerHandler, isBuyerHandler } from '../constants/roles';
+import {
+  ROLES,
+  FARMER_ROLES,
+  REGISTERABLE_ROLE_IDS,
+  isFarmerRole,
+  isFarmerHandler,
+  isBuyerHandler,
+} from '../constants/roles';
 import { categoryMatchesFarmerRole } from '../constants/commodities';
 import { defaultListingUnit } from '../constants/units';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
@@ -58,7 +65,14 @@ export const registerSchema = z
   address: optionalString(),
   gpsLatitude: z.coerce.number().optional(),
   gpsLongitude: z.coerce.number().optional(),
-  roleId: z.coerce.number().int().min(1).max(8),
+  roleId: z.coerce
+    .number()
+    .int()
+    .refine(
+      (id): id is (typeof REGISTERABLE_ROLE_IDS)[number] =>
+        (REGISTERABLE_ROLE_IDS as readonly number[]).includes(id),
+      { message: 'Invalid role for registration' }
+    ),
   farmName: optionalString(),
   farmSize: optionalString(),
   experienceYears: z.preprocess(

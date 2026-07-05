@@ -51,6 +51,17 @@ export const AGENT_ROLES = [ROLES.FARMER_HANDLER, ROLES.BUYER_HANDLER];
 export const STAFF_ROLES = [ROLES.ANI_ACCOUNTANT, ROLES.ADMIN];
 export const VERIFIABLE_ROLE_IDS = [...FARMER_ROLES, ROLES.BUYER, ROLES.RESEARCHER, ...AGENT_ROLES];
 
+/** Roles exposed on the public registration form (Admin is staff-only). */
+export const REGISTERABLE_ROLE_IDS = [
+  ROLES.CROP_FARMER,
+  ROLES.LIVESTOCK_FARMER,
+  ROLES.FARMER_HANDLER,
+  ROLES.BUYER,
+  ROLES.BUYER_HANDLER,
+  ROLES.ANI_ACCOUNTANT,
+  ROLES.RESEARCHER,
+] as const;
+
 export function isFarmerRole(roleId: number): boolean {
   return FARMER_ROLES.includes(roleId as typeof ROLES.CROP_FARMER);
 }
