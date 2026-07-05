@@ -28,7 +28,7 @@ export class ResearcherController {
       const data = await researcherService.getPublication(
         req.user!.userId,
         req.user!.roleId,
-        req.params.id
+        req.params.id as string
       );
       ApiResponse.success(res, data);
     } catch (e) {
@@ -50,7 +50,7 @@ export class ResearcherController {
       const pub = await researcherService.updatePublication(
         req.user!.userId,
         req.user!.roleId,
-        req.params.id,
+        req.params.id as string,
         req.body
       );
       ApiResponse.success(res, pub);
@@ -64,7 +64,7 @@ export class ResearcherController {
       const data = await researcherService.deletePublication(
         req.user!.userId,
         req.user!.roleId,
-        req.params.id
+        req.params.id as string
       );
       ApiResponse.success(res, data);
     } catch (e) {
@@ -74,7 +74,7 @@ export class ResearcherController {
 
   recordView = async (req: AuthRequest, res: Response) => {
     try {
-      const data = await researcherService.recordView(req.user!.userId, req.params.id);
+      const data = await researcherService.recordView(req.user!.userId, req.params.id as string);
       ApiResponse.success(res, data);
     } catch (e) {
       ApiResponse.error(res, e);
@@ -86,7 +86,7 @@ export class ResearcherController {
       const data = await researcherService.purchasePublication(
         req.user!.userId,
         req.user!.roleId,
-        req.params.id,
+        req.params.id as string,
         req.body
       );
       ApiResponse.success(res, data);

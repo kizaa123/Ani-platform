@@ -105,7 +105,10 @@ export const registerSchema = z
   });
 
 export const loginSchema = z.object({
-  email: z.string().email(),
+  email: z.preprocess(
+    (val) => (typeof val === 'string' ? val.trim().toLowerCase() : val),
+    z.string().email()
+  ),
   password: z.string(),
 });
 

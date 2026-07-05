@@ -69,7 +69,7 @@ export class AdminService {
       throw new AppError(403, 'Staff accounts cannot be verified through this endpoint');
     }
 
-    if (!VERIFIABLE_ROLE_IDS.includes(existing.roleId)) {
+    if (!(VERIFIABLE_ROLE_IDS as readonly number[]).includes(existing.roleId)) {
       throw new AppError(400, 'Only buyers, farmers, and handlers can be verified');
     }
 

@@ -153,7 +153,9 @@ export default function LoginPage() {
               <Icon name="shield" className="h-3.5 w-3.5" />
               Demo accounts (Password123!)
             </p>
-            <p className="font-mono text-[11px] tracking-tight">kwame@farm.gh · ama@buyer.gh · admin@ani.gh</p>
+            <p className="font-mono text-[11px] tracking-tight">
+              kwame@farm.gh · ama@buyer.gh · akua@research.gh · admin@ani.gh
+            </p>
           </div>
         </div>
       </div>

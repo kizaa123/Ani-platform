@@ -228,9 +228,16 @@ async function main() {
 
   const hash = await bcrypt.hash('Password123!', 12);
 
+  /** Re-running seed resets demo credentials and roles (idempotent). */
+  const demoUserUpdate = (roleId: number) => ({
+    passwordHash: hash,
+    roleId,
+    verificationStatus: 'VERIFIED' as const,
+  });
+
   const kwame = await prisma.user.upsert({
     where: { email: 'kwame@farm.gh' },
-    update: {},
+    update: demoUserUpdate(1),
     create: {
       firstName: 'Kwame', lastName: 'Mensah', email: 'kwame@farm.gh', phone: '+233241234567',
       passwordHash: hash, country: 'Ghana', region: 'Central Region', city: 'Cape Coast',
@@ -279,7 +286,7 @@ async function main() {
 
   const ama = await prisma.user.upsert({
     where: { email: 'ama@buyer.gh' },
-    update: {},
+    update: demoUserUpdate(4),
     create: {
       firstName: 'Ama', lastName: 'Owusu', email: 'ama@buyer.gh', phone: '+233209876543',
       passwordHash: hash, country: 'Ghana', region: 'Greater Accra', city: 'Accra',
@@ -290,27 +297,27 @@ async function main() {
 
   const yaw = await prisma.user.upsert({
     where: { email: 'yaw@handler.gh' },
-    update: {},
+    update: demoUserUpdate(3),
     create: { firstName: 'Yaw', lastName: 'Boateng', email: 'yaw@handler.gh', phone: '+233551112233', passwordHash: hash, country: 'Ghana', region: 'Central Region', city: 'Cape Coast', roleId: 3, verificationStatus: 'VERIFIED' },
   });
   await prisma.agentProfile.upsert({ where: { userId: yaw.id }, update: {}, create: { userId: yaw.id, agentType: 'FARMER_REPRESENTATIVE' } });
 
   const kofi = await prisma.user.upsert({
     where: { email: 'kofi@handler.gh' },
-    update: {},
+    update: demoUserUpdate(5),
     create: { firstName: 'Kofi', lastName: 'Asante', email: 'kofi@handler.gh', phone: '+233554445566', passwordHash: hash, country: 'Ghana', region: 'Greater Accra', city: 'Accra', roleId: 5, verificationStatus: 'VERIFIED' },
   });
   await prisma.agentProfile.upsert({ where: { userId: kofi.id }, update: {}, create: { userId: kofi.id, agentType: 'BUYER_REPRESENTATIVE' } });
 
   await prisma.user.upsert({
     where: { email: 'accountant@ani.gh' },
-    update: {},
+    update: demoUserUpdate(6),
     create: { firstName: 'ANI', lastName: 'Accountant', email: 'accountant@ani.gh', phone: '+233500000001', passwordHash: hash, country: 'Ghana', region: 'Greater Accra', city: 'Accra', roleId: 6, verificationStatus: 'VERIFIED' },
   });
 
   await prisma.user.upsert({
     where: { email: 'admin@ani.gh' },
-    update: {},
+    update: demoUserUpdate(7),
     create: { firstName: 'Platform', lastName: 'Admin', email: 'admin@ani.gh', phone: '+233500000002', passwordHash: hash, country: 'Ghana', region: 'Greater Accra', city: 'Accra', roleId: 7, verificationStatus: 'VERIFIED' },
   });
 
@@ -325,7 +332,7 @@ async function main() {
 
   const akua = await prisma.user.upsert({
     where: { email: 'akua@research.gh' },
-    update: {},
+    update: demoUserUpdate(8),
     create: {
       firstName: 'Akua', lastName: 'Mensah', email: 'akua@research.gh', phone: '+233201112233',
       passwordHash: hash, country: 'Ghana', region: 'Ashanti Region', city: 'Kumasi',

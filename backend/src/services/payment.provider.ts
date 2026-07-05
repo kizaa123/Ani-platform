@@ -4,7 +4,7 @@ export interface PaymentInitRequest {
   paymentMethod: string;
   packageId?: string;
   referenceId?: string;
-  type?: 'ACCESS_PACKAGE' | 'PRODUCT_ORDER';
+  type?: 'ACCESS_PACKAGE' | 'PRODUCT_ORDER' | 'RESEARCH_PURCHASE';
   metadata?: Record<string, string>;
 }
 

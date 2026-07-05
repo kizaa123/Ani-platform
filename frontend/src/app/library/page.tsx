@@ -114,7 +114,18 @@ export default function LibraryPage() {
         </button>
       </form>
 
-      {loadError && <p className="mb-4 rounded-xl bg-red-50 p-4 text-red-700">{loadError}</p>}
+      {loadError && (
+        <p className="mb-4 rounded-xl bg-red-50 p-4 text-red-700">
+          {loadError}
+          {loadError === "Route not found" && (
+            <span className="mt-2 block text-sm">
+              Restart the backend server so the research API routes load, then run{" "}
+              <code className="rounded bg-red-100 px-1">npm run db:setup</code> if the database
+              was created before the Research Library feature.
+            </span>
+          )}
+        </p>
+      )}
 
       {publications.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-brand-200 bg-white p-12 text-center text-gray-500">
