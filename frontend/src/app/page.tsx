@@ -4,7 +4,6 @@ import { Icon, type IconName } from "@/components/icons";
 
 const STATS = [
   { value: "10,000+", label: "Verified Users" },
-  { value: "GHC 5M+", label: "Commodities Traded" },
   { value: "54+", label: "Districts Covered" },
   { value: "100%", label: "Secure Transactions" },
 ];
@@ -138,7 +137,7 @@ export default function HomePage() {
       {/* ── STATS BAR ── */}
       <section className="bg-brand-800 py-8">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+          <div className="grid grid-cols-3 gap-6">
             {STATS.map((s) => (
               <div key={s.label} className="text-center">
                 <p className="text-3xl font-black text-yellow-400">{s.value}</p>
