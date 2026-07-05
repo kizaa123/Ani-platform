@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import { createApp } from './app';
+import { isCloudStorageEnabled } from './services/storage.service';
 
 dotenv.config();
 
@@ -9,6 +10,11 @@ const app = createApp();
 
 app.listen(PORT, HOST, () => {
   console.log(`ANI Platform API → http://${HOST}:${PORT}`);
+  console.log(
+    isCloudStorageEnabled()
+      ? 'Upload storage: Cloudinary (persistent)'
+      : 'Upload storage: local disk (dev only — set CLOUDINARY_* on Render)'
+  );
 });
 
 export default app;

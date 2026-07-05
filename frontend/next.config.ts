@@ -4,7 +4,10 @@ const backend = process.env.BACKEND_URL || "http://localhost:3001";
 
 const nextConfig: NextConfig = {
   images: {
-    remotePatterns: [{ protocol: "http", hostname: "localhost", port: "3001" }],
+    remotePatterns: [
+      { protocol: "http", hostname: "localhost", port: "3001" },
+      { protocol: "https", hostname: "res.cloudinary.com" },
+    ],
     unoptimized: true,
   },
   async rewrites() {

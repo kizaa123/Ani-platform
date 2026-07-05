@@ -196,7 +196,9 @@ export class AgentService {
         unit: listing.unit,
         priceLabel: `GHC ${listing.price}/${listing.unit}`,
         quantityLabel: `${listing.quantity} ${listing.unit}`,
-        images: normalizeImages(listing.images),
+        images: normalizeImages(listing.images).map(
+          (img) => normalizePublicAssetUrl(img) ?? img
+        ),
         location: listing.location,
         harvestStartDate: toHarvestDateInput(listing.harvestStartDate),
         harvestEndDate: toHarvestDateInput(listing.harvestEndDate),

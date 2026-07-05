@@ -2,7 +2,7 @@ import { Response, NextFunction } from 'express';
 import prisma from '../database/prisma';
 import { AuthRequest } from './auth.middleware';
 import { ROLES, isFarmerRole, isStaffRole } from '../constants/roles';
-import { normalizeImages } from './upload.middleware';
+import { normalizeImages, normalizePublicAssetUrl } from './upload.middleware';
 
 export async function buyerHasFarmerFarmAccess(buyerId: string, farmerUserId: string): Promise<boolean> {
   const record = await prisma.buyerFarmerAccess.findUnique({
@@ -123,7 +123,7 @@ export function maskListing(
     city: farmerUser.city,
     farmerName: `${farmerUser.firstName} ${farmerUser.lastName}`,
     farmerId: farmerUser.id,
-    profilePicture: farmerUser.profilePicture,
+    profilePicture: normalizePublicAssetUrl(farmerUser.profilePicture),
     registeredCommodities,
     status: listing.status,
     createdAt: listing.createdAt,
@@ -143,7 +143,9 @@ export function fullListing(
   extras?: { connectionStatus?: string; farmerAccess?: boolean; hasFarmAccess?: boolean }
 ) {
   const { farmerUser, farmerProfile, registeredCommodities } = ctx;
-  const images = normalizeImages(listing.images);
+  const images = normalizeImages(listing.images).map(
+    (img) => normalizePublicAssetUrl(img) ?? img
+  );
   const qty = listing.quantity as number;
   const status = listing.status as string;
   const available = status === 'ACTIVE' && qty > 0;
@@ -174,7 +176,7 @@ export function fullListing(
     hasFarmAccess: extras?.hasFarmAccess ?? true,
     farmerName: `${farmerUser.firstName} ${farmerUser.lastName}`,
     farmerId: farmerUser.id,
-    profilePicture: farmerUser.profilePicture,
+    profilePicture: normalizePublicAssetUrl(farmerUser.profilePicture),
     farmer: {
       id: farmerUser.id,
       name: `${farmerUser.firstName} ${farmerUser.lastName}`,
@@ -184,7 +186,7 @@ export function fullListing(
       country: farmerUser.country,
       city: farmerUser.city,
       address: farmerUser.address,
-      profilePicture: farmerUser.profilePicture,
+      profilePicture: normalizePublicAssetUrl(farmerUser.profilePicture),
       farmName: farmerProfile?.farmName,
       farmSize: farmerProfile?.farmSize,
       experienceYears: farmerProfile?.experienceYears,

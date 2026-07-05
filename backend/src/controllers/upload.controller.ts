@@ -3,7 +3,7 @@ import prisma from '../database/prisma';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { ApiResponse } from '../utils/response';
 import { isFarmerRole } from '../constants/roles';
-import { publicUrl } from '../middleware/upload.middleware';
+import { persistUploadedFile } from '../services/storage.service';
 
 export class UploadController {
   uploadProfilePicture = async (req: AuthRequest, res: Response) => {
@@ -12,7 +12,7 @@ export class UploadController {
         return res.status(400).json({ success: false, error: 'No image file provided' });
       }
 
-      const url = publicUrl(`profiles/${req.file.filename}`);
+      const url = await persistUploadedFile(req.file, 'profiles');
 
       await prisma.user.update({
         where: { id: req.user!.userId },
@@ -36,7 +36,7 @@ export class UploadController {
         return res.status(400).json({ success: false, error: 'No image files provided' });
       }
 
-      const urls = files.map((f) => publicUrl(`listings/${f.filename}`));
+      const urls = await Promise.all(files.map((f) => persistUploadedFile(f, 'listings')));
       ApiResponse.success(res, { urls });
     } catch (e) {
       ApiResponse.error(res, e);
@@ -54,8 +54,8 @@ export class UploadController {
       }
 
       const result: { fileUrl?: string; coverImage?: string } = {};
-      if (file) result.fileUrl = publicUrl(`publications/${file.filename}`);
-      if (cover) result.coverImage = publicUrl(`publications/${cover.filename}`);
+      if (file) result.fileUrl = await persistUploadedFile(file, 'publications');
+      if (cover) result.coverImage = await persistUploadedFile(cover, 'publications');
 
       ApiResponse.success(res, result);
     } catch (e) {

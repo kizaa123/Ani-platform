@@ -11,7 +11,7 @@ import {
   ListingViewContext,
   RegisteredCommodity,
 } from '../middleware/access.middleware';
-import { normalizeImages } from '../middleware/upload.middleware';
+import { normalizeImages, normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import { formatHarvestLabel, parseHarvestDate, toHarvestDateInput } from '../utils/harvest';
 import {
   LISTING_UNITS,
@@ -205,7 +205,9 @@ export class MarketplaceService {
       quantity: listing.quantity,
       price: listing.price,
       unit: listing.unit,
-      images: normalizeImages(listing.images),
+      images: normalizeImages(listing.images).map(
+        (img) => normalizePublicAssetUrl(img) ?? img
+      ),
       location: listing.location,
       ...harvestPayload(listing),
       status: listing.status,
@@ -342,7 +344,7 @@ export class MarketplaceService {
         farmerName: `${profile.user.firstName} ${profile.user.lastName}`,
         farmName: profile.farmName,
         farmSize: profile.farmSize,
-        profilePicture: profile.user.profilePicture,
+        profilePicture: normalizePublicAssetUrl(profile.user.profilePicture),
         country: profile.user.country,
         region: profile.user.region,
         city: profile.user.city,
@@ -489,7 +491,9 @@ export class MarketplaceService {
     });
     return listings.map((l) => ({
       ...l,
-      images: normalizeImages(l.images),
+      images: normalizeImages(l.images).map(
+        (img) => normalizePublicAssetUrl(img) ?? img
+      ),
       priceLabel: `GHC ${l.price}/${l.unit}`,
       quantityLabel: `${l.quantity} ${l.unit}`,
       ...harvestPayload(l),
