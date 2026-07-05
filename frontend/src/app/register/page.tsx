@@ -203,17 +203,19 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="auth-page auth-page-wide">
-      <div className="auth-card">
-        <header className="auth-header">
-          <div className="auth-icon-wrap">
-            <Icon name="user" className="h-7 w-7" />
-          </div>
-          <h1 className="auth-title">Create Account</h1>
-          <p className="auth-subtitle">
-            Step {step} of {totalSteps} — {stepLabels[step - 1]}
-          </p>
-        </header>
+    <div className="flex-1 w-full grid lg:grid-cols-12 bg-brand-50">
+      {/* Left Column: Form Container */}
+      <div className="lg:col-span-6 flex items-start justify-center p-6 sm:p-12 lg:p-16 overflow-y-auto">
+        <div className="w-full max-w-xl space-y-8 bg-white p-8 rounded-2xl border border-brand-100 shadow-xl">
+          <header className="text-center lg:text-left">
+            <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-100 text-brand-700 mb-4">
+              <Icon name="user" className="h-6 w-6" />
+            </div>
+            <h1 className="text-3xl font-extrabold text-brand-900 tracking-tight">Create Account</h1>
+            <p className="mt-2 text-sm text-gray-500">
+              Step {step} of {totalSteps} — {stepLabels[step - 1]}
+            </p>
+          </header>
 
         <div className="auth-step-indicator">
           <div className="auth-step-track">
@@ -624,12 +626,64 @@ export default function RegisterPage() {
           </div>
         )}
 
-        <p className="auth-switch">
-          Have an account?{" "}
-          <Link href="/login" className="auth-switch-link">
-            Sign in
-          </Link>
-        </p>
+          <p className="auth-switch">
+            Have an account?{" "}
+            <Link href="/login" className="auth-switch-link">
+              Sign in
+            </Link>
+          </p>
+        </div>
+      </div>
+
+      {/* Right Column: Platform Overview & Sprout Image */}
+      <div className="hidden lg:col-span-6 lg:flex relative overflow-hidden bg-brand-900 flex-col justify-between p-12 lg:p-16 text-white min-h-[500px]">
+        {/* Background sprout image */}
+        <div className="absolute inset-0 z-0 bg-[url('/login_cover.png')] bg-cover bg-center" />
+        {/* Dark gradient overlay for readability */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-brand-950/95 via-brand-900/60 to-brand-800/10 z-10" />
+
+        {/* Brand logo */}
+        <div className="relative z-20 flex items-center gap-2">
+          <div className="h-10 w-10 bg-brand-500 rounded-xl flex items-center justify-center font-extrabold text-xl text-white shadow-lg shadow-brand-900/40">
+            A
+          </div>
+          <span className="font-extrabold text-2xl tracking-wider uppercase bg-clip-text text-transparent bg-gradient-to-r from-white via-brand-50 to-brand-200">
+            ANI Platform
+          </span>
+        </div>
+
+        {/* Marketing text & stats */}
+        <div className="relative z-20 space-y-6 max-w-xl">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-xs font-semibold text-brand-300 backdrop-blur-md">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            Agricultural Exchange Platform
+          </span>
+          <h2 className="text-4xl lg:text-5xl font-black leading-tight tracking-tight text-white drop-shadow-sm">
+            Connecting African Agriculture to Global Markets
+          </h2>
+          <p className="text-brand-100 text-lg leading-relaxed font-light">
+            Trade commodities securely, connect directly with verified buyers and crop farmers, and request support from expert handlers.
+          </p>
+
+          <div className="grid grid-cols-3 gap-6 pt-8 border-t border-white/10 backdrop-blur-[2px] rounded-xl p-4 bg-white/5">
+            <div>
+              <p className="text-3xl font-extrabold text-gold tracking-tight">10k+</p>
+              <p className="text-[10px] text-brand-200 uppercase tracking-widest font-semibold mt-1">Verified Users</p>
+            </div>
+            <div>
+              <p className="text-3xl font-extrabold text-gold tracking-tight">100%</p>
+              <p className="text-[10px] text-brand-200 uppercase tracking-widest font-semibold mt-1">Secure Escrow</p>
+            </div>
+            <div>
+              <p className="text-3xl font-extrabold text-gold tracking-tight">24/7</p>
+              <p className="text-[10px] text-brand-200 uppercase tracking-widest font-semibold mt-1">Handler Support</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="relative z-20 text-xs text-brand-300 font-medium">
+          © {new Date().getFullYear()} ANI Agricultural Exchange Platform. All rights reserved.
+        </div>
       </div>
     </div>
   );
