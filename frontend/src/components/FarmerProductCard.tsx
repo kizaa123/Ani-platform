@@ -25,10 +25,10 @@ export function FarmerProductCard({ product, onClick, active }: FarmerProductCar
         <ProductImage
           src={product.images[0]}
           alt={product.title}
-          className="aspect-[16/10] min-h-[10rem] w-full object-cover"
+          className="h-44 w-full object-cover"
         />
       ) : (
-        <div className="flex aspect-[16/10] min-h-[10rem] items-center justify-center bg-gradient-to-br from-brand-100 to-brand-200">
+        <div className="flex h-44 items-center justify-center bg-gradient-to-br from-brand-100 to-brand-200">
           <Icon name="wheat" className="h-10 w-10 text-brand-400" />
         </div>
       )}
