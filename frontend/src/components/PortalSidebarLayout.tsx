@@ -8,6 +8,7 @@ import { fullName, type UserProfile } from "@/lib/types";
 import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { NotificationBell } from "@/components/NotificationBell";
 import { Icon, type IconName } from "@/components/icons";
+import { MobileBottomNav, MOBILE_BOTTOM_NAV_PADDING } from "@/components/MobileBottomNav";
 
 export type PortalNavLink = {
   href: string;
@@ -238,9 +239,11 @@ export function PortalSidebarLayout({
         />
       </aside>
 
-      <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-brand-50/30">
+      <main className={`min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-brand-50/30 ${MOBILE_BOTTOM_NAV_PADDING}`}>
         {children}
       </main>
+
+      <MobileBottomNav />
     </div>
   );
 }

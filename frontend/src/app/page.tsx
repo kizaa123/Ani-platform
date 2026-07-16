@@ -86,10 +86,23 @@ export default function HomePage() {
 
         <div className="relative z-10 mx-auto w-full max-w-6xl px-6 py-24">
           <div className="max-w-2xl">
-            <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand-400/30 bg-brand-500/20 px-4 py-1.5 text-sm font-semibold text-brand-200 backdrop-blur-sm">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-              Ghana&apos;s #1 Agricultural Exchange Platform
-            </span>
+            <div className="relative group/badge mb-6 inline-flex overflow-hidden rounded-full p-[1.5px] transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-brand-950/20">
+              {/* Spinning/glowing gradient border */}
+              <span className="absolute inset-0 rounded-full bg-[conic-gradient(from_0deg,var(--color-brand-400),var(--color-gold),var(--color-brand-400))] animate-[spin_6s_linear_infinite]" />
+              
+              <div className="relative flex items-center gap-2.5 rounded-full bg-brand-950/90 px-4.5 py-2 text-sm font-semibold text-brand-100 backdrop-blur-xl">
+                <span className="flex items-center justify-center rounded-full bg-yellow-400/10 p-0.5 text-yellow-400">
+                  <Icon name="sprout" className="h-4 w-4 animate-[pulse_2s_infinite]" />
+                </span>
+                <span className="bg-gradient-to-r from-white via-brand-200 to-white bg-clip-text text-transparent text-xs font-bold tracking-wider uppercase">
+                  Ghana&apos;s #1 Agricultural Exchange Platform
+                </span>
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                </span>
+              </div>
+            </div>
 
             <h1 className="mb-6 text-5xl font-black leading-tight tracking-tight text-white md:text-6xl lg:text-7xl">
               Where Farmers{" "}
