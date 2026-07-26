@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { HandlerProfile, fullName, isBuyer } from "@/lib/types";
+import { HandlerProfile, isBuyer } from "@/lib/types";
 import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { CountrySelect } from "@/components/CountrySelect";
 import { HandlerSelect } from "@/components/HandlerSelect";
+import { RolePrefixedName } from "@/components/RolePrefixedName";
 import { DEFAULT_COUNTRY } from "@/lib/africanCountries";
 import { ProfileIdentityHeader, ProfileEditSection, ProfileEditActions } from "@/components/ProfileIdentityHeader";
 
@@ -164,7 +165,9 @@ export default function BuyerSettingsPage() {
               </button>
             </div>
           </div>
-          <p className="mt-3 text-sm text-brand-700">{fullName(user)} · {user.email}</p>
+          <p className="mt-3 text-sm text-brand-700">
+            <RolePrefixedName user={user} nameClassName="text-brand-700" /> · {user.email}
+          </p>
         </section>
 
         <section className="rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">

@@ -21,7 +21,6 @@ import { DEFAULT_COUNTRY } from "@/lib/africanCountries";
 import { ProfileIdentityHeader, ProfileEditSection, ProfileEditActions } from "@/components/ProfileIdentityHeader";
 
 interface FarmProfileData {
-  farmName: string;
   farmSize?: string;
   experienceYears?: number;
   farmerCommodities: FarmerCommodity[];
@@ -52,7 +51,6 @@ export default function FarmSettingsPage() {
   });
 
   const [farm, setFarm] = useState({
-    farmName: "",
     farmSize: "",
     experienceYears: 0,
   });
@@ -73,7 +71,6 @@ export default function FarmSettingsPage() {
     setRegistered(commodities);
     setCategories(cats);
     setFarm({
-      farmName: profile.farmName || "",
       farmSize: profile.farmSize || "",
       experienceYears: profile.experienceYears ?? 0,
     });
@@ -136,7 +133,6 @@ export default function FarmSettingsPage() {
       await Promise.all([
         api.auth.updateProfile(personal),
         api.farm.update({
-          farmName: farm.farmName,
           farmSize: farm.farmSize,
           experienceYears: farm.experienceYears,
         }),
@@ -343,14 +339,6 @@ export default function FarmSettingsPage() {
       <section className="mb-6 rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-lg font-bold text-brand-900">Farm Details</h2>
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="sm:col-span-2">
-            <label className="mb-1 block text-sm font-medium">Farm name</label>
-            <input
-              value={farm.farmName}
-              onChange={(e) => setFarm({ ...farm, farmName: e.target.value })}
-              className="w-full rounded-lg border px-4 py-2"
-            />
-          </div>
           <div>
             <label className="mb-1 block text-sm font-medium">Farm size</label>
             <input

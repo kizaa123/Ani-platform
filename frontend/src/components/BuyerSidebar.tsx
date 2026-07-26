@@ -1,7 +1,6 @@
 "use client";
 
 import { PortalSidebarLayout, type PortalNavLink } from "@/components/PortalSidebarLayout";
-import type { UserProfile } from "@/lib/types";
 
 export const BUYER_NAV_LINKS: PortalNavLink[] = [
   { href: "/dashboard", label: "Dashboard", icon: "home", match: (p) => p === "/dashboard" },
@@ -19,16 +18,11 @@ export const BUYER_NAV_LINKS: PortalNavLink[] = [
   { href: "/settings", label: "Profile", icon: "user", match: (p) => p.startsWith("/settings") },
 ];
 
-function buyerSubtitle(user: UserProfile) {
-  return user.buyerProfile?.company || user.role;
-}
-
 export function BuyerPortalLayout({ children }: { children: React.ReactNode }) {
   return (
     <PortalSidebarLayout
       navLinks={BUYER_NAV_LINKS}
       portalTitle="Buyer Portal"
-      getSubtitle={buyerSubtitle}
       defaultMobileTitle="Buyer Portal"
     >
       {children}

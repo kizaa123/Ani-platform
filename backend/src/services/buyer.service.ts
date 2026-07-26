@@ -34,11 +34,12 @@ export class BuyerService {
       'Buyer profile not found'
     );
 
-    const [orderStats, farmAccess] = await Promise.all([
+    const [orderStats, productOrders, farmAccess] = await Promise.all([
       prisma.productOrder.findMany({
         where: { buyerId },
         select: { status: true, totalAmount: true },
       }),
+      this.fetchOrdersForBuyer(buyerId),
       prisma.buyerFarmerAccess.findMany({
         where: { buyerId },
         include: {
@@ -90,6 +91,7 @@ export class BuyerService {
         farmsAccessed: completedAccess.length,
       },
       farmAccessPayments,
+      productOrders,
     };
   }
 

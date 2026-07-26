@@ -16,22 +16,22 @@ const ROLE_GROUPS: { groupLabel: string; roles: { id: number; label: string; ico
   {
     groupLabel: "Farmers",
     roles: [
-      { id: ROLES.CROP_FARMER,      label: "Crop Farmer",      icon: "sprout", desc: "Produce & sell crops" },
-      { id: ROLES.LIVESTOCK_FARMER, label: "Livestock Farmer", icon: "wheat",  desc: "Raise & trade livestock" },
+      { id: ROLES.CROP_FARMER,      label: "Fellow (Crop Farmer)",      icon: "sprout", desc: "Produce & sell crops" },
+      { id: ROLES.LIVESTOCK_FARMER, label: "Fellow (Livestock Farmer)", icon: "wheat",  desc: "Raise & trade livestock" },
     ],
   },
   {
     groupLabel: "Research & Commerce",
     roles: [
       { id: ROLES.RESEARCHER, label: "Researcher", icon: "book",  desc: "Academic & field research" },
-      { id: ROLES.BUYER,      label: "Buyer",      icon: "cart",  desc: "Source & purchase commodities" },
+      { id: ROLES.BUYER,      label: "Client",      icon: "cart",  desc: "Source & purchase commodities" },
     ],
   },
   {
     groupLabel: "Support & Operations",
     roles: [
-      { id: ROLES.FARMER_HANDLER, label: "Farmer Handler", icon: "handshake",  desc: "Support crop/livestock farmers" },
-      { id: ROLES.BUYER_HANDLER,  label: "Buyer Handler",  icon: "truck",       desc: "Coordinate buyer logistics" },
+      { id: ROLES.FARMER_HANDLER, label: "Fellow Liason Officer", icon: "handshake",  desc: "Support crop/livestock farmers" },
+      { id: ROLES.BUYER_HANDLER,  label: "Client Liason Officer",  icon: "truck",       desc: "Coordinate buyer logistics" },
       { id: ROLES.ANI_ACCOUNTANT, label: "ANI Accountant", icon: "coins",      desc: "Manage platform finances" },
     ],
   },
@@ -636,6 +636,8 @@ export default function RegisterPage() {
                   onChange={(handlerId) => setForm({ ...form, handlerId })}
                   label={handlerLabel}
                   emptyMessage={handlerEmptyMessage}
+                  variant="compact"
+                  handlerRoleId={isFarmerRole ? ROLES.FARMER_HANDLER : ROLES.BUYER_HANDLER}
                 />
                 <p className="auth-hint mt-3">
                   All registered {isFarmerRole ? "farmer" : "buyer"} handlers appear here. Your

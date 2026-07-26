@@ -3,8 +3,8 @@
 import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { CountryBadge } from "@/components/CountrySelect";
 import { VerificationBadge } from "@/components/VerificationBadge";
+import { RolePrefixedName, getRoleNamePrefix } from "@/components/RolePrefixedName";
 import {
-  fullName,
   isFarmer,
   isBuyer,
   isHandler,
@@ -37,19 +37,21 @@ export function ProfileIdentityHeader({ user, photoCacheBust, onEditClick }: Pro
           cacheBust={cacheBust}
         />
         <div className="min-w-0 flex-1 text-center sm:text-left">
-          <h2 className="text-2xl font-bold text-brand-900">{fullName(user)}</h2>
-          <p className="mt-0.5 text-gray-500">{user.role}</p>
+          <h2 className="text-2xl font-bold">
+            <RolePrefixedName
+              user={user}
+              prefixClassName="text-brand-600 font-bold"
+              nameClassName="text-brand-900 font-bold"
+            />
+          </h2>
+          {!getRoleNamePrefix(user.roleId) && (
+            <p className="mt-0.5 text-gray-500">{user.role}</p>
+          )}
           <CountryBadge
             country={user.country}
             region={user.region}
             className="mt-2 justify-center sm:justify-start"
           />
-          {isFarmer(user.roleId) && user.farmerProfile?.farmName && (
-            <p className="mt-2 text-sm font-medium text-brand-700">{user.farmerProfile.farmName}</p>
-          )}
-          {isBuyer(user.roleId) && user.buyerProfile?.company && (
-            <p className="mt-2 text-sm font-medium text-brand-700">{user.buyerProfile.company}</p>
-          )}
           {isHandler(user.roleId) && (
             <p className="mt-2 text-sm text-brand-700">
               {isBuyerHandler(user.roleId)

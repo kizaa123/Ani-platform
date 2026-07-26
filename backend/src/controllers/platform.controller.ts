@@ -128,6 +128,17 @@ export class AgentController {
     }
   };
 
+  financialStatement = async (req: AuthRequest, res: Response) => {
+    try {
+      ApiResponse.success(
+        res,
+        await agentService.getFinancialStatement(req.user!.userId, req.user!.roleId)
+      );
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
   clientConnections = async (req: AuthRequest, res: Response) => {
     try {
       ApiResponse.success(
@@ -230,6 +241,14 @@ export class AdminController {
   stats = async (_req: AuthRequest, res: Response) => {
     try {
       ApiResponse.success(res, await adminService.getStats());
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  financialStatement = async (_req: AuthRequest, res: Response) => {
+    try {
+      ApiResponse.success(res, await adminService.getFinancialStatement());
     } catch (e) {
       ApiResponse.error(res, e);
     }

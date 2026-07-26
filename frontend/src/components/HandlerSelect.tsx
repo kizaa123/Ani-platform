@@ -3,6 +3,7 @@
 import { HandlerProfile } from "@/lib/types";
 import { FarmerAvatar } from "@/components/FarmerAvatar";
 import { CountryBadge } from "@/components/CountrySelect";
+import { RolePrefixedName } from "@/components/RolePrefixedName";
 import { Icon } from "@/components/icons";
 
 interface HandlerSelectProps {
@@ -11,6 +12,12 @@ interface HandlerSelectProps {
   onChange: (handlerId: string) => void;
   label: string;
   emptyMessage: string;
+  variant?: "default" | "compact";
+  handlerRoleId?: number;
+}
+
+function formatHandlerLocation(handler: HandlerProfile): string {
+  return [handler.city, handler.region, handler.country].filter(Boolean).join(", ");
 }
 
 export function HandlerSelect({
@@ -19,6 +26,8 @@ export function HandlerSelect({
   onChange,
   label,
   emptyMessage,
+  variant = "default",
+  handlerRoleId,
 }: HandlerSelectProps) {
   if (handlers.length === 0) {
     return (
@@ -28,46 +37,75 @@ export function HandlerSelect({
     );
   }
 
+  const compact = variant === "compact";
+
   return (
     <div>
-      <label className="mb-2 block text-sm font-medium text-brand-900">{label}</label>
+      <label className="auth-label mb-2 block">{label}</label>
       <div className="grid gap-2 sm:grid-cols-2">
         {handlers.map((handler) => {
           const selected = value === handler.id;
           const name = `${handler.firstName} ${handler.lastName}`;
+          const location = formatHandlerLocation(handler);
           return (
             <button
               key={handler.id}
               type="button"
               onClick={() => onChange(handler.id)}
-              className={`flex items-start gap-3 rounded-xl border p-4 text-left transition ${
+              className={`flex items-center gap-3 rounded-xl border text-left transition-all duration-150 focus:outline-none ${
+                compact ? "p-3" : "items-start p-4"
+              } ${
                 selected
-                  ? "border-brand-600 bg-brand-100 ring-2 ring-brand-500"
-                  : "border-gray-200 bg-white hover:border-brand-300"
+                  ? compact
+                    ? "border-brand-500 bg-brand-50 shadow-sm ring-1 ring-brand-400"
+                    : "border-brand-600 bg-brand-100 ring-2 ring-brand-500"
+                  : "border-gray-200 bg-white hover:border-brand-300 hover:bg-brand-50/40"
               }`}
             >
               <FarmerAvatar
                 src={handler.profilePicture}
                 name={name}
-                size="md"
+                size={compact ? "sm" : "md"}
                 cacheBust={
                   handler.updatedAt ? new Date(handler.updatedAt).getTime() : undefined
                 }
               />
               <div className="min-w-0 flex-1">
-                <p className="font-semibold text-brand-900">{name}</p>
-                <p className="truncate text-xs text-gray-500">{handler.email}</p>
-                {handler.phone && (
-                  <p className="truncate text-xs text-gray-500">{handler.phone}</p>
+                {compact && handlerRoleId ? (
+                  <RolePrefixedName
+                    user={{
+                      roleId: handlerRoleId,
+                      firstName: handler.firstName,
+                      lastName: handler.lastName,
+                    }}
+                    className="text-sm font-semibold"
+                    nameClassName="text-brand-900"
+                  />
+                ) : (
+                  <p className="font-semibold text-brand-900">{name}</p>
                 )}
-                <CountryBadge
-                  country={handler.country}
-                  region={handler.region}
-                  className="mt-1"
-                />
+                {compact ? (
+                  location ? (
+                    <p className="mt-0.5 truncate text-xs text-gray-500">{location}</p>
+                  ) : null
+                ) : (
+                  <>
+                    <p className="truncate text-xs text-gray-500">{handler.email}</p>
+                    {handler.phone && (
+                      <p className="truncate text-xs text-gray-500">{handler.phone}</p>
+                    )}
+                    <CountryBadge
+                      country={handler.country}
+                      region={handler.region}
+                      className="mt-1"
+                    />
+                  </>
+                )}
               </div>
               <span
-                className={`mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                  compact ? "" : "mt-1"
+                } ${
                   selected
                     ? "border-brand-700 bg-brand-700 text-white"
                     : "border-gray-300 bg-white"

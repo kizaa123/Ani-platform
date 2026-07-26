@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import {
@@ -97,7 +98,15 @@ export default function AdminPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
-      <h1 className="mb-8 text-3xl font-bold text-brand-900">Admin Panel</h1>
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-3xl font-bold text-brand-900">Admin Panel</h1>
+        <Link
+          href="/admin/financials"
+          className="rounded-lg border border-brand-200 bg-white px-4 py-2 text-sm font-semibold text-brand-800 hover:bg-brand-50"
+        >
+          Platform Financial Statement
+        </Link>
+      </div>
 
       {stats && (
         <div className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

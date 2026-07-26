@@ -1,7 +1,6 @@
 "use client";
 
 import { PortalSidebarLayout, type PortalNavLink } from "@/components/PortalSidebarLayout";
-import type { UserProfile } from "@/lib/types";
 
 export const FARMER_NAV_LINKS: PortalNavLink[] = [
   { href: "/dashboard", label: "Dashboard", icon: "home", match: (p) => p === "/dashboard" },
@@ -39,16 +38,11 @@ export const FARMER_NAV_LINKS: PortalNavLink[] = [
   },
 ];
 
-function farmerSubtitle(user: UserProfile) {
-  return user.farmerProfile?.farmName || user.role;
-}
-
 export function FarmerPortalLayout({ children }: { children: React.ReactNode }) {
   return (
     <PortalSidebarLayout
       navLinks={FARMER_NAV_LINKS}
       portalTitle="Farmer Portal"
-      getSubtitle={farmerSubtitle}
       defaultMobileTitle="Farmer Portal"
     >
       {children}

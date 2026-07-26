@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
-import { fullName, type UserProfile } from "@/lib/types";
+import { type UserProfile } from "@/lib/types";
 import { ProfilePhoto } from "@/components/FarmerAvatar";
+import { RolePrefixedName } from "@/components/RolePrefixedName";
 import { NotificationBell } from "@/components/NotificationBell";
 import { Icon, type IconName } from "@/components/icons";
 import { MobileBottomNav, MOBILE_BOTTOM_NAV_PADDING } from "@/components/MobileBottomNav";
@@ -46,7 +47,6 @@ function SidebarContent({
   if (!user) return null;
 
   const photoCacheBust = user.updatedAt ? new Date(user.updatedAt).getTime() : undefined;
-  const subtitle = getSubtitle?.(user) ?? user.role;
 
   return (
     <>
@@ -66,8 +66,14 @@ function SidebarContent({
           cacheBust={photoCacheBust}
         />
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-brand-900">{fullName(user)}</p>
-          <p className="truncate text-xs text-brand-500">{subtitle}</p>
+          <RolePrefixedName
+            user={user}
+            className="text-sm font-semibold"
+            nameClassName="text-brand-900 font-semibold"
+          />
+          {getSubtitle && (
+            <p className="truncate text-xs text-brand-500">{getSubtitle(user)}</p>
+          )}
         </div>
       </div>
 
@@ -127,7 +133,15 @@ function PortalMobileBar({
   const currentPage =
     navLinks.find((link) => link.match(pathname))?.label ?? defaultMobileTitle ?? portalTitle;
   const photoCacheBust = user?.updatedAt ? new Date(user.updatedAt).getTime() : undefined;
-  const subtitle = user ? (getSubtitle?.(user) ?? user.role) : portalTitle;
+  const mobileSubtitle = user ? (
+    getSubtitle ? (
+      getSubtitle(user)
+    ) : (
+      <RolePrefixedName user={user} className="text-xs" nameClassName="text-brand-600 font-medium" />
+    )
+  ) : (
+    portalTitle
+  );
 
   return (
     <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-brand-200 bg-white px-4 py-3 shadow-sm lg:hidden">
@@ -143,7 +157,7 @@ function PortalMobileBar({
       </button>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-bold text-brand-900">{currentPage}</p>
-        <p className="truncate text-xs text-brand-600">{subtitle}</p>
+        <p className="truncate text-xs text-brand-600">{mobileSubtitle}</p>
       </div>
       {user && (
         <>

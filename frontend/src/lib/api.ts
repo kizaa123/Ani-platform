@@ -296,6 +296,8 @@ class ApiClient {
       this.request<import("./types").FinancialStatement | import("./types").BuyerFinancialStatement>(
         `/agents/clients/${ownerId}/financial-statement`
       ),
+    financialStatement: () =>
+      this.request<import("./types").HandlerFinancialStatement>("/agents/financial-statement"),
     clientConnections: (ownerId: string) =>
       this.request<import("./types").Connection[]>(`/agents/clients/${ownerId}/connections`),
   };
@@ -318,6 +320,8 @@ class ApiClient {
 
   admin = {
     stats: () => this.request<import("./types").AdminStats>("/admin/stats"),
+    financialStatement: () =>
+      this.request<import("./types").PlatformFinancialStatement>("/admin/financial-statement"),
     pending: () => this.request<import("./types").PendingVerificationUser[]>("/admin/pending"),
     users: (params?: { status?: string; roleId?: number }) => {
       const q = new URLSearchParams();

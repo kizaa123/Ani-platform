@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { fullName, isBuyer, isHandler } from "@/lib/types";
+import { isBuyer, isHandler } from "@/lib/types";
 import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { CountrySelect } from "@/components/CountrySelect";
+import { RolePrefixedName } from "@/components/RolePrefixedName";
 import { DEFAULT_COUNTRY } from "@/lib/africanCountries";
 import {
   ProfileIdentityHeader,
@@ -157,7 +158,7 @@ export default function ProfilePage() {
               </div>
             </div>
             <p className="mt-3 text-sm text-brand-700">
-              {fullName(user)} · {user.email}
+              <RolePrefixedName user={user} nameClassName="text-brand-700" /> · {user.email}
             </p>
           </section>
 

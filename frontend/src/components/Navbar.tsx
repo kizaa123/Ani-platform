@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
-import { isFarmer, isBuyer, isHandler, isStaff, fullName } from "@/lib/types";
+import { isFarmer, isBuyer, isHandler, isStaff } from "@/lib/types";
 import { FarmerAvatar } from "@/components/FarmerAvatar";
+import { RolePrefixedName, getRoleNamePrefix } from "@/components/RolePrefixedName";
 import { NotificationBell } from "@/components/NotificationBell";
 import { Logo } from "@/components/Logo";
 
@@ -182,8 +183,14 @@ export function Navbar() {
                 cacheBust={photoCacheBust}
               />
               <div className="min-w-0 text-left leading-tight">
-                <p className="truncate text-sm font-semibold text-brand-900">{fullName(user)}</p>
-                <p className="truncate text-[11px] text-brand-500">{user.role}</p>
+                <RolePrefixedName
+                  user={user}
+                  className="text-sm font-semibold"
+                  nameClassName="text-brand-900 font-semibold"
+                />
+                {!getRoleNamePrefix(user.roleId) && (
+                  <p className="truncate text-[11px] text-brand-500">{user.role}</p>
+                )}
               </div>
             </Link>
             <button
@@ -249,8 +256,14 @@ export function Navbar() {
             cacheBust={photoCacheBust}
           />
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-brand-900">{fullName(user)}</p>
-            <p className="truncate text-xs text-brand-500">{user.role}</p>
+            <RolePrefixedName
+              user={user}
+              className="text-sm font-semibold"
+              nameClassName="text-brand-900 font-semibold"
+            />
+            {!getRoleNamePrefix(user.roleId) && (
+              <p className="truncate text-xs text-brand-500">{user.role}</p>
+            )}
           </div>
         </div>
 

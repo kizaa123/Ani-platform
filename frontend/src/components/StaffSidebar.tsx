@@ -14,7 +14,13 @@ export const STAFF_NAV_LINKS: PortalNavLink[] = [
     icon: "handshake",
     match: (p) => p.startsWith("/connections"),
   },
-  { href: "/admin", label: "Admin", icon: "shield", match: (p) => p.startsWith("/admin") },
+  { href: "/admin", label: "Admin", icon: "shield", match: (p) => p === "/admin" },
+  {
+    href: "/admin/financials",
+    label: "Financials",
+    icon: "chart",
+    match: (p) => p.startsWith("/admin/financials"),
+  },
   { href: "/profile", label: "Profile", icon: "user", match: (p) => p.startsWith("/profile") },
 ];
 

@@ -232,6 +232,7 @@ router.patch(
   validateBody(updateOrderTrackSchema),
   agentController.updateClientOrderTrack
 );
+router.get('/agents/financial-statement', authenticate, agentController.financialStatement);
 router.get('/agents/clients/:ownerId/financial-statement', authenticate, agentController.clientFinancialStatement);
 router.get('/agents/clients/:ownerId/connections', authenticate, agentController.clientConnections);
 router.post('/agents/assignments', authenticate, validateBody(assignmentSchema), agentController.createAssignment);
@@ -249,6 +250,7 @@ router.patch('/notifications/:id/read', authenticate, notificationController.mar
 
 // Admin
 router.get('/admin/stats', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), adminController.stats);
+router.get('/admin/financial-statement', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), adminController.financialStatement);
 router.get('/admin/pending', authenticate, requirePermission(PERMISSIONS.VERIFY_USERS), adminController.pendingUsers);
 router.get('/admin/users', authenticate, requirePermission(PERMISSIONS.VERIFY_USERS), adminController.listUsers);
 router.patch('/admin/users/:id/verify', authenticate, requirePermission(PERMISSIONS.VERIFY_USERS), validateBody(verifyUserSchema), adminController.verifyUser);

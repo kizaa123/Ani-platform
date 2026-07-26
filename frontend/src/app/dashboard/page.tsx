@@ -40,7 +40,9 @@ export default function DashboardPage() {
     { href: "/orders", title: "My Orders", desc: "Products ordered from farmers", icon: "package", show: isBuyer(user.roleId) },
     { href: "/connections", title: "Connections", desc: "Manage buyer-farmer requests", icon: "handshake", all: true },
     { href: "/agents", title: isBuyerHandler(user.roleId) ? "My Buyers" : "My Clients", desc: isBuyerHandler(user.roleId) ? "View orders, spending & connections" : "View assigned farmers/buyers", icon: "users", show: isHandler(user.roleId) },
+    { href: "/agents/financials", title: "Financial Statement", desc: isBuyerHandler(user.roleId) ? "Client spending across your buyers" : "Client sales revenue across your farmers", icon: "chart", show: isHandler(user.roleId) },
     { href: "/admin", title: "Admin Panel", desc: "Verification & payments", icon: "shield", show: isStaff(user.roleId) },
+    { href: "/admin/financials", title: "Financial Statement", desc: "Platform-wide revenue & transactions", icon: "chart", show: isStaff(user.roleId) },
     { href: "/farm/settings", title: "Profile", desc: "Profile, handler, farm & commodities", icon: "user", show: isFarmer(user.roleId) },
     { href: "/settings", title: "Profile", desc: "Profile, location & handler", icon: "user", show: isBuyer(user.roleId) },
     { href: "/agents/settings", title: "Profile", desc: "Profile photo & contact details", icon: "user", show: isHandler(user.roleId) },
@@ -61,7 +63,7 @@ export default function DashboardPage() {
             title={c.title}
             desc={c.desc}
             icon={c.icon}
-            image={getPortalNavImage(c.href)}
+            image={getPortalNavImage(c.href, user.roleId)}
           />
         ))}
       </div>

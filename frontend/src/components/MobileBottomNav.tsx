@@ -27,10 +27,10 @@ function farmerNav(): BottomNavItem[] {
       create: true,
     },
     {
-      href: "/farm/orders",
-      label: "Orders",
-      icon: "package",
-      match: (p) => p.startsWith("/farm/orders"),
+      href: "/farm/financials",
+      label: "Financials",
+      icon: "chart",
+      match: (p) => p.startsWith("/farm/financials"),
     },
     {
       href: "/farm/settings",
@@ -46,7 +46,7 @@ function buyerNav(): BottomNavItem[] {
     { href: "/dashboard", label: "Home", icon: "home", match: (p) => p === "/dashboard" },
     { href: "/marketplace", label: "Market", icon: "store", match: (p) => p.startsWith("/marketplace") },
     { href: "/library", label: "Library", icon: "book", match: (p) => p.startsWith("/library") },
-    { href: "/orders", label: "Orders", icon: "package", match: (p) => p.startsWith("/orders") },
+    { href: "/financials", label: "Financials", icon: "chart", match: (p) => p.startsWith("/financials") },
     { href: "/settings", label: "Profile", icon: "user", match: (p) => p.startsWith("/settings") },
   ];
 }
@@ -64,8 +64,8 @@ function researcherNav(): BottomNavItem[] {
     },
     {
       href: "/researcher/financials",
-      label: "Orders",
-      icon: "package",
+      label: "Financials",
+      icon: "chart",
       match: (p) => p.startsWith("/researcher/financials"),
     },
     {
@@ -85,13 +85,15 @@ function handlerNav(): BottomNavItem[] {
       href: "/agents",
       label: "Clients",
       icon: "users",
-      match: (p) => p.startsWith("/agents") && !p.startsWith("/agents/settings"),
+      match: (p) =>
+        (p === "/agents" || p.startsWith("/agents/farm/") || p.startsWith("/agents/buyer/")) &&
+        !p.startsWith("/agents/settings"),
     },
     {
-      href: "/connections",
-      label: "Connect",
-      icon: "handshake",
-      match: (p) => p.startsWith("/connections"),
+      href: "/agents/financials",
+      label: "Financials",
+      icon: "chart",
+      match: (p) => p.startsWith("/agents/financials"),
     },
     {
       href: "/agents/settings",
@@ -106,8 +108,8 @@ function staffNav(): BottomNavItem[] {
   return [
     { href: "/dashboard", label: "Home", icon: "home", match: (p) => p === "/dashboard" },
     { href: "/marketplace", label: "Market", icon: "store", match: (p) => p.startsWith("/marketplace") },
-    { href: "/library", label: "Library", icon: "book", match: (p) => p.startsWith("/library") },
-    { href: "/admin", label: "Admin", icon: "shield", match: (p) => p.startsWith("/admin") },
+    { href: "/admin/financials", label: "Financials", icon: "chart", match: (p) => p.startsWith("/admin/financials") },
+    { href: "/admin", label: "Admin", icon: "shield", match: (p) => p === "/admin" },
     { href: "/profile", label: "Profile", icon: "user", match: (p) => p.startsWith("/profile") },
   ];
 }

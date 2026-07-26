@@ -358,6 +358,7 @@ export interface BuyerFinancialStatement {
     farmsAccessed: number;
   };
   farmAccessPayments: BuyerAccessPaymentLineItem[];
+  productOrders: BuyerOrderLineItem[];
 }
 
 export interface AccessPackage {
@@ -669,6 +670,78 @@ export interface AdminStats {
   listings: number;
   totalRevenue: number;
   activeConnections: number;
+}
+
+export interface PlatformFinancialStatementLineItem {
+  id: string;
+  date: string;
+  type: 'PRODUCT_ORDER' | 'FARM_ACCESS' | 'RESEARCH_SALE' | 'ACCESS_PACKAGE';
+  description: string;
+  partyName: string;
+  amount: number;
+  paymentMethod: string;
+  status: string;
+  transactionId?: string | null;
+}
+
+export interface PlatformFinancialStatement {
+  generatedAt: string;
+  summary: {
+    totalRevenue: number;
+    productOrderRevenue: number;
+    farmAccessRevenue: number;
+    researchRevenue: number;
+    accessPackageRevenue: number;
+    transactionCount: number;
+    productOrderCount: number;
+    farmAccessCount: number;
+    researchSaleCount: number;
+    accessPackageCount: number;
+  };
+  lineItems: PlatformFinancialStatementLineItem[];
+}
+
+export interface HandlerFinancialClientSummary {
+  ownerId: string;
+  clientName: string;
+  clientLabel: string;
+  totalRevenue?: number;
+  salesCount?: number;
+  totalSpent?: number;
+  totalProductSpend?: number;
+  totalFarmAccessSpend?: number;
+  orderCount?: number;
+}
+
+export interface HandlerFinancialTransaction {
+  id: string;
+  date: string;
+  ownerId: string;
+  clientName: string;
+  description: string;
+  counterpartyName: string;
+  amount: number;
+  type: 'SALE' | 'PRODUCT_ORDER' | 'FARM_ACCESS';
+  paymentMethod: string;
+  status: string;
+  transactionId?: string | null;
+}
+
+export interface HandlerFinancialStatement {
+  agentName: string;
+  handlerType: 'farmer' | 'buyer';
+  generatedAt: string;
+  summary: {
+    clientCount: number;
+    totalRevenue?: number;
+    totalSalesCount?: number;
+    totalSpent?: number;
+    totalProductSpend?: number;
+    totalFarmAccessSpend?: number;
+    transactionCount: number;
+  };
+  clients: HandlerFinancialClientSummary[];
+  transactions: HandlerFinancialTransaction[];
 }
 
 export interface AdminVerificationUser {
