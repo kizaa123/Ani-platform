@@ -19,8 +19,8 @@ function MediaSlide({
 }: {
   item: FarmerMediaItem;
   active: boolean;
-  onLike: () => void;
-  onShare: () => void;
+  onLike: (e: React.MouseEvent) => void;
+  onShare: (e: React.MouseEvent) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const src = assetUrl(item.url);
@@ -54,28 +54,34 @@ function MediaSlide({
         <img src={src} alt="" className="h-full w-full object-cover" />
       ) : null}
 
-      <div className="absolute bottom-3 right-3 flex items-center gap-2">
+      {/* Like & Share — stacked vertically on the right */}
+      <div className="absolute bottom-3 right-3 flex flex-col items-center gap-2">
         <button
           type="button"
           onClick={onLike}
           aria-label={item.likedByMe ? "Unlike" : "Like"}
-          className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-semibold backdrop-blur ${
+          className={`flex flex-col items-center justify-center gap-0.5 rounded-full px-3 py-2 text-xs font-semibold backdrop-blur transition-colors ${
             item.likedByMe
-              ? "bg-red-500/90 text-white"
-              : "bg-black/40 text-white hover:bg-black/55"
+              ? "bg-red-500 text-white shadow-lg shadow-red-500/30"
+              : "bg-black/45 text-white hover:bg-black/60"
           }`}
         >
-          <Icon name="heart" className="h-4 w-4" />
-          {item.likesCount > 0 ? item.likesCount : null}
+          <Icon name="heart" className="h-5 w-5" />
+          {item.likesCount > 0 && (
+            <span className="leading-none">{item.likesCount}</span>
+          )}
         </button>
+
         <button
           type="button"
           onClick={onShare}
           aria-label="Share"
-          className="flex items-center gap-1 rounded-full bg-black/40 px-3 py-1.5 text-sm font-semibold text-white backdrop-blur hover:bg-black/55"
+          className="flex flex-col items-center justify-center gap-0.5 rounded-full bg-black/45 px-3 py-2 text-xs font-semibold text-white backdrop-blur transition-colors hover:bg-black/60"
         >
-          <Icon name="share" className="h-4 w-4" />
-          {item.sharesCount > 0 ? item.sharesCount : null}
+          <Icon name="share" className="h-5 w-5" />
+          {item.sharesCount > 0 && (
+            <span className="leading-none">{item.sharesCount}</span>
+          )}
         </button>
       </div>
     </div>
@@ -110,7 +116,11 @@ export function FarmerMediaCarousel({ farmerUserId, farmerName }: FarmerMediaCar
     setActiveIndex(Math.min(Math.max(0, index), items.length - 1));
   }, [items.length]);
 
-  const handleLike = async (item: FarmerMediaItem) => {
+  const handlePrev = () => scrollToIndex(Math.max(0, activeIndex - 1));
+  const handleNext = () => scrollToIndex(Math.min(items.length - 1, activeIndex + 1));
+
+  const handleLike = async (e: React.MouseEvent, item: FarmerMediaItem) => {
+    e.stopPropagation();
     try {
       const result = await api.farm.media.like(item.id);
       setItems((prev) =>
@@ -123,7 +133,8 @@ export function FarmerMediaCarousel({ farmerUserId, farmerName }: FarmerMediaCar
     }
   };
 
-  const handleShare = async (item: FarmerMediaItem) => {
+  const handleShare = async (e: React.MouseEvent, item: FarmerMediaItem) => {
+    e.stopPropagation();
     const src = assetUrl(item.url);
     const absoluteUrl =
       src && typeof window !== "undefined"
@@ -159,7 +170,8 @@ export function FarmerMediaCarousel({ farmerUserId, farmerName }: FarmerMediaCar
       <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-brand-600">
         From the farm
       </p>
-      <div className="overflow-hidden rounded-2xl border border-brand-100 bg-brand-50 shadow-md">
+      <div className="relative overflow-hidden rounded-2xl border border-brand-100 bg-brand-50 shadow-md">
+        {/* Scroll strip */}
         <div
           ref={scrollRef}
           onScroll={handleScroll}
@@ -170,12 +182,42 @@ export function FarmerMediaCarousel({ farmerUserId, farmerName }: FarmerMediaCar
               <MediaSlide
                 item={item}
                 active={index === activeIndex}
-                onLike={() => handleLike(item)}
-                onShare={() => handleShare(item)}
+                onLike={(e) => handleLike(e, item)}
+                onShare={(e) => handleShare(e, item)}
               />
             </div>
           ))}
         </div>
+
+        {/* Prev / Next arrows — desktop only (hidden on mobile) */}
+        {items.length > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={handlePrev}
+              disabled={activeIndex === 0}
+              aria-label="Previous slide"
+              className="absolute left-2 top-1/2 hidden -translate-y-1/2 items-center justify-center rounded-full bg-black/40 p-2 text-white backdrop-blur transition hover:bg-black/60 disabled:opacity-30 sm:flex"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={handleNext}
+              disabled={activeIndex === items.length - 1}
+              aria-label="Next slide"
+              className="absolute right-2 top-1/2 hidden -translate-y-1/2 items-center justify-center rounded-full bg-black/40 p-2 text-white backdrop-blur transition hover:bg-black/60 disabled:opacity-30 sm:flex"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </>
+        )}
+
+        {/* Dot indicators — always visible */}
         {items.length > 1 && (
           <div className="flex items-center justify-center gap-2 border-t border-brand-100 bg-white px-4 py-3">
             {items.map((item, i) => (
