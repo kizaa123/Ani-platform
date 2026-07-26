@@ -107,50 +107,49 @@ export function CommodityPicker({
 
   return (
     <div className="space-y-4">
-      <div>
-        <label htmlFor={searchId} className="mb-1.5 block text-sm font-medium text-brand-900">
-          Search {categoryLabel?.toLowerCase()} commodities
-        </label>
-        <div className="relative">
-          <Icon
-            name="search"
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
-          />
-          <input
-            id={searchId}
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={`Search by name or category…`}
-            className="auth-input w-full pl-9"
-            autoComplete="off"
-          />
-        </div>
-      </div>
-
+      {/* Search + Select combined in one bordered container */}
       <div>
         <label htmlFor={selectId} className="mb-1.5 block text-sm font-medium text-brand-900">
           {mode === "select-add" ? "Add commodity" : "Select commodities"}
         </label>
-        <select
-          id={selectId}
-          value={selectValue}
-          onChange={(e) => addFromSelect(e.target.value)}
-          className="auth-input w-full"
-        >
-          <option value="">
-            {mode === "select-add" ? "Choose a commodity to add…" : "Choose to add…"}
-          </option>
-          {availableForSelect.map((cat) => (
-            <optgroup key={cat.id} label={cat.name}>
-              {cat.commodities.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
+        <div className="overflow-hidden rounded-xl border border-brand-200 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-200">
+          {/* Search row */}
+          <div className="relative border-b border-brand-100">
+            <Icon
+              name="search"
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+            />
+            <input
+              id={searchId}
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by name or category…"
+              className="w-full bg-transparent py-2.5 pl-9 pr-3 text-sm text-brand-900 placeholder:text-gray-400 focus:outline-none"
+              autoComplete="off"
+            />
+          </div>
+          {/* Dropdown row */}
+          <select
+            id={selectId}
+            value={selectValue}
+            onChange={(e) => addFromSelect(e.target.value)}
+            className="w-full bg-white px-3 py-2.5 text-sm text-brand-900 focus:outline-none"
+          >
+            <option value="">
+              {mode === "select-add" ? "Choose a commodity to add…" : "Choose to add…"}
+            </option>
+            {availableForSelect.map((cat) => (
+              <optgroup key={cat.id} label={cat.name}>
+                {cat.commodities.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </div>
         {availableForSelect.length === 0 && search.trim() && (
           <p className="mt-1 text-xs text-gray-500">No matching commodities found.</p>
         )}

@@ -9,32 +9,24 @@ import { CommodityCategory, HandlerProfile, ROLES, farmerCategoryFilter } from "
 import { CountrySelect } from "@/components/CountrySelect";
 import { HandlerSelect } from "@/components/HandlerSelect";
 import { CommodityPicker } from "@/components/CommodityPicker";
-import { Icon, type IconName } from "@/components/icons";
+import { Icon } from "@/components/icons";
 import { Logo } from "@/components/Logo";
 
-const ROLE_GROUPS: { groupLabel: string; roles: { id: number; label: string; icon: IconName; desc: string }[] }[] = [
-  {
-    groupLabel: "Farmers",
-    roles: [
-      { id: ROLES.CROP_FARMER,      label: "Fellow (Crop Farmer)",      icon: "sprout", desc: "Produce & sell crops" },
-      { id: ROLES.LIVESTOCK_FARMER, label: "Fellow (Livestock Farmer)", icon: "wheat",  desc: "Raise & trade livestock" },
-    ],
-  },
-  {
-    groupLabel: "Research & Commerce",
-    roles: [
-      { id: ROLES.RESEARCHER, label: "Researcher", icon: "book",  desc: "Academic & field research" },
-      { id: ROLES.BUYER,      label: "Client",      icon: "cart",  desc: "Source & purchase commodities" },
-    ],
-  },
-  {
-    groupLabel: "Support & Operations",
-    roles: [
-      { id: ROLES.FARMER_HANDLER, label: "Fellow Liason Officer", icon: "handshake",  desc: "Support crop/livestock farmers" },
-      { id: ROLES.BUYER_HANDLER,  label: "Client Liason Officer",  icon: "truck",       desc: "Coordinate buyer logistics" },
-      { id: ROLES.ANI_ACCOUNTANT, label: "ANI Accountant", icon: "coins",      desc: "Manage platform finances" },
-    ],
-  },
+/** Flat list of all roles for the <select> dropdown */
+const ALL_ROLES = [
+  { group: "Farmers",                  id: ROLES.CROP_FARMER,      label: "Fellow (Crop Farmer)" },
+  { group: "Farmers",                  id: ROLES.LIVESTOCK_FARMER, label: "Fellow (Livestock Farmer)" },
+  { group: "Research & Commerce",      id: ROLES.RESEARCHER,       label: "Researcher" },
+  { group: "Research & Commerce",      id: ROLES.BUYER,            label: "Client" },
+  { group: "Support & Operations",     id: ROLES.FARMER_HANDLER,   label: "Fellow Liaison Officer" },
+  { group: "Support & Operations",     id: ROLES.BUYER_HANDLER,    label: "Client Liaison Officer" },
+  { group: "Support & Operations",     id: ROLES.ANI_ACCOUNTANT,   label: "ANI Accountant" },
+];
+
+const ROLE_GROUPS_FOR_SELECT = [
+  { groupLabel: "Farmers",              roles: ALL_ROLES.filter((r) => r.group === "Farmers") },
+  { groupLabel: "Research & Commerce", roles: ALL_ROLES.filter((r) => r.group === "Research & Commerce") },
+  { groupLabel: "Support & Operations",roles: ALL_ROLES.filter((r) => r.group === "Support & Operations") },
 ];
 
 const STEP_LABELS = ["Account", "Details", "Commodities"] as const;
@@ -378,55 +370,27 @@ export default function RegisterPage() {
             </div>
 
             <div className="auth-field">
-              <label className="auth-label">
+              <label htmlFor="reg-role" className="auth-label">
                 I am a…
               </label>
-              <div className="mt-1 space-y-3 overflow-hidden">
-                {ROLE_GROUPS.map((group) => (
-                  <div key={group.groupLabel}>
-                    <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                      {group.groupLabel}
-                    </p>
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-2">
-                      {group.roles.map((r) => {
-                        const isSelected = form.roleId === r.id;
-                        return (
-                          <button
-                            key={r.id}
-                            type="button"
-                            onClick={() => setForm({ ...form, roleId: r.id })}
-                            className={[
-                              "flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-all duration-150 focus:outline-none",
-                              isSelected
-                                ? "border-brand-500 bg-brand-50 shadow-sm ring-1 ring-brand-400"
-                                : "border-gray-200 bg-white hover:border-brand-300 hover:bg-brand-50/40",
-                            ].join(" ")}
-                          >
-                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-100 text-brand-700">
-                              <Icon name={r.icon} className="h-4 w-4" />
-                            </span>
-                            <span className="min-w-0 flex-1">
-                              <span className={`block truncate text-sm font-semibold ${isSelected ? "text-brand-800" : "text-gray-800"}`}>
-                                {r.label}
-                              </span>
-                              <span className="block truncate text-[10px] leading-tight text-gray-400">
-                                {r.desc}
-                              </span>
-                            </span>
-                            {isSelected && (
-                              <span className="shrink-0 text-brand-600">
-                                <Icon name="check" className="h-3.5 w-3.5" />
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
+              <select
+                id="reg-role"
+                value={form.roleId}
+                onChange={(e) => setForm({ ...form, roleId: Number(e.target.value) })}
+                className="auth-input w-full"
+              >
+                {ROLE_GROUPS_FOR_SELECT.map((group) => (
+                  <optgroup key={group.groupLabel} label={group.groupLabel}>
+                    {group.roles.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.label}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
-              </div>
+              </select>
               {isFarmerRole && (
-                <p className="auth-hint text-brand-700 mt-2">
+                <p className="auth-hint text-brand-700 mt-1">
                   You will only select {categoryFilter?.toLowerCase()} commodities in step 3.
                 </p>
               )}
