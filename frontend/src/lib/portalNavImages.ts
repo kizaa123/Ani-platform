@@ -65,13 +65,13 @@ export const PORTAL_NAV_IMAGES_SHARED = {
 
 export const PORTAL_NAV_IMAGES_CROP_FARMER = {
 
-  /** CROP: Marketplace — add `public/portal/crop-marketplace.jpg` */
+  /** CROP: Marketplace */
 
-  "/marketplace": "/portal/marketplace-friendly-exchange-stockcake.jpg",
+  "/marketplace": "/marketplace-friendly-exchange-stockcake.jpg",
 
-  /** CROP: My Farm — add `public/portal/crop-my-farm.jpg` */
+  /** CROP: My Farm */
 
-  "/farm": "/portal/young-farmer-is-writing-notes-in-his-growing-corn-field-2XCDAWT.jpg",
+  "/farm": "/young-farmer-is-writing-notes-in-his-growing-corn-field-2XCDAWT.jpg",
 
   /** CROP: Financial Statement card */
 
@@ -95,13 +95,13 @@ export const PORTAL_NAV_IMAGES_CROP_FARMER = {
 
 export const PORTAL_NAV_IMAGES_LIVESTOCK_FARMER = {
 
-  /** LIVESTOCK: Marketplace — add `public/portal/livestock-marketplace.jpg` */
+  /** LIVESTOCK: Marketplace */
 
-  "/marketplace": "/portal/poultry.webp",
+  "/marketplace": "/poultry.webp",
 
-  /** LIVESTOCK: My Farm — add `public/portal/livestock-my-farm.jpg` */
+  /** LIVESTOCK: My Farm */
 
-  "/farm": "/portal/live stock farm.jpg",
+  "/farm": "/live stock farm.jpg",
 
   /** LIVESTOCK: Financial Statement card */
 
@@ -121,7 +121,7 @@ export const PORTAL_NAV_IMAGES_BUYER = {
 
   /** Change image here: Buyer Marketplace card (distinct from crop/livestock farmer marketplace images) */
 
-  "/marketplace": "/farmer market place.png ",
+  "/marketplace": "/farmer market place.png",
 
   /** Change image here: Buyer Access card */
 
@@ -211,17 +211,7 @@ export const PORTAL_NAV_IMAGES_STAFF = {
 
  */
 
-export const PORTAL_CUSTOM_PATH_FALLBACKS: Record<string, string> = {
-
-  "/portal/crop-marketplace.jpg": "/truongdinhanh-agriculture-9939844_1920.jpg",
-
-  "/portal/livestock-marketplace.jpg": "/herd-of-cattle-grazing-in-green-pasture-looking-at-camera-photo.jpg",
-
-  "/portal/crop-my-farm.jpg": "/famer on pitch.jpg",
-
-  "/portal/livestock-my-farm.jpg": "/herd-of-cattle-grazing-in-green-pasture-looking-at-camera-photo.jpg",
-
-};
+export const PORTAL_CUSTOM_PATH_FALLBACKS: Record<string, string> = {};
 
 
 
