@@ -94,6 +94,52 @@ class ApiClient {
     return json.data as T;
   }
 
+  private async downloadRequest(path: string): Promise<void> {
+    const headers: Record<string, string> = {};
+    if (this.accessToken) headers.Authorization = `Bearer ${this.accessToken}`;
+
+    let res = await fetch(`${API}${path}`, { headers });
+
+    if (res.status === 401 && this.refreshToken) {
+      const refreshRes = await fetch(`${API}/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken: this.refreshToken }),
+      });
+      if (refreshRes.ok) {
+        const json = await refreshRes.json();
+        this.accessToken = json.data.accessToken;
+        localStorage.setItem("accessToken", json.data.accessToken);
+        headers.Authorization = `Bearer ${this.accessToken}`;
+        res = await fetch(`${API}${path}`, { headers });
+      } else {
+        this.clearTokens();
+        if (typeof window !== "undefined") window.location.href = "/login";
+        throw new Error("Session expired");
+      }
+    }
+
+    if (!res.ok) {
+      const contentType = res.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        const json = await res.json();
+        throw new Error(json.error || "Download failed");
+      }
+      throw new Error(`Download failed (${res.status})`);
+    }
+
+    const blob = await res.blob();
+    const disposition = res.headers.get("content-disposition") || "";
+    const match = disposition.match(/filename="([^"]+)"/);
+    const filename = match?.[1] || "download.pdf";
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
   private async uploadRequest<T>(path: string, formData: FormData): Promise<T> {
     const headers: Record<string, string> = {};
     if (this.accessToken) headers.Authorization = `Bearer ${this.accessToken}`;
@@ -173,9 +219,25 @@ class ApiClient {
     remove: (id: string) =>
       this.request(`/marketplace/${id}`, { method: "DELETE" }),
     purchase: (id: string, body: { quantity: number; paymentMethod: string }) =>
-      this.request(`/marketplace/${id}/purchase`, {
+      this.request<{
+        orderId: string;
+        releaseOtp: string | null;
+        totalPaid: number;
+        message: string;
+      }>(`/marketplace/${id}/purchase`, {
         method: "POST",
         body: JSON.stringify(body),
+      }),
+  };
+
+  orders = {
+    get: (id: string) =>
+      this.request<import("./types").OrderDetail>(`/orders/${id}`),
+    statement: (id: string) => this.downloadRequest(`/orders/${id}/statement`),
+    release: (id: string, otp: string) =>
+      this.request<import("./types").OrderReleaseResult>(`/orders/${id}/release`, {
+        method: "POST",
+        body: JSON.stringify({ otp }),
       }),
   };
 

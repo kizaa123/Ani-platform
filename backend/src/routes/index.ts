@@ -19,7 +19,7 @@ import { registerSchema, loginSchema, updateUserProfileSchema, updateHandlerSche
 import { updateFarmSchema, addCommoditySchema, updateOrderTrackSchema } from '../services/farm.service';
 import { listingSchema, updateListingSchema } from '../services/marketplace.service';
 import { purchaseSchema, packageSchema, purchaseFarmAccessSchema } from '../services/payment.service';
-import { purchaseProductSchema } from '../services/order.service';
+import { purchaseProductSchema, releaseOrderSchema } from '../services/order.service';
 import { publicationSchema, updatePublicationSchema, purchasePublicationSchema } from '../services/researcher.service';
 import { connectionSchema } from '../services/connection.service';
 import { assignmentSchema } from '../services/agent.service';
@@ -201,6 +201,15 @@ router.post(
   requirePermission(PERMISSIONS.REQUEST_CONNECTION),
   validateBody(purchaseProductSchema),
   orderController.purchase
+);
+router.get('/orders/:id', authenticate, orderController.getOne);
+router.get('/orders/:id/statement', authenticate, orderController.statement);
+router.post(
+  '/orders/:id/release',
+  authenticate,
+  requirePermission(PERMISSIONS.REQUEST_CONNECTION),
+  validateBody(releaseOrderSchema),
+  orderController.release
 );
 router.get('/marketplace/:id', authenticate, marketplaceController.getOne);
 router.post('/marketplace', authenticate, requirePermission(PERMISSIONS.CREATE_LISTING), validateBody(listingSchema), marketplaceController.create);

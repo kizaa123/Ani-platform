@@ -43,6 +43,7 @@ export function PurchaseModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const [releaseOtp, setReleaseOtp] = useState<string | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -61,6 +62,7 @@ export function PurchaseModal({
     setQuantity(Math.min(1, maxQty) || 1);
     setError("");
     setSuccessMsg("");
+    setReleaseOtp(null);
     setActiveImageIndex(0);
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, [listing.id]);
@@ -81,9 +83,10 @@ export function PurchaseModal({
     setSubmitting(true);
     setError("");
     try {
-      await api.marketplace.purchase(listing.id, { quantity, paymentMethod });
+      const result = await api.marketplace.purchase(listing.id, { quantity, paymentMethod });
+      setReleaseOtp(result.releaseOtp);
       setSuccessMsg(
-        `${quantity} ${unitLabel} — GHC ${total.toFixed(2)} paid to ${farmerName}.`
+        `${quantity} ${unitLabel} — GHC ${total.toFixed(2)} held in escrow until you confirm delivery.`
       );
       scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
       onSuccess();
@@ -124,7 +127,11 @@ export function PurchaseModal({
               <TransactionSuccess
                 title="Order placed successfully"
                 message={successMsg}
-                hint="You can track this order from My Orders."
+                hint={
+                  releaseOtp
+                    ? `Your 4-digit release code is ${releaseOtp}. Save it — you'll enter it in My Orders when you receive your delivery.`
+                    : "Check My Orders for your release code and financial statement PDF."
+                }
                 actionLabel="View my orders"
                 onAction={() => {
                   window.location.href = "/orders";
@@ -239,7 +246,7 @@ export function PurchaseModal({
                   <PaymentCheckout
                     totalLabel={`${quantity} × GHC ${unitPrice}`}
                     totalAmount={`GHC ${total.toFixed(2)}`}
-                    subtitle={`Payment goes to ${farmerName}'s farm account`}
+                    subtitle="Payment held in escrow until you confirm delivery"
                     payLabel={`Pay GHC ${total.toFixed(2)}`}
                     onPay={handlePurchase}
                     submitting={submitting}

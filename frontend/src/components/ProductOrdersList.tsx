@@ -5,7 +5,13 @@ import { ProductImage, ProfilePhoto } from "@/components/FarmerAvatar";
 import { CountryBadge } from "@/components/CountrySelect";
 import { OrderTrackControls, OrderTrackTimeline } from "@/components/OrderTrackTimeline";
 import { api } from "@/lib/api";
-import { formatDate, formatGhc, orderStatusStyle } from "@/lib/format";
+import {
+  formatDate,
+  formatGhc,
+  escrowStatusLabel,
+  escrowStatusStyle,
+  orderStatusStyle,
+} from "@/lib/format";
 import { OrderTrackStage } from "@/lib/orderTrack";
 import { BuyerOrderLineItem, formatListingUnit, ProductOrderLineItem } from "@/lib/types";
 import { Icon } from "@/components/icons";
@@ -15,6 +21,143 @@ type OrderListItem = ProductOrderLineItem | BuyerOrderLineItem;
 
 function isBuyerOrder(order: OrderListItem): order is BuyerOrderLineItem {
   return "farmerName" in order;
+}
+
+function orderStatementId(order: OrderListItem): string | null {
+  return order.orderId ?? null;
+}
+
+function OrderEscrowPanel({
+  order,
+  perspective,
+  onUpdated,
+}: {
+  order: OrderListItem;
+  perspective: OrderListPerspective;
+  onUpdated?: (updated: Partial<OrderListItem>) => void;
+}) {
+  const [otp, setOtp] = useState("");
+  const [releasing, setReleasing] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const statementId = orderStatementId(order);
+  const escrowStatus = order.escrowStatus ?? "HELD";
+  const canRelease = perspective === "buyer" && order.canRelease && escrowStatus === "HELD";
+
+  const downloadStatement = async () => {
+    if (!statementId) return;
+    setDownloading(true);
+    setError("");
+    try {
+      await api.orders.statement(statementId);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not download statement");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const releasePayment = async () => {
+    if (!statementId || !/^\d{4}$/.test(otp)) {
+      setError("Enter your 4-digit release code");
+      return;
+    }
+    setReleasing(true);
+    setError("");
+    setSuccess("");
+    try {
+      const result = await api.orders.release(statementId, otp);
+      setSuccess("Payment released to ANI Accountant.");
+      setOtp("");
+      onUpdated?.({
+        escrowStatus: result.escrowStatus,
+        otpVerifiedAt: result.otpVerifiedAt,
+        paymentReleasedAt: result.paymentReleasedAt,
+        canRelease: false,
+        releaseOtp: null,
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Release failed");
+    } finally {
+      setReleasing(false);
+    }
+  };
+
+  if (!statementId && !order.escrowStatus) return null;
+
+  return (
+    <div className="mt-5 rounded-xl border border-brand-100 bg-brand-50/30 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Payment trust</p>
+        <span
+          className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${escrowStatusStyle(escrowStatus)}`}
+        >
+          {escrowStatusLabel(escrowStatus)}
+        </span>
+      </div>
+
+      {order.paymentReleasedAt && (
+        <p className="mt-2 text-xs text-gray-600">
+          Released {formatDate(order.paymentReleasedAt)}
+        </p>
+      )}
+
+      {canRelease && order.releaseOtp && (
+        <p className="mt-3 rounded-lg bg-white px-3 py-2 text-sm text-brand-900">
+          Your release code:{" "}
+          <span className="font-mono text-lg font-bold tracking-widest text-brand-700">
+            {order.releaseOtp}
+          </span>
+        </p>
+      )}
+
+      {canRelease && (
+        <div className="mt-3 space-y-2">
+          <p className="text-xs text-gray-600">
+            Enter your 4-digit code after you receive your order to release payment to the ANI
+            Accountant.
+          </p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="\d{4}"
+              maxLength={4}
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 4))}
+              placeholder="0000"
+              className="w-24 rounded-lg border border-brand-200 px-3 py-2 text-center font-mono text-lg tracking-widest focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+              aria-label="4-digit release code"
+            />
+            <button
+              type="button"
+              onClick={releasePayment}
+              disabled={releasing || otp.length !== 4}
+              className="btn-primary flex-1 py-2 disabled:opacity-50"
+            >
+              {releasing ? "Confirming…" : "Confirm delivery"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {statementId && (
+        <button
+          type="button"
+          onClick={downloadStatement}
+          disabled={downloading}
+          className="mt-3 w-full rounded-lg border border-brand-200 bg-white px-3 py-2 text-sm font-semibold text-brand-800 hover:bg-brand-50 disabled:opacity-50"
+        >
+          {downloading ? "Preparing PDF…" : "Download financial statement (PDF)"}
+        </button>
+      )}
+
+      {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+      {success && <p className="mt-2 text-xs text-green-700">{success}</p>}
+    </div>
+  );
 }
 
 
@@ -268,6 +411,12 @@ function OrderDetailModal({
               </p>
             </div>
           </div>
+
+          <OrderEscrowPanel
+            order={order}
+            perspective={perspective}
+            onUpdated={(updated) => onTrackUpdated?.({ ...order, ...updated })}
+          />
 
           <div className="mt-5 rounded-xl border border-brand-100 p-4">
             {perspective === "farmer" && !isBuyerOrder(order) ? (

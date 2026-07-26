@@ -47,6 +47,10 @@ type OrderCore = {
   transactionId: string | null;
   trackStage?: string;
   trackUpdatedAt?: Date | null;
+  escrowStatus?: string;
+  otpVerifiedAt?: Date | null;
+  paymentReleasedAt?: Date | null;
+  releaseOtp?: string | null;
   listing: ListingFields;
 };
 
@@ -66,6 +70,23 @@ export function formatUserLocation(user: {
 function productImage(listing: ListingFields): string | null {
   const images = normalizeImages(listing.images).map((img) => normalizePublicAssetUrl(img) ?? img);
   return images[0] ?? null;
+}
+
+function escrowFields(order: OrderCore, perspective: 'buyer' | 'farmer') {
+  const escrowStatus = order.escrowStatus ?? 'HELD';
+  const canRelease =
+    perspective === 'buyer' &&
+    order.status === 'PAID' &&
+    escrowStatus === 'HELD';
+
+  return {
+    orderId: order.id,
+    escrowStatus,
+    otpVerifiedAt: order.otpVerifiedAt?.toISOString() ?? null,
+    paymentReleasedAt: order.paymentReleasedAt?.toISOString() ?? null,
+    canRelease,
+    releaseOtp: canRelease ? (order.releaseOtp ?? null) : null,
+  };
 }
 
 /** Orders received by a farmer (buyer details shown). */
@@ -98,6 +119,7 @@ export function formatFarmerIncomingOrder(
     buyerCountry: order.buyer.country,
     buyerProfilePicture: normalizePublicAssetUrl(order.buyer.profilePicture),
     purchaseCount: 1,
+    ...escrowFields(order, 'farmer'),
   };
 }
 
@@ -131,6 +153,17 @@ export function groupFarmerIncomingOrders(orders: FarmerIncomingOrderRow[]) {
       existing.createdAt = order.createdAt;
       existing.paymentMethod = order.paymentMethod;
       existing.transactionId = order.transactionId;
+      existing.id = order.id;
+      existing.escrowStatus = order.escrowStatus;
+      existing.otpVerifiedAt = order.otpVerifiedAt;
+      existing.paymentReleasedAt = order.paymentReleasedAt;
+      existing.releaseOtp = order.releaseOtp;
+    }
+
+    if (existing.escrowStatus !== order.escrowStatus && order.escrowStatus === 'HELD') {
+      existing.escrowStatus = 'HELD';
+      existing.id = order.id;
+      existing.releaseOtp = order.releaseOtp;
     }
 
     if (
@@ -150,6 +183,7 @@ export function groupFarmerIncomingOrders(orders: FarmerIncomingOrderRow[]) {
     .map((order) => ({
       ...formatFarmerIncomingOrder(order),
       id: `${order.buyerId}-${order.listingId}`,
+      orderId: order.id,
       purchaseCount: order.purchaseCount,
     }));
 }
@@ -185,6 +219,7 @@ export function formatBuyerPlacedOrder(
     farmerProfilePicture: normalizePublicAssetUrl(order.farmer.profilePicture ?? null),
     farmName: order.farmer.farmerProfile?.farmName ?? null,
     purchaseCount: 1,
+    ...escrowFields(order, 'buyer'),
   };
 }
 
@@ -224,6 +259,17 @@ export function groupBuyerPlacedOrders(orders: BuyerPlacedOrderRow[]) {
       existing.createdAt = order.createdAt;
       existing.paymentMethod = order.paymentMethod;
       existing.transactionId = order.transactionId;
+      existing.id = order.id;
+      existing.escrowStatus = order.escrowStatus;
+      existing.otpVerifiedAt = order.otpVerifiedAt;
+      existing.paymentReleasedAt = order.paymentReleasedAt;
+      existing.releaseOtp = order.releaseOtp;
+    }
+
+    if (existing.escrowStatus !== order.escrowStatus && order.escrowStatus === 'HELD') {
+      existing.escrowStatus = 'HELD';
+      existing.id = order.id;
+      existing.releaseOtp = order.releaseOtp;
     }
 
     if (
@@ -243,6 +289,7 @@ export function groupBuyerPlacedOrders(orders: BuyerPlacedOrderRow[]) {
     .map((order) => ({
       ...formatBuyerPlacedOrder(order),
       id: `${order.buyerId}-${order.listingId}`,
+      orderId: order.id,
       purchaseCount: order.purchaseCount,
     }));
 }

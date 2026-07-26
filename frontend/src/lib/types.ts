@@ -220,7 +220,45 @@ export function isLivestockFarmer(roleId: number) {
 
 export { assetUrl } from "./assetUrl";
 
-export interface ProductOrderLineItem {
+export interface OrderEscrowFields {
+  orderId?: string;
+  escrowStatus?: 'HELD' | 'RELEASED';
+  otpVerifiedAt?: string | null;
+  paymentReleasedAt?: string | null;
+  canRelease?: boolean;
+  releaseOtp?: string | null;
+}
+
+export interface OrderDetail extends OrderEscrowFields {
+  id: string;
+  buyerId: string;
+  farmerId: string;
+  listingId: string;
+  quantity: number;
+  unit: string;
+  unitPrice: number;
+  totalAmount: number;
+  status: string;
+  paymentMethod: string;
+  transactionId?: string | null;
+  trackStage?: import("./orderTrack").OrderTrackStage;
+  trackUpdatedAt?: string | null;
+  createdAt: string;
+  productName: string;
+  buyerName: string;
+  farmerName: string;
+}
+
+export interface OrderReleaseResult {
+  id: string;
+  escrowStatus: 'HELD' | 'RELEASED';
+  otpVerifiedAt: string | null;
+  paymentReleasedAt: string | null;
+  canRelease: boolean;
+  releaseOtp: string | null;
+}
+
+export interface ProductOrderLineItem extends OrderEscrowFields {
   id: string;
   buyerId?: string;
   listingId?: string;
@@ -296,7 +334,7 @@ export interface FinancialStatement {
   salesLineItems: FinancialStatementLineItem[];
 }
 
-export interface BuyerOrderLineItem {
+export interface BuyerOrderLineItem extends OrderEscrowFields {
   id: string;
   buyerId?: string;
   listingId?: string;

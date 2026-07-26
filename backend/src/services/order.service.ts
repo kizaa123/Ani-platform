@@ -5,10 +5,15 @@ import { ROLES } from '../constants/roles';
 import { buyerHasApprovedFarmAccess } from '../middleware/access.middleware';
 import { getPaymentProvider } from './payment.provider';
 import { notifyNewOrder, notifyProductPurchase } from './notification.service';
+import { generateReleaseOtp } from '../utils/orderOtp';
 
 export const purchaseProductSchema = z.object({
   quantity: z.number().positive(),
   paymentMethod: z.string().min(2),
+});
+
+export const releaseOrderSchema = z.object({
+  otp: z.string().regex(/^\d{4}$/, 'Release code must be 4 digits'),
 });
 
 export class OrderService {
@@ -63,6 +68,8 @@ export class OrderService {
     }
 
     const txResult = await prisma.$transaction(async (tx) => {
+      const releaseOtp = generateReleaseOtp();
+
       const order = await tx.productOrder.create({
         data: {
           buyerId,
@@ -77,6 +84,8 @@ export class OrderService {
           status: result.status === 'COMPLETED' ? 'PAID' : 'PENDING',
           trackStage: 'ORDER_RECEIVED',
           trackUpdatedAt: result.status === 'COMPLETED' ? new Date() : null,
+          releaseOtp: result.status === 'COMPLETED' ? releaseOtp : null,
+          escrowStatus: 'HELD',
         },
         include: {
           listing: { include: { commodity: true } },
@@ -97,13 +106,22 @@ export class OrderService {
         order,
         message: `Purchased ${data.quantity} ${listing.unit} of ${listing.title}`,
         totalPaid: totalAmount,
+        releaseOtp: result.status === 'COMPLETED' ? releaseOtp : null,
+        orderId: order.id,
       };
     });
 
     const buyerName = `${txResult.order.buyer.firstName} ${txResult.order.buyer.lastName}`;
     const farmerName = `${listing.farmer.user.firstName} ${listing.farmer.user.lastName}`;
     await notifyNewOrder(farmerUserId, buyerId, buyerName, listing.title, totalAmount);
-    await notifyProductPurchase(buyerId, farmerUserId, farmerName, listing.title, totalAmount);
+    await notifyProductPurchase(
+      buyerId,
+      farmerUserId,
+      farmerName,
+      listing.title,
+      totalAmount,
+      txResult.order.id
+    );
 
     return txResult;
   }

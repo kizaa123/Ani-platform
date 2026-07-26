@@ -12,9 +12,9 @@ import {
   isBuyer,
   isFarmer,
 } from "@/lib/types";
-import { FarmerBrowseCardItem } from "@/components/FarmerBrowseCardItem";
-import { FarmerDetailModal } from "@/components/FarmerDetailModal";
+import { FarmerAvatar } from "@/components/FarmerAvatar";
 import { FarmerProductCard } from "@/components/FarmerProductCard";
+import { VerificationBadge } from "@/components/VerificationBadge";
 import { PurchaseModal } from "@/components/PurchaseModal";
 import { Icon } from "@/components/icons";
 
@@ -49,7 +49,6 @@ export default function MarketplacePage() {
   const [search, setSearch] = useState("");
   const [purchaseFarmer, setPurchaseFarmer] = useState<FarmerBrowseCard | null>(null);
   const [activeListingId, setActiveListingId] = useState<string | null>(null);
-  const [detailFarmer, setDetailFarmer] = useState<FarmerBrowseCard | null>(null);
   const [orderPlacedMessage, setOrderPlacedMessage] = useState("");
   const router = useRouter();
 
@@ -257,13 +256,18 @@ export default function MarketplacePage() {
               key={farmer.farmerId}
               className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm"
             >
-              <div className="border-b border-brand-50 p-4 sm:p-5">
-                <FarmerBrowseCardItem
-                  farmer={farmer}
-                  accessPriceLabel={browse?.farmAccessPriceLabel}
-                  onClick={() => setDetailFarmer(farmer)}
-                  embedded
-                />
+              <div className="border-b border-brand-50 px-4 py-3 sm:px-5">
+                <div className="flex items-center gap-2.5">
+                  <FarmerAvatar
+                    src={farmer.profilePicture}
+                    name={farmer.farmerName}
+                    size="sm"
+                  />
+                  <div className="min-w-0 flex flex-wrap items-center gap-2">
+                    <h3 className="truncate font-bold text-brand-900">{farmer.farmerName}</h3>
+                    <VerificationBadge status={farmer.verificationStatus} />
+                  </div>
+                </div>
               </div>
 
               {farmer.canViewProducts ? (
@@ -272,13 +276,17 @@ export default function MarketplacePage() {
                     <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
                       Products ({farmer.products.length})
                     </p>
-                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1 snap-x snap-mandatory">
                       {farmer.products.map((product) => (
-                        <FarmerProductCard
+                        <div
                           key={product.id}
-                          product={product}
-                          onClick={() => openPurchase(farmer, product)}
-                        />
+                          className="w-64 shrink-0 snap-start sm:w-72"
+                        >
+                          <FarmerProductCard
+                            product={product}
+                            onClick={() => openPurchase(farmer, product)}
+                          />
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -321,14 +329,6 @@ export default function MarketplacePage() {
             </section>
           ))}
         </div>
-      )}
-
-      {detailFarmer && (
-        <FarmerDetailModal
-          farmer={detailFarmer}
-          farmAccessPriceLabel={browse?.farmAccessPriceLabel}
-          onClose={() => setDetailFarmer(null)}
-        />
       )}
 
       {purchaseFarmer && activeListing && (

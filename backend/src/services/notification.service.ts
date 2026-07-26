@@ -10,6 +10,7 @@ export type CreateNotificationInput = {
     | 'CHAT_MESSAGE'
     | 'NEW_ORDER'
     | 'ORDER_TRACKED'
+    | 'ORDER_PAYMENT_RELEASED'
     | 'CONNECTION_REQUEST'
     | 'CONNECTION_APPROVED'
     | 'CONNECTION_DECLINED'
@@ -144,7 +145,7 @@ export async function notifyNewOrder(
   productName: string,
   totalAmount: number
 ) {
-  const body = `${buyerName} ordered ${productName} — GHC ${totalAmount.toFixed(2)} added to your financial statement.`;
+  const body = `${buyerName} ordered ${productName} — GHC ${totalAmount.toFixed(2)} held in escrow until buyer confirms delivery. Download the order statement from Buyer Orders.`;
   await notifyFarmerTeam(farmerId, {
     actorId: buyerId,
     type: 'NEW_ORDER',
@@ -159,16 +160,60 @@ export async function notifyProductPurchase(
   farmerId: string,
   farmerName: string,
   productName: string,
-  totalAmount: number
+  totalAmount: number,
+  orderId?: string
 ) {
   await createNotification({
     userId: buyerId,
     actorId: farmerId,
     type: 'PRODUCT_PURCHASE',
-    title: 'Purchase recorded',
-    body: `You purchased ${productName} from ${farmerName} for GHC ${totalAmount.toFixed(2)}. View your financial statement for details.`,
-    link: '/financials',
+    title: 'Order placed — save your release code',
+    body: `You purchased ${productName} from ${farmerName} for GHC ${totalAmount.toFixed(2)}. Check My Orders for your 4-digit release code and financial statement PDF.`,
+    link: orderId ? `/orders?order=${orderId}` : '/orders',
   }).catch(() => undefined);
+}
+
+export async function notifyOrderPaymentReleased(order: {
+  id: string;
+  buyerId: string;
+  farmerId: string;
+  totalAmount: number;
+  listing: { title: string };
+  buyer: { firstName: string; lastName: string };
+  farmer: { firstName: string; lastName: string };
+}) {
+  const buyerName = `${order.buyer.firstName} ${order.buyer.lastName}`;
+  const farmerName = `${order.farmer.firstName} ${order.farmer.lastName}`;
+  const body = `${buyerName} confirmed delivery for ${order.listing.title} — GHC ${order.totalAmount.toFixed(2)} released to ANI Accountant.`;
+
+  const buyerHandlers = await prisma.agentAssignment.findMany({
+    where: { ownerId: order.buyerId, relationshipType: 'BUYER_REPRESENTATIVE' },
+    select: { agentId: true },
+  });
+  const farmerHandlers = await prisma.agentAssignment.findMany({
+    where: { ownerId: order.farmerId, relationshipType: 'FARMER_REPRESENTATIVE' },
+    select: { agentId: true },
+  });
+  const staff = await prisma.user.findMany({
+    where: { roleId: { in: [...STAFF_ROLES] } },
+    select: { id: true },
+  });
+
+  const userIds = [
+    order.buyerId,
+    order.farmerId,
+    ...buyerHandlers.map((h) => h.agentId),
+    ...farmerHandlers.map((h) => h.agentId),
+    ...staff.map((s) => s.id),
+  ];
+
+  await notifyUsers(userIds, {
+    actorId: order.buyerId,
+    type: 'ORDER_PAYMENT_RELEASED',
+    title: 'Order payment released',
+    body,
+    link: '/orders',
+  });
 }
 
 export async function notifyOrderTracked(

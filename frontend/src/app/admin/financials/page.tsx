@@ -28,6 +28,18 @@ export default function AdminFinancialsPage() {
   const router = useRouter();
   const [statement, setStatement] = useState<PlatformFinancialStatement | null>(null);
   const [error, setError] = useState("");
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  const downloadOrderStatement = async (orderId: string) => {
+    setDownloadingId(orderId);
+    try {
+      await api.orders.statement(orderId);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not download statement");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
@@ -140,6 +152,7 @@ export default function AdminFinancialsPage() {
                   <th className="px-4 py-2.5">Parties</th>
                   <th className="px-4 py-2.5 text-right">Amount</th>
                   <th className="px-5 py-2.5">Status</th>
+                  <th className="px-5 py-2.5">Statement</th>
                 </tr>
               </thead>
               <tbody>
@@ -161,6 +174,20 @@ export default function AdminFinancialsPage() {
                         {item.status.toLowerCase()}
                       </span>
                     </td>
+                    <td className="px-5 py-2.5">
+                      {item.type === "PRODUCT_ORDER" ? (
+                        <button
+                          type="button"
+                          onClick={() => downloadOrderStatement(item.id)}
+                          disabled={downloadingId === item.id}
+                          className="text-[10px] font-semibold text-brand-700 hover:underline disabled:opacity-50"
+                        >
+                          {downloadingId === item.id ? "…" : "PDF"}
+                        </button>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -170,7 +197,7 @@ export default function AdminFinancialsPage() {
                     Total platform revenue
                   </td>
                   <td className="px-4 py-3 text-right text-xs">{formatGhc(summary.totalRevenue)}</td>
-                  <td />
+                  <td colSpan={2} />
                 </tr>
               </tfoot>
             </table>

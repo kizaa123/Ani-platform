@@ -22,3 +22,25 @@ export function orderStatusStyle(status: string) {
       return "bg-yellow-100 text-yellow-800";
   }
 }
+
+export function escrowStatusStyle(status: string) {
+  switch (status) {
+    case "RELEASED":
+      return "bg-green-100 text-green-800";
+    case "HELD":
+      return "bg-amber-100 text-amber-900";
+    default:
+      return "bg-gray-100 text-gray-700";
+  }
+}
+
+export function escrowStatusLabel(status: string) {
+  switch (status) {
+    case "RELEASED":
+      return "Released to ANI Accountant";
+    case "HELD":
+      return "Held in escrow";
+    default:
+      return status;
+  }
+}

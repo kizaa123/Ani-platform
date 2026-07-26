@@ -70,6 +70,7 @@ export class AdminService {
       amount: order.totalAmount,
       paymentMethod: order.paymentMethod,
       status: order.status,
+      escrowStatus: order.escrowStatus,
       transactionId: order.transactionId,
     }));
 

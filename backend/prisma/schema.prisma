@@ -271,6 +271,11 @@ enum OrderTrackStage {
   DELIVERED
 }
 
+enum OrderEscrowStatus {
+  HELD
+  RELEASED
+}
+
 model ProductOrder {
   id            String          @id @default(uuid())
   buyerId       String          @map("buyer_id")
@@ -285,6 +290,10 @@ model ProductOrder {
   status        OrderStatus     @default(PENDING)
   trackStage    OrderTrackStage @default(ORDER_RECEIVED) @map("track_stage")
   trackUpdatedAt DateTime?      @map("track_updated_at")
+  releaseOtp     String?           @map("release_otp")
+  otpVerifiedAt  DateTime?         @map("otp_verified_at")
+  paymentReleasedAt DateTime?   @map("payment_released_at")
+  escrowStatus  OrderEscrowStatus @default(HELD) @map("escrow_status")
   createdAt     DateTime        @default(now()) @map("created_at")
 
   buyer   User             @relation("BuyerOrders", fields: [buyerId], references: [id])
@@ -408,6 +417,7 @@ enum NotificationType {
   CHAT_MESSAGE
   NEW_ORDER
   ORDER_TRACKED
+  ORDER_PAYMENT_RELEASED
   CONNECTION_REQUEST
   CONNECTION_APPROVED
   CONNECTION_DECLINED
