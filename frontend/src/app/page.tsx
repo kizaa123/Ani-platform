@@ -66,11 +66,11 @@ const TEAM = [
  */
 const ROLE_CARD_IMAGES = {
   cropFarmer: "/famer on pitch.jpg",       // Change image here: Crop Farmer card
-  livestockFarmer: "/login_cover.png",  // Change image here: Livestock Farmer card
-  fruitFarmer: "/login_cover.png",      // Change image here: Fruit Farmer card
-  buyer: "/famer and buyer.jpg",            // Change image here: Buyer card
-  handler: "/login_cover.png",          // Change image here: Handler card
-  researcher: "/login_cover.png",       // Change image here: Researcher card
+  livestockFarmer: "/herd-of-cattle-grazing-in-green-pasture-looking-at-camera-photo.jpg",  // Change image here: Livestock Farmer card
+  fruitFarmer: "/portrait-happy-farmer-couple-holding-baskets-vegetables-fruits-vineyard-77869777.webp",      // Change image here: Fruit Farmer card
+  buyer: "/farmer and buyer.jpg",            // Change image here: Buyer card
+  handler: "/farmer and her agent.webp",          // Change image here: Handler card
+  researcher: "/Agric researchers.jpg",       // Change image here: Researcher card
 } as const;
 
 const ROLE_CARDS: { icon: IconName; label: string; desc: string; image: string }[] = [
