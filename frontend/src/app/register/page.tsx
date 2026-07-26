@@ -10,6 +10,7 @@ import { CountrySelect } from "@/components/CountrySelect";
 import { HandlerSelect } from "@/components/HandlerSelect";
 import { CommodityPicker } from "@/components/CommodityPicker";
 import { Icon } from "@/components/icons";
+import { Logo } from "@/components/Logo";
 
 const ROLE_GROUPS = [
   {
@@ -219,13 +220,8 @@ export default function RegisterPage() {
         <div className="absolute inset-0 bg-gradient-to-tr from-brand-950/95 via-brand-900/60 to-brand-800/10 z-10" />
 
         {/* Brand logo */}
-        <div className="relative z-20 flex items-center gap-2">
-          <div className="h-10 w-10 bg-brand-500 rounded-xl flex items-center justify-center font-extrabold text-xl text-white shadow-lg shadow-brand-900/40">
-            A
-          </div>
-          <span className="font-extrabold text-2xl tracking-wider uppercase bg-clip-text text-transparent bg-gradient-to-r from-white via-brand-50 to-brand-200">
-            ANI Platform
-          </span>
+        <div className="relative z-20">
+          <Logo theme="light" size="lg" />
         </div>
 
         {/* Marketing text & stats */}

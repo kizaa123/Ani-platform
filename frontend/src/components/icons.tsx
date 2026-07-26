@@ -30,7 +30,8 @@ export type IconName =
   | "book"
   | "plus"
   | "heart"
-  | "share";
+  | "share"
+  | "logo";
 
 type IconProps = SVGProps<SVGSVGElement> & { name: IconName };
 
@@ -188,6 +189,12 @@ const paths: Record<IconName, ReactNode> = {
     <>
       <path strokeLinecap="round" strokeLinejoin="round" d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M16 6l-4-4-4 4M12 2v14" />
     </>
+  ),
+  logo: (
+    <svg viewBox="0 0 68 40" fill="none" className="h-full w-full">
+      <polygon points="20 4, 34 12, 34 28, 20 36, 6 28, 6 12" fill="#1F9D68" stroke="#2C3238" strokeWidth="3.5" strokeLinejoin="round" />
+      <polygon points="48 4, 62 12, 62 28, 48 36, 34 28, 34 12" fill="none" stroke="#2C3238" strokeWidth="3.5" strokeLinejoin="round" />
+    </svg>
   ),
 };
 

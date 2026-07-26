@@ -9,6 +9,7 @@ import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { NotificationBell } from "@/components/NotificationBell";
 import { Icon, type IconName } from "@/components/icons";
 import { MobileBottomNav, MOBILE_BOTTOM_NAV_PADDING } from "@/components/MobileBottomNav";
+import { Logo } from "@/components/Logo";
 
 export type PortalNavLink = {
   href: string;
@@ -51,10 +52,7 @@ function SidebarContent({
     <>
       <div className="flex items-center justify-between border-b border-brand-100 p-5">
         <div>
-          <Link href="/dashboard" onClick={onNavigate} className="flex items-center gap-2 text-lg font-bold text-brand-900">
-            <Icon name="wheat" className="h-5 w-5 text-brand-700" />
-            ANI Exchange
-          </Link>
+          <Logo href="/dashboard" size="sm" />
           <p className="mt-1 text-xs text-brand-600">{portalTitle}</p>
         </div>
         {showNotificationBell && <NotificationBell />}

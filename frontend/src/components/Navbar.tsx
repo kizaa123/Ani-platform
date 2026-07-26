@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthProvider";
 import { isFarmer, isBuyer, isHandler, isStaff, fullName } from "@/lib/types";
 import { FarmerAvatar } from "@/components/FarmerAvatar";
 import { NotificationBell } from "@/components/NotificationBell";
-import { Icon } from "@/components/icons";
+import { Logo } from "@/components/Logo";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard" },
@@ -103,10 +103,7 @@ export function Navbar() {
       return (
         <header className="sticky top-0 z-50 border-b border-brand-200 bg-white/90 backdrop-blur">
           <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-            <Link href="/" className="flex items-center gap-2 text-xl font-bold text-brand-900">
-              <Icon name="wheat" className="h-6 w-6 text-brand-700" />
-              ANI Exchange
-            </Link>
+            <Logo href="/" size="sm" />
             <div className="flex gap-2 sm:gap-3">
               <Link
                 href="/login"
@@ -159,13 +156,7 @@ export function Navbar() {
       <header className="sticky top-0 z-50 border-b border-brand-200 bg-white shadow-sm">
         <div className="mx-auto hidden h-16 max-w-7xl items-center gap-6 px-6 lg:grid lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:px-8">
           {/* Brand */}
-          <Link
-            href="/dashboard"
-            className="flex shrink-0 items-center gap-2 text-lg font-bold tracking-tight text-brand-900 transition hover:text-brand-700"
-          >
-            <Icon name="wheat" className="h-5 w-5 text-brand-700" />
-            ANI Exchange
-          </Link>
+          <Logo href="/dashboard" size="sm" />
 
           {/* Center nav */}
           <NavLinks
@@ -207,10 +198,7 @@ export function Navbar() {
 
         {/* Mobile bar */}
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 lg:hidden">
-          <Link href="/dashboard" className="flex min-w-0 items-center gap-2 truncate text-base font-bold text-brand-900">
-            <Icon name="wheat" className="h-5 w-5 shrink-0 text-brand-700" />
-            ANI Exchange
-          </Link>
+          <Logo href="/dashboard" size="sm" />
           <div className="flex items-center gap-2">
             <NotificationBell />
             <button
