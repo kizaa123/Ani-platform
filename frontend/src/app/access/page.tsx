@@ -44,9 +44,6 @@ export default function AccessPage() {
   );
 
   const onPaymentSuccess = () => {
-    alert(
-      "Payment received! ANI admin will review your access request. You can view products once approved."
-    );
     loadBrowse();
   };
 

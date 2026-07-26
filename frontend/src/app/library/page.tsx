@@ -8,12 +8,8 @@ import { ResearchPublication, isBuyer, isResearcher } from "@/lib/types";
 import { Icon } from "@/components/icons";
 import { VerificationBadge } from "@/components/VerificationBadge";
 import { ProfilePhoto } from "@/components/FarmerAvatar";
+import { PaymentCheckout, TransactionSuccess } from "@/components/PaymentCheckout";
 import { assetUrl } from "@/lib/assetUrl";
-
-const PAYMENT_METHODS = [
-  { id: "mobile_money", label: "Mobile Money (MTN / Vodafone)" },
-  { id: "bank_transfer", label: "Bank Transfer" },
-];
 
 function formatGhc(amount: number) {
   return `GHC ${amount.toFixed(2)}`;
@@ -26,9 +22,9 @@ export default function LibraryPage() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<ResearchPublication | null>(null);
   const [viewCounts, setViewCounts] = useState<Record<string, number>>({});
-  const [paymentMethod, setPaymentMethod] = useState("mobile_money");
   const [purchasing, setPurchasing] = useState(false);
   const [purchaseError, setPurchaseError] = useState("");
+  const [purchaseSuccess, setPurchaseSuccess] = useState("");
   const [loadError, setLoadError] = useState("");
 
   const load = (q?: string) =>
@@ -63,9 +59,11 @@ export default function LibraryPage() {
     }
     const full = await api.research.get(pub.id);
     setSelected(full);
+    setPurchaseError("");
+    setPurchaseSuccess("");
   };
 
-  const handlePurchase = async () => {
+  const handlePurchase = async (paymentMethod: string) => {
     if (!selected) return;
     setPurchasing(true);
     setPurchaseError("");
@@ -73,6 +71,7 @@ export default function LibraryPage() {
       await api.research.purchase(selected.id, paymentMethod);
       const updated = await api.research.get(selected.id);
       setSelected(updated);
+      setPurchaseSuccess(`You now have access to "${selected.title}".`);
       load(search.trim() || undefined);
     } catch (e) {
       setPurchaseError(e instanceof Error ? e.message : "Purchase failed");
@@ -199,7 +198,11 @@ export default function LibraryPage() {
               <button
                 type="button"
                 className="rounded-lg p-1 text-gray-400 hover:bg-gray-100"
-                onClick={() => setSelected(null)}
+                onClick={() => {
+                  setSelected(null);
+                  setPurchaseSuccess("");
+                  setPurchaseError("");
+                }}
               >
                 <Icon name="x" className="h-5 w-5" />
               </button>
@@ -213,51 +216,53 @@ export default function LibraryPage() {
             </div>
 
             {selected.hasAccess && selected.fileUrl ? (
-              <div className="rounded-xl border border-green-100 bg-green-50 p-4">
-                <p className="mb-3 text-sm text-green-800">You have access to this publication.</p>
-                <button
-                  type="button"
-                  className="btn-primary w-full"
-                  onClick={() => openDocument(selected.fileUrl!)}
-                >
-                  Open document
-                </button>
+              <div className="space-y-4">
+                {purchaseSuccess && (
+                  <TransactionSuccess
+                    title="Unlocked successfully"
+                    message={purchaseSuccess}
+                    actionLabel="Open document"
+                    onAction={() => openDocument(selected.fileUrl!)}
+                    onDismiss={() => setPurchaseSuccess("")}
+                    dismissLabel="Close"
+                  />
+                )}
+                {!purchaseSuccess && (
+                  <div className="rounded-xl border border-green-100 bg-green-50 p-4">
+                    <p className="mb-3 text-sm text-green-800">You have access to this publication.</p>
+                    <button
+                      type="button"
+                      className="btn-primary w-full"
+                      onClick={() => openDocument(selected.fileUrl!)}
+                    >
+                      Open document
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
-              <div className="rounded-xl border border-amber-100 bg-amber-50 p-4">
-                <div className="mb-3 flex items-center gap-2 text-amber-800">
-                  <Icon name="lock" className="h-5 w-5" />
-                  <span className="font-semibold">Paid content — unlock to read</span>
+              <div className="space-y-4">
+                <div className="rounded-xl border border-brand-100 bg-brand-50/60 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">
+                    Unlock to read
+                  </p>
+                  <p className="mt-1 text-2xl font-bold text-brand-900">
+                    {formatGhc(selected.price ?? 0)}
+                  </p>
                 </div>
-                <p className="mb-4 text-sm text-amber-700">
-                  Pay {formatGhc(selected.price ?? 0)} directly to the researcher to access this file.
-                </p>
+
                 {isResearcher(user.roleId) ? (
                   <p className="text-sm text-gray-600">Researchers cannot purchase publications.</p>
                 ) : isBuyer(user.roleId) ? (
-                  <>
-                    <label className="auth-label">Payment method</label>
-                    <select
-                      className="auth-input mb-4"
-                      value={paymentMethod}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
-                    >
-                      {PAYMENT_METHODS.map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.label}
-                        </option>
-                      ))}
-                    </select>
-                    {purchaseError && <p className="auth-error mb-3">{purchaseError}</p>}
-                    <button
-                      type="button"
-                      className="btn-gold w-full"
-                      disabled={purchasing}
-                      onClick={handlePurchase}
-                    >
-                      {purchasing ? "Processing..." : `Pay ${formatGhc(selected.price ?? 0)} & unlock`}
-                    </button>
-                  </>
+                  <PaymentCheckout
+                    totalLabel="Publication"
+                    totalAmount={formatGhc(selected.price ?? 0)}
+                    subtitle={`Payment goes to ${selected.researcher.name}`}
+                    payLabel={`Pay ${formatGhc(selected.price ?? 0)} & unlock`}
+                    onPay={handlePurchase}
+                    submitting={purchasing}
+                    error={purchaseError}
+                  />
                 ) : (
                   <p className="text-sm text-gray-600">
                     Register as a Buyer to purchase and read paid publications.

@@ -18,6 +18,7 @@ import {
   assertUnitForRole,
   defaultListingUnit,
 } from '../constants/units';
+import { computeListedPrice } from '../utils/listingPrice';
 
 export { LISTING_UNITS } from '../constants/units';
 
@@ -242,7 +243,7 @@ export class MarketplaceService {
         title: data.title,
         description: data.description,
         quantity: data.quantity,
-        price: data.price,
+        price: computeListedPrice(data.price),
         unit,
         images: data.images ?? [],
         location: data.location,
@@ -451,11 +452,12 @@ export class MarketplaceService {
     if (data.quantity !== undefined) {
       assertLivestockQuantity(roleId, data.quantity);
     }
-    const { harvestStartDate, harvestEndDate, images, ...rest } = data;
+    const { harvestStartDate, harvestEndDate, images, price, ...rest } = data;
     return prisma.commodityListing.update({
       where: { id: existing.id },
       data: {
         ...rest,
+        ...(price !== undefined ? { price: computeListedPrice(price) } : {}),
         ...(images !== undefined ? { images: normalizeImages(images) } : {}),
         ...(harvestStartDate !== undefined || harvestEndDate !== undefined
           ? listingHarvestFields({ harvestStartDate, harvestEndDate })

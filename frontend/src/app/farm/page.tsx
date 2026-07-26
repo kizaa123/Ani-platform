@@ -10,6 +10,7 @@ import { ProductImage } from "@/components/FarmerAvatar";
 import { Icon } from "@/components/icons";
 import { FarmerMediaItem } from "@/lib/types";
 import { assetUrl } from "@/lib/assetUrl";
+import { basePriceFromListed, computeListedPrice } from "@/lib/listingPrice";
 
 const MAX_FARM_MEDIA = 5;
 const MAX_VIDEO_DURATION = 60;
@@ -163,7 +164,7 @@ export default function FarmPage() {
       title: listing.title,
       description: listing.description || "",
       quantity: listing.quantity ?? 0,
-      price: listing.price ?? 0,
+      price: basePriceFromListed(listing.price ?? 0),
       unit: normalizeListingUnit(listing.unit, user?.roleId ?? ROLES.CROP_FARMER),
       location: listing.location || "",
       images,
@@ -221,6 +222,11 @@ export default function FarmPage() {
   const registeredCommodities = useMemo(
     () => profile?.farmerCommodities ?? [],
     [profile]
+  );
+
+  const listedPricePreview = useMemo(
+    () => (form.price > 0 ? computeListedPrice(form.price) : 0),
+    [form.price]
   );
 
   if (loading || !user) {
@@ -406,43 +412,54 @@ export default function FarmPage() {
             className="w-full rounded-lg border bg-white px-4 py-2"
             rows={3}
           />
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <input
-              type="number"
-              placeholder={isLivestockFarmer(user?.roleId ?? 0) ? "No. of animals" : "Quantity"}
-              min={1}
-              step={isLivestockFarmer(user?.roleId ?? 0) ? 1 : "any"}
-              value={form.quantity || ""}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  quantity: isLivestockFarmer(user?.roleId ?? 0)
-                    ? parseInt(e.target.value, 10) || 0
-                    : parseFloat(e.target.value),
-                })
-              }
-              className="rounded-lg border bg-white px-4 py-2"
-            />
-            <select
-              value={form.unit}
-              onChange={(e) => setForm({ ...form, unit: e.target.value as ListingUnit })}
-              className="rounded-lg border bg-white px-4 py-2"
-            >
-              {listingUnitsForRole(user?.roleId ?? ROLES.CROP_FARMER).map((u) => (
-                <option key={u} value={u}>
-                  {formatListingUnit(u)}
-                </option>
-              ))}
-            </select>
-            <input
-              type="number"
-              placeholder="Price (GHC)"
-              value={form.price || ""}
-              onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value) })}
-              className="rounded-lg border bg-white px-4 py-2"
-            />
-            <div className="flex items-center px-2 text-sm font-semibold text-brand-800">
-              GHC {form.price || 0}/{formatListingUnit(form.unit)}
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <input
+                type="number"
+                placeholder={isLivestockFarmer(user?.roleId ?? 0) ? "No. of animals" : "Quantity"}
+                min={1}
+                step={isLivestockFarmer(user?.roleId ?? 0) ? 1 : "any"}
+                value={form.quantity || ""}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    quantity: isLivestockFarmer(user?.roleId ?? 0)
+                      ? parseInt(e.target.value, 10) || 0
+                      : parseFloat(e.target.value),
+                  })
+                }
+                className="rounded-lg border bg-white px-4 py-2"
+              />
+              <select
+                value={form.unit}
+                onChange={(e) => setForm({ ...form, unit: e.target.value as ListingUnit })}
+                className="rounded-lg border bg-white px-4 py-2"
+              >
+                {listingUnitsForRole(user?.roleId ?? ROLES.CROP_FARMER).map((u) => (
+                  <option key={u} value={u}>
+                    {formatListingUnit(u)}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="number"
+                placeholder="Your price (GHC)"
+                min={0}
+                step="any"
+                value={form.price || ""}
+                onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value) || 0 })}
+                className="col-span-2 rounded-lg border bg-white px-4 py-2 sm:col-span-1"
+              />
+            </div>
+            <div className="rounded-lg border border-brand-200 bg-white px-4 py-2.5 text-sm">
+              {form.price > 0 ? (
+                <p className="font-semibold text-brand-800">
+                  Your price: GHC {form.price} → Listed price: GHC {listedPricePreview}/
+                  {formatListingUnit(form.unit)}
+                </p>
+              ) : (
+                <p className="text-gray-500">Enter your price — buyers will see it plus 50% as the listed price.</p>
+              )}
             </div>
           </div>
           <input
@@ -561,9 +578,16 @@ export default function FarmPage() {
                       `${l.quantity} ${formatListingUnit(normalizeListingUnit(l.unit, user?.roleId ?? ROLES.CROP_FARMER))}`}
                   </p>
                   <p className="text-lg font-bold text-brand-900">
+                    Listed:{" "}
                     {l.priceLabel ||
                       `GHC ${l.price}/${formatListingUnit(normalizeListingUnit(l.unit, user?.roleId ?? ROLES.CROP_FARMER))}`}
                   </p>
+                  {l.price != null && l.price > 0 && (
+                    <p className="text-xs text-gray-500">
+                      Your price: GHC {basePriceFromListed(l.price)}/
+                      {formatListingUnit(normalizeListingUnit(l.unit, user?.roleId ?? ROLES.CROP_FARMER))}
+                    </p>
+                  )}
                   {l.harvestLabel && (
                     <p className="mt-1 flex items-center gap-1 text-xs text-brand-700">
                       <Icon name="calendar" className="h-3.5 w-3.5 shrink-0" />
