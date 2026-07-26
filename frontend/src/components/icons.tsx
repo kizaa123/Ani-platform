@@ -28,7 +28,9 @@ export type IconName =
   | "chevron-right"
   | "eye"
   | "book"
-  | "plus";
+  | "plus"
+  | "heart"
+  | "share";
 
 type IconProps = SVGProps<SVGSVGElement> & { name: IconName };
 
@@ -175,6 +177,16 @@ const paths: Record<IconName, ReactNode> = {
   plus: (
     <>
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
+    </>
+  ),
+  heart: (
+    <>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z" />
+    </>
+  ),
+  share: (
+    <>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M16 6l-4-4-4 4M12 2v14" />
     </>
   ),
 };

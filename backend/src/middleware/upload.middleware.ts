@@ -15,7 +15,7 @@ export const MAX_LISTING_IMAGES_PER_UPLOAD = 10;
 export const MAX_DOCUMENT_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
 export function ensureUploadDirs() {
-  for (const dir of ['profiles', 'listings', 'products', 'publications']) {
+  for (const dir of ['profiles', 'listings', 'products', 'publications', 'farm-media']) {
     const full = path.join(UPLOADS_ROOT, dir);
     if (!fs.existsSync(full)) fs.mkdirSync(full, { recursive: true });
   }
@@ -80,6 +80,23 @@ export const publicationCoverUpload = multer({
   fileFilter: imageFilter,
 }).single('cover');
 
+/** Max upload size per farm media file (image or short video). */
+export const MAX_FARM_MEDIA_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+
+const mediaFilter: multer.Options['fileFilter'] = (_req, file, cb) => {
+  if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image or video files are allowed'));
+  }
+};
+
+export const farmMediaUpload = multer({
+  storage: diskStorage('farm-media'),
+  limits: { fileSize: MAX_FARM_MEDIA_FILE_SIZE },
+  fileFilter: mediaFilter,
+}).single('media');
+
 export function publicUrl(relativePath: string): string {
   return `/uploads/${relativePath.replace(/\\/g, '/')}`;
 }
@@ -99,7 +116,7 @@ export function normalizePublicAssetUrl(path?: string | null): string | null {
   }
   if (trimmed.startsWith('/uploads/')) return trimmed;
   if (trimmed.startsWith('uploads/')) return `/${trimmed}`;
-  if (trimmed.startsWith('profiles/') || trimmed.startsWith('listings/') || trimmed.startsWith('publications/')) {
+  if (trimmed.startsWith('profiles/') || trimmed.startsWith('listings/') || trimmed.startsWith('publications/') || trimmed.startsWith('farm-media/')) {
     return publicUrl(trimmed);
   }
   return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;

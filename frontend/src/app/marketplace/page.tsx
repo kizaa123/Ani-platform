@@ -12,9 +12,8 @@ import {
   isBuyer,
   isFarmer,
 } from "@/lib/types";
-import { FarmerAvatar } from "@/components/FarmerAvatar";
-import { CountryBadge } from "@/components/CountrySelect";
-import { VerificationBadge } from "@/components/VerificationBadge";
+import { FarmerBrowseCardItem } from "@/components/FarmerBrowseCardItem";
+import { FarmerDetailModal } from "@/components/FarmerDetailModal";
 import { FarmerProductCard } from "@/components/FarmerProductCard";
 import { PurchaseModal } from "@/components/PurchaseModal";
 import { Icon } from "@/components/icons";
@@ -50,6 +49,7 @@ export default function MarketplacePage() {
   const [search, setSearch] = useState("");
   const [purchaseFarmer, setPurchaseFarmer] = useState<FarmerBrowseCard | null>(null);
   const [activeListingId, setActiveListingId] = useState<string | null>(null);
+  const [detailFarmer, setDetailFarmer] = useState<FarmerBrowseCard | null>(null);
   const [orderPlacedMessage, setOrderPlacedMessage] = useState("");
   const router = useRouter();
 
@@ -251,92 +251,28 @@ export default function MarketplacePage() {
           {search.trim() ? "No farmers match your search." : "No farmers registered yet."}
         </div>
       ) : (
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="space-y-8">
           {filteredFarmers.map((farmer) => (
-            <div
+            <section
               key={farmer.farmerId}
-              className="flex flex-col overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm"
+              className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm"
             >
-              <div className="border-b border-brand-50 bg-brand-50/40 p-5">
-                <div className="flex items-center gap-3">
-                  <FarmerAvatar
-                    src={farmer.profilePicture}
-                    name={farmer.farmerName}
-                    size="lg"
-                  />
-                  <div className="flex-1">
-                    <p className="text-lg font-bold text-brand-900">{farmer.farmerName}</p>
-                    <p className="text-sm text-brand-700">{farmer.farmName}</p>
-                    <VerificationBadge status={farmer.verificationStatus} className="mt-1" />
-                    <CountryBadge country={farmer.country} region={farmer.region} />
-                  </div>
-                </div>
-
-                {farmer.farmSize && (
-                  <p className="mt-3 text-sm text-brand-800">
-                    Farm size: <strong>{farmer.farmSize}</strong>
-                  </p>
-                )}
-
-                {farmer.registeredCommodities.length > 0 && (
-                  <div className="mt-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      Commodities sold
-                    </p>
-                    <div className="mt-1.5 flex flex-wrap gap-1">
-                      {farmer.registeredCommodities.map((rc) => (
-                        <span
-                          key={rc.id}
-                          className="rounded-full border border-brand-100 bg-white px-2.5 py-0.5 text-xs text-brand-800"
-                        >
-                          {rc.name}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {user && isBuyer(user.roleId) && !farmer.canViewProducts && (
-                  <div className="mt-4 rounded-xl border border-brand-200 bg-white p-4 text-center">
-                    {farmer.hasFarmAccess && farmer.connectionStatus === "PENDING" ? (
-                      <>
-                        <p className="text-sm font-semibold text-amber-900">
-                          Payment received — waiting for ANI admin approval
-                        </p>
-                        <Link
-                          href="/connections"
-                          className="btn-outline mt-3 inline-block w-full py-2.5"
-                        >
-                          View connection status
-                        </Link>
-                      </>
-                    ) : (
-                      <>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                          Farm access fee
-                        </p>
-                        <p className="mt-1 text-2xl font-bold text-brand-900">
-                          {farmer.farmAccessPriceLabel ?? browse?.farmAccessPriceLabel ?? "—"}
-                        </p>
-                        <Link
-                          href="/access"
-                          className="btn-gold mt-3 inline-block w-full py-2.5"
-                        >
-                          Pay to Access Farm
-                        </Link>
-                      </>
-                    )}
-                  </div>
-                )}
+              <div className="border-b border-brand-50 p-4 sm:p-5">
+                <FarmerBrowseCardItem
+                  farmer={farmer}
+                  accessPriceLabel={browse?.farmAccessPriceLabel}
+                  onClick={() => setDetailFarmer(farmer)}
+                  embedded
+                />
               </div>
 
               {farmer.canViewProducts ? (
                 farmer.products.length > 0 ? (
-                  <div className="p-4">
+                  <div className="p-4 sm:p-5">
                     <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
                       Products ({farmer.products.length})
                     </p>
-                    <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                       {farmer.products.map((product) => (
                         <FarmerProductCard
                           key={product.id}
@@ -351,16 +287,55 @@ export default function MarketplacePage() {
                     No products listed yet from this farm.
                   </div>
                 )
+              ) : user && isBuyer(user.roleId) ? (
+                <div className="border-t border-brand-50 px-4 py-4 sm:px-5">
+                  {farmer.hasFarmAccess && farmer.connectionStatus === "PENDING" ? (
+                    <div className="rounded-xl bg-amber-50 px-4 py-3 text-center">
+                      <p className="text-sm font-semibold text-amber-900">
+                        Payment received — waiting for ANI admin approval
+                      </p>
+                      <Link
+                        href="/connections"
+                        className="btn-outline mt-3 inline-block w-full max-w-xs py-2.5"
+                      >
+                        View connection status
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-3 rounded-xl bg-brand-50 px-4 py-4 text-center sm:flex-row sm:justify-between sm:text-left">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                          Farm access required
+                        </p>
+                        <p className="mt-0.5 text-lg font-bold text-brand-900">
+                          {farmer.farmAccessPriceLabel ?? browse?.farmAccessPriceLabel ?? "—"}
+                        </p>
+                      </div>
+                      <Link href="/access" className="btn-gold shrink-0 px-6 py-2.5">
+                        Pay to Access Farm
+                      </Link>
+                    </div>
+                  )}
+                </div>
               ) : null}
-            </div>
+            </section>
           ))}
         </div>
+      )}
+
+      {detailFarmer && (
+        <FarmerDetailModal
+          farmer={detailFarmer}
+          farmAccessPriceLabel={browse?.farmAccessPriceLabel}
+          onClose={() => setDetailFarmer(null)}
+        />
       )}
 
       {purchaseFarmer && activeListing && (
         <PurchaseModal
           listing={activeListing}
           relatedProducts={purchaseFarmer.products}
+          farmerId={purchaseFarmer.farmerId}
           farmerName={purchaseFarmer.farmerName}
           farmerPhoto={purchaseFarmer.profilePicture}
           country={purchaseFarmer.country}

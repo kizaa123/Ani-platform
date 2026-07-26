@@ -383,11 +383,11 @@ export default function FarmSettingsPage() {
         {registered.length === 0 ? (
           <p className="mb-4 text-sm text-amber-700">No commodities yet — add at least one to post products.</p>
         ) : (
-          <div className="mb-6 flex flex-wrap gap-2">
+          <div className="mb-6 flex gap-2 overflow-x-auto overflow-y-hidden pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {registered.map((fc) => (
               <span
                 key={fc.id}
-                className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1.5 text-sm font-medium text-brand-900"
+                className="inline-flex shrink-0 items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1.5 text-sm font-medium text-brand-900"
               >
                 ✓ {fc.commodity?.name}
                 <button

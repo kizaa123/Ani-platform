@@ -105,6 +105,18 @@ export interface AccessPackageSummary {
   priceLabel: string;
 }
 
+export interface FarmerMediaItem {
+  id: string;
+  type: "IMAGE" | "VIDEO";
+  url: string;
+  duration?: number | null;
+  orderIndex: number;
+  likesCount: number;
+  sharesCount: number;
+  likedByMe?: boolean;
+  createdAt: string;
+}
+
 export interface FarmerBrowseCard {
   farmerId: string;
   farmerName: string;

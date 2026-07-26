@@ -6,10 +6,9 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import { FarmerBrowseCard, MarketplaceBrowse, isBuyer } from "@/lib/types";
-import { FarmerAvatar } from "@/components/FarmerAvatar";
-import { CountryBadge } from "@/components/CountrySelect";
 import { FarmAccessPaymentModal } from "@/components/FarmAccessPaymentModal";
-import { VerificationBadge } from "@/components/VerificationBadge";
+import { FarmerBrowseCardItem } from "@/components/FarmerBrowseCardItem";
+import { FarmerDetailModal } from "@/components/FarmerDetailModal";
 import { Icon } from "@/components/icons";
 
 function filterFarmers(farmers: FarmerBrowseCard[], query: string): FarmerBrowseCard[] {
@@ -24,6 +23,7 @@ export default function AccessPage() {
   const [browse, setBrowse] = useState<MarketplaceBrowse | null>(null);
   const [search, setSearch] = useState("");
   const [payFarmer, setPayFarmer] = useState<FarmerBrowseCard | null>(null);
+  const [detailFarmer, setDetailFarmer] = useState<FarmerBrowseCard | null>(null);
 
   const loadBrowse = useCallback(() => {
     api.marketplace.browse().then(setBrowse).catch(console.error);
@@ -48,6 +48,11 @@ export default function AccessPage() {
       "Payment received! ANI admin will review your access request. You can view products once approved."
     );
     loadBrowse();
+  };
+
+  const openAccessPayment = (farmer: FarmerBrowseCard) => {
+    setDetailFarmer(null);
+    setPayFarmer(farmer);
   };
 
   if (loading) return <div className="p-12 text-center">Loading...</div>;
@@ -79,6 +84,11 @@ export default function AccessPage() {
             className="w-full rounded-2xl border border-brand-200 bg-white py-3.5 pl-12 pr-4 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
           />
         </div>
+        {search.trim() && (
+          <p className="mt-2 text-sm text-gray-500">
+            {filteredFarmers.length} farmer{filteredFarmers.length !== 1 ? "s" : ""} found
+          </p>
+        )}
       </div>
 
       {filteredFarmers.length === 0 ? (
@@ -86,97 +96,29 @@ export default function AccessPage() {
           {search.trim() ? "No farmers match your search." : "No farmers registered yet."}
         </div>
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {filteredFarmers.map((farmer) => (
-            <div
+            <FarmerBrowseCardItem
               key={farmer.farmerId}
-              className="flex flex-col rounded-2xl border border-brand-100 bg-white p-5 shadow-sm"
-            >
-              <div className="flex items-center gap-3">
-                <FarmerAvatar
-                  src={farmer.profilePicture}
-                  name={farmer.farmerName}
-                  size="lg"
-                />
-                <div className="min-w-0 flex-1">
-                  <h3 className="truncate font-bold text-brand-900">{farmer.farmerName}</h3>
-                  <p className="truncate text-sm text-brand-700">{farmer.farmName}</p>
-                  <VerificationBadge status={farmer.verificationStatus} className="mt-1" />
-                  <CountryBadge country={farmer.country} region={farmer.region} />
-                </div>
-              </div>
-
-              {farmer.farmSize && (
-                <div className="mt-4 rounded-xl bg-brand-50 px-3 py-2">
-                  <p className="text-xs font-semibold uppercase text-gray-500">Farm size</p>
-                  <p className="font-semibold text-brand-900">{farmer.farmSize}</p>
-                </div>
-              )}
-
-              {farmer.registeredCommodities.length > 0 && (
-                <div className="mt-4">
-                  <p className="text-xs font-semibold uppercase text-gray-500">
-                    Commodities registered
-                  </p>
-                  <div className="mt-1.5 flex flex-wrap gap-1">
-                    {farmer.registeredCommodities.map((c) => (
-                      <span
-                        key={c.id}
-                        className="rounded-full border border-brand-100 bg-white px-2.5 py-0.5 text-xs text-brand-800"
-                      >
-                        {c.name}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="mt-auto pt-5">
-                {farmer.hasFarmAccess && farmer.connectionStatus === "ACCEPTED" ? (
-                  <div className="space-y-2">
-                    <span className="block w-full rounded-xl bg-green-100 py-2.5 text-center text-sm font-semibold text-green-800">
-                      ✓ Farm access approved
-                    </span>
-                    <Link
-                      href="/marketplace"
-                      className="btn-primary block w-full py-2.5 text-center"
-                    >
-                      View Farm Products
-                    </Link>
-                  </div>
-                ) : farmer.hasFarmAccess && farmer.connectionStatus === "PENDING" ? (
-                  <div className="space-y-2">
-                    <span className="block w-full rounded-xl bg-amber-100 py-2.5 text-center text-sm font-semibold text-amber-900">
-                      ⏳ Awaiting ANI admin approval
-                    </span>
-                    <Link
-                      href="/connections"
-                      className="btn-outline block w-full py-2.5 text-center"
-                    >
-                      View connection status
-                    </Link>
-                  </div>
-                ) : (
-                  <>
-                    <div className="mb-3 text-center">
-                      <p className="text-xs font-semibold uppercase text-gray-500">Access fee</p>
-                      <p className="text-2xl font-bold text-brand-900">
-                        {farmer.farmAccessPriceLabel ?? "—"}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setPayFarmer(farmer)}
-                      className="btn-gold w-full py-3"
-                    >
-                      Access Farm
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
+              farmer={farmer}
+              accessPriceLabel={browse?.farmAccessPriceLabel}
+              onClick={() => setDetailFarmer(farmer)}
+            />
           ))}
         </div>
+      )}
+
+      {detailFarmer && (
+        <FarmerDetailModal
+          farmer={detailFarmer}
+          farmAccessPriceLabel={browse?.farmAccessPriceLabel}
+          onClose={() => setDetailFarmer(null)}
+          onAccessFarm={
+            !detailFarmer.hasFarmAccess
+              ? () => openAccessPayment(detailFarmer)
+              : undefined
+          }
+        />
       )}
 
       {payFarmer && (

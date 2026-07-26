@@ -2,7 +2,7 @@ import fs from 'fs';
 import { v2 as cloudinary } from 'cloudinary';
 import { publicUrl } from '../middleware/upload.middleware';
 
-export type UploadFolder = 'profiles' | 'listings' | 'publications';
+export type UploadFolder = 'profiles' | 'listings' | 'publications' | 'farm-media';
 
 let cloudinaryConfigured = false;
 
@@ -33,13 +33,20 @@ function removeLocalFile(filePath: string) {
   }
 }
 
-async function uploadToCloudinary(filePath: string, folder: UploadFolder): Promise<string> {
+async function uploadToCloudinary(
+  filePath: string,
+  folder: UploadFolder,
+  resourceType: 'auto' | 'video' | 'image' = 'auto'
+): Promise<{ url: string; duration?: number }> {
   ensureCloudinaryConfig();
   const result = await cloudinary.uploader.upload(filePath, {
     folder: `ani-platform/${folder}`,
-    resource_type: 'auto',
+    resource_type: resourceType,
   });
-  return result.secure_url;
+  return {
+    url: result.secure_url,
+    duration: typeof result.duration === 'number' ? result.duration : undefined,
+  };
 }
 
 /** Persist a multer disk upload and return the public URL stored in the database. */
@@ -48,9 +55,26 @@ export async function persistUploadedFile(
   folder: UploadFolder
 ): Promise<string> {
   if (isCloudStorageEnabled()) {
-    const url = await uploadToCloudinary(file.path, folder);
+    const { url } = await uploadToCloudinary(file.path, folder);
     removeLocalFile(file.path);
     return url;
   }
   return publicUrl(`${folder}/${file.filename}`);
+}
+
+/** Persist farmer image/video upload; returns URL and optional video duration from Cloudinary. */
+export async function persistFarmerMediaFile(
+  file: Express.Multer.File
+): Promise<{ url: string; duration?: number }> {
+  const isVideo = file.mimetype.startsWith('video/');
+  if (isCloudStorageEnabled()) {
+    const result = await uploadToCloudinary(
+      file.path,
+      'farm-media',
+      isVideo ? 'video' : 'image'
+    );
+    removeLocalFile(file.path);
+    return result;
+  }
+  return { url: publicUrl(`farm-media/${file.filename}`) };
 }

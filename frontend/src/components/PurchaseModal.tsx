@@ -7,11 +7,13 @@ import { Listing, formatListingUnit } from "@/lib/types";
 import { FarmerAvatar, ProductImage } from "@/components/FarmerAvatar";
 import { CountryBadge } from "@/components/CountrySelect";
 import { FarmerProductCard } from "@/components/FarmerProductCard";
+import { FarmerMediaCarousel } from "@/components/FarmerMediaCarousel";
 import { Icon } from "@/components/icons";
 
 interface PurchaseViewProps {
   listing: Listing;
   relatedProducts: Listing[];
+  farmerId: string;
   farmerName: string;
   farmerPhoto?: string | null;
   country?: string;
@@ -39,6 +41,7 @@ const PAYMENT_METHODS = [
 export function PurchaseModal({
   listing,
   relatedProducts,
+  farmerId,
   farmerName,
   farmerPhoto,
   country,
@@ -161,6 +164,8 @@ export function PurchaseModal({
               </div>
             </div>
           )}
+
+          <FarmerMediaCarousel farmerUserId={farmerId} farmerName={farmerName} />
 
           {/* Purchase section — top */}
           <section className="mb-10">

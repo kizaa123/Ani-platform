@@ -49,20 +49,21 @@ export default function LoginPage() {
 
         {/* Marketing text & stats */}
         <div className="relative z-20 space-y-6 max-w-xl">
-          <div className="relative group/badge inline-flex overflow-hidden rounded-full p-[1.5px] transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-brand-950/20 self-start">
-            {/* Spinning/glowing gradient border */}
-            <span className="absolute inset-0 rounded-full bg-[conic-gradient(from_0deg,var(--color-brand-400),var(--color-gold),var(--color-brand-400))] animate-[spin_6s_linear_infinite]" />
+          <div className="relative group/badge inline-flex overflow-hidden rounded-2xl p-[1.5px] transition-all hover:scale-[1.01] active:scale-[0.99] duration-300 shadow-xl shadow-brand-950/30 self-start">
+            {/* Background gradient outline glow */}
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-emerald-400 to-yellow-500 opacity-80 group-hover/badge:opacity-100 transition-opacity" />
             
-            <div className="relative flex items-center gap-2.5 rounded-full bg-brand-950/90 px-4 py-1.5 text-xs font-semibold text-brand-100 backdrop-blur-xl">
-              <span className="flex items-center justify-center rounded-full bg-yellow-400/10 p-0.5 text-yellow-400">
-                <Icon name="sprout" className="h-3.5 w-3.5 animate-[pulse_2s_infinite]" />
+            {/* Main content body */}
+            <div className="relative flex items-center gap-3 rounded-[15px] bg-brand-950 px-5 py-3 text-white backdrop-blur-xl">
+              <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-yellow-400 text-brand-950 font-bold text-sm shadow-md animate-pulse">
+                ★
               </span>
-              <span className="bg-gradient-to-r from-white via-brand-200 to-white bg-clip-text text-transparent text-[10px] font-bold tracking-wider uppercase">
+              <span className="text-sm sm:text-base font-extrabold tracking-wide bg-gradient-to-r from-yellow-300 via-white to-emerald-300 bg-clip-text text-transparent">
                 Ghana&apos;s #1 Agricultural Exchange Platform
               </span>
-              <span className="relative flex h-1.5 w-1.5">
+              <span className="relative flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
               </span>
             </div>
           </div>

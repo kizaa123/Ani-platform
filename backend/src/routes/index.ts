@@ -26,8 +26,9 @@ import { assignmentSchema } from '../services/agent.service';
 import { messageSchema } from '../services/chat.service';
 import { verifyUserSchema } from '../services/admin.service';
 import { uploadController } from '../controllers/upload.controller';
+import { farmerMediaController } from '../controllers/farmerMedia.controller';
 import { researcherController } from '../controllers/researcher.controller';
-import { profileUpload, listingImagesUpload, publicationFileUpload, MAX_IMAGE_FILE_SIZE, MAX_DOCUMENT_FILE_SIZE } from '../middleware/upload.middleware';
+import { profileUpload, listingImagesUpload, publicationFileUpload, farmMediaUpload, MAX_IMAGE_FILE_SIZE, MAX_DOCUMENT_FILE_SIZE, MAX_FARM_MEDIA_FILE_SIZE } from '../middleware/upload.middleware';
 import { authRateLimiter } from '../middleware/rate-limit.middleware';
 import { PERMISSIONS } from '../constants/roles';
 
@@ -46,6 +47,15 @@ function publicationUploadErrorMessage(err: unknown): string {
   if (err && typeof err === 'object' && 'code' in err && err.code === 'LIMIT_FILE_SIZE') {
     const maxMb = Math.round(MAX_DOCUMENT_FILE_SIZE / (1024 * 1024));
     return `File is too large. Maximum document size is ${maxMb} MB.`;
+  }
+  if (err instanceof Error) return err.message;
+  return 'Upload failed';
+}
+
+function farmMediaUploadErrorMessage(err: unknown): string {
+  if (err && typeof err === 'object' && 'code' in err && err.code === 'LIMIT_FILE_SIZE') {
+    const maxMb = Math.round(MAX_FARM_MEDIA_FILE_SIZE / (1024 * 1024));
+    return `File is too large. Maximum farm media size is ${maxMb} MB.`;
   }
   if (err instanceof Error) return err.message;
   return 'Upload failed';
@@ -117,6 +127,30 @@ router.put('/farm/profile', authenticate, validateBody(updateFarmSchema), farmCo
 router.get('/farm/commodities', authenticate, farmController.listCommodities);
 router.post('/farm/commodities', authenticate, requirePermission(PERMISSIONS.MANAGE_COMMODITIES), validateBody(addCommoditySchema), farmController.addCommodity);
 router.delete('/farm/commodities/:id', authenticate, requirePermission(PERMISSIONS.MANAGE_COMMODITIES), farmController.removeCommodity);
+
+// Farmer media
+router.get('/farm/media', authenticate, farmerMediaController.listOwn);
+router.get('/farm/media/by-farmer/:farmerUserId', authenticate, farmerMediaController.listByFarmer);
+router.post(
+  '/farm/media',
+  authenticate,
+  requirePermission(PERMISSIONS.CREATE_LISTING),
+  (req, res, next) => {
+    farmMediaUpload(req, res, (err) => {
+      if (err) return res.status(400).json({ success: false, error: farmMediaUploadErrorMessage(err) });
+      next();
+    });
+  },
+  farmerMediaController.upload
+);
+router.delete(
+  '/farm/media/:id',
+  authenticate,
+  requirePermission(PERMISSIONS.CREATE_LISTING),
+  farmerMediaController.remove
+);
+router.post('/farm/media/:id/like', authenticate, farmerMediaController.toggleLike);
+router.post('/farm/media/:id/share', authenticate, farmerMediaController.share);
 
 // Buyer
 router.get('/buyer/financial-statement', authenticate, buyerController.financialStatement);

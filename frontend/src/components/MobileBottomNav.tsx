@@ -128,20 +128,20 @@ function NavLink({ item, active }: { item: BottomNavItem; active: boolean }) {
         href={item.href}
         aria-label={item.label}
         aria-current={active ? "page" : undefined}
-        className="relative -mt-5 flex flex-col items-center gap-0.5"
+        className="relative -mt-6 flex flex-col items-center gap-1 transition-transform active:scale-95 duration-200"
       >
         <span
-          className={`flex h-12 w-12 items-center justify-center rounded-full shadow-md transition ${
+          className={`flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all duration-300 ${
             active
-              ? "bg-brand-900 text-white ring-2 ring-brand-200"
-              : "bg-brand-700 text-white hover:bg-brand-800"
+              ? "bg-brand-900 text-white ring-4 ring-brand-100 shadow-brand-900/40"
+              : "bg-brand-700 text-white hover:bg-brand-800 shadow-brand-700/30"
           }`}
         >
-          <Icon name="plus" className="h-6 w-6" />
+          <Icon name="plus" className="h-7 w-7" />
         </span>
         <span
-          className={`text-[10px] font-medium leading-tight ${
-            active ? "text-brand-800" : "text-gray-500"
+          className={`text-[10px] font-bold tracking-wide uppercase ${
+            active ? "text-brand-900" : "text-gray-500"
           }`}
         >
           {item.label}
@@ -155,17 +155,22 @@ function NavLink({ item, active }: { item: BottomNavItem; active: boolean }) {
       href={item.href}
       aria-label={item.label}
       aria-current={active ? "page" : undefined}
-      className={`flex min-w-0 flex-1 flex-col items-center gap-0.5 px-1 py-1 transition ${
-        active ? "text-brand-800" : "text-gray-500 hover:text-brand-700"
-      }`}
+      className="relative flex min-w-0 flex-1 flex-col items-center gap-1 py-2 px-1 transition duration-300 active:scale-95"
     >
-      <Icon
-        name={item.icon}
-        className={`h-6 w-6 shrink-0 ${active ? "text-brand-700" : "text-current"}`}
-      />
-      <span className={`truncate text-[10px] font-medium leading-tight ${active ? "font-semibold" : ""}`}>
-        {item.label}
-      </span>
+      <div className={`flex flex-col items-center gap-0.5 rounded-2xl px-3 py-1.5 transition-all duration-300 ${
+        active ? "bg-brand-50 text-brand-800 shadow-[inset_0_1px_2px_rgba(27,67,50,0.06)]" : "text-gray-500 hover:text-brand-700"
+      }`}>
+        <Icon
+          name={item.icon}
+          className={`h-5 w-5 shrink-0 transition-transform duration-300 ${active ? "scale-110 text-brand-750" : "text-current"}`}
+        />
+        <span className={`truncate text-[10px] font-medium leading-none ${active ? "font-bold" : ""}`}>
+          {item.label}
+        </span>
+      </div>
+      {active && (
+        <span className="absolute bottom-0 h-1 w-1 rounded-full bg-yellow-500" />
+      )}
     </Link>
   );
 }
@@ -182,10 +187,9 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="Mobile navigation"
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-brand-200 bg-white/95 shadow-[0_-4px_16px_rgba(27,67,50,0.08)] backdrop-blur-sm lg:hidden"
-      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      className="fixed bottom-4 inset-x-4 z-40 mx-auto max-w-lg rounded-2xl border border-brand-100/80 bg-white/90 shadow-[0_12px_32px_rgba(27,67,50,0.12)] backdrop-blur-md lg:hidden"
     >
-      <div className="mx-auto flex max-w-lg items-end justify-around px-2 pt-2 pb-1">
+      <div className="flex items-end justify-around px-3 py-1.5">
         {items.map((item) => (
           <NavLink key={item.href} item={item} active={item.match(pathname)} />
         ))}
@@ -195,4 +199,4 @@ export function MobileBottomNav() {
 }
 
 /** Bottom padding for main content so it clears the fixed nav on mobile */
-export const MOBILE_BOTTOM_NAV_PADDING = "pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] lg:pb-0";
+export const MOBILE_BOTTOM_NAV_PADDING = "pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] lg:pb-0";

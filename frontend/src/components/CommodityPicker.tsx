@@ -161,14 +161,14 @@ export function CommodityPicker({
           <p className="mb-2 text-sm font-medium text-brand-800">
             Selected ({selectedCommodities.length})
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex gap-2 overflow-x-auto overflow-y-hidden pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {selectedCommodities.map((c) => (
               <span
                 key={c.id}
-                className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-3 py-1.5 text-sm font-medium text-brand-900"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-3 py-1.5 text-sm font-medium text-brand-900"
               >
-                <span className="truncate">{c.name}</span>
-                <span className="text-xs font-normal text-gray-500">
+                <span className="whitespace-nowrap">{c.name}</span>
+                <span className="text-xs font-normal text-gray-500 whitespace-nowrap">
                   ({c.category?.name ?? "—"})
                 </span>
                 <button

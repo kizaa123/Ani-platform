@@ -215,6 +215,24 @@ class ApiClient {
         method: "PATCH",
         body: JSON.stringify(body),
       }),
+    media: {
+      list: () => this.request<import("./types").FarmerMediaItem[]>("/farm/media"),
+      listByFarmer: (farmerUserId: string) =>
+        this.request<import("./types").FarmerMediaItem[]>(`/farm/media/by-farmer/${farmerUserId}`),
+      upload: (file: File, duration?: number) => {
+        const fd = new FormData();
+        fd.append("media", file);
+        if (duration != null) fd.append("duration", String(duration));
+        return this.uploadRequest<import("./types").FarmerMediaItem>("/farm/media", fd);
+      },
+      remove: (id: string) => this.request(`/farm/media/${id}`, { method: "DELETE" }),
+      like: (id: string) =>
+        this.request<{ liked: boolean; likesCount: number }>(`/farm/media/${id}/like`, {
+          method: "POST",
+        }),
+      share: (id: string) =>
+        this.request<{ sharesCount: number }>(`/farm/media/${id}/share`, { method: "POST" }),
+    },
   };
 
   buyer = {

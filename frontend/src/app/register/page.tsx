@@ -11,14 +11,29 @@ import { HandlerSelect } from "@/components/HandlerSelect";
 import { CommodityPicker } from "@/components/CommodityPicker";
 import { Icon } from "@/components/icons";
 
-const ROLE_OPTIONS = [
-  { id: ROLES.CROP_FARMER, label: "Crop Farmer" },
-  { id: ROLES.LIVESTOCK_FARMER, label: "Livestock Farmer" },
-  { id: ROLES.FARMER_HANDLER, label: "Farmer Handler" },
-  { id: ROLES.BUYER, label: "Buyer" },
-  { id: ROLES.BUYER_HANDLER, label: "Buyer Handler" },
-  { id: ROLES.RESEARCHER, label: "Researcher" },
-  { id: ROLES.ANI_ACCOUNTANT, label: "ANI Accountant" },
+const ROLE_GROUPS = [
+  {
+    groupLabel: "Farmers",
+    roles: [
+      { id: ROLES.CROP_FARMER,      label: "Crop Farmer",      icon: "🌾", desc: "Produce & sell crops" },
+      { id: ROLES.LIVESTOCK_FARMER, label: "Livestock Farmer", icon: "🐄", desc: "Raise & trade livestock" },
+    ],
+  },
+  {
+    groupLabel: "Research & Commerce",
+    roles: [
+      { id: ROLES.RESEARCHER,    label: "Researcher",    icon: "🔬", desc: "Academic & field research" },
+      { id: ROLES.BUYER,         label: "Buyer",         icon: "🛒", desc: "Source & purchase commodities" },
+    ],
+  },
+  {
+    groupLabel: "Support & Operations",
+    roles: [
+      { id: ROLES.FARMER_HANDLER,  label: "Farmer Handler",  icon: "🤝", desc: "Support crop/livestock farmers" },
+      { id: ROLES.BUYER_HANDLER,   label: "Buyer Handler",   icon: "📦", desc: "Coordinate buyer logistics" },
+      { id: ROLES.ANI_ACCOUNTANT,  label: "ANI Accountant",  icon: "💼", desc: "Manage platform finances" },
+    ],
+  },
 ];
 
 const STEP_LABELS = ["Account", "Details", "Commodities"] as const;
@@ -367,23 +382,53 @@ export default function RegisterPage() {
             </div>
 
             <div className="auth-field">
-              <label htmlFor="reg-role" className="auth-label">
-                Role
+              <label className="auth-label">
+                I am a…
               </label>
-              <select
-                id="reg-role"
-                value={form.roleId}
-                onChange={(e) => setForm({ ...form, roleId: parseInt(e.target.value) })}
-                className="auth-input"
-              >
-                {ROLE_OPTIONS.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.label}
-                  </option>
+              <div className="mt-1 space-y-3 overflow-hidden">
+                {ROLE_GROUPS.map((group) => (
+                  <div key={group.groupLabel}>
+                    <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                      {group.groupLabel}
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-2">
+                      {group.roles.map((r) => {
+                        const isSelected = form.roleId === r.id;
+                        return (
+                          <button
+                            key={r.id}
+                            type="button"
+                            onClick={() => setForm({ ...form, roleId: r.id })}
+                            className={[
+                              "flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-all duration-150 focus:outline-none",
+                              isSelected
+                                ? "border-brand-500 bg-brand-50 shadow-sm ring-1 ring-brand-400"
+                                : "border-gray-200 bg-white hover:border-brand-300 hover:bg-brand-50/40",
+                            ].join(" ")}
+                          >
+                            <span className="text-xl leading-none">{r.icon}</span>
+                            <span className="min-w-0 flex-1">
+                              <span className={`block truncate text-sm font-semibold ${isSelected ? "text-brand-800" : "text-gray-800"}`}>
+                                {r.label}
+                              </span>
+                              <span className="block truncate text-[10px] leading-tight text-gray-400">
+                                {r.desc}
+                              </span>
+                            </span>
+                            {isSelected && (
+                              <span className="shrink-0 text-brand-600">
+                                <Icon name="check" className="h-3.5 w-3.5" />
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 ))}
-              </select>
+              </div>
               {isFarmerRole && (
-                <p className="auth-hint text-brand-700">
+                <p className="auth-hint text-brand-700 mt-2">
                   You will only select {categoryFilter?.toLowerCase()} commodities in step 3.
                 </p>
               )}
