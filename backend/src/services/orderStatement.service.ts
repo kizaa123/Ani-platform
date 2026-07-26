@@ -133,20 +133,22 @@ export function buildOrderStatementPdf(order: OrderForStatement): Promise<Buffer
     doc.text(`Commodity: ${order.listing.commodity.name} (${order.listing.commodity.category.name})`);
     doc.text(`Quantity: ${order.quantity} ${order.unit}`);
     doc.text(`Unit price: GHC ${order.unitPrice.toFixed(2)}`);
-    doc.text(`Total: GHC ${order.totalAmount.toFixed(2)}`);
+    doc.text(`Total amount: GHC ${order.totalAmount.toFixed(2)}`);
     doc.text(`Payment method: ${order.paymentMethod.replace(/_/g, ' ')}`);
     doc.moveDown();
 
-    doc.fontSize(12).fillColor('#111827').text('Parties', { underline: true });
+    doc.fontSize(12).fillColor('#111827').text('From (Buyer)', { underline: true });
     doc.moveDown(0.5);
     doc.fontSize(10).fillColor('#374151');
-    doc.text(`Buyer: ${buyerName}`);
-    doc.text(`  ${order.buyer.email} · ${order.buyer.phone}`);
-    doc.text(`  ${formatLocation(order.buyer)}`);
+    doc.text(`Name: ${buyerName}`);
+    doc.text(`Location: ${formatLocation(order.buyer)}`);
+    doc.moveDown();
+
+    doc.fontSize(12).fillColor('#111827').text('To (Farmer)', { underline: true });
     doc.moveDown(0.5);
-    doc.text(`Farmer: ${farmerName}${farmName ? ` (${farmName})` : ''}`);
-    doc.text(`  ${order.farmer.email} · ${order.farmer.phone}`);
-    doc.text(`  ${formatLocation(order.farmer)}`);
+    doc.fontSize(10).fillColor('#374151');
+    doc.text(`Name: ${farmerName}${farmName ? ` (${farmName})` : ''}`);
+    doc.text(`Location: ${formatLocation(order.farmer)}`);
     doc.moveDown();
 
     doc.fontSize(12).fillColor('#111827').text('Payment & Escrow', { underline: true });

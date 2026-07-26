@@ -418,80 +418,46 @@ function OrderDetailModal({
             onUpdated={(updated) => onTrackUpdated?.({ ...order, ...updated })}
           />
 
-          <div className="mt-5 rounded-xl border border-brand-100 p-4">
-            {perspective === "farmer" && !isBuyerOrder(order) ? (
-              <>
-                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Buyer</p>
-                <div className="flex items-start gap-4">
-                  <ProfilePhoto src={order.buyerProfilePicture} name={order.buyerName} size={80} />
-                  <div className="min-w-0 flex-1">
-                    <p className="font-bold text-brand-900">{order.buyerName}</p>
-                    {order.buyerEmail && (
-                      <p className="break-all text-sm text-gray-600">{order.buyerEmail}</p>
-                    )}
-                    <CountryBadge
-                      country={order.buyerCountry}
-                      region={order.buyerLocation.split(",")[1]?.trim()}
-                      className="mt-2"
-                    />
-                  </div>
+          <div className="mt-5 rounded-xl border border-brand-100 p-4 space-y-4">
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">From (Buyer)</p>
+              <div className="flex items-center gap-3">
+                <ProfilePhoto
+                  src={!isBuyerOrder(order) ? order.buyerProfilePicture : undefined}
+                  name={!isBuyerOrder(order) ? (order.buyerName ?? "Buyer") : "Buyer"}
+                  size={48}
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-brand-900">
+                    {!isBuyerOrder(order) ? (order.buyerName ?? "Buyer") : "Buyer"}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    Location: {!isBuyerOrder(order) ? (order.buyerLocation ?? "—") : "—"}
+                  </p>
                 </div>
+              </div>
+            </div>
 
-                <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase text-gray-500">Phone</p>
-                    <a
-                      href={`tel:${order.buyerPhone}`}
-                      className="font-semibold text-brand-700 hover:underline"
-                    >
-                      {order.buyerPhone}
-                    </a>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase text-gray-500">Location</p>
-                    <p className="text-gray-800">{order.buyerLocation}</p>
-                  </div>
+            <div className="border-t border-brand-100 pt-3">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">To (Farmer)</p>
+              <div className="flex items-center gap-3">
+                <ProfilePhoto
+                  src={isBuyerOrder(order) ? order.farmerProfilePicture : undefined}
+                  name={isBuyerOrder(order) ? order.farmerName : "Farmer"}
+                  size={48}
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-brand-900">
+                    {isBuyerOrder(order)
+                      ? `${order.farmerName}${order.farmName ? ` (${order.farmName})` : ""}`
+                      : "Farmer / My Farm"}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    Location: {isBuyerOrder(order) ? order.farmerLocation : (order.productLocation ?? "—")}
+                  </p>
                 </div>
-              </>
-            ) : isBuyerOrder(order) ? (
-              <>
-                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Farmer</p>
-                <div className="flex items-start gap-4">
-                  <ProfilePhoto
-                    src={order.farmerProfilePicture}
-                    name={order.farmerName}
-                    size={80}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="font-bold text-brand-900">{order.farmerName}</p>
-                    {order.farmName && (
-                      <p className="text-sm font-medium text-brand-700">{order.farmName}</p>
-                    )}
-                    {order.farmerEmail && (
-                      <p className="break-all text-sm text-gray-600">{order.farmerEmail}</p>
-                    )}
-                    <CountryBadge
-                      country={order.farmerCountry}
-                      region={order.farmerLocation.split(",")[1]?.trim()}
-                      className="mt-2"
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase text-gray-500">Location</p>
-                    <p className="text-gray-800">{order.farmerLocation}</p>
-                  </div>
-                  {order.productLocation && (
-                    <div>
-                      <p className="text-[10px] font-semibold uppercase text-gray-500">Product origin</p>
-                      <p className="text-gray-800">{order.productLocation}</p>
-                    </div>
-                  )}
-                </div>
-              </>
-            ) : null}
+              </div>
+            </div>
           </div>
 
           <p className="mt-4 text-center text-xs text-gray-500">
@@ -511,12 +477,11 @@ export function SalesOrdersTable({ items }: { items: ProductOrderLineItem[] }) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[800px] text-sm">
+      <table className="w-full min-w-[700px] text-sm">
         <thead>
           <tr className="border-b border-brand-50 bg-brand-50/50 text-left text-xs font-semibold uppercase text-gray-600">
             <th className="px-4 py-3">Product</th>
             <th className="px-4 py-3">Buyer</th>
-            <th className="px-4 py-3">Phone</th>
             <th className="px-4 py-3">Location</th>
             <th className="px-4 py-3 text-right">Qty</th>
             <th className="px-4 py-3 text-right">Total</th>
@@ -547,11 +512,6 @@ export function SalesOrdersTable({ items }: { items: ProductOrderLineItem[] }) {
                   <ProfilePhoto src={item.buyerProfilePicture} name={item.buyerName} size={40} />
                   <span className="font-medium text-gray-900">{item.buyerName}</span>
                 </div>
-              </td>
-              <td className="px-4 py-3">
-                <a href={`tel:${item.buyerPhone}`} className="font-medium text-brand-700 hover:underline">
-                  {item.buyerPhone}
-                </a>
               </td>
               <td className="px-4 py-3 text-gray-700">{item.buyerLocation}</td>
               <td className="px-4 py-3 text-right text-gray-800">
