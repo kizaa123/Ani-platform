@@ -8,9 +8,17 @@ interface FarmerProductCardProps {
   product: Listing;
   onClick: () => void;
   active?: boolean;
+  imageClassName?: string;
+  contentClassName?: string;
 }
 
-export function FarmerProductCard({ product, onClick, active }: FarmerProductCardProps) {
+export function FarmerProductCard({
+  product,
+  onClick,
+  active,
+  imageClassName = "h-44 w-full object-cover",
+  contentClassName = "p-3",
+}: FarmerProductCardProps) {
   return (
     <button
       type="button"
@@ -25,14 +33,16 @@ export function FarmerProductCard({ product, onClick, active }: FarmerProductCar
         <ProductImage
           src={product.images[0]}
           alt={product.title}
-          className="h-44 w-full object-cover"
+          className={imageClassName}
         />
       ) : (
-        <div className="flex h-44 items-center justify-center bg-gradient-to-br from-brand-100 to-brand-200">
+        <div
+          className={`flex items-center justify-center bg-gradient-to-br from-brand-100 to-brand-200 ${imageClassName}`}
+        >
           <Icon name="wheat" className="h-10 w-10 text-brand-400" />
         </div>
       )}
-      <div className="p-3">
+      <div className={contentClassName}>
         <div className="flex items-start justify-between gap-2">
           <h4 className="line-clamp-1 font-semibold text-brand-900 group-hover:text-brand-700">
             {product.title}

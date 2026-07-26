@@ -256,17 +256,22 @@ export default function MarketplacePage() {
               key={farmer.farmerId}
               className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm"
             >
-              <div className="border-b border-brand-50 px-4 py-3 sm:px-5">
-                <div className="flex items-center gap-2.5">
-                  <FarmerAvatar
-                    src={farmer.profilePicture}
-                    name={farmer.farmerName}
-                    size="sm"
-                  />
-                  <div className="min-w-0 flex flex-wrap items-center gap-2">
-                    <h3 className="truncate font-bold text-brand-900">{farmer.farmerName}</h3>
-                    <VerificationBadge status={farmer.verificationStatus} />
+              <div className="border-b border-brand-50 px-4 py-4 sm:px-5">
+                <div className="flex flex-col items-center gap-2 sm:flex-row sm:items-start sm:gap-4">
+                  <div className="flex shrink-0 flex-col items-center gap-1.5">
+                    <FarmerAvatar
+                      src={farmer.profilePicture}
+                      name={farmer.farmerName}
+                      size="md"
+                    />
+                    <VerificationBadge
+                      status={farmer.verificationStatus}
+                      className="text-[10px] px-2 py-0.5"
+                    />
                   </div>
+                  <h3 className="min-w-0 text-center font-bold text-brand-900 sm:pt-3 sm:text-left">
+                    {farmer.farmerName}
+                  </h3>
                 </div>
               </div>
 
@@ -276,15 +281,17 @@ export default function MarketplacePage() {
                     <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
                       Products ({farmer.products.length})
                     </p>
-                    <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1 snap-x snap-mandatory">
+                    <div className="-mx-1 flex gap-5 overflow-x-auto px-1 pb-1 snap-x snap-mandatory scrollbar-hide sm:gap-6">
                       {farmer.products.map((product) => (
                         <div
                           key={product.id}
-                          className="w-64 shrink-0 snap-start sm:w-72"
+                          className="w-72 shrink-0 snap-start sm:w-80"
                         >
                           <FarmerProductCard
                             product={product}
                             onClick={() => openPurchase(farmer, product)}
+                            imageClassName="h-56 w-full object-cover"
+                            contentClassName="p-4"
                           />
                         </div>
                       ))}
