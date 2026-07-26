@@ -9,30 +9,30 @@ import { CommodityCategory, HandlerProfile, ROLES, farmerCategoryFilter } from "
 import { CountrySelect } from "@/components/CountrySelect";
 import { HandlerSelect } from "@/components/HandlerSelect";
 import { CommodityPicker } from "@/components/CommodityPicker";
-import { Icon } from "@/components/icons";
+import { Icon, type IconName } from "@/components/icons";
 import { Logo } from "@/components/Logo";
 
-const ROLE_GROUPS = [
+const ROLE_GROUPS: { groupLabel: string; roles: { id: number; label: string; icon: IconName; desc: string }[] }[] = [
   {
     groupLabel: "Farmers",
     roles: [
-      { id: ROLES.CROP_FARMER,      label: "Crop Farmer",      icon: "🌾", desc: "Produce & sell crops" },
-      { id: ROLES.LIVESTOCK_FARMER, label: "Livestock Farmer", icon: "🐄", desc: "Raise & trade livestock" },
+      { id: ROLES.CROP_FARMER,      label: "Crop Farmer",      icon: "sprout", desc: "Produce & sell crops" },
+      { id: ROLES.LIVESTOCK_FARMER, label: "Livestock Farmer", icon: "wheat",  desc: "Raise & trade livestock" },
     ],
   },
   {
     groupLabel: "Research & Commerce",
     roles: [
-      { id: ROLES.RESEARCHER,    label: "Researcher",    icon: "🔬", desc: "Academic & field research" },
-      { id: ROLES.BUYER,         label: "Buyer",         icon: "🛒", desc: "Source & purchase commodities" },
+      { id: ROLES.RESEARCHER, label: "Researcher", icon: "book",  desc: "Academic & field research" },
+      { id: ROLES.BUYER,      label: "Buyer",      icon: "cart",  desc: "Source & purchase commodities" },
     ],
   },
   {
     groupLabel: "Support & Operations",
     roles: [
-      { id: ROLES.FARMER_HANDLER,  label: "Farmer Handler",  icon: "🤝", desc: "Support crop/livestock farmers" },
-      { id: ROLES.BUYER_HANDLER,   label: "Buyer Handler",   icon: "📦", desc: "Coordinate buyer logistics" },
-      { id: ROLES.ANI_ACCOUNTANT,  label: "ANI Accountant",  icon: "💼", desc: "Manage platform finances" },
+      { id: ROLES.FARMER_HANDLER, label: "Farmer Handler", icon: "handshake",  desc: "Support crop/livestock farmers" },
+      { id: ROLES.BUYER_HANDLER,  label: "Buyer Handler",  icon: "truck",       desc: "Coordinate buyer logistics" },
+      { id: ROLES.ANI_ACCOUNTANT, label: "ANI Accountant", icon: "coins",      desc: "Manage platform finances" },
     ],
   },
 ];
@@ -402,7 +402,9 @@ export default function RegisterPage() {
                                 : "border-gray-200 bg-white hover:border-brand-300 hover:bg-brand-50/40",
                             ].join(" ")}
                           >
-                            <span className="text-xl leading-none">{r.icon}</span>
+                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-100 text-brand-700">
+                              <Icon name={r.icon} className="h-4 w-4" />
+                            </span>
                             <span className="min-w-0 flex-1">
                               <span className={`block truncate text-sm font-semibold ${isSelected ? "text-brand-800" : "text-gray-800"}`}>
                                 {r.label}
