@@ -65,10 +65,10 @@ const TEAM = [
  * Place images in public/roles/ (e.g. public/roles/crop-farmer.jpg) and update the matching entry.
  */
 const ROLE_CARD_IMAGES = {
-  cropFarmer: "/login_cover.png",       // Change image here: Crop Farmer card
+  cropFarmer: "/famer on pitch.jpg",       // Change image here: Crop Farmer card
   livestockFarmer: "/login_cover.png",  // Change image here: Livestock Farmer card
   fruitFarmer: "/login_cover.png",      // Change image here: Fruit Farmer card
-  buyer: "/login_cover.png",            // Change image here: Buyer card
+  buyer: "/famer and buyer.jpg",            // Change image here: Buyer card
   handler: "/login_cover.png",          // Change image here: Handler card
   researcher: "/login_cover.png",       // Change image here: Researcher card
 } as const;
