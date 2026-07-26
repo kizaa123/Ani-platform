@@ -52,7 +52,7 @@ export default function FarmerOrdersPage() {
     <div className="mx-auto max-w-5xl px-4 py-8">
       <div className="mb-8">
         <Link href="/farm" className="text-sm text-brand-600 hover:underline">
-          ← Back to My Farm
+          Back to My Farm
         </Link>
         <h1 className="mt-2 text-3xl font-bold text-brand-900">Buyer Orders</h1>
         <p className="text-gray-500">
@@ -78,7 +78,7 @@ export default function FarmerOrdersPage() {
             href="/farm/financials"
             className="mt-1 inline-block text-xs font-semibold text-brand-700 hover:underline"
           >
-            View financial statement →
+            View financial statement
           </Link>
         </div>
       </div>

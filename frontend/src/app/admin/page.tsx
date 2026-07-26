@@ -138,7 +138,7 @@ export default function AdminPage() {
                     <VerificationBadge status={c.buyer.verificationStatus} className="mt-1" />
                   )}
                   <p className="mt-2 text-sm text-brand-700">
-                    → {c.farmer?.farmName ?? (c.farmer ? fullName(c.farmer) : "Unknown farm")}
+                    {c.farmer?.farmName ?? (c.farmer ? fullName(c.farmer) : "Unknown farm")}
                   </p>
                   {c.farmer && (
                     <CountryBadge country={c.farmer.country} region={c.farmer.region} className="mt-1" />

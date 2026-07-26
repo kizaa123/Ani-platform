@@ -58,7 +58,7 @@ export default function ResearcherFinancialsPage() {
     <div className="mx-auto max-w-5xl px-4 py-8">
       <div className="mb-8">
         <Link href="/researcher/publications" className="text-sm text-brand-600 hover:underline">
-          ← Back to Publications
+          Back to Publications
         </Link>
         <h1 className="mt-2 text-2xl font-bold text-brand-900">Financial Statement</h1>
         <p className="text-sm text-gray-500">

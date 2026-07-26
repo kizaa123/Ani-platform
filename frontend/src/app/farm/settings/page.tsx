@@ -206,7 +206,7 @@ export default function FarmSettingsPage() {
     <div className="mx-auto max-w-3xl px-4 py-8">
       <div className="mb-8">
         <Link href="/farm" className="text-sm text-brand-600 hover:underline">
-          ← Back to My Farm
+          Back to My Farm
         </Link>
         <h1 className="mt-2 text-3xl font-bold text-brand-900">Profile</h1>
         <p className="text-gray-500">

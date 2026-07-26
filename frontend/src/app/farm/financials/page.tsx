@@ -101,7 +101,7 @@ export default function FinancialStatementPage() {
     <div className="mx-auto max-w-5xl px-4 py-8">
       <div className="mb-8">
         <Link href="/farm" className="text-sm text-brand-600 hover:underline">
-          ← Back to My Farm
+          Back to My Farm
         </Link>
         <h1 className="mt-2 text-2xl font-bold text-brand-900">Financial Statement</h1>
         <p className="text-sm text-gray-500">Overview of your farm products and marketplace activity</p>
@@ -145,7 +145,7 @@ export default function FinancialStatementPage() {
               <p className="text-sm text-gray-500">Buyer purchases with contact details</p>
             </div>
             <Link href="/farm/orders" className="text-sm font-semibold text-brand-700 hover:underline">
-              View all orders →
+              View all orders
             </Link>
           </div>
           <SalesOrdersTable items={salesOrders} />

@@ -60,7 +60,7 @@ export default function BuyerOrdersPage() {
     <div className="mx-auto max-w-5xl px-4 py-8">
       <div className="mb-8">
         <Link href="/dashboard" className="text-sm text-brand-600 hover:underline">
-          ← Back to Dashboard
+          Back to Dashboard
         </Link>
         <h1 className="mt-2 text-3xl font-bold text-brand-900">My Orders</h1>
         <p className="text-gray-500">Products you ordered from farmers on the marketplace</p>
@@ -81,7 +81,7 @@ export default function BuyerOrdersPage() {
           <p className="text-xs font-semibold uppercase text-gray-500">Total product spend</p>
           <p className="mt-1 text-2xl font-bold text-brand-900">{formatGhc(paidTotal)}</p>
           <Link href="/financials" className="mt-1 inline-block text-xs font-semibold text-brand-700 hover:underline">
-            View financial statement →
+            View financial statement
           </Link>
         </div>
       </div>

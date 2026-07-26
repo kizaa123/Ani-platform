@@ -53,7 +53,7 @@ export default function BuyerFinancialsPage() {
     <div className="mx-auto max-w-5xl px-4 py-8">
       <div className="mb-8">
         <Link href="/dashboard" className="text-sm text-brand-600 hover:underline">
-          ← Back to Dashboard
+          Back to Dashboard
         </Link>
         <h1 className="mt-2 text-2xl font-bold text-brand-900">Financial Statement</h1>
         <p className="text-sm text-gray-500">Spending overview and farm access fees</p>
@@ -79,7 +79,7 @@ export default function BuyerFinancialsPage() {
           <p className="text-xs font-semibold uppercase text-gray-500">Total orders</p>
           <p className="mt-1 text-xl font-bold text-brand-900">{summary.totalOrders}</p>
           <Link href="/orders" className="mt-1 inline-block text-xs font-semibold text-brand-700 hover:underline">
-            View all orders →
+            View all orders
           </Link>
         </div>
       </div>

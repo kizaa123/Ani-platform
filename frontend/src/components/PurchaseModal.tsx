@@ -124,7 +124,7 @@ export function PurchaseModal({
             onClick={onClose}
             className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-brand-900 hover:bg-brand-50"
           >
-            ← Back to Marketplace
+            Back to Marketplace
           </button>
           <div className="flex items-center gap-3">
             <FarmerAvatar src={farmerPhoto} name={farmerName} size="md" />

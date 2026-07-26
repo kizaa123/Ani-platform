@@ -82,10 +82,7 @@ export function FarmerBrowseCardItem({
             <CountryBadge country={farmer.country} region={farmer.region} />
           </div>
         </div>
-        <Icon
-          name="chevron-right"
-          className="mt-1 h-5 w-5 shrink-0 text-brand-300 transition group-hover:text-brand-600"
-        />
+
       </div>
 
       <div className="mt-4 flex items-center justify-between gap-2">

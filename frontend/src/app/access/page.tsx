@@ -61,7 +61,7 @@ export default function AccessPage() {
     <div className="mx-auto max-w-6xl px-4 py-10">
       <div className="mb-8">
         <Link href="/marketplace" className="text-sm text-brand-600 hover:underline">
-          ← Back to Marketplace
+          Back to Marketplace
         </Link>
         <h1 className="mt-2 text-3xl font-bold text-brand-900">Buyer Access</h1>
         <p className="text-gray-500">

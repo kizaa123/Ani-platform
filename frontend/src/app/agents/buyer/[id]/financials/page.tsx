@@ -85,7 +85,7 @@ export default function HandlerClientBuyerFinancialsPage() {
           value={String(summary.totalOrders)}
           sub={
             <Link href={`/agents/buyer/${ownerId}/orders`} className="font-semibold text-brand-700 hover:underline">
-              View orders →
+              View orders
             </Link>
           }
         />

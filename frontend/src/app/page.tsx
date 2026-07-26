@@ -60,11 +60,56 @@ const TEAM = [
   },
 ];
 
-const ROLES: { icon: IconName; label: string; desc: string }[] = [
-  { icon: "sprout", label: "Crop Farmers", desc: "List produce, manage prices & track buyers" },
-  { icon: "wheat", label: "Livestock Farmers", desc: "Advertise animals, set availability & connect with agents" },
-  { icon: "user", label: "Buyers", desc: "Discover verified farms and pay for secure access" },
-  { icon: "handshake", label: "Handlers & Agents", desc: "Represent clients and close deals efficiently" },
+/**
+ * Role card images — swap any path below with your own file under frontend/public/.
+ * Place images in public/roles/ (e.g. public/roles/crop-farmer.jpg) and update the matching entry.
+ */
+const ROLE_CARD_IMAGES = {
+  cropFarmer: "/login_cover.png",       // Change image here: Crop Farmer card
+  livestockFarmer: "/login_cover.png",  // Change image here: Livestock Farmer card
+  fruitFarmer: "/login_cover.png",      // Change image here: Fruit Farmer card
+  buyer: "/login_cover.png",            // Change image here: Buyer card
+  handler: "/login_cover.png",          // Change image here: Handler card
+  researcher: "/login_cover.png",       // Change image here: Researcher card
+} as const;
+
+const ROLE_CARDS: { icon: IconName; label: string; desc: string; image: string }[] = [
+  {
+    icon: "sprout",
+    label: "Crop Farmer",
+    desc: "Register as a crop farmer to list produce, manage prices and harvest schedules, and track interested buyers — all from one dashboard.",
+    image: ROLE_CARD_IMAGES.cropFarmer,
+  },
+  {
+    icon: "wheat",
+    label: "Livestock Farmer",
+    desc: "Showcase your livestock, set availability and pricing, and connect with buyers and agents who are ready to trade.",
+    image: ROLE_CARD_IMAGES.livestockFarmer,
+  },
+  {
+    icon: "leaf",
+    label: "Fruit Farmer",
+    desc: "Highlight seasonal fruits, orchard yields and delivery windows so buyers can discover and order fresh produce directly from your farm.",
+    image: ROLE_CARD_IMAGES.fruitFarmer,
+  },
+  {
+    icon: "cart",
+    label: "Buyer",
+    desc: "Browse verified farms, preview listings for free, and unlock full farmer details to source commodities securely across Ghana.",
+    image: ROLE_CARD_IMAGES.buyer,
+  },
+  {
+    icon: "handshake",
+    label: "Handler",
+    desc: "Represent farmers or buyers, manage relationships, negotiate deals, and streamline transactions on behalf of your clients.",
+    image: ROLE_CARD_IMAGES.handler,
+  },
+  {
+    icon: "book",
+    label: "Researcher",
+    desc: "Access agricultural data, publish field research, and connect with farmers and buyers to support evidence-based farming across the region.",
+    image: ROLE_CARD_IMAGES.researcher,
+  },
 ];
 
 export default function HomePage() {
@@ -162,18 +207,27 @@ export default function HomePage() {
               Whether you grow it, buy it, or broker it — ANI Platform has a tailored experience designed for your role.
             </p>
           </div>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {ROLES.map((r) => (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {ROLE_CARDS.map((r) => (
               <div
                 key={r.label}
-                className="group flex flex-col gap-4 rounded-2xl border border-brand-100 bg-white p-6 shadow-sm transition-all hover:border-brand-300 hover:shadow-md"
+                className="group flex flex-col overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm transition-all hover:border-brand-300 hover:shadow-md"
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-100 text-brand-700 transition-colors group-hover:bg-brand-700 group-hover:text-white">
-                  <Icon name={r.icon} className="h-6 w-6" />
+                <div className="relative h-40 w-full overflow-hidden">
+                  <Image
+                    src={r.image}
+                    alt={r.label}
+                    fill
+                    className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-brand-900/60 via-brand-900/20 to-transparent" />
+                  <div className="absolute bottom-3 left-3 flex h-10 w-10 items-center justify-center rounded-xl bg-white/90 text-brand-700 shadow-sm backdrop-blur-sm transition-colors group-hover:bg-brand-700 group-hover:text-white">
+                    <Icon name={r.icon} className="h-5 w-5" />
+                  </div>
                 </div>
-                <div>
+                <div className="flex flex-col gap-2 p-5">
                   <h3 className="font-bold text-brand-900">{r.label}</h3>
-                  <p className="mt-1 text-sm text-gray-500">{r.desc}</p>
+                  <p className="text-sm leading-relaxed text-gray-500">{r.desc}</p>
                 </div>
               </div>
             ))}

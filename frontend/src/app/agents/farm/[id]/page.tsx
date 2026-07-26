@@ -41,7 +41,7 @@ export default function HandlerClientFarmPage() {
     return (
       <div className="mx-auto max-w-3xl px-4 py-10">
         <Link href="/agents" className="text-sm font-medium text-brand-600 hover:underline">
-          ← Back to My Clients
+          Back to My Clients
         </Link>
         <p className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">{error}</p>
       </div>
