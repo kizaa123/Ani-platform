@@ -88,6 +88,7 @@ model User {
   researchPurchases      ResearchPurchase[]  @relation("StudentResearchPurchases")
   researchSales          ResearchPurchase[]  @relation("ResearcherSales")
   farmerMediaLikes       FarmerMediaLike[]
+  productMediaLikes      ProductMediaLike[]
 
   @@map("users")
 }
@@ -255,6 +256,7 @@ model CommodityListing {
   farmer    FarmerProfile @relation(fields: [farmerId], references: [id], onDelete: Cascade)
   commodity Commodity     @relation(fields: [commodityId], references: [id])
   orders    ProductOrder[]
+  media     ProductMedia[]
 
   @@map("commodity_listing")
 }
@@ -539,6 +541,44 @@ model FarmerMediaLike {
 
   @@unique([mediaId, buyerId])
   @@map("farmer_media_likes")
+}
+
+// ─── Product Media ────────────────────────────────────────────────────────────
+
+enum ProductMediaType {
+  IMAGE
+  VIDEO
+}
+
+model ProductMedia {
+  id          String           @id @default(uuid())
+  listingId   String           @map("listing_id")
+  type        ProductMediaType
+  url         String           @db.Text
+  duration    Float?
+  orderIndex  Int              @default(0) @map("order_index")
+  likesCount  Int              @default(0) @map("likes_count")
+  sharesCount Int              @default(0) @map("shares_count")
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  listing CommodityListing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  likes   ProductMediaLike[]
+
+  @@index([listingId, orderIndex])
+  @@map("product_media")
+}
+
+model ProductMediaLike {
+  id        String   @id @default(uuid())
+  mediaId   String   @map("media_id")
+  buyerId   String   @map("buyer_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  media ProductMedia @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  buyer User         @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+
+  @@unique([mediaId, buyerId])
+  @@map("product_media_likes")
 }
 
 // ─── Audit ─────────────────────────────────────────────────────────────────────

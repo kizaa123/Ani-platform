@@ -19,6 +19,7 @@ import {
   defaultListingUnit,
 } from '../constants/units';
 import { computeListedPrice } from '../utils/listingPrice';
+import { productMediaService } from './productMedia.service';
 
 export { LISTING_UNITS } from '../constants/units';
 
@@ -196,7 +197,8 @@ export class MarketplaceService {
       commodity: unknown;
       farmer: Parameters<MarketplaceService['buildContext']>[0];
     },
-    access: { hasAccess: boolean; connectionStatus: string; hasFarmAccess?: boolean }
+    access: { hasAccess: boolean; connectionStatus: string; hasFarmAccess?: boolean },
+    media: ReturnType<typeof productMediaService.listByListing> extends Promise<infer T> ? T : never = []
   ) {
     const ctx = this.buildContext(listing.farmer);
     const base = {
@@ -209,6 +211,7 @@ export class MarketplaceService {
       images: normalizeImages(listing.images).map(
         (img) => normalizePublicAssetUrl(img) ?? img
       ),
+      media,
       location: listing.location,
       ...harvestPayload(listing),
       status: listing.status,
@@ -294,6 +297,9 @@ export class MarketplaceService {
 
     const term = search?.trim().toLowerCase() ?? '';
 
+    const allListingIds = farmerProfiles.flatMap((p) => p.listings.map((l) => l.id));
+    const mediaMap = await productMediaService.listForListings(allListingIds, userId);
+
     const farmers = farmerProfiles.map((profile) => {
       const farmerUserId = profile.user.id;
       const hasFarmAccess =
@@ -335,7 +341,8 @@ export class MarketplaceService {
                   farmerCommodities: profile.farmerCommodities,
                 },
               },
-              access
+              access,
+              mediaMap.get(listing.id) ?? []
             )
           )
         : [];
@@ -399,10 +406,14 @@ export class MarketplaceService {
     const isBuyerRole = roleId === ROLES.BUYER;
     const farmAccessSet = isBuyerRole ? await buyerFarmAccessSet(userId) : undefined;
 
+    const listingIds = listings.map((l) => l.id);
+    const mediaMap = await productMediaService.listForListings(listingIds, userId);
+
     return Promise.all(
       listings.map(async (l) => {
         const access = await this.listingAccess(userId, roleId, l.farmer.user.id, farmAccessSet);
-        return this.formatListing(l, access);
+        const media = mediaMap.get(l.id) ?? [];
+        return this.formatListing(l, access, media);
       })
     );
   }
@@ -427,7 +438,8 @@ export class MarketplaceService {
       listing.farmer.user.id,
       farmAccessSet
     );
-    return this.formatListing(listing, access);
+    const media = await productMediaService.listByListing(id, userId);
+    return this.formatListing(listing, access, media);
   }
 
   async updateListing(
@@ -491,11 +503,16 @@ export class MarketplaceService {
       include: { commodity: { include: { category: true } } },
       orderBy: { createdAt: 'desc' },
     });
+    const mediaMap = await productMediaService.listForListings(
+      listings.map((l) => l.id),
+      userId
+    );
     return listings.map((l) => ({
       ...l,
       images: normalizeImages(l.images).map(
         (img) => normalizePublicAssetUrl(img) ?? img
       ),
+      media: mediaMap.get(l.id) ?? [],
       priceLabel: `GHC ${l.price}/${l.unit}`,
       quantityLabel: `${l.quantity} ${l.unit}`,
       ...harvestPayload(l),

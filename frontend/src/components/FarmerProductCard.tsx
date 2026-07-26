@@ -2,6 +2,8 @@
 
 import { Listing, formatListingUnit } from "@/lib/types";
 import { ProductImage } from "@/components/FarmerAvatar";
+import { productMediaIsVideo, productMediaThumbnail } from "@/components/ProductMediaGallery";
+import { assetUrl } from "@/lib/assetUrl";
 import { Icon } from "@/components/icons";
 
 interface FarmerProductCardProps {
@@ -19,6 +21,9 @@ export function FarmerProductCard({
   imageClassName = "h-44 w-full object-cover",
   contentClassName = "p-3",
 }: FarmerProductCardProps) {
+  const thumb = productMediaThumbnail(product);
+  const isVideo = productMediaIsVideo(product);
+
   return (
     <button
       type="button"
@@ -29,12 +34,29 @@ export function FarmerProductCard({
           : "border-brand-100"
       }`}
     >
-      {product.images?.[0] ? (
-        <ProductImage
-          src={product.images[0]}
-          alt={product.title}
-          className={imageClassName}
-        />
+      {thumb ? (
+        <div className="relative">
+          {isVideo ? (
+            <>
+              <video
+                src={assetUrl(thumb) ?? undefined}
+                className={imageClassName}
+                muted
+                playsInline
+                preload="metadata"
+              />
+              <span className="absolute bottom-2 right-2 rounded bg-black/50 px-1.5 py-0.5 text-[10px] text-white">
+                VIDEO
+              </span>
+            </>
+          ) : (
+            <ProductImage
+              src={thumb}
+              alt={product.title}
+              className={imageClassName}
+            />
+          )}
+        </div>
       ) : (
         <div
           className={`flex items-center justify-center bg-gradient-to-br from-brand-100 to-brand-200 ${imageClassName}`}

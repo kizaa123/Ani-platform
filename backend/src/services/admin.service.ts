@@ -71,6 +71,7 @@ export class AdminService {
       paymentMethod: order.paymentMethod,
       status: order.status,
       escrowStatus: order.escrowStatus,
+      otpVerifiedAt: order.otpVerifiedAt?.toISOString() ?? null,
       transactionId: order.transactionId,
     }));
 

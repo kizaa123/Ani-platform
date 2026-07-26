@@ -163,6 +163,15 @@
   }
 }
 
+:root {
+  --mobile-bottom-nav-safe-area: env(safe-area-inset-bottom, 0px);
+}
+
+/* Safe-area inset applies only to the fixed mobile bottom nav, not the whole page. */
+.mobile-bottom-nav {
+  padding-bottom: var(--mobile-bottom-nav-safe-area);
+}
+
 body {
   @apply bg-brand-50 text-gray-900 antialiased;
 }

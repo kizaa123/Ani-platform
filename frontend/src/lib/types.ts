@@ -117,6 +117,18 @@ export interface FarmerMediaItem {
   createdAt: string;
 }
 
+export interface ProductMediaItem {
+  id: string;
+  type: "IMAGE" | "VIDEO";
+  url: string;
+  duration?: number | null;
+  orderIndex: number;
+  likesCount: number;
+  sharesCount: number;
+  likedByMe?: boolean;
+  createdAt: string;
+}
+
 export interface FarmerBrowseCard {
   farmerId: string;
   farmerName: string;
@@ -153,6 +165,7 @@ export interface Listing {
   priceLabel?: string;
   quantityLabel?: string;
   images?: string[];
+  media?: ProductMediaItem[];
   location?: string;
   region?: string;
   country?: string;
@@ -719,6 +732,8 @@ export interface PlatformFinancialStatementLineItem {
   amount: number;
   paymentMethod: string;
   status: string;
+  escrowStatus?: string;
+  otpVerifiedAt?: string | null;
   transactionId?: string | null;
 }
 

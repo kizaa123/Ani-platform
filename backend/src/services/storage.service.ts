@@ -2,7 +2,7 @@ import fs from 'fs';
 import { v2 as cloudinary } from 'cloudinary';
 import { publicUrl } from '../middleware/upload.middleware';
 
-export type UploadFolder = 'profiles' | 'listings' | 'publications' | 'farm-media';
+export type UploadFolder = 'profiles' | 'listings' | 'publications' | 'farm-media' | 'product-media';
 
 let cloudinaryConfigured = false;
 
@@ -77,4 +77,21 @@ export async function persistFarmerMediaFile(
     return result;
   }
   return { url: publicUrl(`farm-media/${file.filename}`) };
+}
+
+/** Persist product image/video upload; returns URL and optional video duration from Cloudinary. */
+export async function persistProductMediaFile(
+  file: Express.Multer.File
+): Promise<{ url: string; duration?: number }> {
+  const isVideo = file.mimetype.startsWith('video/');
+  if (isCloudStorageEnabled()) {
+    const result = await uploadToCloudinary(
+      file.path,
+      'product-media',
+      isVideo ? 'video' : 'image'
+    );
+    removeLocalFile(file.path);
+    return result;
+  }
+  return { url: publicUrl(`product-media/${file.filename}`) };
 }

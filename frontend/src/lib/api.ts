@@ -228,6 +228,31 @@ class ApiClient {
         method: "POST",
         body: JSON.stringify(body),
       }),
+    media: {
+      list: (listingId: string) =>
+        this.request<import("./types").ProductMediaItem[]>(`/farm/listings/${listingId}/media`),
+      upload: (listingId: string, file: File, duration?: number) => {
+        const fd = new FormData();
+        fd.append("media", file);
+        if (duration != null) fd.append("duration", String(duration));
+        return this.uploadRequest<import("./types").ProductMediaItem>(
+          `/farm/listings/${listingId}/media`,
+          fd
+        );
+      },
+      remove: (listingId: string, mediaId: string) =>
+        this.request(`/farm/listings/${listingId}/media/${mediaId}`, { method: "DELETE" }),
+      like: (listingId: string, mediaId: string) =>
+        this.request<{ liked: boolean; likesCount: number }>(
+          `/farm/listings/${listingId}/media/${mediaId}/like`,
+          { method: "POST" }
+        ),
+      share: (listingId: string, mediaId: string) =>
+        this.request<{ sharesCount: number }>(
+          `/farm/listings/${listingId}/media/${mediaId}/share`,
+          { method: "POST" }
+        ),
+    },
   };
 
   orders = {

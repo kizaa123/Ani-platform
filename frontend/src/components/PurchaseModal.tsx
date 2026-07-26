@@ -3,11 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { Listing, formatListingUnit } from "@/lib/types";
-import { FarmerAvatar, ProductImage } from "@/components/FarmerAvatar";
+import { FarmerAvatar } from "@/components/FarmerAvatar";
 import { CountryBadge } from "@/components/CountrySelect";
 import { FarmerProductCard } from "@/components/FarmerProductCard";
+import { ProductMediaGallery } from "@/components/ProductMediaGallery";
 import { PaymentCheckout, TransactionSuccess } from "@/components/PaymentCheckout";
-import { Icon } from "@/components/icons";
 
 interface PurchaseViewProps {
   listing: Listing;
@@ -44,7 +44,6 @@ export function PurchaseModal({
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [releaseOtp, setReleaseOtp] = useState<string | null>(null);
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const total = Math.round(quantity * unitPrice * 100) / 100;
@@ -63,7 +62,6 @@ export function PurchaseModal({
     setError("");
     setSuccessMsg("");
     setReleaseOtp(null);
-    setActiveImageIndex(0);
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, [listing.id]);
 
@@ -96,8 +94,6 @@ export function PurchaseModal({
       setSubmitting(false);
     }
   };
-
-  const currentImage = listing.images?.[activeImageIndex] || listing.images?.[0];
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-white">
@@ -142,37 +138,13 @@ export function PurchaseModal({
 
           <div className="grid gap-6 lg:grid-cols-2 lg:gap-10 lg:items-start">
             <div className="flex flex-col gap-3">
-              <div className="overflow-hidden rounded-2xl border border-brand-100 bg-brand-50">
-                {currentImage ? (
-                  <ProductImage
-                    src={currentImage}
-                    alt={listing.title}
-                    className="aspect-[4/3] w-full object-cover sm:aspect-square"
-                  />
-                ) : (
-                  <div className="flex aspect-[4/3] items-center justify-center bg-gradient-to-br from-brand-100 to-brand-200 sm:aspect-square">
-                    <Icon name="wheat" className="h-16 w-16 text-brand-400" />
-                  </div>
-                )}
-              </div>
-              {listing.images && listing.images.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto pb-1">
-                  {listing.images.map((img, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => setActiveImageIndex(i)}
-                      className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border transition-all ${
-                        activeImageIndex === i
-                          ? "border-brand-600 ring-2 ring-brand-500"
-                          : "border-brand-100 opacity-70"
-                      }`}
-                    >
-                      <ProductImage src={img} alt="" className="h-full w-full object-cover" />
-                    </button>
-                  ))}
-                </div>
-              )}
+              <ProductMediaGallery
+                listingId={listing.id}
+                productTitle={listing.title}
+                media={listing.media ?? []}
+                fallbackImages={listing.images}
+                interactive
+              />
             </div>
 
             <div className="flex flex-col">
@@ -246,7 +218,6 @@ export function PurchaseModal({
                   <PaymentCheckout
                     totalLabel={`${quantity} × GHC ${unitPrice}`}
                     totalAmount={`GHC ${total.toFixed(2)}`}
-                    subtitle="Payment held in escrow until you confirm delivery"
                     payLabel={`Pay GHC ${total.toFixed(2)}`}
                     onPay={handlePurchase}
                     submitting={submitting}

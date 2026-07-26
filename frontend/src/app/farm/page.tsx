@@ -5,14 +5,17 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { Listing, ROLES, defaultListingUnit, listingUnitsForRole, formatListingUnit, isLivestockFarmer, normalizeListingUnit, type ListingUnit } from "@/lib/types";
+import { Listing, ROLES, defaultListingUnit, listingUnitsForRole, formatListingUnit, isLivestockFarmer, normalizeListingUnit, type ListingUnit, ProductMediaItem } from "@/lib/types";
 import { ProductImage } from "@/components/FarmerAvatar";
 import { Icon } from "@/components/icons";
 import { FarmerMediaItem } from "@/lib/types";
 import { assetUrl } from "@/lib/assetUrl";
 import { basePriceFromListed, computeListedPrice } from "@/lib/listingPrice";
 
+import { productMediaThumbnail } from "@/components/ProductMediaGallery";
+
 const MAX_FARM_MEDIA = 5;
+const MAX_PRODUCT_MEDIA = 5;
 const MAX_VIDEO_DURATION = 60;
 
 async function getVideoDuration(file: File): Promise<number> {
@@ -57,23 +60,30 @@ const emptyListingForm = (roleId: number) => ({
 export default function FarmPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const listingImagesRef = useRef<HTMLInputElement>(null);
+  const productMediaRef = useRef<HTMLInputElement>(null);
   const farmMediaRef = useRef<HTMLInputElement>(null);
 
   const [profile, setProfile] = useState<FarmProfile | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
   const [farmMedia, setFarmMedia] = useState<FarmerMediaItem[]>([]);
+  const [productMedia, setProductMedia] = useState<ProductMediaItem[]>([]);
+  const [pendingMediaFiles, setPendingMediaFiles] = useState<
+    Array<{ file: File; preview: string; duration?: number }>
+  >([]);
   const [mediaUploading, setMediaUploading] = useState(false);
+  const [productMediaUploading, setProductMediaUploading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string[]>([]);
-  const [listingImageVersion, setListingImageVersion] = useState(0);
   const [form, setForm] = useState(emptyListingForm(ROLES.CROP_FARMER));
 
   const resetForm = useCallback(() => {
     setForm(emptyListingForm(user?.roleId ?? ROLES.CROP_FARMER));
-    setImagePreview([]);
+    setProductMedia([]);
+    setPendingMediaFiles((prev) => {
+      prev.forEach((p) => URL.revokeObjectURL(p.preview));
+      return [];
+    });
     setEditingId(null);
     setShowForm(false);
   }, [user?.roleId]);
@@ -97,25 +107,60 @@ export default function FarmPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- load once per farmer session
   }, [user?.id, loading, router]);
 
-  const handleListingImages = async (files: FileList | null) => {
+  const totalProductMediaCount = productMedia.length + pendingMediaFiles.length;
+
+  const handleProductMediaUpload = async (files: FileList | null) => {
     if (!files?.length) return;
-    setUploading(true);
+    if (totalProductMediaCount >= MAX_PRODUCT_MEDIA) {
+      alert(`Maximum ${MAX_PRODUCT_MEDIA} media files allowed per product`);
+      return;
+    }
+
+    const file = files[0];
+    setProductMediaUploading(true);
     try {
-      const { urls } = await api.upload.listingImages(Array.from(files));
-      setForm((f) => ({ ...f, images: [...f.images, ...urls] }));
-      setImagePreview((p) => [...p, ...urls]);
-      setListingImageVersion((v) => v + 1);
+      let duration: number | undefined;
+      if (file.type.startsWith("video/")) {
+        duration = await getVideoDuration(file);
+        if (duration > MAX_VIDEO_DURATION) {
+          alert(`Videos must be ${MAX_VIDEO_DURATION} seconds or less`);
+          return;
+        }
+      }
+
+      if (editingId) {
+        const item = await api.marketplace.media.upload(editingId, file, duration);
+        setProductMedia((prev) => [...prev, item]);
+      } else {
+        const preview = URL.createObjectURL(file);
+        setPendingMediaFiles((prev) => [...prev, { file, preview, duration }]);
+      }
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Image upload failed");
+      alert(e instanceof Error ? e.message : "Media upload failed");
     } finally {
-      if (listingImagesRef.current) listingImagesRef.current.value = "";
-      setUploading(false);
+      if (productMediaRef.current) productMediaRef.current.value = "";
+      setProductMediaUploading(false);
     }
   };
 
-  const removeListingImage = (index: number) => {
-    setForm((f) => ({ ...f, images: f.images.filter((_, i) => i !== index) }));
-    setImagePreview((p) => p.filter((_, i) => i !== index));
+  const removeProductMedia = async (id: string) => {
+    if (!editingId) return;
+    if (!confirm("Remove this media from the product?")) return;
+    try {
+      await api.marketplace.media.remove(editingId, id);
+      setProductMedia((prev) => prev.filter((m) => m.id !== id));
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Could not remove media");
+    }
+  };
+
+  const removePendingMedia = (index: number) => {
+    setPendingMediaFiles((prev) => {
+      const next = [...prev];
+      URL.revokeObjectURL(next[index].preview);
+      next.splice(index, 1);
+      return next;
+    });
   };
 
   const handleFarmMediaUpload = async (files: FileList | null) => {
@@ -157,7 +202,6 @@ export default function FarmPage() {
   };
 
   const startEdit = (listing: Listing) => {
-    const images = listing.images ?? [];
     setEditingId(listing.id);
     setForm({
       commodityId: listing.commodity?.id ?? 0,
@@ -167,11 +211,15 @@ export default function FarmPage() {
       price: basePriceFromListed(listing.price ?? 0),
       unit: normalizeListingUnit(listing.unit, user?.roleId ?? ROLES.CROP_FARMER),
       location: listing.location || "",
-      images,
+      images: listing.images ?? [],
       harvestStartDate: listing.harvestStartDate || "",
       harvestEndDate: listing.harvestEndDate || "",
     });
-    setImagePreview(images);
+    setProductMedia(listing.media ?? []);
+    setPendingMediaFiles((prev) => {
+      prev.forEach((p) => URL.revokeObjectURL(p.preview));
+      return [];
+    });
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -195,15 +243,19 @@ export default function FarmPage() {
     }
     const payload = {
       ...form,
+      images: [],
       harvestStartDate: form.harvestStartDate,
       harvestEndDate: form.harvestEndDate,
     };
     if (editingId) {
       await api.marketplace.update(editingId, payload);
     } else {
-      await api.marketplace.create(payload);
+      const created = await api.marketplace.create(payload) as { id: string };
+      const listingId = created.id;
+      for (const pending of pendingMediaFiles) {
+        await api.marketplace.media.upload(listingId, pending.file, pending.duration);
+      }
     }
-    setListingImageVersion((v) => v + 1);
     resetForm();
     load();
   };
@@ -293,7 +345,7 @@ export default function FarmPage() {
         />
         {farmMedia.length === 0 ? (
           <p className="text-sm text-gray-500">
-            Share photos or short videos of your farm — buyers see these when placing orders.
+            Share photos or short videos of your farm profile.
           </p>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
@@ -502,34 +554,82 @@ export default function FarmPage() {
             </div>
           </div>
           <div>
+            <p className="mb-2 text-sm font-semibold text-brand-900">
+              Product photos &amp; videos
+            </p>
+            <p className="mb-3 text-xs text-gray-500">
+              Up to {MAX_PRODUCT_MEDIA} files per product. Videos max {MAX_VIDEO_DURATION} seconds.
+              Buyers see these when viewing and ordering.
+            </p>
             <input
-              ref={listingImagesRef}
+              ref={productMediaRef}
               type="file"
-              accept="image/*"
-              multiple
+              accept="image/*,video/*"
               className="hidden"
-              onChange={(e) => handleListingImages(e.target.files)}
+              onChange={(e) => handleProductMediaUpload(e.target.files)}
             />
             <button
               type="button"
-              onClick={() => listingImagesRef.current?.click()}
-              className="rounded-lg border border-brand-300 bg-white px-4 py-2 text-sm font-medium text-brand-800"
+              onClick={() => productMediaRef.current?.click()}
+              disabled={productMediaUploading || totalProductMediaCount >= MAX_PRODUCT_MEDIA}
+              className="rounded-lg border border-brand-300 bg-white px-4 py-2 text-sm font-medium text-brand-800 disabled:opacity-50"
             >
-              + Add product photos
+              {productMediaUploading ? "Uploading..." : "+ Add product media"}
             </button>
-            {imagePreview.length > 0 && (
-              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {imagePreview.map((url, i) => (
-                  <div key={url} className="relative">
-                    <ProductImage
-                      src={url}
-                      alt={`Product ${i + 1}`}
-                      cacheBust={listingImageVersion}
-                    />
+            {(productMedia.length > 0 || pendingMediaFiles.length > 0) && (
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5">
+                {productMedia.map((item) => {
+                  const src = assetUrl(item.url);
+                  return (
+                    <div key={item.id} className="relative overflow-hidden rounded-xl border border-brand-100 bg-brand-50">
+                      {item.type === "VIDEO" && src ? (
+                        <video
+                          src={src}
+                          className="aspect-square w-full object-cover"
+                          muted
+                          loop
+                          playsInline
+                          autoPlay
+                          preload="metadata"
+                        />
+                      ) : src ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={src} alt="" className="aspect-square w-full object-cover" />
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={() => removeProductMedia(item.id)}
+                        aria-label="Remove media"
+                        className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white hover:bg-black/80"
+                      >
+                        <Icon name="x" className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  );
+                })}
+                {pendingMediaFiles.map((pending, i) => (
+                  <div key={pending.preview} className="relative overflow-hidden rounded-xl border border-dashed border-brand-200 bg-brand-50">
+                    {pending.file.type.startsWith("video/") ? (
+                      <video
+                        src={pending.preview}
+                        className="aspect-square w-full object-cover"
+                        muted
+                        loop
+                        playsInline
+                        autoPlay
+                        preload="metadata"
+                      />
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={pending.preview} alt="" className="aspect-square w-full object-cover" />
+                    )}
+                    <span className="absolute left-1 top-1 rounded bg-brand-700/80 px-1.5 py-0.5 text-[10px] text-white">
+                      New
+                    </span>
                     <button
                       type="button"
-                      onClick={() => removeListingImage(i)}
-                      aria-label={`Remove photo ${i + 1}`}
+                      onClick={() => removePendingMedia(i)}
+                      aria-label="Remove pending media"
                       className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white hover:bg-black/80"
                     >
                       <Icon name="x" className="h-3.5 w-3.5" />
@@ -541,7 +641,7 @@ export default function FarmPage() {
           </div>
           <button
             onClick={saveListing}
-            disabled={uploading}
+            disabled={uploading || productMediaUploading}
             className="rounded-xl bg-brand-700 px-6 py-2 font-semibold text-white disabled:opacity-50"
           >
             {editingId ? "Save Changes" : "Add to Farm"}
@@ -555,17 +655,29 @@ export default function FarmPage() {
             No products on your farm yet. Click <strong>Add Product</strong> above to list one for buyers.
           </div>
         ) : (
-          listings.map((l) => (
+          listings.map((l) => {
+            const thumb = productMediaThumbnail(l);
+            const isVideo = l.media?.[0]?.type === "VIDEO";
+            return (
             <div key={l.id} className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
               <div className="flex flex-col gap-4 sm:flex-row">
-                {l.images?.[0] ? (
-                  <ProductImage
-                    key={`${l.id}-${l.images[0]}`}
-                    src={l.images[0]}
-                    alt={l.title}
-                    className="h-44 w-full shrink-0 rounded-xl object-cover sm:h-44 sm:w-44"
-                    cacheBust={listingImageVersion}
-                  />
+                {thumb ? (
+                  isVideo ? (
+                    <video
+                      src={assetUrl(thumb) ?? undefined}
+                      className="h-44 w-full shrink-0 rounded-xl object-cover sm:h-44 sm:w-44"
+                      muted
+                      playsInline
+                      preload="metadata"
+                    />
+                  ) : (
+                    <ProductImage
+                      key={`${l.id}-${thumb}`}
+                      src={thumb}
+                      alt={l.title}
+                      className="h-44 w-full shrink-0 rounded-xl object-cover sm:h-44 sm:w-44"
+                    />
+                  )
                 ) : (
                   <div className="flex h-44 w-full shrink-0 items-center justify-center rounded-xl bg-brand-50 sm:w-44">
                     <Icon name="wheat" className="h-10 w-10 text-brand-300" />
@@ -614,7 +726,8 @@ export default function FarmPage() {
                 </div>
               </div>
             </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

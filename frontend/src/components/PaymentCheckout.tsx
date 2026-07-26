@@ -37,13 +37,6 @@ export function PaymentCheckout({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl bg-brand-900 p-5 text-white">
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-brand-200">{totalLabel}</span>
-          <span className="text-2xl font-bold">{totalAmount}</span>
-        </div>
-        {subtitle && <p className="mt-2 text-xs text-brand-300">{subtitle}</p>}
-      </div>
 
       <div className="rounded-xl border border-brand-100 bg-white px-4 py-3">
         <div className="flex items-center justify-between gap-2">

@@ -1,0 +1,19 @@
+{
+  "name": "ANI Agricultural Exchange Platform",
+  "short_name": "ANI Platform",
+  "description": "Connect farmers, buyers, and agents across Ghana",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fbfdfb",
+  "theme_color": "#1b4332",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

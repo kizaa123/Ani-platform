@@ -31,6 +31,7 @@ export type IconName =
   | "plus"
   | "heart"
   | "share"
+  | "download"
   | "logo";
 
 type IconProps = SVGProps<SVGSVGElement> & { name: IconName };
@@ -188,6 +189,11 @@ const paths: Record<IconName, ReactNode> = {
   share: (
     <>
       <path strokeLinecap="round" strokeLinejoin="round" d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M16 6l-4-4-4 4M12 2v14" />
+    </>
+  ),
+  download: (
+    <>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16" />
     </>
   ),
   logo: (

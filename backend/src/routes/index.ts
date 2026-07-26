@@ -27,8 +27,9 @@ import { messageSchema } from '../services/chat.service';
 import { verifyUserSchema } from '../services/admin.service';
 import { uploadController } from '../controllers/upload.controller';
 import { farmerMediaController } from '../controllers/farmerMedia.controller';
+import { productMediaController } from '../controllers/productMedia.controller';
 import { researcherController } from '../controllers/researcher.controller';
-import { profileUpload, listingImagesUpload, publicationFileUpload, farmMediaUpload, MAX_IMAGE_FILE_SIZE, MAX_DOCUMENT_FILE_SIZE, MAX_FARM_MEDIA_FILE_SIZE } from '../middleware/upload.middleware';
+import { profileUpload, listingImagesUpload, publicationFileUpload, farmMediaUpload, productMediaUpload, MAX_IMAGE_FILE_SIZE, MAX_DOCUMENT_FILE_SIZE, MAX_FARM_MEDIA_FILE_SIZE } from '../middleware/upload.middleware';
 import { authRateLimiter } from '../middleware/rate-limit.middleware';
 import { PERMISSIONS } from '../constants/roles';
 
@@ -151,6 +152,29 @@ router.delete(
 );
 router.post('/farm/media/:id/like', authenticate, farmerMediaController.toggleLike);
 router.post('/farm/media/:id/share', authenticate, farmerMediaController.share);
+
+// Product media (per listing)
+router.get('/farm/listings/:listingId/media', authenticate, productMediaController.list);
+router.post(
+  '/farm/listings/:listingId/media',
+  authenticate,
+  requirePermission(PERMISSIONS.CREATE_LISTING),
+  (req, res, next) => {
+    productMediaUpload(req, res, (err) => {
+      if (err) return res.status(400).json({ success: false, error: farmMediaUploadErrorMessage(err) });
+      next();
+    });
+  },
+  productMediaController.upload
+);
+router.delete(
+  '/farm/listings/:listingId/media/:id',
+  authenticate,
+  requirePermission(PERMISSIONS.CREATE_LISTING),
+  productMediaController.remove
+);
+router.post('/farm/listings/:listingId/media/:id/like', authenticate, productMediaController.toggleLike);
+router.post('/farm/listings/:listingId/media/:id/share', authenticate, productMediaController.share);
 
 // Buyer
 router.get('/buyer/financial-statement', authenticate, buyerController.financialStatement);

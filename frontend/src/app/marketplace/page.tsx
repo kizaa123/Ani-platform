@@ -256,8 +256,8 @@ export default function MarketplacePage() {
               key={farmer.farmerId}
               className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm"
             >
-              <div className="border-b border-brand-50 px-4 py-4 sm:px-5">
-                <div className="flex flex-col items-center gap-2 sm:flex-row sm:items-start sm:gap-4">
+              <div className="border-b border-brand-50 px-4 py-3 sm:px-5 sm:py-4">
+                <div className="flex flex-row items-center gap-3 sm:items-start sm:gap-4">
                   <div className="flex shrink-0 flex-col items-center gap-1.5">
                     <FarmerAvatar
                       src={farmer.profilePicture}
@@ -269,7 +269,7 @@ export default function MarketplacePage() {
                       className="text-[10px] px-2 py-0.5"
                     />
                   </div>
-                  <h3 className="min-w-0 text-center font-bold text-brand-900 sm:pt-3 sm:text-left">
+                  <h3 className="min-w-0 flex-1 text-left font-bold text-brand-900 sm:pt-3">
                     {farmer.farmerName}
                   </h3>
                 </div>
@@ -290,7 +290,7 @@ export default function MarketplacePage() {
                           <FarmerProductCard
                             product={product}
                             onClick={() => openPurchase(farmer, product)}
-                            imageClassName="h-56 w-full object-cover"
+                            imageClassName="h-44 w-full object-cover sm:h-52 md:h-56"
                             contentClassName="p-4"
                           />
                         </div>

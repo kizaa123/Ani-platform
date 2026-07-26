@@ -58,20 +58,19 @@ export function Logo({
   };
 
   const titleSizes = {
-    sm: "text-base font-extrabold tracking-tight",
-    md: "text-xl font-black tracking-tight",
-    lg: "text-2xl font-black tracking-tight",
+    sm: "text-[10px] font-black tracking-tight leading-tight",
+    md: "text-xs font-black tracking-tight leading-tight",
+    lg: "text-sm font-black tracking-tight leading-tight",
   };
 
   const taglineSizes = {
-    sm: "text-[9px] font-medium tracking-wider uppercase opacity-75 -mt-0.5",
-    md: "text-[10px] font-semibold tracking-widest uppercase opacity-80 -mt-0.5",
-    lg: "text-xs font-semibold tracking-widest uppercase opacity-85 -mt-0.5",
+    sm: "text-[8px] font-black tracking-wider uppercase -mt-0.5",
+    md: "text-[9px] font-black tracking-widest uppercase -mt-0.5",
+    lg: "text-[10px] font-black tracking-widest uppercase -mt-0.5",
   };
 
-  const isLight = theme === "light";
-  const titleColor = isLight ? "text-white" : "text-brand-950";
-  const taglineColor = isLight ? "text-brand-200" : "text-brand-600";
+  const titleColor = "text-black";
+  const taglineColor = "text-black";
 
   const content = (
     <div className={`inline-flex items-center gap-2.5 ${className}`}>
@@ -79,7 +78,7 @@ export function Logo({
       {variant !== "mark" && (
         <div className="flex flex-col leading-none">
           <span className={`${titleSizes[size]} ${titleColor}`}>
-            ANI Platform
+            Agricess Networking International- ANI
           </span>
           {(showTagline || variant === "full") && (
             <span className={`${taglineSizes[size]} ${taglineColor}`}>

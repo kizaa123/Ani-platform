@@ -189,9 +189,9 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="Mobile navigation"
-      className="fixed bottom-4 inset-x-4 z-40 mx-auto max-w-lg rounded-2xl border border-brand-100/80 bg-white/90 shadow-[0_12px_32px_rgba(27,67,50,0.12)] backdrop-blur-md lg:hidden"
+      className="mobile-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-brand-100/80 bg-white/95 shadow-[0_-4px_24px_rgba(27,67,50,0.08)] backdrop-blur-md lg:hidden"
     >
-      <div className="flex items-end justify-around px-3 py-1.5">
+      <div className="mx-auto flex max-w-lg items-end justify-around px-3 py-1.5">
         {items.map((item) => (
           <NavLink key={item.href} item={item} active={item.match(pathname)} />
         ))}
@@ -201,4 +201,4 @@ export function MobileBottomNav() {
 }
 
 /** Bottom padding for main content so it clears the fixed nav on mobile */
-export const MOBILE_BOTTOM_NAV_PADDING = "pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] lg:pb-0";
+export const MOBILE_BOTTOM_NAV_PADDING = "pb-[calc(4.25rem+var(--mobile-bottom-nav-safe-area))] lg:pb-0";

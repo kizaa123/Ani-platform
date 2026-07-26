@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 
 import { Navbar } from "@/components/Navbar";
+import { AppFooter } from "@/components/AppFooter";
 
 import { FarmerPortalLayout } from "@/components/FarmerSidebar";
 
@@ -59,6 +60,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Navbar />
 
         <main className="flex-1">{children}</main>
+
+        <AppFooter />
 
       </>
 

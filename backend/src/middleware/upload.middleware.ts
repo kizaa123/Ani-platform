@@ -15,7 +15,7 @@ export const MAX_LISTING_IMAGES_PER_UPLOAD = 10;
 export const MAX_DOCUMENT_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
 export function ensureUploadDirs() {
-  for (const dir of ['profiles', 'listings', 'products', 'publications', 'farm-media']) {
+  for (const dir of ['profiles', 'listings', 'products', 'publications', 'farm-media', 'product-media']) {
     const full = path.join(UPLOADS_ROOT, dir);
     if (!fs.existsSync(full)) fs.mkdirSync(full, { recursive: true });
   }
@@ -97,6 +97,12 @@ export const farmMediaUpload = multer({
   fileFilter: mediaFilter,
 }).single('media');
 
+export const productMediaUpload = multer({
+  storage: diskStorage('product-media'),
+  limits: { fileSize: MAX_FARM_MEDIA_FILE_SIZE },
+  fileFilter: mediaFilter,
+}).single('media');
+
 export function publicUrl(relativePath: string): string {
   return `/uploads/${relativePath.replace(/\\/g, '/')}`;
 }
@@ -116,7 +122,7 @@ export function normalizePublicAssetUrl(path?: string | null): string | null {
   }
   if (trimmed.startsWith('/uploads/')) return trimmed;
   if (trimmed.startsWith('uploads/')) return `/${trimmed}`;
-  if (trimmed.startsWith('profiles/') || trimmed.startsWith('listings/') || trimmed.startsWith('publications/') || trimmed.startsWith('farm-media/')) {
+  if (trimmed.startsWith('profiles/') || trimmed.startsWith('listings/') || trimmed.startsWith('publications/') || trimmed.startsWith('farm-media/') || trimmed.startsWith('product-media/')) {
     return publicUrl(trimmed);
   }
   return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;

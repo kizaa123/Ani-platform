@@ -176,14 +176,23 @@ export default function AdminFinancialsPage() {
                     </td>
                     <td className="px-5 py-2.5">
                       {item.type === "PRODUCT_ORDER" ? (
-                        <button
-                          type="button"
-                          onClick={() => downloadOrderStatement(item.id)}
-                          disabled={downloadingId === item.id}
-                          className="text-[10px] font-semibold text-brand-700 hover:underline disabled:opacity-50"
-                        >
-                          {downloadingId === item.id ? "…" : "PDF"}
-                        </button>
+                        item.escrowStatus === "RELEASED" || Boolean("otpVerifiedAt" in item && item.otpVerifiedAt) ? (
+                          <button
+                            type="button"
+                            onClick={() => downloadOrderStatement(item.id)}
+                            disabled={downloadingId === item.id}
+                            className="text-[10px] font-semibold text-brand-700 hover:underline disabled:opacity-50"
+                          >
+                            {downloadingId === item.id ? "…" : "PDF"}
+                          </button>
+                        ) : (
+                          <span
+                            className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-[9px] font-semibold text-amber-700 border border-amber-200"
+                            title="PDF locked until delivery release OTP is confirmed"
+                          >
+                            Locked
+                          </span>
+                        )
                       ) : (
                         <span className="text-gray-400">—</span>
                       )}

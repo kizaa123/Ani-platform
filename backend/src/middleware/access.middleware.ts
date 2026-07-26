@@ -160,6 +160,7 @@ export function fullListing(
     priceLabel: `GHC ${listing.price}/${listing.unit}`,
     quantityLabel: `${listing.quantity} ${listing.unit}`,
     images,
+    media: listing.media ?? [],
     location: listing.location,
     harvestStartDate: listing.harvestStartDate,
     harvestEndDate: listing.harvestEndDate,
