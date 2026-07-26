@@ -237,7 +237,7 @@ export function PortalSidebarLayout({
         />
       </aside>
 
-      <main className={`min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-brand-50/30 ${MOBILE_BOTTOM_NAV_PADDING}`}>
+      <main className={`min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-white ${MOBILE_BOTTOM_NAV_PADDING}`}>
         {children}
       </main>
 
