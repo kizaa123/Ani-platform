@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Icon, type IconName } from "@/components/icons";
+import { PortalNavCard } from "@/components/PortalNavCard";
 
 const STATS = [
   { value: "10,000+", label: "Verified Users" },
@@ -209,27 +210,14 @@ export default function HomePage() {
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {ROLE_CARDS.map((r) => (
-              <div
+              <PortalNavCard
                 key={r.label}
-                className="group flex flex-col overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm transition-all hover:border-brand-300 hover:shadow-md"
-              >
-                <div className="relative h-40 w-full overflow-hidden">
-                  <Image
-                    src={r.image}
-                    alt={r.label}
-                    fill
-                    className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-brand-900/60 via-brand-900/20 to-transparent" />
-                  <div className="absolute bottom-3 left-3 flex h-10 w-10 items-center justify-center rounded-xl bg-white/90 text-brand-700 shadow-sm backdrop-blur-sm transition-colors group-hover:bg-brand-700 group-hover:text-white">
-                    <Icon name={r.icon} className="h-5 w-5" />
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2 p-5">
-                  <h3 className="font-bold text-brand-900">{r.label}</h3>
-                  <p className="text-sm leading-relaxed text-gray-500">{r.desc}</p>
-                </div>
-              </div>
+                href="/login"
+                title={r.label}
+                desc={r.desc}
+                icon={r.icon}
+                image={r.image}
+              />
             ))}
           </div>
         </div>
@@ -251,7 +239,7 @@ export default function HomePage() {
             {HOW_IT_WORKS.map((item) => (
               <div
                 key={item.step}
-                className="relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-brand-100 bg-brand-50 p-6 shadow-sm"
+                className="card-elevated relative flex flex-col gap-4 overflow-hidden rounded-2xl bg-brand-50 p-6"
               >
                 <div className={`absolute -right-4 -top-4 h-20 w-20 rounded-full bg-gradient-to-br ${item.color} opacity-10`} />
                 <span className="text-5xl font-black text-brand-100">{item.step}</span>

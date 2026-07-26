@@ -2,10 +2,11 @@
  * Portal dashboard navigation card images.
  *
  * HOW TO CHANGE IMAGES:
- * 1. Place replacement files under `frontend/public/portal/` (recommended), e.g.
- *    `frontend/public/portal/marketplace.jpg`
- * 2. Update the matching path below for the card you want to change.
+ * 1. Place replacement files under `frontend/public/` (same as homepage role cards), e.g.
+ *    `frontend/public/marketplace.jpg`, or optionally under `frontend/public/portal/`.
+ * 2. Update the matching path below for the card you want to change (paths start with `/`).
  * 3. Keys must match the card `href` values in `frontend/src/app/dashboard/page.tsx`.
+ * 4. Unknown hrefs fall back to `PORTAL_NAV_IMAGE_FALLBACK` via `getPortalNavImage()`.
  *
  * Homepage role card images live separately in `frontend/src/app/page.tsx` (`ROLE_CARD_IMAGES`).
  */
