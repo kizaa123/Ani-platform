@@ -37,7 +37,6 @@ export default function DashboardPage() {
     { href: "/farm/financials", title: "Financial Statement", desc: "View farm product finances", icon: "chart", show: isFarmer(user.roleId) },
     { href: "/access", title: "Buyer Access", desc: "Pay to access farmer farms", icon: "credit-card", show: isBuyer(user.roleId) },
     { href: "/financials", title: "Financial Statement", desc: "Spending & farm access fees", icon: "chart", show: isBuyer(user.roleId) },
-    { href: "/orders", title: "My Orders", desc: "Products ordered from farmers", icon: "package", show: isBuyer(user.roleId) },
     { href: "/connections", title: "Connections", desc: "Manage buyer-farmer requests", icon: "handshake", all: true },
     { href: "/agents", title: isBuyerHandler(user.roleId) ? "My Buyers" : "My Clients", desc: isBuyerHandler(user.roleId) ? "View orders, spending & connections" : "View assigned farmers/buyers", icon: "users", show: isHandler(user.roleId) },
     { href: "/agents/financials", title: "Financial Statement", desc: isBuyerHandler(user.roleId) ? "Client spending across your buyers" : "Client sales revenue across your farmers", icon: "chart", show: isHandler(user.roleId) },
