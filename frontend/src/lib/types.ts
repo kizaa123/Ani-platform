@@ -541,12 +541,29 @@ export interface ConnectionUser {
   verificationStatus?: string;
 }
 
+export interface NotificationMetadata {
+  imageUrl?: string | null;
+  price?: number | null;
+  priceLabel?: string | null;
+  farmerId?: string | null;
+  farmerUserId?: string | null;
+  listingId?: string | null;
+  publicationId?: string | null;
+  actionUrl?: string | null;
+  actionLabel?: string | null;
+  farmSize?: string | null;
+  location?: string | null;
+  commodities?: string[] | null;
+  farmerName?: string | null;
+}
+
 export interface AppNotification {
   id: string;
   type: string;
   title: string;
   body: string;
   link?: string | null;
+  metadata?: NotificationMetadata | null;
   read: boolean;
   createdAt: string;
   actor?: {
@@ -678,6 +695,10 @@ export interface ResearchPublication {
   price?: number | null;
   isFree: boolean;
   viewCount: number;
+  likesCount: number;
+  sharesCount: number;
+  likedByMe?: boolean;
+  commentsCount?: number;
   status: string;
   createdAt: string;
   hasAccess?: boolean;
@@ -687,6 +708,17 @@ export interface ResearchPublication {
     name: string;
     profilePicture?: string | null;
     verificationStatus?: string;
+  };
+}
+
+export interface ResearchComment {
+  id: string;
+  content: string;
+  createdAt: string;
+  user: {
+    id: string;
+    name: string;
+    profilePicture?: string | null;
   };
 }
 

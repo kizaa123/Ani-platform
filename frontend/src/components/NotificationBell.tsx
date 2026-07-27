@@ -22,6 +22,98 @@ function BellIcon() {
   );
 }
 
+function isRichNotification(type: string) {
+  return type === "NEW_PRODUCT" || type === "NEW_FARMER" || type === "NEW_PUBLICATION";
+}
+
+function notificationAction(n: AppNotification) {
+  const label = n.metadata?.actionLabel;
+  const url = n.metadata?.actionUrl ?? n.link;
+  if (!label || !url) return null;
+  return { label, url };
+}
+
+function NotificationThumbnail({ n }: { n: AppNotification }) {
+  const imageUrl = n.metadata?.imageUrl;
+  const iconName = NOTIFICATION_ICONS[n.type] ?? "bell";
+
+  if (imageUrl) {
+    return (
+      <img
+        src={imageUrl}
+        alt=""
+        className="h-14 w-14 shrink-0 rounded-lg border border-brand-100 object-cover"
+      />
+    );
+  }
+
+  if (n.actor?.profilePicture) {
+    return (
+      <img
+        src={n.actor.profilePicture}
+        alt=""
+        className="h-14 w-14 shrink-0 rounded-lg border border-brand-100 object-cover"
+      />
+    );
+  }
+
+  return (
+    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-brand-100 bg-brand-50">
+      <Icon name={iconName} className="h-6 w-6 text-brand-700" />
+    </div>
+  );
+}
+
+function RichNotificationContent({ n }: { n: AppNotification }) {
+  const action = notificationAction(n);
+
+  return (
+    <>
+      <div className="flex items-start justify-between gap-2">
+        <p className="font-semibold text-brand-900">{n.title}</p>
+        {!n.read && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-brand-600" />}
+      </div>
+
+      {n.metadata?.priceLabel && (
+        <p className="mt-1 text-sm font-semibold text-brand-700">{n.metadata.priceLabel}</p>
+      )}
+
+      {n.type === "NEW_FARMER" && n.metadata?.location && (
+        <p className="mt-1 text-xs text-gray-500">{n.metadata.location}</p>
+      )}
+
+      {n.type === "NEW_FARMER" && n.metadata?.commodities && n.metadata.commodities.length > 0 && (
+        <p className="mt-1 text-xs text-gray-500">
+          {n.metadata.commodities.join(" · ")}
+        </p>
+      )}
+
+      <p className="mt-1 text-sm leading-snug text-gray-600">{n.body}</p>
+
+      {action && (
+        <span className="mt-2 inline-flex rounded-lg bg-brand-700 px-3 py-1 text-xs font-semibold text-white">
+          {action.label}
+        </span>
+      )}
+
+      <p className="mt-2 text-[10px] text-gray-400">{formatDate(n.createdAt)}</p>
+    </>
+  );
+}
+
+function StandardNotificationContent({ n }: { n: AppNotification }) {
+  return (
+    <>
+      <div className="flex items-start justify-between gap-2">
+        <p className="font-semibold text-brand-900">{n.title}</p>
+        {!n.read && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-brand-600" />}
+      </div>
+      <p className="mt-1 text-sm leading-snug text-gray-600">{n.body}</p>
+      <p className="mt-2 text-[10px] text-gray-400">{formatDate(n.createdAt)}</p>
+    </>
+  );
+}
+
 export function NotificationBell({ className = "" }: { className?: string }) {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -99,7 +191,8 @@ export function NotificationBell({ className = "" }: { className?: string }) {
       }
     }
     setOpen(false);
-    if (n.link) router.push(n.link);
+    const destination = n.metadata?.actionUrl ?? n.link;
+    if (destination) router.push(destination);
   };
 
   return (
@@ -139,7 +232,7 @@ export function NotificationBell({ className = "" }: { className?: string }) {
               <div className="flex items-center justify-between border-b border-brand-100 px-5 py-4">
                 <div>
                   <h2 className="text-lg font-bold text-brand-900">Notifications</h2>
-                  <p className="text-xs text-gray-500">Messages, orders & financial activity</p>
+                  <p className="text-xs text-gray-500">Products, farms, library & activity</p>
                 </div>
                 <button
                   type="button"
@@ -169,32 +262,39 @@ export function NotificationBell({ className = "" }: { className?: string }) {
                   <p className="px-5 py-12 text-center text-sm text-gray-500">No notifications yet.</p>
                 ) : (
                   <ul className="divide-y divide-brand-50">
-                    {items.map((n) => (
-                      <li key={n.id}>
-                        <button
-                          type="button"
-                          onClick={() => openNotification(n)}
-                          className={`flex w-full gap-3 px-5 py-4 text-left transition hover:bg-brand-50/60 ${
-                            !n.read ? "bg-brand-50/40" : ""
-                          }`}
-                        >
-                          <Icon
-                            name={NOTIFICATION_ICONS[n.type] ?? "bell"}
-                            className="mt-0.5 h-5 w-5 shrink-0 text-brand-700"
-                          />
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-start justify-between gap-2">
-                              <p className="font-semibold text-brand-900">{n.title}</p>
-                              {!n.read && (
-                                <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-brand-600" />
-                              )}
-                            </div>
-                            <p className="mt-1 text-sm leading-snug text-gray-600">{n.body}</p>
-                            <p className="mt-2 text-[10px] text-gray-400">{formatDate(n.createdAt)}</p>
-                          </div>
-                        </button>
-                      </li>
-                    ))}
+                    {items.map((n) => {
+                      const rich = isRichNotification(n.type);
+                      return (
+                        <li key={n.id}>
+                          <button
+                            type="button"
+                            onClick={() => openNotification(n)}
+                            className={`flex w-full gap-3 px-5 py-4 text-left transition hover:bg-brand-50/60 ${
+                              !n.read ? "bg-brand-50/40" : ""
+                            }`}
+                          >
+                            {rich ? (
+                              <>
+                                <NotificationThumbnail n={n} />
+                                <div className="min-w-0 flex-1">
+                                  <RichNotificationContent n={n} />
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <Icon
+                                  name={NOTIFICATION_ICONS[n.type] ?? "bell"}
+                                  className="mt-0.5 h-5 w-5 shrink-0 text-brand-700"
+                                />
+                                <div className="min-w-0 flex-1">
+                                  <StandardNotificationContent n={n} />
+                                </div>
+                              </>
+                            )}
+                          </button>
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </div>

@@ -112,6 +112,46 @@ export class ResearcherController {
       ApiResponse.error(res, e);
     }
   };
+
+  toggleLike = async (req: AuthRequest, res: Response) => {
+    try {
+      const data = await researcherService.toggleLike(req.params.id as string, req.user!.userId);
+      ApiResponse.success(res, data);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  share = async (req: AuthRequest, res: Response) => {
+    try {
+      const data = await researcherService.recordShare(req.params.id as string);
+      ApiResponse.success(res, data);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  listComments = async (req: AuthRequest, res: Response) => {
+    try {
+      const data = await researcherService.listComments(req.params.id as string);
+      ApiResponse.success(res, data);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  addComment = async (req: AuthRequest, res: Response) => {
+    try {
+      const data = await researcherService.addComment(
+        req.params.id as string,
+        req.user!.userId,
+        req.body
+      );
+      ApiResponse.success(res, data, 201);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
 }
 
 export const researcherController = new ResearcherController();

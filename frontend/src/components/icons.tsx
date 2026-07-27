@@ -272,4 +272,7 @@ export const NOTIFICATION_ICONS: Record<string, IconName> = {
   CONNECTION_DECLINED: "x",
   FARM_ACCESS_PAID: "coins",
   RESEARCH_PURCHASE: "book",
+  NEW_PRODUCT: "store",
+  NEW_FARMER: "users",
+  NEW_PUBLICATION: "book",
 };

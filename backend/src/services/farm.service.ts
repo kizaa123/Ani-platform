@@ -205,6 +205,7 @@ export class FarmService {
         include: {
           user: { select: { firstName: true, lastName: true, email: true, country: true, region: true } },
           listings: {
+            where: { status: { not: 'ARCHIVED' } },
             include: { commodity: { include: { category: true } } },
             orderBy: { createdAt: 'desc' },
           },

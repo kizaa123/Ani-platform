@@ -109,20 +109,20 @@ export default function FinancialStatementPage() {
 
       {/* Summary cards */}
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
+        <div className="min-h-28 rounded-xl border border-brand-100 bg-white p-6 shadow-sm">
           <p className="text-xs font-semibold uppercase text-gray-500">Products for sale</p>
-          <p className="mt-1 text-xl font-bold text-brand-900">{formatGhc(summary.totalListedValue)}</p>
-          <p className="text-xs text-gray-500">{summary.activeListings} active product(s)</p>
+          <p className="mt-2 text-xl font-bold text-brand-900">{formatGhc(summary.totalListedValue)}</p>
+          <p className="mt-1 text-xs text-gray-500">{summary.activeListings} active product(s)</p>
         </div>
-        <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
+        <div className="min-h-28 rounded-xl border border-brand-100 bg-white p-6 shadow-sm">
           <p className="text-xs font-semibold uppercase text-gray-500">Total earned</p>
-          <p className="mt-1 text-xl font-bold text-green-700">{formatGhc(summary.totalSalesRevenue ?? 0)}</p>
-          <p className="text-xs text-gray-500">{summary.totalSalesCount ?? 0} completed sale(s)</p>
+          <p className="mt-2 text-xl font-bold text-green-700">{formatGhc(summary.totalSalesRevenue ?? 0)}</p>
+          <p className="mt-1 text-xs text-gray-500">{summary.totalSalesCount ?? 0} completed sale(s)</p>
         </div>
-        <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
+        <div className="min-h-28 rounded-xl border border-brand-100 bg-white p-6 shadow-sm">
           <p className="text-xs font-semibold uppercase text-gray-500">All products</p>
-          <p className="mt-1 text-xl font-bold text-brand-900">{summary.totalProducts}</p>
-          <p className="text-xs text-gray-500">Listed on your farm</p>
+          <p className="mt-2 text-xl font-bold text-brand-900">{summary.totalProducts}</p>
+          <p className="mt-1 text-xs text-gray-500">Listed on your farm</p>
         </div>
       </div>
 

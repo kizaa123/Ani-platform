@@ -1,4 +1,4 @@
-import { Icon } from "@/components/icons";
+import { VerifiedBadgeIcon } from "@/components/VerificationBadge";
 import {
   fullName,
   isBuyer,
@@ -47,7 +47,7 @@ export function RolePrefixedName({
         <span>{name}</span>
         {showVerifiedBadge && isVerified && (
           <span title="Verified User">
-            <Icon name="check-circle" className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
+            <VerifiedBadgeIcon className="h-4 w-4 shrink-0" />
           </span>
         )}
       </span>
@@ -65,7 +65,7 @@ export function RolePrefixedName({
       <span className={nameClassName}>{name}</span>
       {showVerifiedBadge && isVerified && (
         <span title="Verified User">
-          <Icon name="check-circle" className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
+          <VerifiedBadgeIcon className="h-4 w-4 shrink-0" />
         </span>
       )}
     </span>

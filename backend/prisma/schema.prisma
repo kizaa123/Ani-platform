@@ -87,8 +87,10 @@ model User {
   triggeredNotifications Notification[]   @relation("NotificationActor")
   researchPurchases      ResearchPurchase[]  @relation("StudentResearchPurchases")
   researchSales          ResearchPurchase[]  @relation("ResearcherSales")
-  farmerMediaLikes       FarmerMediaLike[]
-  productMediaLikes      ProductMediaLike[]
+  farmerMediaLikes           FarmerMediaLike[]
+  productMediaLikes          ProductMediaLike[]
+  researchPublicationLikes   ResearchPublicationLike[]
+  researchComments             ResearchComment[]
 
   @@map("users")
 }
@@ -426,6 +428,9 @@ enum NotificationType {
   FARM_ACCESS_PAID
   PRODUCT_PURCHASE
   RESEARCH_PURCHASE
+  NEW_PRODUCT
+  NEW_FARMER
+  NEW_PUBLICATION
 }
 
 // ─── Research Library ────────────────────────────────────────────────────────
@@ -445,6 +450,8 @@ model ResearchPublication {
   price        Float?
   isFree       Boolean           @default(true) @map("is_free")
   viewCount    Int               @default(0) @map("view_count")
+  likesCount   Int               @default(0) @map("likes_count")
+  sharesCount  Int               @default(0) @map("shares_count")
   status       PublicationStatus @default(ACTIVE)
   createdAt    DateTime          @default(now()) @map("created_at")
   updatedAt    DateTime          @updatedAt @map("updated_at")
@@ -452,8 +459,37 @@ model ResearchPublication {
   researcher ResearcherProfile  @relation(fields: [researcherId], references: [id], onDelete: Cascade)
   purchases    ResearchPurchase[]
   views        ResearchView[]
+  likes        ResearchPublicationLike[]
+  comments     ResearchComment[]
 
   @@map("research_publications")
+}
+
+model ResearchPublicationLike {
+  id            String   @id @default(uuid())
+  publicationId String   @map("publication_id")
+  userId        String   @map("user_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  publication ResearchPublication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([publicationId, userId])
+  @@map("research_publication_likes")
+}
+
+model ResearchComment {
+  id            String   @id @default(uuid())
+  publicationId String   @map("publication_id")
+  userId        String   @map("user_id")
+  content       String   @db.Text
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  publication ResearchPublication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([publicationId, createdAt])
+  @@map("research_comments")
 }
 
 model ResearchView {
@@ -495,6 +531,7 @@ model Notification {
   title     String
   body      String
   link      String?
+  metadata  Json?
   read      Boolean          @default(false)
   createdAt DateTime         @default(now()) @map("created_at")
 

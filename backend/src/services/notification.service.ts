@@ -1,26 +1,73 @@
+import { Prisma } from '@prisma/client';
 import prisma from '../database/prisma';
 import { assertFound } from '../utils/errors';
-import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
-import { STAFF_ROLES } from '../constants/roles';
+import { normalizeImages, normalizePublicAssetUrl } from '../middleware/upload.middleware';
+import { buyerFarmAccessSet } from '../middleware/access.middleware';
+import {
+  FARMER_ROLES,
+  MARKETPLACE_BUYER_ROLES,
+  ROLES,
+  STAFF_ROLES,
+} from '../constants/roles';
+
+export type NotificationMetadata = {
+  imageUrl?: string | null;
+  price?: number | null;
+  priceLabel?: string | null;
+  farmerId?: string | null;
+  farmerUserId?: string | null;
+  listingId?: string | null;
+  publicationId?: string | null;
+  actionUrl?: string | null;
+  actionLabel?: string | null;
+  farmSize?: string | null;
+  location?: string | null;
+  commodities?: string[] | null;
+  farmerName?: string | null;
+};
+
+export type NotificationTypeValue =
+  | 'CHAT_MESSAGE'
+  | 'NEW_ORDER'
+  | 'ORDER_TRACKED'
+  | 'ORDER_PAYMENT_RELEASED'
+  | 'CONNECTION_REQUEST'
+  | 'CONNECTION_APPROVED'
+  | 'CONNECTION_DECLINED'
+  | 'FARM_ACCESS_PAID'
+  | 'PRODUCT_PURCHASE'
+  | 'RESEARCH_PURCHASE'
+  | 'NEW_PRODUCT'
+  | 'NEW_FARMER'
+  | 'NEW_PUBLICATION';
 
 export type CreateNotificationInput = {
   userId: string;
   actorId?: string | null;
-  type:
-    | 'CHAT_MESSAGE'
-    | 'NEW_ORDER'
-    | 'ORDER_TRACKED'
-    | 'ORDER_PAYMENT_RELEASED'
-    | 'CONNECTION_REQUEST'
-    | 'CONNECTION_APPROVED'
-    | 'CONNECTION_DECLINED'
-    | 'FARM_ACCESS_PAID'
-    | 'PRODUCT_PURCHASE'
-    | 'RESEARCH_PURCHASE';
+  type: NotificationTypeValue;
   title: string;
   body: string;
   link?: string | null;
+  metadata?: NotificationMetadata | null;
 };
+
+function toMetadataJson(metadata?: NotificationMetadata | null): Prisma.InputJsonValue | undefined {
+  if (!metadata) return undefined;
+  return metadata as Prisma.InputJsonValue;
+}
+
+function parseMetadata(value: Prisma.JsonValue | null): NotificationMetadata | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  return value as NotificationMetadata;
+}
+
+function formatMetadata(metadata: NotificationMetadata | null): NotificationMetadata | null {
+  if (!metadata) return null;
+  return {
+    ...metadata,
+    imageUrl: metadata.imageUrl ? normalizePublicAssetUrl(metadata.imageUrl) : metadata.imageUrl,
+  };
+}
 
 export async function createNotification(input: CreateNotificationInput) {
   return prisma.notification.create({
@@ -31,6 +78,7 @@ export async function createNotification(input: CreateNotificationInput) {
       title: input.title,
       body: input.body,
       link: input.link ?? null,
+      metadata: toMetadataJson(input.metadata),
     },
     include: {
       actor: { select: { id: true, firstName: true, lastName: true, profilePicture: true } },
@@ -39,10 +87,25 @@ export async function createNotification(input: CreateNotificationInput) {
 }
 
 export async function notifyUsers(userIds: string[], input: Omit<CreateNotificationInput, 'userId'>) {
-  const uniqueIds = [...new Set(userIds)];
+  const uniqueIds = [...new Set(userIds)].filter((id) => id !== input.actorId);
   await Promise.all(
     uniqueIds.map((userId) => createNotification({ ...input, userId }).catch(() => undefined))
   );
+}
+
+export async function notifyUsersByRoles(
+  roleIds: readonly number[],
+  input: Omit<CreateNotificationInput, 'userId'>,
+  excludeUserId?: string | null
+) {
+  const users = await prisma.user.findMany({
+    where: { roleId: { in: [...roleIds] } },
+    select: { id: true },
+  });
+  const userIds = users
+    .map((u) => u.id)
+    .filter((id) => id !== excludeUserId && id !== input.actorId);
+  await notifyUsers(userIds, input);
 }
 
 export async function notifyFarmerTeam(
@@ -74,6 +137,7 @@ export class NotificationService {
       title: n.title,
       body: n.body,
       link: n.link,
+      metadata: formatMetadata(parseMetadata(n.metadata)),
       read: n.read,
       createdAt: n.createdAt.toISOString(),
       actor: n.actor
@@ -120,6 +184,153 @@ export const notificationService = new NotificationService();
 
 function formatName(firstName: string, lastName: string) {
   return `${firstName} ${lastName}`.trim();
+}
+
+function formatLocation(city: string, region: string, country: string) {
+  return [city, region, country].filter(Boolean).join(', ');
+}
+
+function snippet(text: string | null | undefined, max = 140) {
+  if (!text) return '';
+  return text.length > max ? `${text.slice(0, max)}…` : text;
+}
+
+function firstListingImage(images: unknown, media?: { type: string; url: string }[]) {
+  const imageMedia = media?.find((m) => m.type === 'IMAGE');
+  if (imageMedia?.url) return normalizePublicAssetUrl(imageMedia.url);
+  const normalized = normalizeImages(images);
+  return normalized[0] ? normalizePublicAssetUrl(normalized[0]) : null;
+}
+
+export async function notifyNewProductListing(params: {
+  farmerUserId: string;
+  farmerName: string;
+  listing: {
+    id: string;
+    title: string;
+    price: number;
+    unit: string;
+    images: unknown;
+  };
+  media?: { type: string; url: string }[];
+}) {
+  const { farmerUserId, farmerName, listing, media } = params;
+  const imageUrl = firstListingImage(listing.images, media);
+  const priceLabel = `GHC ${listing.price.toFixed(2)}/${listing.unit}`;
+
+  const buyers = await prisma.user.findMany({
+    where: { roleId: { in: [...MARKETPLACE_BUYER_ROLES] } },
+    select: { id: true },
+  });
+
+  await Promise.all(
+    buyers
+      .filter((b) => b.id !== farmerUserId)
+      .map(async (buyer) => {
+        const accessSet = await buyerFarmAccessSet(buyer.id);
+        const hasAccess = accessSet.has(farmerUserId);
+        const link = hasAccess ? '/marketplace' : '/access';
+        const actionLabel = hasAccess ? 'View product' : 'Access farm';
+
+        await createNotification({
+          userId: buyer.id,
+          actorId: farmerUserId,
+          type: 'NEW_PRODUCT',
+          title: listing.title,
+          body: `${farmerName} listed ${listing.title} — ${priceLabel}.`,
+          link,
+          metadata: {
+            imageUrl,
+            price: listing.price,
+            priceLabel,
+            farmerUserId,
+            listingId: listing.id,
+            actionUrl: link,
+            actionLabel,
+          },
+        }).catch(() => undefined);
+      })
+  );
+}
+
+export async function notifyNewFarmerJoined(params: {
+  farmerUserId: string;
+  farmerName: string;
+  farmSize?: string | null;
+  city: string;
+  region: string;
+  country: string;
+  commodities: string[];
+}) {
+  const { farmerUserId, farmerName, farmSize, city, region, country, commodities } = params;
+  const location = formatLocation(city, region, country);
+  const commodityList = commodities.length ? commodities.join(', ') : 'Not specified';
+
+  const buyers = await prisma.user.findMany({
+    where: { roleId: { in: [...MARKETPLACE_BUYER_ROLES] } },
+    select: { id: true },
+  });
+
+  await Promise.all(
+    buyers
+      .filter((b) => b.id !== farmerUserId)
+      .map(async (buyer) => {
+        await createNotification({
+          userId: buyer.id,
+          actorId: farmerUserId,
+          type: 'NEW_FARMER',
+          title: `New farmer: ${farmerName}`,
+          body: `${farmSize ? `${farmSize} acres · ` : ''}${location}. Commodities: ${commodityList}.`,
+          link: '/access',
+          metadata: {
+            farmerUserId,
+            farmerName,
+            farmSize: farmSize ?? null,
+            location,
+            commodities,
+            actionUrl: '/access',
+            actionLabel: 'Access farm',
+          },
+        }).catch(() => undefined);
+      })
+  );
+}
+
+export async function notifyNewPublication(params: {
+  researcherUserId: string;
+  researcherName: string;
+  publication: {
+    id: string;
+    title: string;
+    description?: string | null;
+    coverImage?: string | null;
+  };
+}) {
+  const { researcherUserId, researcherName, publication } = params;
+  const imageUrl = publication.coverImage
+    ? normalizePublicAssetUrl(publication.coverImage)
+    : null;
+  const description = snippet(publication.description);
+
+  await notifyUsersByRoles(
+    [...FARMER_ROLES, ROLES.BUYER, ROLES.STUDENT],
+    {
+      actorId: researcherUserId,
+      type: 'NEW_PUBLICATION',
+      title: publication.title,
+      body: description
+        ? `${researcherName} published "${publication.title}" — ${description}`
+        : `${researcherName} published "${publication.title}".`,
+      link: '/library',
+      metadata: {
+        imageUrl,
+        publicationId: publication.id,
+        actionUrl: '/library',
+        actionLabel: 'Read',
+      },
+    },
+    researcherUserId
+  );
 }
 
 export async function notifyChatMessage(

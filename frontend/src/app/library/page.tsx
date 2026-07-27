@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import {
+  ResearchComment,
   ResearchPublication,
   canPurchasePublication,
   isResearcher,
@@ -24,41 +25,177 @@ function formatGhc(amount: number) {
   return `GHC ${amount.toFixed(2)}`;
 }
 
+function formatCommentDate(iso: string) {
+  return new Date(iso).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function PublicationComments({
+  publicationId,
+  canComment,
+}: {
+  publicationId: string;
+  canComment: boolean;
+}) {
+  const [comments, setComments] = useState<ResearchComment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [content, setContent] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const loadComments = useCallback(() => {
+    setLoading(true);
+    api.research.comments
+      .list(publicationId)
+      .then(setComments)
+      .catch(() => setComments([]))
+      .finally(() => setLoading(false));
+  }, [publicationId]);
+
+  useEffect(() => {
+    loadComments();
+  }, [loadComments]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = content.trim();
+    if (!trimmed) return;
+    setSubmitting(true);
+    setError("");
+    try {
+      const comment = await api.research.comments.add(publicationId, trimmed);
+      setComments((prev) => [...prev, comment]);
+      setContent("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to post comment");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="mt-6 border-t border-gray-100 pt-5">
+      <h3 className="mb-3 text-sm font-bold text-gray-900">
+        Comments {comments.length > 0 && `(${comments.length})`}
+      </h3>
+
+      {loading ? (
+        <p className="text-sm text-gray-500">Loading comments...</p>
+      ) : comments.length === 0 ? (
+        <p className="text-sm text-gray-500">No comments yet. Be the first to share your thoughts.</p>
+      ) : (
+        <ul className="mb-4 max-h-48 space-y-3 overflow-y-auto">
+          {comments.map((comment) => (
+            <li key={comment.id} className="rounded-xl bg-gray-50 px-3 py-2.5">
+              <div className="flex items-center gap-2">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-100 text-xs font-bold text-brand-700">
+                  {comment.user.profilePicture ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={assetUrl(comment.user.profilePicture) || ""}
+                      alt={comment.user.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    comment.user.name.charAt(0)
+                  )}
+                </div>
+                <span className="text-xs font-semibold text-gray-800">{comment.user.name}</span>
+                <span className="text-xs text-gray-400">{formatCommentDate(comment.createdAt)}</span>
+              </div>
+              <p className="mt-1.5 text-sm text-gray-700">{comment.content}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {canComment ? (
+        <form onSubmit={handleSubmit} className="space-y-2">
+          <textarea
+            className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+            rows={3}
+            placeholder="Write a comment..."
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            maxLength={2000}
+          />
+          {error && <p className="text-xs text-red-600">{error}</p>}
+          <button
+            type="submit"
+            disabled={submitting || !content.trim()}
+            className="rounded-xl bg-brand-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-900 disabled:opacity-50"
+          >
+            {submitting ? "Posting..." : "Post comment"}
+          </button>
+        </form>
+      ) : (
+        <p className="text-xs text-gray-500">Unlock this publication to join the discussion.</p>
+      )}
+    </div>
+  );
+}
+
 function PublicationCard({
   pub,
   viewCount,
   onView,
+  onLike,
+  onShare,
 }: {
   pub: ResearchPublication;
   viewCount: number;
   onView: (pub: ResearchPublication) => void;
+  onLike: (pubId: string, result: { liked: boolean; likesCount: number }) => void;
+  onShare: (pubId: string, sharesCount: number) => void;
 }) {
-  const [liked, setLiked] = useState(false);
-  const [likesCount, setLikesCount] = useState(12);
-  const [followed, setFollowed] = useState(false);
-  const [showComments, setShowComments] = useState(false);
+  const [liking, setLiking] = useState(false);
+  const [sharing, setSharing] = useState(false);
+
+  const handleLike = async () => {
+    if (liking) return;
+    setLiking(true);
+    try {
+      const result = await api.research.like(pub.id);
+      onLike(pub.id, result);
+    } catch {
+      /* non-blocking */
+    } finally {
+      setLiking(false);
+    }
+  };
 
   const handleShare = async () => {
+    if (sharing) return;
+    setSharing(true);
     try {
+      const shareUrl =
+        typeof window !== "undefined"
+          ? `${window.location.origin}/library?pub=${pub.id}`
+          : "";
       if (typeof navigator !== "undefined" && navigator.share) {
-        await navigator.share({ title: pub.title, url: window.location.href });
+        await navigator.share({ title: pub.title, url: shareUrl });
       } else if (typeof navigator !== "undefined" && navigator.clipboard) {
-        await navigator.clipboard.writeText(window.location.href);
+        await navigator.clipboard.writeText(shareUrl);
         alert("Publication link copied to clipboard!");
       }
+      const result = await api.research.share(pub.id);
+      onShare(pub.id, result.sharesCount);
     } catch {
-      /* user cancelled */
+      /* user cancelled or failed */
+    } finally {
+      setSharing(false);
     }
   };
 
   return (
     <article className="flex w-full flex-col overflow-hidden rounded-3xl border border-brand-100 bg-white p-5 shadow-md transition hover:border-brand-200 hover:shadow-lg">
-      {/* Top Preview Title */}
       <div className="mb-3">
         <p className="text-base font-bold text-brand-900 line-clamp-1">{pub.title}</p>
       </div>
 
-      {/* Researcher Profile Row */}
       <div className="mb-4 flex items-center gap-4">
         <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full border-2 border-brand-100 bg-brand-50 shadow-xs">
           {pub.researcher.profilePicture ? (
@@ -81,10 +218,8 @@ function PublicationCard({
         </div>
       </div>
 
-      {/* Full Publication Title */}
       <h3 className="text-lg font-bold text-gray-900 leading-snug">{pub.title}</h3>
 
-      {/* Qualifications / Description */}
       <div className="mt-2.5 text-sm text-gray-600 leading-relaxed">
         <p>
           <span className="font-semibold text-gray-900">Qualifications: </span>
@@ -93,11 +228,24 @@ function PublicationCard({
         </p>
       </div>
 
-      {/* Views & Price Row */}
       <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3 text-sm">
-        <div className="flex items-center gap-1.5 text-gray-600 font-medium">
-          <Icon name="eye" className="h-4 w-4 text-gray-500" />
-          <span>{viewCount}</span>
+        <div className="flex items-center gap-3 text-gray-600 font-medium">
+          <span className="flex items-center gap-1.5">
+            <Icon name="eye" className="h-4 w-4 text-gray-500" />
+            {viewCount}
+          </span>
+          {pub.likesCount > 0 && (
+            <span className="flex items-center gap-1.5">
+              <Icon name="thumbs-up" className="h-4 w-4 text-gray-500" />
+              {pub.likesCount}
+            </span>
+          )}
+          {pub.sharesCount > 0 && (
+            <span className="flex items-center gap-1.5">
+              <Icon name="share" className="h-4 w-4 text-gray-500" />
+              {pub.sharesCount}
+            </span>
+          )}
         </div>
 
         <span className="font-bold text-brand-700 text-base">
@@ -105,57 +253,41 @@ function PublicationCard({
         </span>
       </div>
 
-      {/* Action Bar (4 Pills) */}
-      <div className="mt-4 grid grid-cols-4 gap-2">
+      <div className="mt-4 grid grid-cols-3 gap-2">
         <button
           type="button"
-          onClick={() => {
-            setLiked(!liked);
-            setLikesCount((prev) => (liked ? prev - 1 : prev + 1));
-          }}
+          onClick={handleLike}
+          disabled={liking}
           className={`flex items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-xs font-semibold transition ${
-            liked
+            pub.likedByMe
               ? "bg-emerald-600 text-white shadow-xs"
               : "bg-emerald-100/70 text-emerald-800 hover:bg-emerald-200/80"
           }`}
         >
           <Icon name="thumbs-up" className="h-3.5 w-3.5 shrink-0" />
-          <span>Like</span>
+          <span>{pub.likesCount > 0 ? pub.likesCount : "Like"}</span>
         </button>
 
         <button
           type="button"
-          onClick={() => setShowComments(!showComments)}
+          onClick={() => onView(pub)}
           className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-100/70 px-2 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-200/80"
         >
           <Icon name="comment" className="h-3.5 w-3.5 shrink-0" />
-          <span>Comment</span>
+          <span>{(pub.commentsCount ?? 0) > 0 ? pub.commentsCount : "Comment"}</span>
         </button>
 
         <button
           type="button"
           onClick={handleShare}
+          disabled={sharing}
           className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-100/70 px-2 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-200/80"
         >
           <Icon name="share" className="h-3.5 w-3.5 shrink-0" />
-          <span>Share</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setFollowed(!followed)}
-          className={`flex items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-xs font-semibold transition ${
-            followed
-              ? "bg-emerald-700 text-white shadow-xs"
-              : "bg-emerald-100/70 text-emerald-800 hover:bg-emerald-200/80"
-          }`}
-        >
-          <Icon name="user-plus" className="h-3.5 w-3.5 shrink-0" />
-          <span>{followed ? "Following" : "Follow"}</span>
+          <span>{pub.sharesCount > 0 ? pub.sharesCount : "Share"}</span>
         </button>
       </div>
 
-      {/* Read Now Button */}
       <button
         type="button"
         onClick={() => onView(pub)}
@@ -178,12 +310,27 @@ export default function LibraryPage() {
   const [purchaseError, setPurchaseError] = useState("");
   const [purchaseSuccess, setPurchaseSuccess] = useState("");
   const [loadError, setLoadError] = useState("");
+  const [modalLiking, setModalLiking] = useState(false);
+  const [modalSharing, setModalSharing] = useState(false);
 
   const studentView = user ? isStudent(user.roleId) : false;
   const groupedPublications = useMemo(
     () => groupPublicationsByCategory(publications),
     [publications]
   );
+
+  const updatePublication = (pubId: string, patch: Partial<ResearchPublication>) => {
+    setPublications((prev) => prev.map((p) => (p.id === pubId ? { ...p, ...patch } : p)));
+    setSelected((prev) => (prev?.id === pubId ? { ...prev, ...patch } : prev));
+  };
+
+  const handleLike = (pubId: string, result: { liked: boolean; likesCount: number }) => {
+    updatePublication(pubId, { likedByMe: result.liked, likesCount: result.likesCount });
+  };
+
+  const handleShare = (pubId: string, sharesCount: number) => {
+    updatePublication(pubId, { sharesCount });
+  };
 
   const load = (q?: string) =>
     api.research
@@ -238,6 +385,40 @@ export default function LibraryPage() {
     }
   };
 
+  const handleModalLike = async () => {
+    if (!selected || modalLiking) return;
+    setModalLiking(true);
+    try {
+      const result = await api.research.like(selected.id);
+      handleLike(selected.id, result);
+    } finally {
+      setModalLiking(false);
+    }
+  };
+
+  const handleModalShare = async () => {
+    if (!selected || modalSharing) return;
+    setModalSharing(true);
+    try {
+      const shareUrl =
+        typeof window !== "undefined"
+          ? `${window.location.origin}/library?pub=${selected.id}`
+          : "";
+      if (typeof navigator !== "undefined" && navigator.share) {
+        await navigator.share({ title: selected.title, url: shareUrl });
+      } else if (typeof navigator !== "undefined" && navigator.clipboard) {
+        await navigator.clipboard.writeText(shareUrl);
+        alert("Publication link copied to clipboard!");
+      }
+      const result = await api.research.share(selected.id);
+      handleShare(selected.id, result.sharesCount);
+    } catch {
+      /* user cancelled */
+    } finally {
+      setModalSharing(false);
+    }
+  };
+
   const openDocument = (url: string) => {
     const href = assetUrl(url);
     if (href) window.open(href, "_blank", "noopener,noreferrer");
@@ -249,7 +430,6 @@ export default function LibraryPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
-      {/* Header */}
       <div className="mb-6">
         <h1 className="text-3xl font-extrabold text-brand-900">Research Library</h1>
         <p className="mt-1 text-sm text-gray-500">
@@ -259,7 +439,6 @@ export default function LibraryPage() {
         </p>
       </div>
 
-      {/* Search Input Bar */}
       <form onSubmit={handleSearch} className="mb-8 flex gap-3">
         <div className="relative flex-1">
           <Icon name="search" className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
@@ -310,6 +489,8 @@ export default function LibraryPage() {
                       pub={pub}
                       viewCount={viewCounts[pub.id] ?? pub.viewCount}
                       onView={handleView}
+                      onLike={handleLike}
+                      onShare={handleShare}
                     />
                   ))}
                 </div>
@@ -325,6 +506,8 @@ export default function LibraryPage() {
               pub={pub}
               viewCount={viewCounts[pub.id] ?? pub.viewCount}
               onView={handleView}
+              onLike={handleLike}
+              onShare={handleShare}
             />
           ))}
         </div>
@@ -353,9 +536,44 @@ export default function LibraryPage() {
 
             {selected.description && <p className="mb-4 text-sm text-gray-600">{selected.description}</p>}
 
-            <div className="mb-4 flex items-center gap-2 text-sm text-gray-500">
-              <Icon name="eye" className="h-4 w-4" />
-              {viewCounts[selected.id] ?? selected.viewCount} views
+            <div className="mb-4 flex flex-wrap items-center gap-4 text-sm text-gray-500">
+              <span className="flex items-center gap-1.5">
+                <Icon name="eye" className="h-4 w-4" />
+                {viewCounts[selected.id] ?? selected.viewCount} views
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Icon name="thumbs-up" className="h-4 w-4" />
+                {selected.likesCount} likes
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Icon name="share" className="h-4 w-4" />
+                {selected.sharesCount} shares
+              </span>
+            </div>
+
+            <div className="mb-4 flex gap-2">
+              <button
+                type="button"
+                onClick={handleModalLike}
+                disabled={modalLiking}
+                className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition ${
+                  selected.likedByMe
+                    ? "bg-emerald-600 text-white"
+                    : "bg-emerald-100/70 text-emerald-800 hover:bg-emerald-200/80"
+                }`}
+              >
+                <Icon name="thumbs-up" className="h-3.5 w-3.5" />
+                {selected.likedByMe ? "Liked" : "Like"}
+              </button>
+              <button
+                type="button"
+                onClick={handleModalShare}
+                disabled={modalSharing}
+                className="flex items-center gap-1.5 rounded-xl bg-emerald-100/70 px-3 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-200/80"
+              >
+                <Icon name="share" className="h-3.5 w-3.5" />
+                Share
+              </button>
             </div>
 
             {selected.hasAccess && selected.fileUrl ? (
@@ -413,6 +631,11 @@ export default function LibraryPage() {
                 )}
               </div>
             )}
+
+            <PublicationComments
+              publicationId={selected.id}
+              canComment={!!selected.hasAccess}
+            />
           </div>
         </div>
       )}

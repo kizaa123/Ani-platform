@@ -21,6 +21,7 @@ import { categoryMatchesFarmerRole } from '../constants/commodities';
 import { defaultListingUnit } from '../constants/units';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import { normalizePhone, PHONE_VALIDATION_MESSAGE } from '../utils/phone';
+import { notifyNewFarmerJoined } from './notification.service';
 
 const phoneSchema = z.preprocess(
   normalizePhone,
@@ -299,6 +300,27 @@ export class AuthService {
     const accessToken = generateAccessToken(tokenPayload);
     const refreshToken = generateRefreshToken(tokenPayload);
     await storeRefreshToken(user.id, refreshToken);
+
+    if (FARMER_ROLES.includes(input.roleId as typeof ROLES.CROP_FARMER)) {
+      const commodities = input.commodityIds?.length
+        ? (
+            await prisma.commodity.findMany({
+              where: { id: { in: input.commodityIds } },
+              select: { name: true },
+            })
+          ).map((c) => c.name)
+        : [];
+
+      notifyNewFarmerJoined({
+        farmerUserId: user.id,
+        farmerName: `${user.firstName} ${user.lastName}`.trim(),
+        farmSize: input.farmSize,
+        city: user.city,
+        region: user.region,
+        country: user.country,
+        commodities,
+      }).catch(() => undefined);
+    }
 
     const fullUser = await prisma.user.findUnique({
       where: { id: user.id },

@@ -4,7 +4,7 @@ import { AppError, assertFound, assertAuthorized } from '../utils/errors';
 import { ROLES, isResearcherRole } from '../constants/roles';
 import { getPaymentProvider } from './payment.provider';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
-import { notifyResearchPurchase } from './notification.service';
+import { notifyResearchPurchase, notifyNewPublication } from './notification.service';
 
 export const publicationSchema = z.object({
   title: z.string().min(2),
@@ -19,6 +19,10 @@ export const updatePublicationSchema = publicationSchema.partial();
 
 export const purchasePublicationSchema = z.object({
   paymentMethod: z.string().min(2),
+});
+
+export const commentSchema = z.object({
+  content: z.string().min(1).max(2000),
 });
 
 const publicationInclude = {
@@ -47,6 +51,8 @@ function formatPublication(
     price: number | null;
     isFree: boolean;
     viewCount: number;
+    likesCount: number;
+    sharesCount: number;
     status: string;
     createdAt: Date;
     researcher: {
@@ -59,7 +65,7 @@ function formatPublication(
       };
     };
   },
-  options: { includeFile?: boolean; hasAccess?: boolean; isOwner?: boolean } = {}
+  options: { includeFile?: boolean; hasAccess?: boolean; isOwner?: boolean; likedByMe?: boolean; commentsCount?: number } = {}
 ) {
   const canAccess = options.isOwner || pub.isFree || options.hasAccess;
   return {
@@ -71,6 +77,10 @@ function formatPublication(
     price: pub.price,
     isFree: pub.isFree,
     viewCount: pub.viewCount,
+    likesCount: pub.likesCount,
+    sharesCount: pub.sharesCount,
+    likedByMe: options.likedByMe ?? false,
+    commentsCount: options.commentsCount,
     status: pub.status,
     createdAt: pub.createdAt.toISOString(),
     hasAccess: !!canAccess,
@@ -84,6 +94,24 @@ function formatPublication(
   };
 }
 
+function formatComment(comment: {
+  id: string;
+  content: string;
+  createdAt: Date;
+  user: { id: string; firstName: string; lastName: string; profilePicture: string | null };
+}) {
+  return {
+    id: comment.id,
+    content: comment.content,
+    createdAt: comment.createdAt.toISOString(),
+    user: {
+      id: comment.user.id,
+      name: `${comment.user.firstName} ${comment.user.lastName}`,
+      profilePicture: normalizePublicAssetUrl(comment.user.profilePicture),
+    },
+  };
+}
+
 export class ResearcherService {
   private async getResearcherProfile(userId: string) {
     return assertFound(
@@ -92,13 +120,58 @@ export class ResearcherService {
     );
   }
 
+  private async getActivePublication(publicationId: string) {
+    return assertFound(
+      await prisma.researchPublication.findFirst({
+        where: { id: publicationId, status: 'ACTIVE' },
+      }),
+      'Publication not found'
+    );
+  }
+
+  private async userHasPublicationAccess(userId: string, pub: { id: string; researcherId: string; isFree: boolean }) {
+    const researcherProfile = await prisma.researcherProfile.findUnique({ where: { userId } });
+    if (researcherProfile?.id === pub.researcherId) return true;
+    if (pub.isFree) return true;
+    const purchase = await prisma.researchPurchase.findFirst({
+      where: { studentId: userId, publicationId: pub.id, status: 'COMPLETED' },
+    });
+    return !!purchase;
+  }
+
+  private async assertPublicationAccess(userId: string, publicationId: string) {
+    const pub = await this.getActivePublication(publicationId);
+    const hasAccess = await this.userHasPublicationAccess(userId, pub);
+    assertAuthorized(hasAccess, 'You must unlock this publication before commenting');
+    return pub;
+  }
+
+  private async getLikedPublicationIds(userId: string, publicationIds: string[]) {
+    if (!publicationIds.length) return new Set<string>();
+    const likes = await prisma.researchPublicationLike.findMany({
+      where: { userId, publicationId: { in: publicationIds } },
+      select: { publicationId: true },
+    });
+    return new Set(likes.map((l) => l.publicationId));
+  }
+
+  private async getCommentCounts(publicationIds: string[]) {
+    if (!publicationIds.length) return new Map<string, number>();
+    const counts = await prisma.researchComment.groupBy({
+      by: ['publicationId'],
+      where: { publicationId: { in: publicationIds } },
+      _count: { _all: true },
+    });
+    return new Map(counts.map((c) => [c.publicationId, c._count._all]));
+  }
+
   async createPublication(userId: string, roleId: number, data: z.infer<typeof publicationSchema>) {
     assertAuthorized(isResearcherRole(roleId), 'Only researchers can create publications');
     const profile = await this.getResearcherProfile(userId);
 
     const isFree = data.isFree ?? (data.price == null || data.price <= 0);
 
-    return prisma.researchPublication.create({
+    const publication = await prisma.researchPublication.create({
       data: {
         researcherId: profile.id,
         title: data.title,
@@ -110,6 +183,20 @@ export class ResearcherService {
       },
       include: publicationInclude,
     });
+
+    const researcherName = `${publication.researcher.user.firstName} ${publication.researcher.user.lastName}`.trim();
+    notifyNewPublication({
+      researcherUserId: userId,
+      researcherName,
+      publication: {
+        id: publication.id,
+        title: publication.title,
+        description: publication.description,
+        coverImage: publication.coverImage,
+      },
+    }).catch(() => undefined);
+
+    return publication;
   }
 
   async updatePublication(
@@ -208,12 +295,19 @@ export class ResearcherService {
 
     const purchasedIds = new Set(purchases.map((p) => p.publicationId));
     const researcherProfile = await prisma.researcherProfile.findUnique({ where: { userId } });
+    const pubIds = publications.map((p) => p.id);
+    const [likedIds, commentCounts] = await Promise.all([
+      this.getLikedPublicationIds(userId, pubIds),
+      this.getCommentCounts(pubIds),
+    ]);
 
     return publications.map((p) =>
       formatPublication(p, {
         hasAccess: purchasedIds.has(p.id),
         isOwner: researcherProfile?.id === p.researcherId,
         includeFile: false,
+        likedByMe: likedIds.has(p.id),
+        commentsCount: commentCounts.get(p.id) ?? 0,
       })
     );
   }
@@ -230,15 +324,18 @@ export class ResearcherService {
     const researcherProfile = await prisma.researcherProfile.findUnique({ where: { userId } });
     const isOwner = researcherProfile?.id === pub.researcherId;
 
-    let hasAccess = pub.isFree || isOwner;
-    if (!hasAccess) {
-      const purchase = await prisma.researchPurchase.findFirst({
-        where: { studentId: userId, publicationId, status: 'COMPLETED' },
-      });
-      hasAccess = !!purchase;
-    }
+    const hasAccess = await this.userHasPublicationAccess(userId, pub);
 
-    return formatPublication(pub, { hasAccess, isOwner, includeFile: hasAccess });
+    const [likedByMe, commentsCount] = await Promise.all([
+      prisma.researchPublicationLike
+        .findUnique({
+          where: { publicationId_userId: { publicationId, userId } },
+        })
+        .then((l) => !!l),
+      prisma.researchComment.count({ where: { publicationId } }),
+    ]);
+
+    return formatPublication(pub, { hasAccess, isOwner, includeFile: hasAccess, likedByMe, commentsCount });
   }
 
   async recordView(userId: string, publicationId: string) {
@@ -437,6 +534,78 @@ export class ResearcherService {
       where: { userId },
       data,
     });
+  }
+
+  async toggleLike(publicationId: string, userId: string) {
+    await this.getActivePublication(publicationId);
+
+    const existing = await prisma.researchPublicationLike.findUnique({
+      where: { publicationId_userId: { publicationId, userId } },
+    });
+
+    if (existing) {
+      await prisma.$transaction([
+        prisma.researchPublicationLike.delete({ where: { id: existing.id } }),
+        prisma.researchPublication.update({
+          where: { id: publicationId },
+          data: { likesCount: { decrement: 1 } },
+        }),
+      ]);
+      const updated = await prisma.researchPublication.findUnique({ where: { id: publicationId } });
+      return { liked: false, likesCount: updated?.likesCount ?? 0 };
+    }
+
+    await prisma.$transaction([
+      prisma.researchPublicationLike.create({ data: { publicationId, userId } }),
+      prisma.researchPublication.update({
+        where: { id: publicationId },
+        data: { likesCount: { increment: 1 } },
+      }),
+    ]);
+    const updated = await prisma.researchPublication.findUnique({ where: { id: publicationId } });
+    return { liked: true, likesCount: updated?.likesCount ?? 0 };
+  }
+
+  async recordShare(publicationId: string) {
+    const pub = await this.getActivePublication(publicationId);
+
+    const updated = await prisma.researchPublication.update({
+      where: { id: pub.id },
+      data: { sharesCount: { increment: 1 } },
+    });
+
+    return { sharesCount: updated.sharesCount };
+  }
+
+  async listComments(publicationId: string) {
+    await this.getActivePublication(publicationId);
+
+    const comments = await prisma.researchComment.findMany({
+      where: { publicationId },
+      include: {
+        user: { select: { id: true, firstName: true, lastName: true, profilePicture: true } },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return comments.map(formatComment);
+  }
+
+  async addComment(publicationId: string, userId: string, data: z.infer<typeof commentSchema>) {
+    await this.assertPublicationAccess(userId, publicationId);
+
+    const comment = await prisma.researchComment.create({
+      data: {
+        publicationId,
+        userId,
+        content: data.content.trim(),
+      },
+      include: {
+        user: { select: { id: true, firstName: true, lastName: true, profilePicture: true } },
+      },
+    });
+
+    return formatComment(comment);
   }
 }
 

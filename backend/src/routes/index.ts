@@ -20,7 +20,7 @@ import { updateFarmSchema, addCommoditySchema, updateOrderTrackSchema } from '..
 import { listingSchema, updateListingSchema } from '../services/marketplace.service';
 import { purchaseSchema, packageSchema, purchaseFarmAccessSchema } from '../services/payment.service';
 import { purchaseProductSchema, releaseOrderSchema } from '../services/order.service';
-import { publicationSchema, updatePublicationSchema, purchasePublicationSchema } from '../services/researcher.service';
+import { publicationSchema, updatePublicationSchema, purchasePublicationSchema, commentSchema } from '../services/researcher.service';
 import { connectionSchema } from '../services/connection.service';
 import { assignmentSchema } from '../services/agent.service';
 import { messageSchema } from '../services/chat.service';
@@ -186,6 +186,10 @@ router.get('/research/my', authenticate, requirePermission(PERMISSIONS.MANAGE_PU
 router.get('/research/financial-statement', authenticate, requirePermission(PERMISSIONS.MANAGE_PUBLICATIONS), researcherController.financialStatement);
 router.put('/research/profile', authenticate, requirePermission(PERMISSIONS.MANAGE_PUBLICATIONS), researcherController.updateProfile);
 router.get('/research/:id', authenticate, researcherController.getOne);
+router.get('/research/:id/comments', authenticate, researcherController.listComments);
+router.post('/research/:id/comments', authenticate, validateBody(commentSchema), researcherController.addComment);
+router.post('/research/:id/like', authenticate, researcherController.toggleLike);
+router.post('/research/:id/share', authenticate, researcherController.share);
 router.post('/research/:id/view', authenticate, researcherController.recordView);
 router.post(
   '/research/:id/purchase',

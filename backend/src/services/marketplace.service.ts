@@ -20,6 +20,7 @@ import {
 } from '../constants/units';
 import { computeListedPrice } from '../utils/listingPrice';
 import { productMediaService } from './productMedia.service';
+import { notifyNewProductListing } from './notification.service';
 
 export { LISTING_UNITS } from '../constants/units';
 
@@ -239,7 +240,7 @@ export class MarketplaceService {
     assertUnitForRole(roleId, unit);
     assertLivestockQuantity(roleId, data.quantity);
 
-    return prisma.commodityListing.create({
+    const listing = await prisma.commodityListing.create({
       data: {
         farmerId: profile.id,
         commodityId: data.commodityId,
@@ -252,8 +253,26 @@ export class MarketplaceService {
         location: data.location,
         ...listingHarvestFields(data),
       },
-      include: { commodity: { include: { category: true } } },
+      include: {
+        commodity: { include: { category: true } },
+        farmer: { include: { user: { select: { id: true, firstName: true, lastName: true } } } },
+      },
     });
+
+    const farmerName = `${listing.farmer.user.firstName} ${listing.farmer.user.lastName}`.trim();
+    notifyNewProductListing({
+      farmerUserId: userId,
+      farmerName,
+      listing: {
+        id: listing.id,
+        title: listing.title,
+        price: listing.price,
+        unit: listing.unit,
+        images: listing.images,
+      },
+    }).catch(() => undefined);
+
+    return listing;
   }
 
   async browseMarketplace(userId: string, roleId: number, search?: string) {

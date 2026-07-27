@@ -351,6 +351,21 @@ class ApiClient {
       this.request<import("./types").ResearcherFinancialStatement>("/research/financial-statement"),
     updateProfile: (body: Record<string, unknown>) =>
       this.request("/research/profile", { method: "PUT", body: JSON.stringify(body) }),
+    like: (id: string) =>
+      this.request<{ liked: boolean; likesCount: number }>(`/research/${id}/like`, {
+        method: "POST",
+      }),
+    share: (id: string) =>
+      this.request<{ sharesCount: number }>(`/research/${id}/share`, { method: "POST" }),
+    comments: {
+      list: (id: string) =>
+        this.request<import("./types").ResearchComment[]>(`/research/${id}/comments`),
+      add: (id: string, content: string) =>
+        this.request<import("./types").ResearchComment>(`/research/${id}/comments`, {
+          method: "POST",
+          body: JSON.stringify({ content }),
+        }),
+    },
   };
 
   connections = {
