@@ -165,6 +165,12 @@ export function PurchaseModal({
                 </span>
               </div>
 
+              {listing.description?.trim() && (
+                <p className="mt-3 text-sm leading-relaxed text-gray-600 whitespace-pre-wrap">
+                  {listing.description.trim()}
+                </p>
+              )}
+
               <div className="mt-4 rounded-xl border border-brand-100 bg-brand-50/60 px-4 py-3">
                 <p className="text-xl font-bold text-brand-900">
                   {listing.priceLabel || `GHC ${unitPrice}/${unitLabel}`}

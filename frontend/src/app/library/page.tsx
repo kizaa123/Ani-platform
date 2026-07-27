@@ -213,7 +213,7 @@ function PublicationCard({
 
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-base font-semibold text-gray-700">{pub.researcher.name}</span>
-          <VerificationBadge status={pub.researcher.verificationStatus ?? "VERIFIED"} />
+          <VerificationBadge status={pub.researcher.verificationStatus} />
         </div>
       </div>
 

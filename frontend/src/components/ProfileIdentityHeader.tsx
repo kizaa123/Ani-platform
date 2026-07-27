@@ -3,7 +3,6 @@
 import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
-import { VerificationBadge } from "@/components/VerificationBadge";
 import { RolePrefixedName, getRoleNamePrefix } from "@/components/RolePrefixedName";
 import {
   isFarmer,
@@ -77,9 +76,6 @@ export function ProfileIdentityHeader({ user, photoCacheBust, onEditClick }: Pro
                 Handler: {user.assignedHandler.firstName} {user.assignedHandler.lastName}
               </p>
             </div>
-          )}
-          {user.verificationStatus && user.verificationStatus !== "VERIFIED" && (
-            <VerificationBadge status={user.verificationStatus} className="mt-3" />
           )}
         </div>
       </div>

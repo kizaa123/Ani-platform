@@ -50,16 +50,12 @@ function SidebarContent({
 
   return (
     <>
-      <div className="flex flex-col items-center border-b border-brand-100 p-5">
-        {/* Logo: icon + ANI + motto only — no full platform name */}
-        <Link href="/dashboard" className="inline-flex items-center gap-2.5 transition-opacity hover:opacity-85">
-          <Logo href={undefined} size="sm" showTagline />
-        </Link>
-        {/* Portal title centered */}
-        <span className="mt-2 rounded-full bg-brand-50 px-3 py-0.5 text-[11px] font-semibold uppercase tracking-widest text-brand-600">
-          {portalTitle}
-        </span>
-        {showNotificationBell && <div className="mt-2"><NotificationBell /></div>}
+      <div className="flex items-center justify-between border-b border-brand-100 p-5">
+        <div>
+          <Logo href="/dashboard" size="sm" />
+          <p className="mt-1 text-xs font-medium text-brand-600">{portalTitle}</p>
+        </div>
+        {showNotificationBell && <NotificationBell />}
       </div>
 
       <div className="flex items-center gap-3 border-b border-brand-100 px-5 py-4">

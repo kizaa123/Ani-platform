@@ -144,7 +144,7 @@ export default function AdminPage() {
                     {c.buyer ? fullName(c.buyer) : "Unknown buyer"}
                   </p>
                   {c.buyer?.verificationStatus && (
-                    <VerificationBadge status={c.buyer.verificationStatus} className="mt-1" />
+                    <VerificationBadge adminView status={c.buyer.verificationStatus} className="mt-1" />
                   )}
                   <p className="mt-2 text-sm text-brand-700">
                     {c.farmer?.farmName ?? (c.farmer ? fullName(c.farmer) : "Unknown farm")}
@@ -253,7 +253,7 @@ export default function AdminPage() {
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-bold text-brand-900">{fullName(u)}</p>
-                    <VerificationBadge status={u.verificationStatus} />
+                    <VerificationBadge adminView status={u.verificationStatus} />
                   </div>
                   <p className="text-sm text-gray-500">
                     {u.email} · {u.role.roleName}

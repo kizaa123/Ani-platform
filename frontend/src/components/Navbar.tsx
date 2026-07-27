@@ -103,29 +103,29 @@ export function Navbar() {
     if (pathname === "/" || pathname === "/login" || pathname === "/register") {
       return (
         <header className="sticky top-0 z-50 border-b border-brand-200 bg-white/95 shadow-sm backdrop-blur-md">
-          <div className="mx-auto flex h-24 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:h-20 sm:px-6 lg:h-24 lg:px-8">
             {/* Brand — logo + full name + motto */}
-            <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-85">
-              <LogoIcon className="h-14 w-auto flex-shrink-0" theme="dark" />
+            <Link href="/" className="flex items-center gap-2 sm:gap-3 transition-opacity hover:opacity-85">
+              <LogoIcon className="h-8 w-auto flex-shrink-0 sm:h-11 lg:h-14" theme="dark" />
               <div className="flex flex-col justify-center">
-                <span className="text-base font-extrabold leading-tight tracking-tight text-gray-900 sm:text-lg">
+                <span className="text-sm font-extrabold leading-tight tracking-tight text-gray-900 sm:text-base lg:text-lg">
                   Agricess Network International
                 </span>
-                <span className="mt-0.5 text-[11px] italic tracking-wide text-emerald-600">
+                <span className="mt-0.5 text-[10px] italic tracking-wide text-emerald-600 sm:text-[11px]">
                   Together for all
                 </span>
               </div>
             </Link>
-            <div className="flex gap-2 sm:gap-3">
+            <div className="flex gap-1.5 sm:gap-3">
               <Link
                 href="/login"
-                className="rounded-lg px-3 py-2 text-sm font-medium text-brand-700 hover:bg-brand-100 sm:px-4"
+                className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-brand-700 hover:bg-brand-100 sm:px-4 sm:py-2 sm:text-sm"
               >
                 Login
               </Link>
               <Link
                 href="/register"
-                className="rounded-lg bg-brand-700 px-3 py-2 text-sm font-medium text-white hover:bg-brand-900 sm:px-4"
+                className="rounded-lg bg-brand-700 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-brand-900 sm:px-4 sm:py-2 sm:text-sm"
               >
                 Register
               </Link>

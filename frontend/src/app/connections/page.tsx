@@ -14,7 +14,7 @@ function canModerateConnection(roleId: number) {
 }
 
 function showVerificationBadge(status?: string | null) {
-  return status === "VERIFIED" || status === "REJECTED";
+  return status === "VERIFIED";
 }
 
 function showConnectionStatusBadge(status: string, partner?: ConnectionUser) {

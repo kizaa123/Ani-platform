@@ -3,7 +3,6 @@
 import { FarmerBrowseCard } from "@/lib/types";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
-import { VerificationBadge } from "@/components/VerificationBadge";
 import { Icon } from "@/components/icons";
 
 interface FarmerBrowseCardItemProps {
@@ -79,9 +78,6 @@ export function FarmerBrowseCardItem({
           <h3 className="truncate font-bold text-brand-900">{farmer.farmerName}</h3>
           <p className="truncate text-sm text-brand-700">{farmer.farmName}</p>
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-            {farmer.verificationStatus && farmer.verificationStatus !== "VERIFIED" && (
-              <VerificationBadge status={farmer.verificationStatus} />
-            )}
             <CountryBadge country={farmer.country} region={farmer.region} />
           </div>
         </div>

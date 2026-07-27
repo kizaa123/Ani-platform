@@ -29,14 +29,18 @@ interface VerificationBadgeProps {
   status?: string | null;
   className?: string;
   showIconOnly?: boolean;
+  /** Admin-only: show Pending/Rejected badges. End-user views hide non-verified statuses. */
+  adminView?: boolean;
 }
 
 export function VerificationBadge({
   status,
   className = "",
   showIconOnly = false,
+  adminView = false,
 }: VerificationBadgeProps) {
   if (!status) return null;
+  if (!adminView && status !== "VERIFIED") return null;
 
   const verified = status === "VERIFIED";
   const rejected = status === "REJECTED";
