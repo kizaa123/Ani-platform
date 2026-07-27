@@ -17,6 +17,7 @@ import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { FarmerProductCard } from "@/components/FarmerProductCard";
 import { PurchaseModal } from "@/components/PurchaseModal";
 import { Icon } from "@/components/icons";
+import { CardGridSkeleton, PageContentSkeleton } from "@/components/LoadingPrimitives";
 
 function filterFarmers(farmers: FarmerBrowseCard[], query: string): FarmerBrowseCard[] {
   const term = query.trim().toLowerCase();
@@ -53,13 +54,23 @@ export default function MarketplacePage() {
   const router = useRouter();
 
   const farmerView = user ? isFarmer(user.roleId) : false;
+  const [browseLoading, setBrowseLoading] = useState(true);
+  const [listingsLoading, setListingsLoading] = useState(true);
 
   const loadBrowse = useCallback(() => {
     if (farmerView) {
-      api.marketplace.my().then(setMyListings).catch(console.error);
+      api.marketplace
+        .my()
+        .then(setMyListings)
+        .catch(console.error)
+        .finally(() => setListingsLoading(false));
       return;
     }
-    api.marketplace.browse().then(setBrowse).catch(console.error);
+    api.marketplace
+      .browse()
+      .then(setBrowse)
+      .catch(console.error)
+      .finally(() => setBrowseLoading(false));
   }, [farmerView]);
 
   useEffect(() => {
@@ -91,6 +102,7 @@ export default function MarketplacePage() {
   };
 
   const handleOrderSuccess = useCallback(() => {
+    setBrowseLoading(true);
     loadBrowse();
     setOrderPlacedMessage("Order placed successfully!");
   }, [loadBrowse]);
@@ -112,7 +124,7 @@ export default function MarketplacePage() {
     if (updated) setPurchaseFarmer(updated);
   }, [browse, purchaseFarmer?.farmerId]);
 
-  if (loading) return <div className="p-12 text-center">Loading...</div>;
+  if (loading) return <PageContentSkeleton />;
 
   if (farmerView) {
     return (
@@ -157,7 +169,9 @@ export default function MarketplacePage() {
           )}
         </div>
 
-        {filteredMyListings.length === 0 ? (
+        {listingsLoading ? (
+          <CardGridSkeleton />
+        ) : filteredMyListings.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-brand-200 p-12 text-center text-gray-500">
             {search.trim() ? (
               "No products match your search."
@@ -238,7 +252,9 @@ export default function MarketplacePage() {
         </div>
       )}
 
-      {filteredFarmers.length === 0 ? (
+      {browseLoading ? (
+        <CardGridSkeleton />
+      ) : filteredFarmers.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-brand-200 p-12 text-center text-gray-500">
           {search.trim() ? "No farmers match your search." : "No farmers registered yet."}
         </div>

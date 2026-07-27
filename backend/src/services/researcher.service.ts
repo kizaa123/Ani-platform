@@ -310,7 +310,6 @@ export class ResearcherService {
       formatPublication(p, {
         hasAccess: purchasedIds.has(p.id),
         isOwner: researcherProfile?.id === p.researcherId,
-        includeFile: false,
         likedByMe: likedIds.has(p.id),
         commentsCount: commentCounts.get(p.id) ?? 0,
       })

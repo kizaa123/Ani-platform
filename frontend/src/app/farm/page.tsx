@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { Listing, ROLES, defaultListingUnit, listingUnitsForRole, formatListingUnit, isLivestockFarmer, normalizeListingUnit, type ListingUnit, ProductMediaItem } from "@/lib/types";
 import { ProductImage } from "@/components/FarmerAvatar";
 import { Icon } from "@/components/icons";
+import { PageContentSkeleton, SpinnerLabel } from "@/components/LoadingPrimitives";
 import { HarvestCalendarTrigger } from "@/components/HarvestCalendarTrigger";
 import { assetUrl } from "@/lib/assetUrl";
 import { basePriceFromListed, computeListedPrice } from "@/lib/listingPrice";
@@ -238,15 +239,11 @@ export default function FarmPage() {
   );
 
   if (loading || !user) {
-    return <div className="p-12 text-center text-gray-500">Loading your farm...</div>;
+    return <PageContentSkeleton variant="form" maxWidth="max-w-4xl" />;
   }
 
   if (!profile) {
-    return (
-      <div className="mx-auto max-w-4xl px-4 py-8">
-        <p className="text-center text-gray-500">Loading farm details...</p>
-      </div>
-    );
+    return <PageContentSkeleton variant="form" maxWidth="max-w-4xl" />;
   }
 
   return (
@@ -523,7 +520,11 @@ export default function FarmPage() {
                   disabled={productMediaUploading || totalProductMediaCount >= MAX_PRODUCT_MEDIA}
                   className="rounded-xl border border-brand-300 bg-brand-50 px-4 py-2 text-xs font-bold text-brand-800 transition hover:bg-brand-100 disabled:opacity-50"
                 >
-                  {productMediaUploading ? "Uploading..." : "+ Add Media"}
+                  {productMediaUploading ? (
+                    <SpinnerLabel label="Uploading..." className="h-3.5 w-3.5" />
+                  ) : (
+                    "+ Add Media"
+                  )}
                 </button>
               </div>
 
@@ -532,7 +533,7 @@ export default function FarmPage() {
                   {productMedia.map((item) => {
                     const src = assetUrl(item.url);
                     return (
-                      <div key={item.id} className="relative overflow-hidden rounded-xl border border-brand-100 bg-brand-50">
+                      <div key={item.id} className="relative overflow-hidden rounded-xl border border-brand-100 bg-white">
                         {item.type === "VIDEO" && src ? (
                           <video
                             src={src}
@@ -544,8 +545,11 @@ export default function FarmPage() {
                             preload="metadata"
                           />
                         ) : src ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={src} alt="" className="aspect-square w-full object-cover" />
+                          <ProductImage
+                            src={item.url}
+                            alt=""
+                            className="aspect-square w-full"
+                          />
                         ) : null}
                         <button
                           type="button"

@@ -9,6 +9,7 @@ import { PUBLICATION_CATEGORY_OPTIONS } from "@/lib/publicationCategories";
 import { Icon } from "@/components/icons";
 import { FileUploadZone } from "@/components/FileUploadZone";
 import { PublicationCoverImage } from "@/components/PublicationCoverImage";
+import { PageContentSkeleton, SpinnerLabel } from "@/components/LoadingPrimitives";
 import { assetUrl } from "@/lib/assetUrl";
 
 const emptyForm = {
@@ -51,6 +52,13 @@ export default function ResearcherPublicationsPage() {
   }, [localCoverPreview]);
 
   const handleDocSelect = async (file: File) => {
+    const isPdf =
+      file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+    if (!isPdf) {
+      setError("Only PDF files are allowed");
+      return;
+    }
+
     setPendingDocName(file.name);
     setUploadingDoc(true);
     try {
@@ -112,7 +120,7 @@ export default function ResearcherPublicationsPage() {
 
   const save = async () => {
     if (!form.title.trim() || !form.fileUrl) {
-      setError("Title and document file are required");
+      setError("Title and PDF file are required");
       return;
     }
     if (!form.category) {
@@ -161,7 +169,7 @@ export default function ResearcherPublicationsPage() {
   const uploading = uploadingDoc || uploadingCover;
 
   if (loading || !user) {
-    return <div className="p-12 text-center text-gray-500">Loading...</div>;
+    return <PageContentSkeleton variant="form" />;
   }
 
   return (
@@ -169,7 +177,7 @@ export default function ResearcherPublicationsPage() {
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-brand-900">My Publications</h1>
-          <p className="text-sm text-gray-500">Upload books and research files for students to read</p>
+          <p className="text-sm text-gray-500">Upload PDF publications for students to read</p>
         </div>
         {!showForm && (
           <button type="button" className="btn-primary" onClick={() => setShowForm(true)}>
@@ -185,7 +193,7 @@ export default function ResearcherPublicationsPage() {
               {editingId ? "Edit publication" : "New publication"}
             </h2>
             <p className="mt-1 text-sm text-gray-500">
-              Add your research document, cover art, and a clear description for readers.
+              Add your PDF, optional cover art, and a clear description for readers.
             </p>
           </div>
           {error && <p className="auth-error mb-4">{error}</p>}
@@ -225,14 +233,14 @@ export default function ResearcherPublicationsPage() {
               <div className="space-y-4">
                 <FileUploadZone
                   compact
-                  label="Document"
-                  accept=".pdf,.epub,.doc,.docx,.txt"
+                  label="PDF document"
+                  accept=".pdf,application/pdf"
                   icon="file"
                   disabled={uploading}
                   uploading={uploadingDoc}
                   onFileSelect={handleDocSelect}
                   fileName={docFileName}
-                  hint="PDF, EPUB, Word or text"
+                  hint="PDF only"
                 />
                 <FileUploadZone
                   compact
@@ -291,7 +299,7 @@ export default function ResearcherPublicationsPage() {
 
           <div className="mt-6 flex gap-3 border-t border-brand-50 pt-5">
             <button type="button" className="btn-primary" disabled={saving || uploading} onClick={save}>
-              {saving ? "Saving..." : editingId ? "Update" : "Publish"}
+              {saving ? <SpinnerLabel label="Saving..." className="h-4 w-4" /> : editingId ? "Update" : "Publish"}
             </button>
             <button type="button" className="btn-outline" onClick={resetForm}>
               Cancel
@@ -302,7 +310,7 @@ export default function ResearcherPublicationsPage() {
 
       {publications.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-brand-200 bg-white p-12 text-center text-gray-500">
-          No publications yet. Upload your first book or research file.
+          No publications yet. Upload your first PDF publication.
         </div>
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

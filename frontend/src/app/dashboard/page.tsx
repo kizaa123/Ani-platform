@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { isFarmer, isBuyer, isHandler, isStaff, isBuyerHandler, isResearcher, isStudent, isMarketplaceBuyer } from "@/lib/types";
-import { PortalNavCard } from "@/components/PortalNavCard";
+import { PortalNavCard, PortalNavCardSkeleton } from "@/components/PortalNavCard";
 import { getPortalNavImage } from "@/lib/portalNavImages";
 import type { IconName } from "@/components/icons";
 
@@ -25,7 +25,18 @@ export default function DashboardPage() {
     if (!loading && !user) router.push("/login");
   }, [user?.id, loading, router]);
 
-  if (loading || !user) return <div className="p-12 text-center text-gray-500">Loading...</div>;
+  if (loading || !user) {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-10">
+        <div className="mb-8 h-8 w-64 animate-pulse rounded-lg bg-gray-200" />
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <PortalNavCardSkeleton key={i} />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   const cards = ([
     { href: "/marketplace", title: "Marketplace", desc: "Browse commodity listings", icon: "store", all: true },

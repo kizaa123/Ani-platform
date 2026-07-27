@@ -10,6 +10,7 @@ import { FarmAccessPaymentModal } from "@/components/FarmAccessPaymentModal";
 import { FarmerBrowseCardItem } from "@/components/FarmerBrowseCardItem";
 import { FarmerDetailModal } from "@/components/FarmerDetailModal";
 import { Icon } from "@/components/icons";
+import { PageContentSkeleton } from "@/components/LoadingPrimitives";
 
 function filterFarmers(farmers: FarmerBrowseCard[], query: string): FarmerBrowseCard[] {
   const term = query.trim().toLowerCase();
@@ -133,12 +134,17 @@ export default function AccessPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [browse, setBrowse] = useState<MarketplaceBrowse | null>(null);
+  const [browseLoading, setBrowseLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [payFarmer, setPayFarmer] = useState<FarmerBrowseCard | null>(null);
   const [detailFarmer, setDetailFarmer] = useState<FarmerBrowseCard | null>(null);
 
   const loadBrowse = useCallback(() => {
-    api.marketplace.browse().then(setBrowse).catch(console.error);
+    api.marketplace
+      .browse()
+      .then(setBrowse)
+      .catch(console.error)
+      .finally(() => setBrowseLoading(false));
   }, []);
 
   useEffect(() => {
@@ -166,6 +172,7 @@ export default function AccessPage() {
   );
 
   const onPaymentSuccess = () => {
+    setBrowseLoading(true);
     loadBrowse();
   };
 
@@ -174,7 +181,7 @@ export default function AccessPage() {
     setPayFarmer(farmer);
   };
 
-  if (loading) return <div className="p-12 text-center text-gray-500">Loading buyer access...</div>;
+  if (loading) return <PageContentSkeleton variant="list" />;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
@@ -209,7 +216,9 @@ export default function AccessPage() {
         )}
       </div>
 
-      {filteredFarmers.length === 0 ? (
+      {browseLoading ? (
+        <PageContentSkeleton variant="list" />
+      ) : filteredFarmers.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-brand-200 p-12 text-center text-gray-500">
           {search.trim() ? "No farmers match your search query." : "No farmers registered yet."}
         </div>

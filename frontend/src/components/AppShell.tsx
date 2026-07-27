@@ -10,6 +10,7 @@ import { Navbar } from "@/components/Navbar";
 import { AppFooter } from "@/components/AppFooter";
 
 import { FarmerPortalLayout } from "@/components/FarmerSidebar";
+import { PageLoader } from "@/components/LoadingPrimitives";
 
 import { HandlerPortalLayout } from "@/components/HandlerSidebar";
 
@@ -74,9 +75,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
 
   if (loading) {
-
-    return <main className="flex-1">{children}</main>;
-
+    return <PageLoader />;
   }
 
 

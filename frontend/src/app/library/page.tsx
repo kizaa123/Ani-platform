@@ -19,6 +19,8 @@ import { Icon } from "@/components/icons";
 import { PublicationCoverImage } from "@/components/PublicationCoverImage";
 import { VerificationBadge } from "@/components/VerificationBadge";
 import { PaymentCheckout, TransactionSuccess } from "@/components/PaymentCheckout";
+import { CardGridSkeleton, PageContentSkeleton, SpinnerLabel } from "@/components/LoadingPrimitives";
+import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { assetUrl } from "@/lib/assetUrl";
 
 function formatGhc(amount: number) {
@@ -83,7 +85,11 @@ function PublicationComments({
       </h3>
 
       {loading ? (
-        <p className="text-sm text-gray-500">Loading comments...</p>
+        <div className="space-y-2">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div key={i} className="h-12 animate-pulse rounded-xl bg-gray-200" />
+          ))}
+        </div>
       ) : comments.length === 0 ? (
         <p className="text-sm text-gray-500">No comments yet. Be the first to share your thoughts.</p>
       ) : (
@@ -91,16 +97,17 @@ function PublicationComments({
           {comments.map((comment) => (
             <li key={comment.id} className="rounded-xl bg-gray-50 px-3 py-2.5">
               <div className="flex items-center gap-2">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-100 text-xs font-bold text-brand-700">
+                <div className="flex h-7 w-7 shrink-0 overflow-hidden rounded-full bg-white">
                   {comment.user.profilePicture ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={assetUrl(comment.user.profilePicture) || ""}
-                      alt={comment.user.name}
-                      className="h-full w-full object-cover"
+                    <ProfilePhoto
+                      src={comment.user.profilePicture}
+                      name={comment.user.name}
+                      size={28}
                     />
                   ) : (
-                    comment.user.name.charAt(0)
+                    <div className="flex h-full w-full items-center justify-center bg-gray-100 text-xs font-bold text-gray-400">
+                      {comment.user.name.charAt(0)}
+                    </div>
                   )}
                 </div>
                 <span className="text-xs font-semibold text-gray-800">{comment.user.name}</span>
@@ -128,7 +135,7 @@ function PublicationComments({
             disabled={submitting || !content.trim()}
             className="rounded-xl bg-brand-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-900 disabled:opacity-50"
           >
-            {submitting ? "Posting..." : "Post comment"}
+            {submitting ? <SpinnerLabel label="Posting..." className="h-4 w-4" /> : "Post comment"}
           </button>
         </form>
       ) : (
@@ -142,12 +149,14 @@ function PublicationCard({
   pub,
   viewCount,
   onView,
+  onReadNow,
   onLike,
   onShare,
 }: {
   pub: ResearchPublication;
   viewCount: number;
   onView: (pub: ResearchPublication) => void;
+  onReadNow: (pub: ResearchPublication) => void;
   onLike: (pubId: string, result: { liked: boolean; likesCount: number }) => void;
   onShare: (pubId: string, sharesCount: number) => void;
 }) {
@@ -196,16 +205,15 @@ function PublicationCard({
 
       <div className="flex flex-1 flex-col p-5">
       <div className="mb-4 flex items-center gap-4">
-        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full border-2 border-brand-100 bg-brand-50 shadow-xs">
+        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full border-2 border-gray-100 bg-white shadow-xs">
           {pub.researcher.profilePicture ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={assetUrl(pub.researcher.profilePicture) || ""}
-              alt={pub.researcher.name}
-              className="h-full w-full object-cover"
+            <ProfilePhoto
+              src={pub.researcher.profilePicture}
+              name={pub.researcher.name}
+              size={80}
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-xl font-bold text-brand-700">
+            <div className="flex h-full w-full items-center justify-center bg-gray-100 text-xl font-bold text-gray-400">
               {pub.researcher.name.charAt(0)}
             </div>
           )}
@@ -289,7 +297,7 @@ function PublicationCard({
 
       <button
         type="button"
-        onClick={() => onView(pub)}
+        onClick={() => (pub.isLocked ? onView(pub) : onReadNow(pub))}
         className="mt-auto w-full rounded-2xl bg-brand-800 py-3.5 text-base font-bold text-white shadow-sm transition hover:bg-brand-900 active:scale-98"
       >
         {pub.isLocked ? "View & unlock" : "Read now"}
@@ -303,6 +311,7 @@ export default function LibraryPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [publications, setPublications] = useState<ResearchPublication[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<ResearchPublication | null>(null);
   const [viewCounts, setViewCounts] = useState<Record<string, number>>({});
@@ -331,7 +340,7 @@ export default function LibraryPage() {
     updatePublication(pubId, { sharesCount });
   };
 
-  const load = (q?: string) =>
+  const load = (q?: string) => {
     api.research
       .browse(q)
       .then((data) => {
@@ -342,7 +351,9 @@ export default function LibraryPage() {
         });
         setViewCounts(counts);
       })
-      .catch((e) => setLoadError(e instanceof Error ? e.message : "Failed to load"));
+      .catch((e) => setLoadError(e instanceof Error ? e.message : "Failed to load"))
+      .finally(() => setDataLoading(false));
+  };
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
@@ -351,6 +362,7 @@ export default function LibraryPage() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    setDataLoading(true);
     load(search.trim() || undefined);
   };
 
@@ -423,8 +435,34 @@ export default function LibraryPage() {
     if (href) window.open(href, "_blank", "noopener,noreferrer");
   };
 
+  const handleReadNow = async (pub: ResearchPublication) => {
+    try {
+      const { viewCount } = await api.research.recordView(pub.id);
+      setViewCounts((prev) => ({ ...prev, [pub.id]: viewCount }));
+    } catch {
+      // non-blocking
+    }
+
+    if (pub.fileUrl) {
+      openDocument(pub.fileUrl);
+      return;
+    }
+
+    try {
+      const full = await api.research.get(pub.id);
+      if (full.fileUrl) {
+        openDocument(full.fileUrl);
+        return;
+      }
+    } catch {
+      /* fall through to modal */
+    }
+
+    await handleView(pub);
+  };
+
   if (loading || !user) {
-    return <div className="p-12 text-center text-gray-500">Loading...</div>;
+    return <PageContentSkeleton />;
   }
 
   return (
@@ -457,7 +495,9 @@ export default function LibraryPage() {
         </p>
       )}
 
-      {publications.length === 0 ? (
+      {dataLoading ? (
+        <CardGridSkeleton count={4} columns="sm:grid-cols-2" imageHeight="h-36" />
+      ) : publications.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-brand-200 bg-white p-12 text-center text-gray-500">
           No publications found.
         </div>
@@ -490,6 +530,7 @@ export default function LibraryPage() {
                           pub={pub}
                           viewCount={viewCounts[pub.id] ?? pub.viewCount}
                           onView={handleView}
+                          onReadNow={handleReadNow}
                           onLike={handleLike}
                           onShare={handleShare}
                         />
@@ -572,7 +613,7 @@ export default function LibraryPage() {
                   <TransactionSuccess
                     title="Unlocked successfully"
                     message={purchaseSuccess}
-                    actionLabel="Open document"
+                    actionLabel="Read PDF"
                     onAction={() => openDocument(selected.fileUrl!)}
                     onDismiss={() => setPurchaseSuccess("")}
                     dismissLabel="Close"
@@ -586,7 +627,7 @@ export default function LibraryPage() {
                       className="btn-primary w-full"
                       onClick={() => openDocument(selected.fileUrl!)}
                     >
-                      Open document
+                      Read PDF
                     </button>
                   </div>
                 )}

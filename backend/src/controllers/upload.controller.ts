@@ -1,9 +1,14 @@
+import path from 'path';
 import { Response } from 'express';
 import prisma from '../database/prisma';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { ApiResponse } from '../utils/response';
 import { isFarmerRole } from '../constants/roles';
 import { persistUploadedFile } from '../services/storage.service';
+
+function isPdfFile(file: Express.Multer.File): boolean {
+  return file.mimetype === 'application/pdf' || path.extname(file.originalname).toLowerCase() === '.pdf';
+}
 
 export class UploadController {
   uploadProfilePicture = async (req: AuthRequest, res: Response) => {
@@ -51,6 +56,10 @@ export class UploadController {
 
       if (!file && !cover) {
         return res.status(400).json({ success: false, error: 'No files provided' });
+      }
+
+      if (file && !isPdfFile(file)) {
+        return res.status(400).json({ success: false, error: 'Only PDF files are allowed for publications' });
       }
 
       const result: { fileUrl?: string; coverImage?: string } = {};

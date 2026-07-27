@@ -11,7 +11,7 @@ export const MAX_IMAGE_FILE_SIZE = 20 * 1024 * 1024; // 20 MB
 /** Max product images per upload request. */
 export const MAX_LISTING_IMAGES_PER_UPLOAD = 10;
 
-/** Max upload size per document file (PDF, EPUB, etc.). */
+/** Max upload size per publication PDF file. */
 export const MAX_DOCUMENT_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
 export function ensureUploadDirs() {
@@ -50,25 +50,26 @@ export const listingImagesUpload = multer({
   fileFilter: imageFilter,
 }).array('images', MAX_LISTING_IMAGES_PER_UPLOAD);
 
-const documentFilter: multer.Options['fileFilter'] = (_req, file, cb) => {
-  const allowed = [
-    'application/pdf',
-    'application/epub+zip',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'text/plain',
-  ];
-  if (allowed.includes(file.mimetype) || file.mimetype.startsWith('image/')) {
-    cb(null, true);
-  } else {
-    cb(new Error('Only PDF, EPUB, Word, text, or image files are allowed'));
+const publicationFileFilter: multer.Options['fileFilter'] = (_req, file, cb) => {
+  if (file.fieldname === 'cover') {
+    if (file.mimetype.startsWith('image/')) cb(null, true);
+    else cb(new Error('Cover must be an image file'));
+    return;
   }
+  if (file.fieldname === 'file') {
+    const isPdf =
+      file.mimetype === 'application/pdf' || file.originalname.toLowerCase().endsWith('.pdf');
+    if (isPdf) cb(null, true);
+    else cb(new Error('Only PDF files are allowed for publications'));
+    return;
+  }
+  cb(new Error('Unexpected upload field'));
 };
 
 export const publicationFileUpload = multer({
   storage: diskStorage('publications'),
   limits: { fileSize: MAX_DOCUMENT_FILE_SIZE },
-  fileFilter: documentFilter,
+  fileFilter: publicationFileFilter,
 }).fields([
   { name: 'file', maxCount: 1 },
   { name: 'cover', maxCount: 1 },
