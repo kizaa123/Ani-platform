@@ -31,10 +31,14 @@ function getLogoPath(): string | null {
   return null;
 }
 
+const PAGE_MARGIN = 45;
+const CONTENT_WIDTH = 505;
+const CONTENT_RIGHT = PAGE_MARGIN + CONTENT_WIDTH;
+
 function drawPageWatermark(doc: PDFKit.PDFDocument, logoPath: string): void {
   const pageWidth = doc.page.width;
   const pageHeight = doc.page.height;
-  const watermarkWidth = 300;
+  const watermarkWidth = 260;
 
   doc.save();
   doc.opacity(0.08);
@@ -130,9 +134,23 @@ function formatLocation(user: {
   return [user.city, user.region, user.country].filter(Boolean).join(', ') || '—';
 }
 
+function formatStatementDate(date: Date): string {
+  return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function formatStatementDateTime(date: Date): string {
+  return date.toLocaleString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 export function buildOrderStatementPdf(order: OrderForStatement): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ margin: 45, size: 'A4' });
+    const doc = new PDFDocument({ margin: PAGE_MARGIN, size: 'A4' });
     const chunks: Buffer[] = [];
 
     doc.on('data', (chunk: Buffer) => chunks.push(chunk));
@@ -143,127 +161,147 @@ export function buildOrderStatementPdf(order: OrderForStatement): Promise<Buffer
     const buyerName = `${order.buyer.firstName} ${order.buyer.lastName}`;
     const farmerName = `${order.farmer.firstName} ${order.farmer.lastName}`;
     const farmName = order.farmer.farmerProfile?.farmName;
+    const totalFormatted = `GHC ${order.totalAmount.toFixed(2)}`;
+    const otpVerifiedLabel = order.otpVerifiedAt
+      ? formatStatementDateTime(order.otpVerifiedAt)
+      : 'Confirmed';
 
     if (logoPath) {
       drawPageWatermark(doc, logoPath);
-      doc.on('pageAdded', () => {
-        if (logoPath) drawPageWatermark(doc, logoPath);
-      });
+      doc.on('pageAdded', () => drawPageWatermark(doc, logoPath));
     }
 
-    // --- TOP HEADER ---
+    // --- HEADER ---
+    const headerTop = 38;
     if (logoPath) {
-      doc.image(logoPath, 45, 38, { width: 55 });
+      doc.image(logoPath, PAGE_MARGIN, headerTop, { width: 50 });
     }
 
-    const titleLeft = logoPath ? 110 : 45;
-    doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000').text('Agricess Networking International - ANI', titleLeft, 38);
-    doc.font('Helvetica-Bold').fontSize(8).fillColor('#166534').text('TOGETHER FOR ALL', titleLeft, 56);
-    doc.font('Helvetica-Bold').fontSize(9).fillColor('#4B5563').text('OFFICIAL FINANCIAL STATEMENT & ORDER RECEIPT', titleLeft, 68);
+    const titleLeft = logoPath ? 105 : PAGE_MARGIN;
+    const titleWidth = 270;
+    doc.font('Helvetica-Bold').fontSize(13).fillColor('#111827');
+    doc.text('Agricess Networking International', titleLeft, headerTop, { width: titleWidth });
+    doc.font('Helvetica-Bold').fontSize(8).fillColor('#166534');
+    doc.text('TOGETHER FOR ALL', titleLeft, headerTop + 18);
+    doc.font('Helvetica-Bold').fontSize(8.5).fillColor('#4B5563');
+    doc.text('Official Financial Statement & Order Receipt', titleLeft, headerTop + 32);
 
-    // Top Right Status Badge
-    doc.roundedRect(385, 42, 165, 24, 4).fillAndStroke('#DCFCE7', '#86EFAC');
-    doc.font('Helvetica-Bold').fontSize(8).fillColor('#166534').text('CONFIRMED & RELEASED', 385, 49, { width: 165, align: 'center' });
+    const badgeWidth = 150;
+    const badgeLeft = CONTENT_RIGHT - badgeWidth;
+    doc.roundedRect(badgeLeft, headerTop + 4, badgeWidth, 22, 4).fillAndStroke('#DCFCE7', '#86EFAC');
+    doc.font('Helvetica-Bold').fontSize(7.5).fillColor('#166534');
+    doc.text('CONFIRMED & RELEASED', badgeLeft, headerTop + 11, { width: badgeWidth, align: 'center' });
 
-    // Divider Line
-    doc.moveTo(45, 92).lineTo(550, 92).strokeColor('#E5E7EB').lineWidth(1).stroke();
+    const headerBottom = headerTop + 58;
+    doc.moveTo(PAGE_MARGIN, headerBottom).lineTo(CONTENT_RIGHT, headerBottom).strokeColor('#E5E7EB').lineWidth(1).stroke();
 
-    // --- STATEMENT METADATA BOX ---
-    doc.roundedRect(45, 102, 505, 48, 6).fillAndStroke('#F9FAFB', '#E5E7EB');
-    
-    doc.font('Helvetica-Bold').fontSize(8).fillColor('#6B7280').text('STATEMENT ID', 57, 110);
-    doc.font('Helvetica-Bold').fontSize(10).fillColor('#111827').text(`ANI-${order.id.slice(0, 8).toUpperCase()}`, 57, 124);
+    // --- STATEMENT METADATA (2x2 grid to avoid column overlap) ---
+    const metaTop = headerBottom + 10;
+    const metaHeight = 58;
+    doc.roundedRect(PAGE_MARGIN, metaTop, CONTENT_WIDTH, metaHeight, 6).fillAndStroke('#F9FAFB', '#E5E7EB');
 
-    doc.font('Helvetica-Bold').fontSize(8).fillColor('#6B7280').text('DATE ISSUED', 190, 110);
-    doc.font('Helvetica').fontSize(9).fillColor('#111827').text(new Date(order.createdAt).toLocaleDateString(), 190, 124);
+    const metaCol1 = PAGE_MARGIN + 12;
+    const metaCol2 = PAGE_MARGIN + 260;
+    const metaRow1 = metaTop + 10;
+    const metaRow2 = metaTop + 34;
 
-    doc.font('Helvetica-Bold').fontSize(8).fillColor('#6B7280').text('PAYMENT METHOD', 300, 110);
-    doc.font('Helvetica').fontSize(9).fillColor('#111827').text(order.paymentMethod.replace(/_/g, ' '), 300, 124);
+    doc.font('Helvetica-Bold').fontSize(7.5).fillColor('#6B7280').text('STATEMENT ID', metaCol1, metaRow1);
+    doc.font('Helvetica-Bold').fontSize(9.5).fillColor('#111827').text(`ANI-${order.id.slice(0, 8).toUpperCase()}`, metaCol1, metaRow1 + 11);
 
-    doc.font('Helvetica-Bold').fontSize(8).fillColor('#6B7280').text('OTP VERIFIED AT', 420, 110);
-    doc.font('Helvetica').fontSize(8.5).fillColor('#166534').text(
-      order.otpVerifiedAt ? new Date(order.otpVerifiedAt).toLocaleString() : 'CONFIRMED',
-      420,
-      124
-    );
+    doc.font('Helvetica-Bold').fontSize(7.5).fillColor('#6B7280').text('DATE ISSUED', metaCol2, metaRow1);
+    doc.font('Helvetica').fontSize(9).fillColor('#111827').text(formatStatementDate(order.createdAt), metaCol2, metaRow1 + 11);
 
-    // --- PARTIES CARDS (BUYER & FARMER) ---
-    // Buyer Card
-    doc.roundedRect(45, 160, 245, 95, 6).fillAndStroke('#FFFFFF', '#E5E7EB');
-    doc.rect(45, 160, 245, 22).fill('#F3F4F6');
-    doc.font('Helvetica-Bold').fontSize(8).fillColor('#374151').text('BUYER / CUSTOMER (PAYER)', 55, 167);
+    doc.font('Helvetica-Bold').fontSize(7.5).fillColor('#6B7280').text('PAYMENT METHOD', metaCol1, metaRow2);
+    doc.font('Helvetica').fontSize(9).fillColor('#111827').text(order.paymentMethod.replace(/_/g, ' '), metaCol1, metaRow2 + 11, { width: 230 });
 
-    doc.font('Helvetica-Bold').fontSize(10).fillColor('#111827').text(buyerName, 55, 190);
-    doc.font('Helvetica').fontSize(8.5).fillColor('#4B5563').text(`Location: ${formatLocation(order.buyer)}`, 55, 206);
-    doc.font('Helvetica').fontSize(8.5).fillColor('#4B5563').text(`Email: ${order.buyer.email || '—'}`, 55, 220);
-    doc.font('Helvetica').fontSize(8.5).fillColor('#4B5563').text(`Phone: ${order.buyer.phone || '—'}`, 55, 234);
+    doc.font('Helvetica-Bold').fontSize(7.5).fillColor('#6B7280').text('OTP VERIFIED', metaCol2, metaRow2);
+    doc.font('Helvetica').fontSize(8.5).fillColor('#166534').text(otpVerifiedLabel, metaCol2, metaRow2 + 11, { width: 230 });
 
-    // Farmer Card
-    doc.roundedRect(305, 160, 245, 95, 6).fillAndStroke('#FFFFFF', '#E5E7EB');
-    doc.rect(305, 160, 245, 22).fill('#F3F4F6');
-    doc.font('Helvetica-Bold').fontSize(8).fillColor('#374151').text('FARMER / SUPPLIER (RECIPIENT)', 315, 167);
+    // --- PARTIES ---
+    const partyTop = metaTop + metaHeight + 12;
+    const partyWidth = 245;
+    const partyHeight = 92;
+    const partyGap = 15;
+    const farmerLeft = PAGE_MARGIN + partyWidth + partyGap;
 
-    doc.font('Helvetica-Bold').fontSize(10).fillColor('#111827').text(farmerName, 315, 190);
+    doc.roundedRect(PAGE_MARGIN, partyTop, partyWidth, partyHeight, 6).fillAndStroke('#FFFFFF', '#E5E7EB');
+    doc.rect(PAGE_MARGIN, partyTop, partyWidth, 20).fill('#F3F4F6');
+    doc.font('Helvetica-Bold').fontSize(7.5).fillColor('#374151').text('BUYER / CUSTOMER (PAYER)', PAGE_MARGIN + 10, partyTop + 6);
+    doc.font('Helvetica-Bold').fontSize(9.5).fillColor('#111827').text(buyerName, PAGE_MARGIN + 10, partyTop + 28, { width: partyWidth - 20 });
+    doc.font('Helvetica').fontSize(8).fillColor('#4B5563').text(`Location: ${formatLocation(order.buyer)}`, PAGE_MARGIN + 10, partyTop + 44, { width: partyWidth - 20 });
+    doc.font('Helvetica').fontSize(8).fillColor('#4B5563').text(`Email: ${order.buyer.email || '—'}`, PAGE_MARGIN + 10, partyTop + 58, { width: partyWidth - 20 });
+    doc.font('Helvetica').fontSize(8).fillColor('#4B5563').text(`Phone: ${order.buyer.phone || '—'}`, PAGE_MARGIN + 10, partyTop + 72, { width: partyWidth - 20 });
+
+    doc.roundedRect(farmerLeft, partyTop, partyWidth, partyHeight, 6).fillAndStroke('#FFFFFF', '#E5E7EB');
+    doc.rect(farmerLeft, partyTop, partyWidth, 20).fill('#F3F4F6');
+    doc.font('Helvetica-Bold').fontSize(7.5).fillColor('#374151').text('FARMER / SUPPLIER (RECIPIENT)', farmerLeft + 10, partyTop + 6);
+    doc.font('Helvetica-Bold').fontSize(9.5).fillColor('#111827').text(farmerName, farmerLeft + 10, partyTop + 28, { width: partyWidth - 20 });
+    let farmerDetailY = partyTop + 44;
     if (farmName) {
-      doc.font('Helvetica-Oblique').fontSize(8.5).fillColor('#166534').text(`Farm: ${farmName}`, 315, 206);
+      doc.font('Helvetica-Oblique').fontSize(8).fillColor('#166534').text(`Farm: ${farmName}`, farmerLeft + 10, farmerDetailY, { width: partyWidth - 20 });
+      farmerDetailY += 14;
     }
-    doc.font('Helvetica').fontSize(8.5).fillColor('#4B5563').text(`Location: ${formatLocation(order.farmer)}`, 315, farmName ? 220 : 206);
-    doc.font('Helvetica').fontSize(8.5).fillColor('#4B5563').text(`Phone: ${order.farmer.phone || '—'}`, 315, farmName ? 234 : 220);
+    doc.font('Helvetica').fontSize(8).fillColor('#4B5563').text(`Location: ${formatLocation(order.farmer)}`, farmerLeft + 10, farmerDetailY, { width: partyWidth - 20 });
+    doc.font('Helvetica').fontSize(8).fillColor('#4B5563').text(`Phone: ${order.farmer.phone || '—'}`, farmerLeft + 10, farmerDetailY + 14, { width: partyWidth - 20 });
 
-    // --- ITEM & BREAKDOWN TABLE ---
-    const tableTop = 270;
-    doc.roundedRect(45, tableTop, 505, 24, 4).fill('#166534');
-    doc.font('Helvetica-Bold').fontSize(8.5).fillColor('#FFFFFF');
-    doc.text('DESCRIPTION / PRODUCT', 55, tableTop + 7);
-    doc.text('CATEGORY', 270, tableTop + 7);
-    doc.text('QTY', 370, tableTop + 7, { width: 40, align: 'right' });
-    doc.text('UNIT PRICE', 420, tableTop + 7, { width: 60, align: 'right' });
-    doc.text('TOTAL', 490, tableTop + 7, { width: 50, align: 'right' });
+    // --- LINE ITEMS TABLE ---
+    const tableTop = partyTop + partyHeight + 16;
+    doc.roundedRect(PAGE_MARGIN, tableTop, CONTENT_WIDTH, 22, 4).fill('#166534');
+    doc.font('Helvetica-Bold').fontSize(8).fillColor('#FFFFFF');
+    doc.text('DESCRIPTION / PRODUCT', PAGE_MARGIN + 10, tableTop + 6);
+    doc.text('CATEGORY', 268, tableTop + 6);
+    doc.text('QTY', 368, tableTop + 6, { width: 40, align: 'right' });
+    doc.text('UNIT PRICE', 418, tableTop + 6, { width: 60, align: 'right' });
+    doc.text('LINE TOTAL', 488, tableTop + 6, { width: 52, align: 'right' });
 
-    // Table Row Content
-    const rowY = tableTop + 32;
-    doc.roundedRect(45, rowY, 505, 42, 4).fillAndStroke('#FFFFFF', '#F3F4F6');
+    const rowY = tableTop + 28;
+    const rowHeight = 40;
+    doc.roundedRect(PAGE_MARGIN, rowY, CONTENT_WIDTH, rowHeight, 4).fillAndStroke('#FFFFFF', '#E5E7EB');
+    doc.font('Helvetica-Bold').fontSize(9.5).fillColor('#111827').text(order.listing.title, PAGE_MARGIN + 10, rowY + 8, { width: 195 });
+    doc.font('Helvetica').fontSize(7.5).fillColor('#6B7280').text(`Commodity: ${order.listing.commodity.name}`, PAGE_MARGIN + 10, rowY + 22, { width: 195 });
+    doc.font('Helvetica').fontSize(8.5).fillColor('#374151').text(order.listing.commodity.category.name, 268, rowY + 14, { width: 90 });
+    doc.font('Helvetica').fontSize(8.5).fillColor('#374151').text(`${order.quantity} ${order.unit}`, 368, rowY + 14, { width: 40, align: 'right' });
+    doc.font('Helvetica').fontSize(8.5).fillColor('#374151').text(`GHC ${order.unitPrice.toFixed(2)}`, 418, rowY + 14, { width: 60, align: 'right' });
+    doc.font('Helvetica-Bold').fontSize(8.5).fillColor('#111827').text(totalFormatted, 488, rowY + 14, { width: 52, align: 'right' });
 
-    doc.font('Helvetica-Bold').fontSize(10).fillColor('#111827').text(order.listing.title, 55, rowY + 8);
-    doc.font('Helvetica').fontSize(8).fillColor('#6B7280').text(`Commodity: ${order.listing.commodity.name}`, 55, rowY + 22);
+    // --- FINANCIAL BREAKDOWN ---
+    const breakdownTop = rowY + rowHeight + 14;
+    const breakdownHeight = 52;
+    doc.roundedRect(PAGE_MARGIN, breakdownTop, CONTENT_WIDTH, breakdownHeight, 6).fillAndStroke('#FAFAFA', '#E5E7EB');
 
-    doc.font('Helvetica').fontSize(9).fillColor('#374151').text(order.listing.commodity.category.name, 270, rowY + 14);
-    doc.font('Helvetica').fontSize(9).fillColor('#374151').text(`${order.quantity} ${order.unit}`, 370, rowY + 14, { width: 40, align: 'right' });
-    doc.font('Helvetica').fontSize(9).fillColor('#374151').text(`GHC ${order.unitPrice.toFixed(2)}`, 420, rowY + 14, { width: 60, align: 'right' });
-    doc.font('Helvetica-Bold').fontSize(9.5).fillColor('#111827').text(`GHC ${order.totalAmount.toFixed(2)}`, 490, rowY + 14, { width: 50, align: 'right' });
+    doc.font('Helvetica').fontSize(9).fillColor('#374151').text('Subtotal', PAGE_MARGIN + 15, breakdownTop + 12);
+    doc.font('Helvetica').fontSize(9).fillColor('#374151').text(totalFormatted, 400, breakdownTop + 12, { width: 95, align: 'right' });
 
-    // --- FINANCIAL SUMMARY & TOTAL AMOUNT PAID (HIGHLIGHTED BOLD) ---
-    const summaryTop = rowY + 55;
-    doc.roundedRect(45, summaryTop, 505, 75, 6).fillAndStroke('#F0FDF4', '#22C55E');
+    doc.font('Helvetica').fontSize(9).fillColor('#374151').text('Escrow & Handling Fee', PAGE_MARGIN + 15, breakdownTop + 28);
+    doc.font('Helvetica').fontSize(9).fillColor('#166534').text('GHC 0.00 (Included)', 400, breakdownTop + 28, { width: 95, align: 'right' });
 
-    doc.font('Helvetica').fontSize(9).fillColor('#374151').text('Subtotal:', 60, summaryTop + 12);
-    doc.font('Helvetica').fontSize(9).fillColor('#374151').text(`GHC ${order.totalAmount.toFixed(2)}`, 440, summaryTop + 12, { width: 100, align: 'right' });
+    // --- PROMINENT TOTAL AMOUNT ---
+    const totalTop = breakdownTop + breakdownHeight + 10;
+    const totalHeight = 54;
+    doc.roundedRect(PAGE_MARGIN, totalTop, CONTENT_WIDTH, totalHeight, 8).fill('#166534');
+    doc.font('Helvetica-Bold').fontSize(12).fillColor('#FFFFFF').text('TOTAL AMOUNT', PAGE_MARGIN + 18, totalTop + 10);
+    doc.font('Helvetica-Bold').fontSize(22).fillColor('#FFFFFF').text(totalFormatted, PAGE_MARGIN + 18, totalTop + 26, {
+      width: CONTENT_WIDTH - 36,
+      align: 'right',
+    });
 
-    doc.font('Helvetica').fontSize(9).fillColor('#374151').text('Escrow & Handling Fee:', 60, summaryTop + 27);
-    doc.font('Helvetica').fontSize(9).fillColor('#166534').text('GHC 0.00 (Included)', 440, summaryTop + 27, { width: 100, align: 'right' });
-
-    doc.moveTo(60, summaryTop + 42).lineTo(540, summaryTop + 42).strokeColor('#86EFAC').lineWidth(1).stroke();
-
-    // PROMINENT BOLD TOTAL AMOUNT PAID
-    doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000').text('TOTAL AMOUNT PAID:', 60, summaryTop + 49);
-    doc.font('Helvetica-Bold').fontSize(16).fillColor('#166534').text(`GHC ${order.totalAmount.toFixed(2)}`, 380, summaryTop + 47, { width: 160, align: 'right' });
-
-    // --- TRUST & FOOTER STAMP ---
-    const footerTop = summaryTop + 90;
-    doc.roundedRect(45, footerTop, 505, 45, 6).fillAndStroke('#F9FAFB', '#E5E7EB');
-    doc.font('Helvetica-Bold').fontSize(8.5).fillColor('#166534').text('✓ ESCROW PAYMENT CONFIRMED & RELEASED', 55, footerTop + 10);
+    // --- CONFIRMATION FOOTER ---
+    const footerTop = totalTop + totalHeight + 14;
+    const footerHeight = 42;
+    doc.roundedRect(PAGE_MARGIN, footerTop, CONTENT_WIDTH, footerHeight, 6).fillAndStroke('#F0FDF4', '#BBF7D0');
+    doc.font('Helvetica-Bold').fontSize(8.5).fillColor('#166534').text('ESCROW PAYMENT CONFIRMED & RELEASED', PAGE_MARGIN + 12, footerTop + 10);
     doc.font('Helvetica').fontSize(8).fillColor('#4B5563').text(
-      `Delivery OTP confirmed on ${order.otpVerifiedAt ? new Date(order.otpVerifiedAt).toLocaleString() : 'N/A'}. Payment released to ANI Accountant.`,
-      55,
-      footerTop + 24
+      `Delivery OTP confirmed on ${order.otpVerifiedAt ? formatStatementDateTime(order.otpVerifiedAt) : 'N/A'}. Payment released to ANI Accountant.`,
+      PAGE_MARGIN + 12,
+      footerTop + 24,
+      { width: CONTENT_WIDTH - 24 }
     );
 
-    // Legal Footer
     doc.font('Helvetica').fontSize(7.5).fillColor('#9CA3AF').text(
       'This financial statement is an official digital record issued by Agricess Networking International (ANI). All funds are protected under ANI Escrow policy until delivery confirmation.',
-      45,
-      footerTop + 55,
-      { align: 'center', width: 505 }
+      PAGE_MARGIN,
+      footerTop + footerHeight + 12,
+      { align: 'center', width: CONTENT_WIDTH }
     );
 
     doc.end();

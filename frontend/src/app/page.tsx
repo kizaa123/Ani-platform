@@ -132,23 +132,15 @@ export default function HomePage() {
 
         <div className="relative z-10 mx-auto w-full max-w-6xl px-6 py-24">
           <div className="max-w-2xl">
-            <div className="relative group/badge mb-6 inline-flex overflow-hidden rounded-2xl p-[1.5px] transition-all hover:scale-[1.01] active:scale-[0.99] duration-300 shadow-xl shadow-brand-950/30">
-              {/* Background gradient outline glow */}
-              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-emerald-400 to-yellow-500 opacity-80 group-hover/badge:opacity-100 transition-opacity" />
-              
-              {/* Main content body */}
-              <div className="relative flex items-center gap-3 rounded-[15px] bg-brand-950 px-5 py-3 text-white backdrop-blur-xl">
-                <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-yellow-400 text-brand-950 font-bold text-sm shadow-md animate-pulse">
-                  ★
-                </span>
-                <span className="text-sm sm:text-base font-extrabold tracking-wide bg-gradient-to-r from-yellow-300 via-white to-emerald-300 bg-clip-text text-transparent">
-                  Ghana&apos;s #1 Agricultural Exchange Platform
-                </span>
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
-                </span>
-              </div>
+              {/* Clean badge pill */}
+            <div className="mb-6 inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 backdrop-blur-sm">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+              </span>
+              <span className="text-sm font-medium tracking-wide text-white/90">
+                Ghana&apos;s Agricultural Exchange Platform
+              </span>
             </div>
 
             <h1 className="mb-6 text-5xl font-black leading-tight tracking-tight text-white md:text-6xl lg:text-7xl">

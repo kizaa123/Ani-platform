@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 interface LogoProps {
-  /** "full" = Icon + Name + Tagline "together for all", "mark" = Icon only, "compact" = Icon + Name */
+  /** "full" = Icon + ANI + Tagline, "mark" = Icon only, "compact" = Icon + ANI only */
   variant?: "full" | "mark" | "compact";
   /** "dark" = for light backgrounds (dark text), "light" = for dark/green backgrounds (white text) */
   theme?: "dark" | "light";
@@ -52,37 +52,37 @@ export function Logo({
   showTagline = true,
 }: LogoProps) {
   const iconSizes = {
-    sm: "h-8 sm:h-9 w-auto flex-shrink-0",
-    md: "h-11 sm:h-12 w-auto flex-shrink-0",
-    lg: "h-16 sm:h-20 w-auto flex-shrink-0",
+    sm: "h-8 w-auto flex-shrink-0",
+    md: "h-10 w-auto flex-shrink-0",
+    lg: "h-14 w-auto flex-shrink-0",
   };
 
-  const titleSizes = {
-    sm: "text-xs sm:text-sm font-semibold tracking-tight leading-snug",
-    md: "text-sm sm:text-base font-bold tracking-tight leading-snug",
-    lg: "text-xl sm:text-2xl font-bold tracking-tight leading-tight",
+  // "ANI" — the brand mark
+  const brandSizes = {
+    sm: "text-xl font-extrabold tracking-tight leading-none",
+    md: "text-2xl font-extrabold tracking-tight leading-none",
+    lg: "text-4xl font-extrabold tracking-tight leading-none",
   };
 
+  // "Together for all" — light, elegant subtitle
   const taglineSizes = {
-    sm: "text-[9px] sm:text-[10px] font-medium tracking-widest uppercase mt-0.5",
-    md: "text-xs font-semibold tracking-widest uppercase mt-0.5",
-    lg: "text-xs sm:text-sm font-semibold tracking-widest uppercase mt-1",
+    sm: "text-[10px] font-normal tracking-widest uppercase leading-none mt-1 opacity-75",
+    md: "text-[11px] font-normal tracking-widest uppercase leading-none mt-1 opacity-75",
+    lg: "text-xs font-normal tracking-widest uppercase leading-none mt-1.5 opacity-75",
   };
 
-  const titleColor = theme === "light" ? "text-white" : "text-gray-900";
-  const taglineColor = theme === "light" ? "text-emerald-200" : "text-emerald-700";
+  const brandColor = theme === "light" ? "text-white" : "text-gray-900";
+  const taglineColor = theme === "light" ? "text-emerald-100" : "text-emerald-600";
 
   const content = (
-    <div className={`inline-flex items-center gap-3 ${className}`}>
+    <div className={`inline-flex items-center gap-2.5 ${className}`}>
       <LogoIcon className={iconSizes[size]} theme={theme} />
       {variant !== "mark" && (
-        <div className="flex flex-col leading-none">
-          <span className={`${titleSizes[size]} ${titleColor}`}>
-            Agricess Networking International- ANI
-          </span>
+        <div className="flex flex-col justify-center">
+          <span className={`${brandSizes[size]} ${brandColor}`}>ANI</span>
           {(showTagline || variant === "full") && (
             <span className={`${taglineSizes[size]} ${taglineColor}`}>
-              together for all
+              Together for all
             </span>
           )}
         </div>
@@ -92,7 +92,7 @@ export function Logo({
 
   if (href) {
     return (
-      <Link href={href} className="inline-flex items-center transition hover:opacity-90">
+      <Link href={href} className="inline-flex items-center transition-opacity hover:opacity-85">
         {content}
       </Link>
     );

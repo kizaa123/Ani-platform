@@ -183,6 +183,10 @@ export function ProductMediaGallery({
   const [activeIndex, setActiveIndex] = useState(0);
   const [shareOpen, setShareOpen] = useState(false);
 
+  // Touch / mouse drag state
+  const dragStartX = useRef<number | null>(null);
+  const isDragging = useRef(false);
+
   useEffect(() => {
     setItems(initialMedia);
     setActiveIndex(0);
@@ -205,6 +209,44 @@ export function ProductMediaGallery({
   const goTo = (index: number) => {
     const clamped = Math.max(0, Math.min(index, totalSlides - 1));
     setActiveIndex(clamped);
+  };
+
+  const goPrev = () => goTo(activeIndex - 1);
+  const goNext = () => goTo(activeIndex + 1);
+
+  // ── Touch handlers ──────────────────────────────────────────────────
+  const handleTouchStart = (e: React.TouchEvent) => {
+    dragStartX.current = e.touches[0].clientX;
+  };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (dragStartX.current === null) return;
+    const delta = e.changedTouches[0].clientX - dragStartX.current;
+    dragStartX.current = null;
+    if (Math.abs(delta) < 30) return; // ignore tiny taps
+    if (delta < 0) goNext();
+    else goPrev();
+  };
+
+  // ── Mouse drag handlers (desktop) ───────────────────────────────────
+  const handleMouseDown = (e: React.MouseEvent) => {
+    dragStartX.current = e.clientX;
+    isDragging.current = false;
+  };
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (dragStartX.current === null) return;
+    if (Math.abs(e.clientX - dragStartX.current) > 5) isDragging.current = true;
+  };
+  const handleMouseUp = (e: React.MouseEvent) => {
+    if (dragStartX.current === null) return;
+    const delta = e.clientX - dragStartX.current;
+    dragStartX.current = null;
+    if (!isDragging.current || Math.abs(delta) < 30) return;
+    if (delta < 0) goNext();
+    else goPrev();
+  };
+  const handleMouseLeave = () => {
+    dragStartX.current = null;
+    isDragging.current = false;
   };
 
   const handleLike = async () => {
@@ -253,7 +295,16 @@ export function ProductMediaGallery({
 
   return (
     <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-      <div className="group relative aspect-square w-full overflow-hidden bg-gray-50">
+      {/* ── Main viewer — swipeable / draggable ── */}
+      <div
+        className="group relative aspect-square w-full cursor-grab overflow-hidden bg-gray-50 active:cursor-grabbing select-none"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+      >
         <MainViewer
           item={activeItem}
           fallbackSrc={activeFallback}
@@ -261,32 +312,62 @@ export function ProductMediaGallery({
           active
         />
 
-        {interactive && activeItem && (
-          <div className="absolute bottom-3 right-3 flex items-center gap-2">
+        {/* ── Prev / Next arrows — desktop only (md+) ── */}
+        {totalSlides > 1 && (
+          <>
             <button
               type="button"
-              onClick={handleLike}
-              aria-label={activeItem.likedByMe ? "Unlike" : "Like"}
-              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold shadow-sm backdrop-blur transition ${
-                activeItem.likedByMe
-                  ? "bg-red-500 text-white"
-                  : "border border-gray-200 bg-white/95 text-gray-700 hover:bg-white"
-              }`}
+              onClick={(e) => { e.stopPropagation(); goPrev(); }}
+              disabled={activeIndex === 0}
+              aria-label="Previous image"
+              className="absolute left-2 top-1/2 hidden h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-xs transition hover:bg-black/60 disabled:opacity-30 md:flex"
             >
-              <Icon name="heart" className="h-4 w-4" />
-              {activeItem.likesCount > 0 && <span>{activeItem.likesCount}</span>}
+              <Icon name="chevron-left" className="h-4 w-4" />
             </button>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); goNext(); }}
+              disabled={activeIndex === totalSlides - 1}
+              aria-label="Next image"
+              className="absolute right-2 top-1/2 hidden h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-xs transition hover:bg-black/60 disabled:opacity-30 md:flex"
+            >
+              <Icon name="chevron-right" className="h-4 w-4" />
+            </button>
+          </>
+        )}
 
-            <div className="relative">
+        {/* ── Like / Share controls ── */}
+        {interactive && activeItem && (
+          <div className="absolute bottom-3 right-3 flex items-center gap-1.5">
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={handleLike}
+                aria-label={activeItem.likedByMe ? "Unlike" : "Like"}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white/95 shadow-sm backdrop-blur transition hover:bg-white"
+              >
+                <Icon
+                  name="heart"
+                  className={`h-5 w-5 ${activeItem.likedByMe ? "fill-red-500 text-red-500" : "fill-none text-gray-600"}`}
+                />
+              </button>
+              {activeItem.likesCount > 0 && (
+                <span className="text-xs font-semibold text-gray-700">{activeItem.likesCount}</span>
+              )}
+            </div>
+
+            <div className="relative flex items-center gap-1">
               <button
                 type="button"
                 onClick={() => setShareOpen((o) => !o)}
                 aria-label="Share"
-                className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white/95 px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm backdrop-blur transition hover:bg-white"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white/95 shadow-sm backdrop-blur transition hover:bg-white"
               >
-                <Icon name="share" className="h-4 w-4" />
-                {activeItem.sharesCount > 0 && <span>{activeItem.sharesCount}</span>}
+                <Icon name="share" className="h-5 w-5 text-gray-600" />
               </button>
+              {activeItem.sharesCount > 0 && (
+                <span className="text-xs font-semibold text-gray-700">{activeItem.sharesCount}</span>
+              )}
               {shareOpen && (
                 <ShareMenu
                   shareUrl={shareUrl}
@@ -300,9 +381,10 @@ export function ProductMediaGallery({
         )}
       </div>
 
+      {/* ── Dot indicators — mobile only ── */}
       {totalSlides > 1 && (
         <div
-          className="flex items-center justify-center gap-2 border-t border-gray-100 bg-white px-3 py-3"
+          className="flex items-center justify-center gap-2 border-t border-gray-100 bg-white px-3 py-3 md:hidden"
           role="tablist"
           aria-label="Product media"
         >
