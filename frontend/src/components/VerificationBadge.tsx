@@ -1,3 +1,5 @@
+import { Icon, type IconName } from "@/components/icons";
+
 interface VerificationBadgeProps {
   status?: string | null;
   className?: string;
@@ -14,7 +16,7 @@ export function VerificationBadge({
   const verified = status === "VERIFIED";
   const rejected = status === "REJECTED";
 
-  const emoji = verified ? "✅" : rejected ? "❌" : "⏳";
+  const iconName: IconName = verified ? "check-circle" : rejected ? "x-circle" : "clock";
   const label = verified ? "Verified" : rejected ? "Rejected" : "Pending";
 
   return (
@@ -27,7 +29,7 @@ export function VerificationBadge({
             : "border border-amber-200 bg-amber-100 text-amber-900"
       } ${className}`}
     >
-      <span aria-hidden="true" className="text-xs">{emoji}</span>
+      <Icon name={iconName} className="h-3.5 w-3.5 shrink-0" />
       {!showIconOnly && <span>{label}</span>}
     </span>
   );

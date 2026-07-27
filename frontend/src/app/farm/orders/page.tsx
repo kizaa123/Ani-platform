@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { ProductOrderLineItem, ROLES } from "@/lib/types";
 import { ProductOrdersList } from "@/components/ProductOrdersList";
 import { formatGhc } from "@/lib/format";
+import { Icon } from "@/components/icons";
 
 export default function FarmerOrdersPage() {
   const { user, loading } = useAuth();
@@ -91,7 +92,7 @@ export default function FarmerOrdersPage() {
         <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4 shadow-xs">
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold uppercase text-amber-800">Unserved</p>
-            <span className="text-xs">⏳</span>
+            <Icon name="clock" className="h-4 w-4 text-amber-600" />
           </div>
           <p className="mt-1 text-2xl font-bold text-amber-900">{unservedOrders.length}</p>
           <p className="mt-1 text-[11px] text-amber-700">Fulfillment pending</p>
@@ -100,7 +101,7 @@ export default function FarmerOrdersPage() {
         <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 shadow-xs">
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold uppercase text-emerald-800">Served</p>
-            <span className="text-xs">✅</span>
+            <Icon name="check-circle" className="h-4 w-4 text-emerald-600" />
           </div>
           <p className="mt-1 text-2xl font-bold text-emerald-900">{servedOrders.length}</p>
           <p className="mt-1 text-[11px] text-emerald-700">Delivered &amp; completed</p>
@@ -135,25 +136,27 @@ export default function FarmerOrdersPage() {
         <button
           type="button"
           onClick={() => setFilterTab("UNSERVED")}
-          className={`rounded-xl px-4 py-2 text-xs font-bold transition ${
+          className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition ${
             filterTab === "UNSERVED"
               ? "bg-amber-600 text-white shadow-xs"
               : "bg-white text-amber-800 border border-amber-200 hover:bg-amber-50"
           }`}
         >
-          ⏳ Unserved Orders ({unservedOrders.length})
+          <Icon name="clock" className="h-3.5 w-3.5" />
+          <span>Unserved Orders ({unservedOrders.length})</span>
         </button>
 
         <button
           type="button"
           onClick={() => setFilterTab("SERVED")}
-          className={`rounded-xl px-4 py-2 text-xs font-bold transition ${
+          className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition ${
             filterTab === "SERVED"
               ? "bg-emerald-600 text-white shadow-xs"
               : "bg-white text-emerald-800 border border-emerald-200 hover:bg-emerald-50"
           }`}
         >
-          ✅ Served Orders ({servedOrders.length})
+          <Icon name="check-circle" className="h-3.5 w-3.5" />
+          <span>Served Orders ({servedOrders.length})</span>
         </button>
       </div>
 

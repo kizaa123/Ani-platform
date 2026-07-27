@@ -113,44 +113,44 @@ function PublicationCard({
             setLiked(!liked);
             setLikesCount((prev) => (liked ? prev - 1 : prev + 1));
           }}
-          className={`flex items-center justify-center gap-1 rounded-xl px-2 py-2 text-xs font-semibold transition ${
+          className={`flex items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-xs font-semibold transition ${
             liked
               ? "bg-emerald-600 text-white shadow-xs"
               : "bg-emerald-100/70 text-emerald-800 hover:bg-emerald-200/80"
           }`}
         >
-          <span>👍</span>
+          <Icon name="thumbs-up" className="h-3.5 w-3.5 shrink-0" />
           <span>Like</span>
         </button>
 
         <button
           type="button"
           onClick={() => setShowComments(!showComments)}
-          className="flex items-center justify-center gap-1 rounded-xl bg-emerald-100/70 px-2 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-200/80"
+          className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-100/70 px-2 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-200/80"
         >
-          <span>💬</span>
+          <Icon name="comment" className="h-3.5 w-3.5 shrink-0" />
           <span>Comment</span>
         </button>
 
         <button
           type="button"
           onClick={handleShare}
-          className="flex items-center justify-center gap-1 rounded-xl bg-emerald-100/70 px-2 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-200/80"
+          className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-100/70 px-2 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-200/80"
         >
-          <span>↪️</span>
+          <Icon name="share" className="h-3.5 w-3.5 shrink-0" />
           <span>Share</span>
         </button>
 
         <button
           type="button"
           onClick={() => setFollowed(!followed)}
-          className={`flex items-center justify-center gap-1 rounded-xl px-2 py-2 text-xs font-semibold transition ${
+          className={`flex items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-xs font-semibold transition ${
             followed
               ? "bg-emerald-700 text-white shadow-xs"
               : "bg-emerald-100/70 text-emerald-800 hover:bg-emerald-200/80"
           }`}
         >
-          <span>👤+</span>
+          <Icon name="user-plus" className="h-3.5 w-3.5 shrink-0" />
           <span>{followed ? "Following" : "Follow"}</span>
         </button>
       </div>

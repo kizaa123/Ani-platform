@@ -33,6 +33,12 @@ export type IconName =
   | "heart"
   | "share"
   | "download"
+  | "thumbs-up"
+  | "comment"
+  | "user-plus"
+  | "check-circle"
+  | "clock"
+  | "x-circle"
   | "logo";
 
 type IconProps = SVGProps<SVGSVGElement> & { name: IconName };
@@ -200,6 +206,36 @@ const paths: Record<IconName, ReactNode> = {
   download: (
     <>
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16" />
+    </>
+  ),
+  "thumbs-up": (
+    <>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 001.99-1.7l1.38-9a2 2 0 00-1.99-2.3zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3" />
+    </>
+  ),
+  comment: (
+    <>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+    </>
+  ),
+  "user-plus": (
+    <>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+    </>
+  ),
+  "check-circle": (
+    <>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </>
+  ),
+  clock: (
+    <>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </>
+  ),
+  "x-circle": (
+    <>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
     </>
   ),
   logo: (

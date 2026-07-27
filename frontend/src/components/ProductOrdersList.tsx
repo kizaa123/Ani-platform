@@ -247,11 +247,13 @@ function CompactOrderCard({
         <span className="text-xs font-semibold text-gray-500">{formatDate(order.date)}</span>
         {isServed ? (
           <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">
-            ✅ Served
+            <Icon name="check-circle" className="h-3.5 w-3.5 shrink-0" />
+            <span>Served</span>
           </span>
         ) : (
           <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-900">
-            ⏳ Unserved
+            <Icon name="clock" className="h-3.5 w-3.5 shrink-0" />
+            <span>Unserved</span>
           </span>
         )}
       </div>

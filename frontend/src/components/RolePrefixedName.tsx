@@ -1,5 +1,4 @@
-"use client";
-
+import { Icon } from "@/components/icons";
 import {
   fullName,
   isBuyer,
@@ -47,8 +46,8 @@ export function RolePrefixedName({
       <span className={["inline-flex items-center gap-1", nameClassName, className].filter(Boolean).join(" ")}>
         <span>{name}</span>
         {showVerifiedBadge && isVerified && (
-          <span className="text-xs shrink-0" title="Verified User">
-            ✅
+          <span title="Verified User">
+            <Icon name="check-circle" className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
           </span>
         )}
       </span>
@@ -56,7 +55,7 @@ export function RolePrefixedName({
   }
 
   return (
-    <span className={["inline-flex items-center gap-0.5 truncate", className].filter(Boolean).join(" ")}>
+    <span className={["inline-flex items-center gap-1 truncate", className].filter(Boolean).join(" ")}>
       <span className={prefixClassName}>{config.prefix}</span>
       {config.separator === "_" ? (
         <span className={separatorClassName}>_</span>
@@ -65,8 +64,8 @@ export function RolePrefixedName({
       )}
       <span className={nameClassName}>{name}</span>
       {showVerifiedBadge && isVerified && (
-        <span className="ml-1 text-xs shrink-0" title="Verified User">
-          ✅
+        <span title="Verified User">
+          <Icon name="check-circle" className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
         </span>
       )}
     </span>
