@@ -8,13 +8,11 @@ import { api } from "@/lib/api";
 import { Listing, ROLES, defaultListingUnit, listingUnitsForRole, formatListingUnit, isLivestockFarmer, normalizeListingUnit, type ListingUnit, ProductMediaItem } from "@/lib/types";
 import { ProductImage } from "@/components/FarmerAvatar";
 import { Icon } from "@/components/icons";
-import { FarmerMediaItem } from "@/lib/types";
 import { assetUrl } from "@/lib/assetUrl";
 import { basePriceFromListed, computeListedPrice } from "@/lib/listingPrice";
 
 import { productMediaThumbnail } from "@/components/ProductMediaGallery";
 
-const MAX_FARM_MEDIA = 5;
 const MAX_PRODUCT_MEDIA = 5;
 const MAX_VIDEO_DURATION = 60;
 
@@ -61,16 +59,13 @@ export default function FarmPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const productMediaRef = useRef<HTMLInputElement>(null);
-  const farmMediaRef = useRef<HTMLInputElement>(null);
 
   const [profile, setProfile] = useState<FarmProfile | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
-  const [farmMedia, setFarmMedia] = useState<FarmerMediaItem[]>([]);
   const [productMedia, setProductMedia] = useState<ProductMediaItem[]>([]);
   const [pendingMediaFiles, setPendingMediaFiles] = useState<
     Array<{ file: File; preview: string; duration?: number }>
   >([]);
-  const [mediaUploading, setMediaUploading] = useState(false);
   const [productMediaUploading, setProductMediaUploading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -89,14 +84,12 @@ export default function FarmPage() {
   }, [user?.roleId]);
 
   const load = async () => {
-    const [p, l, m] = await Promise.all([
+    const [p, l] = await Promise.all([
       api.farm.profile() as Promise<FarmProfile>,
       api.marketplace.my(),
-      api.farm.media.list(),
     ]);
     setProfile(p);
     setListings(l);
-    setFarmMedia(m);
   };
 
   useEffect(() => {
@@ -161,44 +154,6 @@ export default function FarmPage() {
       next.splice(index, 1);
       return next;
     });
-  };
-
-  const handleFarmMediaUpload = async (files: FileList | null) => {
-    if (!files?.length) return;
-    if (farmMedia.length >= MAX_FARM_MEDIA) {
-      alert(`Maximum ${MAX_FARM_MEDIA} media files allowed`);
-      return;
-    }
-
-    const file = files[0];
-    setMediaUploading(true);
-    try {
-      let duration: number | undefined;
-      if (file.type.startsWith("video/")) {
-        duration = await getVideoDuration(file);
-        if (duration > MAX_VIDEO_DURATION) {
-          alert(`Videos must be ${MAX_VIDEO_DURATION} seconds or less`);
-          return;
-        }
-      }
-      const item = await api.farm.media.upload(file, duration);
-      setFarmMedia((prev) => [...prev, item]);
-    } catch (e) {
-      alert(e instanceof Error ? e.message : "Media upload failed");
-    } finally {
-      if (farmMediaRef.current) farmMediaRef.current.value = "";
-      setMediaUploading(false);
-    }
-  };
-
-  const removeFarmMedia = async (id: string) => {
-    if (!confirm("Remove this media from your farm profile?")) return;
-    try {
-      await api.farm.media.remove(id);
-      setFarmMedia((prev) => prev.filter((m) => m.id !== id));
-    } catch (e) {
-      alert(e instanceof Error ? e.message : "Could not remove media");
-    }
   };
 
   const startEdit = (listing: Listing) => {
@@ -317,69 +272,6 @@ export default function FarmPage() {
             </div>
           )}
         </div>
-      </div>
-
-      <div className="mb-8 rounded-2xl border border-brand-100 bg-white p-6 shadow-md">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-bold text-brand-900">Farm photos &amp; videos</h2>
-            <p className="text-sm text-gray-500">
-              Up to {MAX_FARM_MEDIA} files. Videos max {MAX_VIDEO_DURATION} seconds.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => farmMediaRef.current?.click()}
-            disabled={mediaUploading || farmMedia.length >= MAX_FARM_MEDIA}
-            className="rounded-xl bg-brand-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-          >
-            {mediaUploading ? "Uploading..." : "+ Add media"}
-          </button>
-        </div>
-        <input
-          ref={farmMediaRef}
-          type="file"
-          accept="image/*,video/*"
-          className="hidden"
-          onChange={(e) => handleFarmMediaUpload(e.target.files)}
-        />
-        {farmMedia.length === 0 ? (
-          <p className="text-sm text-gray-500">
-            Share photos or short videos of your farm profile.
-          </p>
-        ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
-            {farmMedia.map((item) => {
-              const src = assetUrl(item.url);
-              return (
-                <div key={item.id} className="relative overflow-hidden rounded-xl border border-brand-100 bg-brand-50">
-                  {item.type === "VIDEO" && src ? (
-                    <video
-                      src={src}
-                      className="aspect-square w-full object-cover"
-                      muted
-                      loop
-                      playsInline
-                      autoPlay
-                      preload="metadata"
-                    />
-                  ) : src ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={src} alt="" className="aspect-square w-full object-cover" />
-                  ) : null}
-                  <button
-                    type="button"
-                    onClick={() => removeFarmMedia(item.id)}
-                    aria-label="Remove media"
-                    className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white hover:bg-black/80"
-                  >
-                    <Icon name="x" className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        )}
       </div>
 
       <div className="mb-4 flex items-center justify-between">

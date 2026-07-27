@@ -16,8 +16,11 @@ type OrderForStatement = NonNullable<Awaited<ReturnType<typeof loadOrderForState
 
 function getLogoPath(): string | null {
   const candidates = [
+    path.join(__dirname, '..', '..', 'public', 'ani-logo.png'),
+    path.join(process.cwd(), 'public', 'ani-logo.png'),
     path.join(process.cwd(), 'ANI Logo.png'),
     path.join(process.cwd(), '..', 'ANI Logo.png'),
+    path.join(process.cwd(), '..', 'frontend', 'public', 'login_cover.png'),
     path.join(__dirname, '..', '..', '..', 'ANI Logo.png'),
     path.join(__dirname, '..', '..', 'ANI Logo.png'),
     path.join(__dirname, '..', 'ANI Logo.png'),
@@ -26,6 +29,19 @@ function getLogoPath(): string | null {
     if (fs.existsSync(c)) return c;
   }
   return null;
+}
+
+function drawPageWatermark(doc: PDFKit.PDFDocument, logoPath: string): void {
+  const pageWidth = doc.page.width;
+  const pageHeight = doc.page.height;
+  const watermarkWidth = 300;
+
+  doc.save();
+  doc.opacity(0.08);
+  doc.image(logoPath, (pageWidth - watermarkWidth) / 2, (pageHeight - watermarkWidth * 0.45) / 2, {
+    width: watermarkWidth,
+  });
+  doc.restore();
 }
 
 async function loadOrderForStatement(orderId: string) {
@@ -128,12 +144,11 @@ export function buildOrderStatementPdf(order: OrderForStatement): Promise<Buffer
     const farmerName = `${order.farmer.firstName} ${order.farmer.lastName}`;
     const farmName = order.farmer.farmerProfile?.farmName;
 
-    // --- WATERMARK (BACKGROUND) ---
     if (logoPath) {
-      doc.save();
-      doc.opacity(0.07);
-      doc.image(logoPath, (595.28 - 320) / 2, (841.89 - 180) / 2, { width: 320 });
-      doc.restore();
+      drawPageWatermark(doc, logoPath);
+      doc.on('pageAdded', () => {
+        if (logoPath) drawPageWatermark(doc, logoPath);
+      });
     }
 
     // --- TOP HEADER ---

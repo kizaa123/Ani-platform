@@ -95,9 +95,15 @@ export class MarketplaceController {
 
   remove = async (req: AuthRequest, res: Response) => {
     try {
-      await marketplaceService.deleteListing(req.user!.userId, req.params.id as string);
-      await createAuditLog(req, 'LISTING_REMOVED', 'commodity_listing', { id: req.params.id as string });
-      ApiResponse.success(res, { message: 'Product removed from your farm' });
+      const result = await marketplaceService.deleteListing(
+        req.user!.userId,
+        req.params.id as string
+      );
+      await createAuditLog(req, 'LISTING_REMOVED', 'commodity_listing', {
+        id: req.params.id as string,
+        mode: result.mode,
+      });
+      ApiResponse.success(res, { message: result.message });
     } catch (e) {
       ApiResponse.error(res, e);
     }

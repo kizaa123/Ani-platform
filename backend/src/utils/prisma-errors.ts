@@ -16,6 +16,13 @@ export function toAppError(error: unknown): AppError {
     if (error.code === 'P2021' || error.code === 'P2022') {
       return new AppError(503, 'Database not set up. Run: npm run db:setup', 'DB_NOT_SETUP');
     }
+    if (error.code === 'P2003') {
+      return new AppError(
+        409,
+        'This record cannot be removed because it is linked to existing data',
+        'FK_CONSTRAINT'
+      );
+    }
   }
 
   return new AppError(500, 'Internal server error', 'INTERNAL_ERROR');

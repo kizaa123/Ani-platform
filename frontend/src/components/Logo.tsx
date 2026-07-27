@@ -13,7 +13,7 @@ interface LogoProps {
   showTagline?: boolean;
 }
 
-export function LogoIcon({ className = "h-8 w-auto", theme = "dark" }: { className?: string; theme?: "dark" | "light" }) {
+export function LogoIcon({ className = "h-9 w-auto", theme = "dark" }: { className?: string; theme?: "dark" | "light" }) {
   const strokeColor = theme === "light" ? "#FFFFFF" : "#2C3238";
   return (
     <svg
@@ -28,15 +28,15 @@ export function LogoIcon({ className = "h-8 w-auto", theme = "dark" }: { classNa
         points="20 4, 34 12, 34 28, 20 36, 6 28, 6 12"
         fill="#1F9D68"
         stroke={strokeColor}
-        strokeWidth="3.5"
+        strokeWidth="2.5"
         strokeLinejoin="round"
       />
       {/* Right Hexagon (Outline) */}
       <polygon
         points="48 4, 62 12, 62 28, 48 36, 34 28, 34 12"
-        fill={theme === "light" ? "rgba(255,255,255,0.05)" : "none"}
+        fill={theme === "light" ? "rgba(255,255,255,0.08)" : "none"}
         stroke={strokeColor}
-        strokeWidth="3.5"
+        strokeWidth="2.5"
         strokeLinejoin="round"
       />
     </svg>
@@ -52,28 +52,28 @@ export function Logo({
   showTagline = true,
 }: LogoProps) {
   const iconSizes = {
-    sm: "h-6 w-auto",
-    md: "h-8 w-auto",
-    lg: "h-11 w-auto",
+    sm: "h-8 sm:h-9 w-auto flex-shrink-0",
+    md: "h-11 sm:h-12 w-auto flex-shrink-0",
+    lg: "h-16 sm:h-20 w-auto flex-shrink-0",
   };
 
   const titleSizes = {
-    sm: "text-[10px] font-black tracking-tight leading-tight",
-    md: "text-xs font-black tracking-tight leading-tight",
-    lg: "text-sm font-black tracking-tight leading-tight",
+    sm: "text-xs sm:text-sm font-semibold tracking-tight leading-snug",
+    md: "text-sm sm:text-base font-bold tracking-tight leading-snug",
+    lg: "text-xl sm:text-2xl font-bold tracking-tight leading-tight",
   };
 
   const taglineSizes = {
-    sm: "text-[8px] font-black tracking-wider uppercase -mt-0.5",
-    md: "text-[9px] font-black tracking-widest uppercase -mt-0.5",
-    lg: "text-[10px] font-black tracking-widest uppercase -mt-0.5",
+    sm: "text-[9px] sm:text-[10px] font-medium tracking-widest uppercase mt-0.5",
+    md: "text-xs font-semibold tracking-widest uppercase mt-0.5",
+    lg: "text-xs sm:text-sm font-semibold tracking-widest uppercase mt-1",
   };
 
-  const titleColor = "text-black";
-  const taglineColor = "text-black";
+  const titleColor = theme === "light" ? "text-white" : "text-gray-900";
+  const taglineColor = theme === "light" ? "text-emerald-200" : "text-emerald-700";
 
   const content = (
-    <div className={`inline-flex items-center gap-2.5 ${className}`}>
+    <div className={`inline-flex items-center gap-3 ${className}`}>
       <LogoIcon className={iconSizes[size]} theme={theme} />
       {variant !== "mark" && (
         <div className="flex flex-col leading-none">

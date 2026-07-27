@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
@@ -14,7 +14,142 @@ import { Icon } from "@/components/icons";
 function filterFarmers(farmers: FarmerBrowseCard[], query: string): FarmerBrowseCard[] {
   const term = query.trim().toLowerCase();
   if (!term) return farmers;
-  return farmers.filter((f) => (f.searchTerms ?? "").includes(term));
+  return farmers.filter((f) => (f.searchTerms ?? "").toLowerCase().includes(term));
+}
+
+function getFarmerCategories(farmer: FarmerBrowseCard) {
+  const commodities = farmer.registeredCommodities ?? [];
+  const products = farmer.products ?? [];
+
+  const fruitKeywords = [
+    "fruit", "fruits", "mango", "pineapple", "banana", "orange", "papaya",
+    "pawpaw", "apple", "citrus", "watermelon", "avocado", "guava", "passion",
+    "lemon", "lime", "berry", "grape", "melon"
+  ];
+
+  const livestockKeywords = [
+    "livestock", "poultry", "cattle", "cow", "goat", "sheep", "pig", "swine",
+    "chicken", "turkey", "egg", "eggs", "meat", "dairy", "animal"
+  ];
+
+  let isFruit = false;
+  let isLivestock = false;
+  let isCrop = false;
+
+  for (const c of commodities) {
+    const cat = (c.category ?? "").toLowerCase();
+    const name = (c.name ?? "").toLowerCase();
+    if (cat.includes("fruit") || fruitKeywords.some((k) => name.includes(k))) {
+      isFruit = true;
+    } else if (cat.includes("livestock") || livestockKeywords.some((k) => name.includes(k) || cat.includes(k))) {
+      isLivestock = true;
+    } else {
+      isCrop = true;
+    }
+  }
+
+  for (const p of products) {
+    const title = (p.title ?? "").toLowerCase();
+    const cat = (p.commodity?.category?.name ?? "").toLowerCase();
+    const name = (p.commodity?.name ?? "").toLowerCase();
+    if (cat.includes("fruit") || fruitKeywords.some((k) => name.includes(k) || title.includes(k))) {
+      isFruit = true;
+    } else if (cat.includes("livestock") || livestockKeywords.some((k) => name.includes(k) || cat.includes(k) || title.includes(k))) {
+      isLivestock = true;
+    } else {
+      isCrop = true;
+    }
+  }
+
+  if (!isFruit && !isLivestock && !isCrop) {
+    isCrop = true;
+  }
+
+  return { isCrop, isLivestock, isFruit };
+}
+
+function FarmerRowSection({
+  title,
+  subtitle,
+  icon,
+  farmers,
+  browse,
+  onSelectFarmer,
+}: {
+  title: string;
+  subtitle: string;
+  icon: string;
+  farmers: FarmerBrowseCard[];
+  browse: MarketplaceBrowse | null;
+  onSelectFarmer: (farmer: FarmerBrowseCard) => void;
+}) {
+  const rowRef = useRef<HTMLDivElement>(null);
+
+  const scroll = (direction: "left" | "right") => {
+    if (rowRef.current) {
+      const scrollAmount = direction === "left" ? -360 : 360;
+      rowRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+    }
+  };
+
+  if (farmers.length === 0) return null;
+
+  return (
+    <div className="mb-10 rounded-2xl border border-brand-100/80 bg-white/70 p-5 shadow-xs backdrop-blur-xs">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-xl shadow-xs">
+            {icon}
+          </span>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-bold text-brand-900">{title}</h2>
+              <span className="rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-bold text-brand-800">
+                {farmers.length}
+              </span>
+            </div>
+            <p className="text-xs text-gray-500">{subtitle}</p>
+          </div>
+        </div>
+
+        {/* Scroll controls */}
+        <div className="hidden items-center gap-1.5 sm:flex">
+          <button
+            type="button"
+            onClick={() => scroll("left")}
+            aria-label={`Scroll ${title} left`}
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-brand-200 bg-white text-brand-700 shadow-xs transition hover:bg-brand-100 hover:text-brand-900 active:scale-95"
+          >
+            <Icon name="chevron-left" className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => scroll("right")}
+            aria-label={`Scroll ${title} right`}
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-brand-200 bg-white text-brand-700 shadow-xs transition hover:bg-brand-100 hover:text-brand-900 active:scale-95"
+          >
+            <Icon name="chevron-right" className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Horizontal Scroll Row - auto x-axis hidden scrollbar */}
+      <div
+        ref={rowRef}
+        className="flex gap-4 overflow-x-auto pb-2 pt-1 scroll-smooth [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {farmers.map((farmer) => (
+          <div key={farmer.farmerId} className="w-[280px] shrink-0 sm:w-[320px]">
+            <FarmerBrowseCardItem
+              farmer={farmer}
+              accessPriceLabel={browse?.farmAccessPriceLabel}
+              onClick={() => onSelectFarmer(farmer)}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default function AccessPage() {
@@ -22,6 +157,7 @@ export default function AccessPage() {
   const router = useRouter();
   const [browse, setBrowse] = useState<MarketplaceBrowse | null>(null);
   const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState<"ALL" | "CROPS" | "LIVESTOCK" | "FRUITS">("ALL");
   const [payFarmer, setPayFarmer] = useState<FarmerBrowseCard | null>(null);
   const [detailFarmer, setDetailFarmer] = useState<FarmerBrowseCard | null>(null);
 
@@ -43,6 +179,34 @@ export default function AccessPage() {
     [browse?.farmers, search]
   );
 
+  const cropFarmers = useMemo(
+    () => filteredFarmers.filter((f) => getFarmerCategories(f).isCrop),
+    [filteredFarmers]
+  );
+
+  const livestockFarmers = useMemo(
+    () => filteredFarmers.filter((f) => getFarmerCategories(f).isLivestock),
+    [filteredFarmers]
+  );
+
+  const fruitFarmers = useMemo(
+    () => filteredFarmers.filter((f) => getFarmerCategories(f).isFruit),
+    [filteredFarmers]
+  );
+
+  const categorizedIds = useMemo(() => {
+    const ids = new Set<string>();
+    cropFarmers.forEach((f) => ids.add(f.farmerId));
+    livestockFarmers.forEach((f) => ids.add(f.farmerId));
+    fruitFarmers.forEach((f) => ids.add(f.farmerId));
+    return ids;
+  }, [cropFarmers, livestockFarmers, fruitFarmers]);
+
+  const otherFarmers = useMemo(
+    () => filteredFarmers.filter((f) => !categorizedIds.has(f.farmerId)),
+    [filteredFarmers, categorizedIds]
+  );
+
   const onPaymentSuccess = () => {
     loadBrowse();
   };
@@ -52,23 +216,22 @@ export default function AccessPage() {
     setPayFarmer(farmer);
   };
 
-  if (loading) return <div className="p-12 text-center">Loading...</div>;
+  if (loading) return <div className="p-12 text-center text-gray-500">Loading buyer access...</div>;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
       <div className="mb-8">
-        <Link href="/marketplace" className="text-sm text-brand-600 hover:underline">
-          Back to Marketplace
+        <Link href="/marketplace" className="text-sm font-medium text-brand-600 hover:underline">
+          &larr; Back to Marketplace
         </Link>
         <h1 className="mt-2 text-3xl font-bold text-brand-900">Buyer Access</h1>
         <p className="text-gray-500">
-          Browse registered farmers and pay to access each farm&apos;s products, prices, and purchase
-          options
+          Browse registered farmers grouped by the commodities they produce, and pay to access each farm&apos;s products and prices.
         </p>
       </div>
 
-      <div className="mb-8">
-        <div className="relative">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative flex-1">
           <Icon
             name="search"
             className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"
@@ -78,30 +241,114 @@ export default function AccessPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search farmers or commodities..."
-            className="w-full rounded-2xl border border-brand-200 bg-white py-3.5 pl-12 pr-4 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+            className="w-full rounded-2xl border border-brand-200 bg-white py-3.5 pl-12 pr-4 shadow-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
           />
         </div>
-        {search.trim() && (
-          <p className="mt-2 text-sm text-gray-500">
-            {filteredFarmers.length} farmer{filteredFarmers.length !== 1 ? "s" : ""} found
-          </p>
-        )}
+
+        {/* Filter Pills */}
+        <div className="flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <button
+            type="button"
+            onClick={() => setActiveTab("ALL")}
+            className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition ${
+              activeTab === "ALL"
+                ? "bg-brand-700 text-white shadow-xs"
+                : "bg-white text-gray-600 border border-brand-200 hover:bg-brand-50"
+            }`}
+          >
+            All Categories ({filteredFarmers.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("CROPS")}
+            className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition ${
+              activeTab === "CROPS"
+                ? "bg-brand-700 text-white shadow-xs"
+                : "bg-white text-gray-600 border border-brand-200 hover:bg-brand-50"
+            }`}
+          >
+            🌾 Crops ({cropFarmers.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("LIVESTOCK")}
+            className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition ${
+              activeTab === "LIVESTOCK"
+                ? "bg-brand-700 text-white shadow-xs"
+                : "bg-white text-gray-600 border border-brand-200 hover:bg-brand-50"
+            }`}
+          >
+            🐄 Livestock ({livestockFarmers.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("FRUITS")}
+            className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition ${
+              activeTab === "FRUITS"
+                ? "bg-brand-700 text-white shadow-xs"
+                : "bg-white text-gray-600 border border-brand-200 hover:bg-brand-50"
+            }`}
+          >
+            🍎 Fruits ({fruitFarmers.length})
+          </button>
+        </div>
       </div>
+
+      {search.trim() && (
+        <p className="mb-6 text-sm text-gray-500">
+          {filteredFarmers.length} farmer{filteredFarmers.length !== 1 ? "s" : ""} found for &ldquo;{search}&rdquo;
+        </p>
+      )}
 
       {filteredFarmers.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-brand-200 p-12 text-center text-gray-500">
-          {search.trim() ? "No farmers match your search." : "No farmers registered yet."}
+          {search.trim() ? "No farmers match your search query." : "No farmers registered yet."}
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {filteredFarmers.map((farmer) => (
-            <FarmerBrowseCardItem
-              key={farmer.farmerId}
-              farmer={farmer}
-              accessPriceLabel={browse?.farmAccessPriceLabel}
-              onClick={() => setDetailFarmer(farmer)}
+        <div className="space-y-2">
+          {(activeTab === "ALL" || activeTab === "CROPS") && (
+            <FarmerRowSection
+              title="Crop Farmers"
+              subtitle="Farmers producing grains, cereals, vegetables, tubers, legumes, and spices."
+              icon="🌾"
+              farmers={cropFarmers}
+              browse={browse}
+              onSelectFarmer={setDetailFarmer}
             />
-          ))}
+          )}
+
+          {(activeTab === "ALL" || activeTab === "LIVESTOCK") && (
+            <FarmerRowSection
+              title="Livestock Farmers"
+              subtitle="Farmers producing poultry, cattle, goats, pigs, sheep, dairy, and eggs."
+              icon="🐄"
+              farmers={livestockFarmers}
+              browse={browse}
+              onSelectFarmer={setDetailFarmer}
+            />
+          )}
+
+          {(activeTab === "ALL" || activeTab === "FRUITS") && (
+            <FarmerRowSection
+              title="Fruit Farmers"
+              subtitle="Farmers producing fresh fruits, mangoes, pineapples, citrus, and bananas."
+              icon="🍎"
+              farmers={fruitFarmers}
+              browse={browse}
+              onSelectFarmer={setDetailFarmer}
+            />
+          )}
+
+          {activeTab === "ALL" && otherFarmers.length > 0 && (
+            <FarmerRowSection
+              title="Other Farmers"
+              subtitle="Additional registered farmers on the ANI platform."
+              icon="🌱"
+              farmers={otherFarmers}
+              browse={browse}
+              onSelectFarmer={setDetailFarmer}
+            />
+          )}
         </div>
       )}
 

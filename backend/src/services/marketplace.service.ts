@@ -490,7 +490,41 @@ export class MarketplaceService {
       }),
       'Listing not found or not owned by you'
     );
-    await prisma.commodityListing.delete({ where: { id: existing.id } });
+
+    const orders = await prisma.productOrder.findMany({
+      where: { listingId: existing.id },
+      select: { status: true },
+    });
+
+    if (orders.some((o) => o.status === 'PENDING')) {
+      throw new AppError(
+        409,
+        'Cannot remove this product while an order is pending',
+        'LISTING_HAS_PENDING_ORDER'
+      );
+    }
+
+    if (orders.length > 0) {
+      await prisma.commodityListing.update({
+        where: { id: existing.id },
+        data: { status: 'ARCHIVED' },
+      });
+      return {
+        mode: 'archived' as const,
+        message:
+          'Product removed from your farm. Order history has been preserved.',
+      };
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.productMedia.deleteMany({ where: { listingId: existing.id } });
+      await tx.commodityListing.delete({ where: { id: existing.id } });
+    });
+
+    return {
+      mode: 'deleted' as const,
+      message: 'Product removed from your farm',
+    };
   }
 
   async myListings(userId: string) {
@@ -499,7 +533,7 @@ export class MarketplaceService {
       'Farmer profile not found'
     );
     const listings = await prisma.commodityListing.findMany({
-      where: { farmerId: profile.id },
+      where: { farmerId: profile.id, status: { not: 'ARCHIVED' } },
       include: { commodity: { include: { category: true } } },
       orderBy: { createdAt: 'desc' },
     });

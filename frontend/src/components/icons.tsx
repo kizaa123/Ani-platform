@@ -25,6 +25,7 @@ export type IconName =
   | "message"
   | "coins"
   | "leaf"
+  | "chevron-left"
   | "chevron-right"
   | "eye"
   | "book"
@@ -157,6 +158,11 @@ const paths: Record<IconName, ReactNode> = {
   leaf: (
     <>
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 22c-5-3-8-8-8-14 4 0 8 2 8 6 0-4 4-6 8-6 0 6-3 11-8 14z" />
+    </>
+  ),
+  "chevron-left": (
+    <>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6" />
     </>
   ),
   "chevron-right": (

@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { ProductMediaItem } from "@/lib/types";
 import { assetUrl } from "@/lib/assetUrl";
-import { ProductImage } from "@/components/FarmerAvatar";
 import { Icon } from "@/components/icons";
 
 interface ProductMediaGalleryProps {
@@ -145,7 +144,7 @@ function MainViewer({
 
   if (!src) {
     return (
-      <div className="flex aspect-square w-full items-center justify-center bg-gradient-to-br from-brand-100 to-brand-200">
+      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-brand-100 to-brand-200">
         <Icon name="wheat" className="h-16 w-16 text-brand-400" />
       </div>
     );
@@ -156,7 +155,7 @@ function MainViewer({
       <video
         ref={videoRef}
         src={src}
-        className="aspect-square w-full object-contain bg-black"
+        className="h-full w-full object-contain bg-black"
         muted
         loop
         playsInline
@@ -168,7 +167,7 @@ function MainViewer({
 
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt={alt} className="aspect-square w-full object-contain bg-white" />
+    <img src={src} alt={alt} className="h-full w-full object-contain bg-white" />
   );
 }
 
@@ -183,7 +182,6 @@ export function ProductMediaGallery({
   const [items, setItems] = useState(initialMedia);
   const [activeIndex, setActiveIndex] = useState(0);
   const [shareOpen, setShareOpen] = useState(false);
-  const thumbRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setItems(initialMedia);
@@ -207,12 +205,7 @@ export function ProductMediaGallery({
   const goTo = (index: number) => {
     const clamped = Math.max(0, Math.min(index, totalSlides - 1));
     setActiveIndex(clamped);
-    const thumb = thumbRef.current?.children[clamped] as HTMLElement | undefined;
-    thumb?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
   };
-
-  const handlePrev = () => goTo(activeIndex - 1);
-  const handleNext = () => goTo(activeIndex + 1);
 
   const handleLike = async () => {
     if (!activeItem || !interactive) return;
@@ -251,56 +244,22 @@ export function ProductMediaGallery({
   if (totalSlides === 0) {
     return (
       <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-        <MainViewer alt={productTitle} active />
+        <div className="relative aspect-square w-full bg-gray-50">
+          <MainViewer alt={productTitle} active />
+        </div>
       </div>
     );
   }
 
-  const thumbs = hasMedia
-    ? items.map((item) => ({ key: item.id, item, fallback: undefined as string | undefined }))
-    : fallbackImages.map((url, i) => ({
-        key: `fallback-${i}`,
-        item: undefined as ProductMediaItem | undefined,
-        fallback: url,
-      }));
-
   return (
     <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-      {/* Main viewer — Amazon-style large display */}
-      <div className="group relative bg-gray-50">
+      <div className="group relative aspect-square w-full overflow-hidden bg-gray-50">
         <MainViewer
           item={activeItem}
           fallbackSrc={activeFallback}
           alt={productTitle}
           active
         />
-
-        {totalSlides > 1 && (
-          <>
-            <button
-              type="button"
-              onClick={handlePrev}
-              disabled={activeIndex === 0}
-              aria-label="Previous image"
-              className="absolute left-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-gray-200 bg-white/90 text-gray-700 shadow-sm transition hover:bg-white disabled:opacity-30"
-            >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              onClick={handleNext}
-              disabled={activeIndex >= totalSlides - 1}
-              aria-label="Next image"
-              className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-gray-200 bg-white/90 text-gray-700 shadow-sm transition hover:bg-white disabled:opacity-30"
-            >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </>
-        )}
 
         {interactive && activeItem && (
           <div className="absolute bottom-3 right-3 flex items-center gap-2">
@@ -341,44 +300,26 @@ export function ProductMediaGallery({
         )}
       </div>
 
-      {/* Thumbnail strip */}
       {totalSlides > 1 && (
         <div
-          ref={thumbRef}
-          className="flex gap-2 overflow-x-auto border-t border-gray-100 bg-white p-3 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex items-center justify-center gap-2 border-t border-gray-100 bg-white px-3 py-3"
+          role="tablist"
+          aria-label="Product media"
         >
-          {thumbs.map(({ key, item, fallback }, i) => (
+          {Array.from({ length: totalSlides }, (_, i) => (
             <button
-              key={key}
+              key={hasMedia ? items[i]?.id ?? i : `fallback-${i}`}
               type="button"
+              role="tab"
+              aria-selected={i === activeIndex}
+              aria-label={`View media ${i + 1} of ${totalSlides}`}
               onClick={() => goTo(i)}
-              aria-label={`View media ${i + 1}`}
-              className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-md border-2 transition ${
+              className={`h-2.5 w-2.5 rounded-full transition ${
                 i === activeIndex
-                  ? "border-brand-600 ring-1 ring-brand-500"
-                  : "border-gray-200 opacity-70 hover:opacity-100"
+                  ? "scale-110 bg-brand-600"
+                  : "bg-gray-300 hover:bg-gray-400"
               }`}
-            >
-              {item?.type === "VIDEO" ? (
-                <>
-                  <video
-                    src={assetUrl(item.url) ?? undefined}
-                    className="h-full w-full object-cover"
-                    muted
-                    preload="metadata"
-                  />
-                  <span className="absolute inset-0 flex items-center justify-center bg-black/20 text-white">
-                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </span>
-                </>
-              ) : item ? (
-                <ProductImage src={item.url} alt="" className="h-full w-full object-cover" />
-              ) : fallback ? (
-                <ProductImage src={fallback} alt="" className="h-full w-full object-cover" />
-              ) : null}
-            </button>
+            />
           ))}
         </div>
       )}
