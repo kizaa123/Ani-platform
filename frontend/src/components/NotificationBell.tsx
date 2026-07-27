@@ -74,12 +74,22 @@ function RichNotificationContent({ n }: { n: AppNotification }) {
         {!n.read && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-brand-600" />}
       </div>
 
-      {n.metadata?.priceLabel && (
+      {n.type === "NEW_PRODUCT" && n.metadata?.priceLabel && (
         <p className="mt-1 text-sm font-semibold text-brand-700">{n.metadata.priceLabel}</p>
       )}
 
-      {n.type === "NEW_FARMER" && n.metadata?.location && (
-        <p className="mt-1 text-xs text-gray-500">{n.metadata.location}</p>
+      {n.type === "NEW_PUBLICATION" && n.actor && (
+        <p className="mt-1 text-xs text-gray-500">
+          {n.actor.firstName} {n.actor.lastName}
+        </p>
+      )}
+
+      {n.type === "NEW_FARMER" && (n.metadata?.farmSize || n.metadata?.location) && (
+        <p className="mt-1 text-xs text-gray-500">
+          {[n.metadata.farmSize ? `${n.metadata.farmSize} acres` : null, n.metadata.location]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
       )}
 
       {n.type === "NEW_FARMER" && n.metadata?.commodities && n.metadata.commodities.length > 0 && (
@@ -88,7 +98,9 @@ function RichNotificationContent({ n }: { n: AppNotification }) {
         </p>
       )}
 
-      <p className="mt-1 text-sm leading-snug text-gray-600">{n.body}</p>
+      {n.body && (
+        <p className="mt-1 text-sm leading-snug text-gray-600">{n.body}</p>
+      )}
 
       {action && (
         <span className="mt-2 inline-flex rounded-lg bg-brand-700 px-3 py-1 text-xs font-semibold text-white">

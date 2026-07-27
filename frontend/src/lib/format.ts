@@ -10,6 +10,18 @@ export function formatDate(iso: string) {
   });
 }
 
+export function formatDateTime(iso: string) {
+  return new Date(iso).toLocaleString(undefined, {
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+}
+
 export function orderStatusStyle(status: string) {
   switch (status) {
     case "PAID":

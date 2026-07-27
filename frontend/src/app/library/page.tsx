@@ -236,24 +236,10 @@ function PublicationCard({
       </div>
 
       <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3 text-sm">
-        <div className="flex items-center gap-3 text-gray-600 font-medium">
-          <span className="flex items-center gap-1.5">
-            <Icon name="eye" className="h-4 w-4 text-gray-500" />
-            {viewCount}
-          </span>
-          {pub.likesCount > 0 && (
-            <span className="flex items-center gap-1.5">
-              <Icon name="thumbs-up" className="h-4 w-4 text-gray-500" />
-              {pub.likesCount}
-            </span>
-          )}
-          {pub.sharesCount > 0 && (
-            <span className="flex items-center gap-1.5">
-              <Icon name="share" className="h-4 w-4 text-gray-500" />
-              {pub.sharesCount}
-            </span>
-          )}
-        </div>
+        <span className="flex items-center gap-1.5 font-medium text-gray-600">
+          <Icon name="eye" className="h-4 w-4 text-gray-500" />
+          {viewCount}
+        </span>
 
         <span className="font-bold text-brand-700 text-base">
           {pub.isFree ? "Free" : formatGhc(pub.price ?? 0)}
@@ -265,13 +251,17 @@ function PublicationCard({
           type="button"
           onClick={handleLike}
           disabled={liking}
-          className={`flex items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-xs font-semibold transition ${
-            pub.likedByMe
-              ? "bg-emerald-600 text-white shadow-xs"
-              : "bg-emerald-100/70 text-emerald-800 hover:bg-emerald-200/80"
-          }`}
+          className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-100/70 px-2 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-200/80"
         >
-          <Icon name="thumbs-up" className="h-3.5 w-3.5 shrink-0" />
+          <span
+            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full transition ${
+              pub.likedByMe
+                ? "bg-emerald-600 text-white shadow-xs"
+                : "bg-emerald-200/80 text-emerald-800"
+            }`}
+          >
+            <Icon name="thumbs-up" className="h-3.5 w-3.5" />
+          </span>
           <span>{pub.likesCount > 0 ? pub.likesCount : "Like"}</span>
         </button>
 
@@ -587,13 +577,17 @@ export default function LibraryPage() {
                 type="button"
                 onClick={handleModalLike}
                 disabled={modalLiking}
-                className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition ${
-                  selected.likedByMe
-                    ? "bg-emerald-600 text-white"
-                    : "bg-emerald-100/70 text-emerald-800 hover:bg-emerald-200/80"
-                }`}
+                className="flex items-center gap-1.5 rounded-xl bg-emerald-100/70 px-3 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-200/80"
               >
-                <Icon name="thumbs-up" className="h-3.5 w-3.5" />
+                <span
+                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full transition ${
+                    selected.likedByMe
+                      ? "bg-emerald-600 text-white shadow-xs"
+                      : "bg-emerald-200/80 text-emerald-800"
+                  }`}
+                >
+                  <Icon name="thumbs-up" className="h-3.5 w-3.5" />
+                </span>
                 {selected.likedByMe ? "Liked" : "Like"}
               </button>
               <button

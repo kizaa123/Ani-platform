@@ -2,7 +2,80 @@ import { z } from 'zod';
 import { VerificationStatus } from '@prisma/client';
 import prisma from '../database/prisma';
 import { AppError, assertFound } from '../utils/errors';
-import { STAFF_ROLES, VERIFIABLE_ROLE_IDS } from '../constants/roles';
+import {
+  ROLES,
+  FARMER_ROLES,
+  STAFF_ROLES,
+  VERIFIABLE_ROLE_IDS,
+} from '../constants/roles';
+
+const CHART_MONTHS = 6;
+
+function monthKey(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function chartMonthLabels(count: number): string[] {
+  const keys: string[] = [];
+  const now = new Date();
+  for (let i = count - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    keys.push(monthKey(d));
+  }
+  return keys;
+}
+
+function chartStartDate(months: number): Date {
+  const d = new Date();
+  d.setMonth(d.getMonth() - (months - 1));
+  d.setDate(1);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function countByMonth<T extends { createdAt: Date }>(
+  rows: T[],
+  monthKeys: string[]
+): number[] {
+  const counts = new Map(monthKeys.map((k) => [k, 0]));
+  for (const row of rows) {
+    const key = monthKey(row.createdAt);
+    if (counts.has(key)) counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return monthKeys.map((k) => counts.get(k) ?? 0);
+}
+
+function sumByMonth<T extends { createdAt: Date; amount: number }>(
+  rows: T[],
+  monthKeys: string[]
+): number[] {
+  const sums = new Map(monthKeys.map((k) => [k, 0]));
+  for (const row of rows) {
+    const key = monthKey(row.createdAt);
+    if (sums.has(key)) sums.set(key, (sums.get(key) ?? 0) + row.amount);
+  }
+  return monthKeys.map((k) => sums.get(k) ?? 0);
+}
+
+function formatMonthLabel(key: string): string {
+  const [year, month] = key.split('-').map(Number);
+  return new Date(year, month - 1, 1).toLocaleDateString('en-US', {
+    month: 'short',
+    year: '2-digit',
+  });
+}
+
+const ROLE_CHART_LABELS: Record<number, string> = {
+  [ROLES.CROP_FARMER]: 'Crop Farmers',
+  [ROLES.LIVESTOCK_FARMER]: 'Livestock Farmers',
+  [ROLES.FARMER_HANDLER]: 'Fellow Liaison Officers',
+  [ROLES.BUYER]: 'Buyers',
+  [ROLES.BUYER_HANDLER]: 'Client Liaison Officers',
+  [ROLES.ANI_ACCOUNTANT]: 'Accountants',
+  [ROLES.ADMIN]: 'Admins',
+  [ROLES.RESEARCHER]: 'Researchers',
+  [ROLES.STUDENT]: 'Students',
+};
 
 export const verifyUserSchema = z.object({
   status: z.enum(['VERIFIED', 'REJECTED', 'PENDING']),
@@ -142,12 +215,32 @@ export class AdminService {
   }
 
   async getStats() {
-    const [users, farmers, buyers, listings, connections, financials] = await Promise.all([
+    const [
+      users,
+      farmers,
+      buyers,
+      buyerHandlers,
+      farmerHandlers,
+      listings,
+      activeConnections,
+      pendingVerifications,
+      pendingConnections,
+      financials,
+    ] = await Promise.all([
       prisma.user.count(),
-      prisma.farmerProfile.count(),
-      prisma.buyerProfile.count(),
+      prisma.user.count({ where: { roleId: { in: [...FARMER_ROLES] } } }),
+      prisma.user.count({ where: { roleId: ROLES.BUYER } }),
+      prisma.user.count({ where: { roleId: ROLES.BUYER_HANDLER } }),
+      prisma.user.count({ where: { roleId: ROLES.FARMER_HANDLER } }),
       prisma.commodityListing.count({ where: { status: 'ACTIVE' } }),
       prisma.connectionRequest.count({ where: { status: 'ACCEPTED' } }),
+      prisma.user.count({
+        where: {
+          verificationStatus: 'PENDING',
+          roleId: { in: [...VERIFIABLE_ROLE_IDS] },
+        },
+      }),
+      prisma.connectionRequest.count({ where: { status: 'PENDING' } }),
       this.getFinancialStatement(),
     ]);
 
@@ -155,9 +248,175 @@ export class AdminService {
       users,
       farmers,
       buyers,
+      buyerHandlers,
+      farmerHandlers,
       listings,
       totalRevenue: financials.summary.totalRevenue,
-      activeConnections: connections,
+      activeConnections,
+      pendingVerifications,
+      pendingConnections,
+    };
+  }
+
+  async getDashboardCharts() {
+    const monthKeys = chartMonthLabels(CHART_MONTHS);
+    const startDate = chartStartDate(CHART_MONTHS);
+
+    const [
+      newUsers,
+      usersBeforeWindow,
+      paidOrders,
+      completedFarmAccess,
+      completedResearch,
+      completedPayments,
+      roleCounts,
+      verificationCounts,
+      recentUsers,
+      recentOrders,
+      recentConnections,
+    ] = await Promise.all([
+      prisma.user.findMany({
+        where: { createdAt: { gte: startDate } },
+        select: { createdAt: true },
+      }),
+      prisma.user.count({ where: { createdAt: { lt: startDate } } }),
+      prisma.productOrder.findMany({
+        where: { createdAt: { gte: startDate }, status: 'PAID' },
+        select: { createdAt: true, totalAmount: true },
+      }),
+      prisma.buyerFarmerAccess.findMany({
+        where: { createdAt: { gte: startDate }, status: 'COMPLETED' },
+        select: { createdAt: true, amount: true },
+      }),
+      prisma.researchPurchase.findMany({
+        where: { createdAt: { gte: startDate }, status: 'COMPLETED' },
+        select: { createdAt: true, amount: true },
+      }),
+      prisma.payment.findMany({
+        where: { createdAt: { gte: startDate }, status: 'COMPLETED' },
+        select: { createdAt: true, amount: true },
+      }),
+      prisma.user.groupBy({
+        by: ['roleId'],
+        _count: { id: true },
+      }),
+      prisma.user.groupBy({
+        by: ['verificationStatus'],
+        where: { roleId: { in: [...VERIFIABLE_ROLE_IDS] } },
+        _count: { id: true },
+      }),
+      prisma.user.findMany({
+        take: 6,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          createdAt: true,
+          role: { select: { roleName: true } },
+        },
+      }),
+      prisma.productOrder.findMany({
+        take: 6,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          totalAmount: true,
+          status: true,
+          createdAt: true,
+          listing: { select: { title: true } },
+        },
+      }),
+      prisma.connectionRequest.findMany({
+        take: 6,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          status: true,
+          createdAt: true,
+          buyer: { select: { firstName: true, lastName: true } },
+          farmer: {
+            select: {
+              firstName: true,
+              lastName: true,
+              farmerProfile: { select: { farmName: true } },
+            },
+          },
+        },
+      }),
+    ]);
+
+    const revenueRows = [
+      ...paidOrders.map((o) => ({ createdAt: o.createdAt, amount: o.totalAmount })),
+      ...completedFarmAccess.map((a) => ({ createdAt: a.createdAt, amount: a.amount })),
+      ...completedResearch.map((r) => ({ createdAt: r.createdAt, amount: r.amount })),
+      ...completedPayments.map((p) => ({ createdAt: p.createdAt, amount: p.amount })),
+    ];
+
+    const usersByMonth = countByMonth(newUsers, monthKeys);
+    let runningUsers = usersBeforeWindow;
+    const userGrowth = monthKeys.map((key, index) => {
+      runningUsers += usersByMonth[index];
+      return {
+        month: key,
+        label: formatMonthLabel(key),
+        users: usersByMonth[index],
+        cumulativeUsers: runningUsers,
+      };
+    });
+
+    const ordersTrend = monthKeys.map((key, index) => ({
+      month: key,
+      label: formatMonthLabel(key),
+      orders: countByMonth(paidOrders, monthKeys)[index],
+      revenue: sumByMonth(revenueRows, monthKeys)[index],
+    }));
+
+    const roleDistribution = roleCounts
+      .map((row) => ({
+        roleId: row.roleId,
+        label: ROLE_CHART_LABELS[row.roleId] ?? `Role ${row.roleId}`,
+        count: row._count.id,
+      }))
+      .filter((row) => row.count > 0)
+      .sort((a, b) => b.count - a.count);
+
+    const verificationStatus = verificationCounts.map((row) => ({
+      status: row.verificationStatus,
+      count: row._count.id,
+    }));
+
+    const recentActivity = [
+      ...recentUsers.map((u) => ({
+        id: `user-${u.id}`,
+        type: 'USER_REGISTERED' as const,
+        label: `${u.firstName} ${u.lastName} joined as ${u.role.roleName}`,
+        date: u.createdAt.toISOString(),
+      })),
+      ...recentOrders.map((o) => ({
+        id: `order-${o.id}`,
+        type: 'ORDER' as const,
+        label: `${o.listing.title} — ${o.status}`,
+        date: o.createdAt.toISOString(),
+        amount: o.totalAmount,
+      })),
+      ...recentConnections.map((c) => ({
+        id: `conn-${c.id}`,
+        type: 'CONNECTION' as const,
+        label: `${c.buyer.firstName} ${c.buyer.lastName} → ${c.farmer.farmerProfile?.farmName ?? `${c.farmer.firstName} ${c.farmer.lastName}`} (${c.status})`,
+        date: c.createdAt.toISOString(),
+      })),
+    ]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 8);
+
+    return {
+      generatedAt: new Date().toISOString(),
+      userGrowth,
+      ordersTrend,
+      roleDistribution,
+      verificationStatus,
+      recentActivity,
     };
   }
 

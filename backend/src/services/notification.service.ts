@@ -237,7 +237,7 @@ export async function notifyNewProductListing(params: {
           actorId: farmerUserId,
           type: 'NEW_PRODUCT',
           title: listing.title,
-          body: `${farmerName} listed ${listing.title} — ${priceLabel}.`,
+          body: `${farmerName} listed a new product.`,
           link,
           metadata: {
             imageUrl,
@@ -264,7 +264,6 @@ export async function notifyNewFarmerJoined(params: {
 }) {
   const { farmerUserId, farmerName, farmSize, city, region, country, commodities } = params;
   const location = formatLocation(city, region, country);
-  const commodityList = commodities.length ? commodities.join(', ') : 'Not specified';
 
   const buyers = await prisma.user.findMany({
     where: { roleId: { in: [...MARKETPLACE_BUYER_ROLES] } },
@@ -280,7 +279,7 @@ export async function notifyNewFarmerJoined(params: {
           actorId: farmerUserId,
           type: 'NEW_FARMER',
           title: `New farmer: ${farmerName}`,
-          body: `${farmSize ? `${farmSize} acres · ` : ''}${location}. Commodities: ${commodityList}.`,
+          body: 'Browse their farm and request access.',
           link: '/access',
           metadata: {
             farmerUserId,
@@ -319,8 +318,8 @@ export async function notifyNewPublication(params: {
       type: 'NEW_PUBLICATION',
       title: publication.title,
       body: description
-        ? `${researcherName} published "${publication.title}" — ${description}`
-        : `${researcherName} published "${publication.title}".`,
+        ? description
+        : `${researcherName} published new research.`,
       link: '/library',
       metadata: {
         imageUrl,

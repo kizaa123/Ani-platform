@@ -7,6 +7,7 @@ import { OrderTrackControls, OrderTrackTimeline } from "@/components/OrderTrackT
 import { api } from "@/lib/api";
 import {
   formatDate,
+  formatDateTime,
   formatGhc,
   escrowStatusLabel,
   escrowStatusStyle,
@@ -25,6 +26,30 @@ function isBuyerOrder(order: OrderListItem): order is BuyerOrderLineItem {
 
 function orderStatementId(order: OrderListItem): string | null {
   return order.orderId ?? null;
+}
+
+function OrderReleaseSummary({ order }: { order: OrderListItem }) {
+  if (!order.otpVerifiedAt && !order.paymentReleasedAt) return null;
+
+  return (
+    <div className="mt-5 rounded-xl border border-emerald-100 bg-emerald-50/30 p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Delivery & release</p>
+      <dl className="mt-2 space-y-2 text-sm">
+        {order.otpVerifiedAt && (
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+            <dt className="text-gray-600">Delivery confirmed</dt>
+            <dd className="font-medium text-brand-900">{formatDateTime(order.otpVerifiedAt)}</dd>
+          </div>
+        )}
+        {order.paymentReleasedAt && (
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+            <dt className="text-gray-600">Funds released</dt>
+            <dd className="font-medium text-brand-900">{formatDateTime(order.paymentReleasedAt)}</dd>
+          </div>
+        )}
+      </dl>
+    </div>
+  );
 }
 
 function OrderEscrowPanel({
@@ -97,12 +122,6 @@ function OrderEscrowPanel({
           {escrowStatusLabel(escrowStatus)}
         </span>
       </div>
-
-      {order.paymentReleasedAt && (
-        <p className="mt-2 text-xs text-gray-600">
-          Released {formatDate(order.paymentReleasedAt)}
-        </p>
-      )}
 
       {canRelease && order.releaseOtp && (
         <p className="mt-3 rounded-lg bg-white px-3 py-2 text-sm text-brand-900">
@@ -448,6 +467,8 @@ function OrderDetailModal({
             perspective={perspective}
             onUpdated={(updated) => onTrackUpdated?.({ ...order, ...updated })}
           />
+
+          <OrderReleaseSummary order={order} />
 
           <div className="mt-5 rounded-xl border border-brand-100 p-4 space-y-4">
             <div>

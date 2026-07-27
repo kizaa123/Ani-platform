@@ -246,6 +246,14 @@ export class AdminController {
     }
   };
 
+  dashboardCharts = async (_req: AuthRequest, res: Response) => {
+    try {
+      ApiResponse.success(res, await adminService.getDashboardCharts());
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
   financialStatement = async (_req: AuthRequest, res: Response) => {
     try {
       ApiResponse.success(res, await adminService.getFinancialStatement());

@@ -42,7 +42,7 @@ export function HandlerSelect({
   return (
     <div>
       <label className="auth-label mb-2 block">{label}</label>
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {handlers.map((handler) => {
           const selected = value === handler.id;
           const name = `${handler.firstName} ${handler.lastName}`;
@@ -52,7 +52,7 @@ export function HandlerSelect({
               key={handler.id}
               type="button"
               onClick={() => onChange(handler.id)}
-              className={`flex items-center gap-3 rounded-xl border text-left transition-all duration-150 focus:outline-none ${
+              className={`flex w-full min-w-0 items-center gap-3 overflow-hidden rounded-xl border text-left transition-all duration-150 focus:outline-none ${
                 compact ? "p-3" : "items-start p-4"
               } ${
                 selected
@@ -70,7 +70,7 @@ export function HandlerSelect({
                   handler.updatedAt ? new Date(handler.updatedAt).getTime() : undefined
                 }
               />
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 flex-1 overflow-hidden">
                 {compact && handlerRoleId ? (
                   <RolePrefixedName
                     user={{
@@ -78,11 +78,11 @@ export function HandlerSelect({
                       firstName: handler.firstName,
                       lastName: handler.lastName,
                     }}
-                    className="text-sm font-semibold"
+                    className="block max-w-full truncate text-sm font-semibold"
                     nameClassName="text-brand-900"
                   />
                 ) : (
-                  <p className="font-semibold text-brand-900">{name}</p>
+                  <p className="truncate font-semibold text-brand-900">{name}</p>
                 )}
                 {compact ? (
                   location ? (

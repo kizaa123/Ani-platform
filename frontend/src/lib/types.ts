@@ -766,9 +766,45 @@ export interface AdminStats {
   users: number;
   farmers: number;
   buyers: number;
+  buyerHandlers: number;
+  farmerHandlers: number;
   listings: number;
   totalRevenue: number;
   activeConnections: number;
+  pendingVerifications: number;
+  pendingConnections: number;
+}
+
+export interface AdminDashboardCharts {
+  generatedAt: string;
+  userGrowth: {
+    month: string;
+    label: string;
+    users: number;
+    cumulativeUsers: number;
+  }[];
+  ordersTrend: {
+    month: string;
+    label: string;
+    orders: number;
+    revenue: number;
+  }[];
+  roleDistribution: {
+    roleId: number;
+    label: string;
+    count: number;
+  }[];
+  verificationStatus: {
+    status: string;
+    count: number;
+  }[];
+  recentActivity: {
+    id: string;
+    type: "USER_REGISTERED" | "ORDER" | "CONNECTION";
+    label: string;
+    date: string;
+    amount?: number;
+  }[];
 }
 
 export interface PlatformFinancialStatementLineItem {

@@ -422,6 +422,8 @@ class ApiClient {
 
   admin = {
     stats: () => this.request<import("./types").AdminStats>("/admin/stats"),
+    dashboardCharts: () =>
+      this.request<import("./types").AdminDashboardCharts>("/admin/dashboard-charts"),
     financialStatement: () =>
       this.request<import("./types").PlatformFinancialStatement>("/admin/financial-statement"),
     pending: () => this.request<import("./types").PendingVerificationUser[]>("/admin/pending"),

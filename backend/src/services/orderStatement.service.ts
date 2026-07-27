@@ -18,6 +18,16 @@ type OrderForStatement = NonNullable<Awaited<ReturnType<typeof loadOrderForState
 const PAGE_MARGIN = 45;
 const CONTENT_WIDTH = 505;
 
+const PLATFORM_NAME = 'ANI Agricultural Exchange Platform';
+const PLATFORM_SHORT_NAME = 'ANI Platform';
+
+/** Fixed label column + generous gap before values for readable alignment. */
+const KEY_VALUE_LABEL_WIDTH = 185;
+const KEY_VALUE_GAP = 52;
+const KEY_VALUE_VALUE_X = PAGE_MARGIN + KEY_VALUE_LABEL_WIDTH + KEY_VALUE_GAP;
+const KEY_VALUE_VALUE_WIDTH = CONTENT_WIDTH - KEY_VALUE_LABEL_WIDTH - KEY_VALUE_GAP;
+const KEY_VALUE_ROW_HEIGHT = 15;
+
 const COLORS = {
   text: '#111827',
   muted: '#6B7280',
@@ -52,6 +62,31 @@ function drawLogoWatermark(doc: PDFKit.PDFDocument, logoPath: string): void {
     valign: 'center',
   });
   doc.restore();
+}
+
+function drawPlatformNameWatermark(doc: PDFKit.PDFDocument): void {
+  const pageWidth = doc.page.width;
+  const pageHeight = doc.page.height;
+  const centerX = pageWidth / 2;
+  const centerY = pageHeight / 2;
+
+  doc.save();
+  doc.opacity(0.05);
+  doc.translate(centerX, centerY);
+  doc.rotate(-35);
+
+  doc.font('Helvetica-Bold').fontSize(34).fillColor(COLORS.accent);
+  doc.text(PLATFORM_SHORT_NAME, -260, -48, { width: 520, align: 'center' });
+
+  doc.font('Helvetica').fontSize(14).fillColor(COLORS.muted);
+  doc.text('Agricultural Exchange Platform', -260, -8, { width: 520, align: 'center' });
+
+  doc.restore();
+}
+
+function drawPageWatermark(doc: PDFKit.PDFDocument, logoPath: string | null): void {
+  if (logoPath) drawLogoWatermark(doc, logoPath);
+  drawPlatformNameWatermark(doc);
 }
 
 async function loadOrderForStatement(orderId: string) {
@@ -193,16 +228,18 @@ function drawKeyValue(
   options?: { valueBold?: boolean }
 ): number {
   doc.font('Helvetica').fontSize(9).fillColor(COLORS.text);
-  doc.text(`${label}:`, PAGE_MARGIN, y, { continued: true, width: 130 });
+  doc.text(`${label}:`, PAGE_MARGIN, y, { width: KEY_VALUE_LABEL_WIDTH, lineBreak: false });
+
   doc.font(options?.valueBold ? 'Helvetica-Bold' : 'Helvetica').fontSize(9).fillColor(COLORS.text);
-  doc.text(` ${value}`, { width: CONTENT_WIDTH - 130 });
-  return y + 16;
+  doc.text(value, KEY_VALUE_VALUE_X, y, { width: KEY_VALUE_VALUE_WIDTH });
+
+  return y + KEY_VALUE_ROW_HEIGHT;
 }
 
 function drawFooter(doc: PDFKit.PDFDocument): void {
   doc.font('Helvetica').fontSize(8).fillColor(COLORS.muted);
   doc.text(
-    'This document is an official ANI Platform financial record. Funds are held in escrow until the buyer confirms delivery.',
+    `This document is an official ${PLATFORM_SHORT_NAME} financial record. Funds are held in escrow until the buyer confirms delivery.`,
     PAGE_MARGIN,
     doc.page.height - PAGE_MARGIN - 14,
     { width: CONTENT_WIDTH, align: 'center' }
@@ -219,10 +256,8 @@ export function buildOrderStatementPdf(order: OrderForStatement): Promise<Buffer
     doc.on('error', reject);
 
     const logoPath = getLogoPath();
-    if (logoPath) {
-      drawLogoWatermark(doc, logoPath);
-      doc.on('pageAdded', () => drawLogoWatermark(doc, logoPath));
-    }
+    drawPageWatermark(doc, logoPath);
+    doc.on('pageAdded', () => drawPageWatermark(doc, logoPath));
 
     const totalFormatted = `GHC ${order.totalAmount.toFixed(2)}`;
     const transactionRef = resolveTransactionRef(order);
@@ -230,7 +265,7 @@ export function buildOrderStatementPdf(order: OrderForStatement): Promise<Buffer
     let y = 48;
 
     doc.font('Helvetica-Bold').fontSize(16).fillColor(COLORS.accent);
-    doc.text('ANI Platform', PAGE_MARGIN, y, { width: CONTENT_WIDTH, align: 'center' });
+    doc.text(PLATFORM_NAME, PAGE_MARGIN, y, { width: CONTENT_WIDTH, align: 'center' });
     y += 24;
 
     doc.font('Helvetica').fontSize(11).fillColor(COLORS.text);
@@ -267,6 +302,9 @@ export function buildOrderStatementPdf(order: OrderForStatement): Promise<Buffer
     y = drawSectionTitle(doc, 'Payment & Escrow', y);
     y = drawKeyValue(doc, 'Order status', order.status, y);
     y = drawKeyValue(doc, 'Escrow status', formatEscrowStatus(order.escrowStatus), y);
+    y += 10;
+
+    y = drawSectionTitle(doc, 'Delivery & Release', y);
     y = drawKeyValue(
       doc,
       'Delivery confirmed',

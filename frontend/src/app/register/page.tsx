@@ -6,7 +6,13 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import { CommodityCategory, HandlerProfile, ROLES, farmerCategoryFilter } from "@/lib/types";
-import { isValidPhone, normalizePhone, PHONE_VALIDATION_MESSAGE } from "@/lib/phone";
+import {
+  getDialCodeForCountryName,
+  isValidPhone,
+  normalizePhone,
+  PHONE_VALIDATION_MESSAGE,
+  stripDialCode,
+} from "@/lib/phone";
 import { CountrySelect } from "@/components/CountrySelect";
 import { HandlerSelect } from "@/components/HandlerSelect";
 import { CommodityPicker } from "@/components/CommodityPicker";
@@ -122,6 +128,21 @@ export default function RegisterPage() {
   const categoryFilter = farmerCategoryFilter(form.roleId);
   const totalSteps = isFarmerRole ? 3 : 2;
   const stepLabels = isFarmerRole ? STEP_LABELS : STEP_LABELS.slice(0, 2);
+  const phoneDialCode = getDialCodeForCountryName(form.country);
+
+  const handleCountryChange = (country: string) => {
+    const previousDialCode = form.country ? getDialCodeForCountryName(form.country) : undefined;
+    setForm((prev) => ({
+      ...prev,
+      country,
+      phone: stripDialCode(prev.phone, previousDialCode).slice(0, 10),
+    }));
+  };
+
+  const handlePhoneChange = (raw: string) => {
+    const local = stripDialCode(raw, phoneDialCode || undefined).slice(0, 10);
+    setForm((prev) => ({ ...prev, phone: local }));
+  };
 
   useEffect(() => {
     api.commodities.categories().then(setCategories).catch(() => {});
@@ -350,14 +371,22 @@ export default function RegisterPage() {
               <label htmlFor="reg-phone" className="auth-label">
                 Phone
               </label>
-              <input
-                id="reg-phone"
-                required
-                autoComplete="tel"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="auth-input"
-              />
+              <div className="flex overflow-hidden rounded-xl border border-brand-200 bg-white shadow-sm focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-200">
+                <span className="flex shrink-0 items-center border-r border-brand-200 bg-brand-50/80 px-3 text-sm font-semibold text-brand-800">
+                  {phoneDialCode || "—"}
+                </span>
+                <input
+                  id="reg-phone"
+                  required
+                  autoComplete="tel-national"
+                  inputMode="numeric"
+                  value={form.phone}
+                  onChange={(e) => handlePhoneChange(e.target.value)}
+                  placeholder="241234567"
+                  className="min-w-0 flex-1 border-0 bg-transparent px-4 py-3 text-sm focus:outline-none focus:ring-0"
+                />
+              </div>
+              <p className="auth-hint">Local number only — country code updates when you select a country</p>
             </div>
 
             <div className="auth-field">
@@ -408,7 +437,7 @@ export default function RegisterPage() {
               <label className="auth-label">Country</label>
               <CountrySelect
                 value={form.country}
-                onChange={(country) => setForm({ ...form, country })}
+                onChange={handleCountryChange}
                 required
               />
               <p className="auth-hint">Select the African country where you are based</p>
@@ -433,7 +462,7 @@ export default function RegisterPage() {
               </p>
               <CountrySelect
                 value={form.country}
-                onChange={(country) => setForm({ ...form, country })}
+                onChange={handleCountryChange}
                 required
               />
             </div>
