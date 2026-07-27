@@ -9,10 +9,26 @@ import {
   isFarmerHandler,
   isBuyerHandler,
   isStaffRole,
+  isMarketplaceBuyerRole,
 } from '../constants/roles';
 import { notifyOrderPaymentReleased } from './notification.service';
 
 type OrderForStatement = NonNullable<Awaited<ReturnType<typeof loadOrderForStatement>>>;
+
+const PAGE_MARGIN = 45;
+const CONTENT_WIDTH = 505;
+const CONTENT_RIGHT = PAGE_MARGIN + CONTENT_WIDTH;
+
+const COLORS = {
+  text: '#111827',
+  muted: '#6B7280',
+  border: '#E5E7EB',
+  sectionBg: '#F9FAFB',
+  accent: '#166534',
+  accentLight: '#DCFCE7',
+  totalBar: '#166534',
+  white: '#FFFFFF',
+};
 
 function getLogoPath(): string | null {
   const candidates = [
@@ -31,19 +47,19 @@ function getLogoPath(): string | null {
   return null;
 }
 
-const PAGE_MARGIN = 45;
-const CONTENT_WIDTH = 505;
-const CONTENT_RIGHT = PAGE_MARGIN + CONTENT_WIDTH;
-
-function drawPageWatermark(doc: PDFKit.PDFDocument, logoPath: string): void {
+function drawTextWatermark(doc: PDFKit.PDFDocument): void {
   const pageWidth = doc.page.width;
   const pageHeight = doc.page.height;
-  const watermarkWidth = 260;
+  const centerX = pageWidth / 2;
+  const centerY = pageHeight / 2;
 
   doc.save();
-  doc.opacity(0.08);
-  doc.image(logoPath, (pageWidth - watermarkWidth) / 2, (pageHeight - watermarkWidth * 0.45) / 2, {
-    width: watermarkWidth,
+  doc.opacity(0.06);
+  doc.font('Helvetica-Bold').fontSize(72).fillColor('#166534');
+  doc.rotate(-35, { origin: [centerX, centerY] });
+  doc.text('ANI Platform', centerX - 220, centerY - 36, {
+    width: 440,
+    align: 'center',
   });
   doc.restore();
 }
@@ -134,18 +150,67 @@ function formatLocation(user: {
   return [user.city, user.region, user.country].filter(Boolean).join(', ') || '—';
 }
 
-function formatStatementDate(date: Date): string {
-  return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+function formatDateTime(date: Date): string {
+  return date.toLocaleString('en-US', {
+    month: 'numeric',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+  });
 }
 
-function formatStatementDateTime(date: Date): string {
-  return date.toLocaleString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+function formatPaymentMethod(method: string): string {
+  return method.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function formatEscrowStatus(status: string): string {
+  if (status === 'RELEASED') return 'Released to ANI Accountant';
+  if (status === 'HELD') return 'Held in escrow';
+  return status.replace(/_/g, ' ');
+}
+
+function resolveTransactionRef(order: OrderForStatement): string {
+  if (order.transactionId) return order.transactionId;
+  return `MOCK-${Date.now()}-${order.id.slice(0, 6).toUpperCase()}`;
+}
+
+function formatCommodityLabel(order: OrderForStatement): string {
+  const commodity = order.listing.commodity.name;
+  const category = order.listing.commodity.category.name;
+  return `${commodity} (${category})`;
+}
+
+function formatFarmerDisplayName(order: OrderForStatement): string {
+  const name = `${order.farmer.firstName} ${order.farmer.lastName}`;
+  const farmName = order.farmer.farmerProfile?.farmName;
+  return farmName ? `${name} (${farmName})` : name;
+}
+
+function drawSectionTitle(doc: PDFKit.PDFDocument, title: string, y: number): number {
+  doc.font('Helvetica-Bold').fontSize(10).fillColor(COLORS.accent);
+  doc.text(title, PAGE_MARGIN, y);
+  const lineY = y + 14;
+  doc.moveTo(PAGE_MARGIN, lineY).lineTo(CONTENT_RIGHT, lineY).strokeColor(COLORS.border).lineWidth(0.75).stroke();
+  return lineY + 10;
+}
+
+function drawKeyValue(
+  doc: PDFKit.PDFDocument,
+  label: string,
+  value: string,
+  y: number,
+  options?: { valueBold?: boolean; valueColor?: string }
+): number {
+  doc.font('Helvetica').fontSize(9).fillColor(COLORS.muted);
+  doc.text(`${label}:`, PAGE_MARGIN + 4, y, { continued: true, width: 130 });
+  doc.font(options?.valueBold ? 'Helvetica-Bold' : 'Helvetica')
+    .fontSize(9)
+    .fillColor(options?.valueColor ?? COLORS.text);
+  doc.text(` ${value}`, { width: CONTENT_WIDTH - 140 });
+  return y + 16;
 }
 
 export function buildOrderStatementPdf(order: OrderForStatement): Promise<Buffer> {
@@ -157,151 +222,98 @@ export function buildOrderStatementPdf(order: OrderForStatement): Promise<Buffer
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
 
-    const logoPath = getLogoPath();
-    const buyerName = `${order.buyer.firstName} ${order.buyer.lastName}`;
-    const farmerName = `${order.farmer.firstName} ${order.farmer.lastName}`;
-    const farmName = order.farmer.farmerProfile?.farmName;
-    const totalFormatted = `GHC ${order.totalAmount.toFixed(2)}`;
-    const otpVerifiedLabel = order.otpVerifiedAt
-      ? formatStatementDateTime(order.otpVerifiedAt)
-      : 'Confirmed';
+    drawTextWatermark(doc);
+    doc.on('pageAdded', () => drawTextWatermark(doc));
 
-    if (logoPath) {
-      drawPageWatermark(doc, logoPath);
-      doc.on('pageAdded', () => drawPageWatermark(doc, logoPath));
-    }
+    const logoPath = getLogoPath();
+    const totalFormatted = `GHC ${order.totalAmount.toFixed(2)}`;
+    const transactionRef = resolveTransactionRef(order);
 
     // --- HEADER ---
-    const headerTop = 38;
+    let y = 38;
     if (logoPath) {
-      doc.image(logoPath, PAGE_MARGIN, headerTop, { width: 50 });
+      doc.image(logoPath, PAGE_MARGIN, y, { width: 44 });
     }
 
-    const titleLeft = logoPath ? 105 : PAGE_MARGIN;
-    const titleWidth = 270;
-    doc.font('Helvetica-Bold').fontSize(13).fillColor('#111827');
-    doc.text('Agricess Networking International', titleLeft, headerTop, { width: titleWidth });
-    doc.font('Helvetica-Bold').fontSize(8).fillColor('#166534');
-    doc.text('TOGETHER FOR ALL', titleLeft, headerTop + 18);
-    doc.font('Helvetica-Bold').fontSize(8.5).fillColor('#4B5563');
-    doc.text('Official Financial Statement & Order Receipt', titleLeft, headerTop + 32);
+    const headerTextLeft = logoPath ? PAGE_MARGIN + 54 : PAGE_MARGIN;
+    doc.font('Helvetica-Bold').fontSize(14).fillColor(COLORS.text);
+    doc.text('ANI Platform', headerTextLeft, y);
+    doc.font('Helvetica').fontSize(9).fillColor(COLORS.muted);
+    doc.text('Official Financial Statement', headerTextLeft, y + 18);
 
-    const badgeWidth = 150;
-    const badgeLeft = CONTENT_RIGHT - badgeWidth;
-    doc.roundedRect(badgeLeft, headerTop + 4, badgeWidth, 22, 4).fillAndStroke('#DCFCE7', '#86EFAC');
-    doc.font('Helvetica-Bold').fontSize(7.5).fillColor('#166534');
-    doc.text('CONFIRMED & RELEASED', badgeLeft, headerTop + 11, { width: badgeWidth, align: 'center' });
+    y += 48;
+    doc.moveTo(PAGE_MARGIN, y).lineTo(CONTENT_RIGHT, y).strokeColor(COLORS.border).lineWidth(1).stroke();
+    y += 16;
 
-    const headerBottom = headerTop + 58;
-    doc.moveTo(PAGE_MARGIN, headerBottom).lineTo(CONTENT_RIGHT, headerBottom).strokeColor('#E5E7EB').lineWidth(1).stroke();
+    // --- ORDER METADATA ---
+    y = drawKeyValue(doc, 'Order ID', order.id, y);
+    y = drawKeyValue(doc, 'Date', formatDateTime(order.createdAt), y);
+    y = drawKeyValue(doc, 'Transaction', transactionRef, y, { valueBold: true });
+    y += 8;
 
-    // --- STATEMENT METADATA (2x2 grid to avoid column overlap) ---
-    const metaTop = headerBottom + 10;
-    const metaHeight = 58;
-    doc.roundedRect(PAGE_MARGIN, metaTop, CONTENT_WIDTH, metaHeight, 6).fillAndStroke('#F9FAFB', '#E5E7EB');
+    // --- ORDER DETAILS ---
+    y = drawSectionTitle(doc, 'Order Details', y);
+    y = drawKeyValue(doc, 'Product', order.listing.title, y);
+    y = drawKeyValue(doc, 'Commodity', formatCommodityLabel(order), y);
+    y = drawKeyValue(doc, 'Quantity', `${order.quantity} ${order.unit}`, y);
+    y = drawKeyValue(doc, 'Unit price', `GHC ${order.unitPrice.toFixed(2)}`, y);
+    y = drawKeyValue(doc, 'Total amount', totalFormatted, y, { valueBold: true });
+    y = drawKeyValue(doc, 'Payment method', formatPaymentMethod(order.paymentMethod), y);
+    y += 8;
 
-    const metaCol1 = PAGE_MARGIN + 12;
-    const metaCol2 = PAGE_MARGIN + 260;
-    const metaRow1 = metaTop + 10;
-    const metaRow2 = metaTop + 34;
-
-    doc.font('Helvetica-Bold').fontSize(7.5).fillColor('#6B7280').text('STATEMENT ID', metaCol1, metaRow1);
-    doc.font('Helvetica-Bold').fontSize(9.5).fillColor('#111827').text(`ANI-${order.id.slice(0, 8).toUpperCase()}`, metaCol1, metaRow1 + 11);
-
-    doc.font('Helvetica-Bold').fontSize(7.5).fillColor('#6B7280').text('DATE ISSUED', metaCol2, metaRow1);
-    doc.font('Helvetica').fontSize(9).fillColor('#111827').text(formatStatementDate(order.createdAt), metaCol2, metaRow1 + 11);
-
-    doc.font('Helvetica-Bold').fontSize(7.5).fillColor('#6B7280').text('PAYMENT METHOD', metaCol1, metaRow2);
-    doc.font('Helvetica').fontSize(9).fillColor('#111827').text(order.paymentMethod.replace(/_/g, ' '), metaCol1, metaRow2 + 11, { width: 230 });
-
-    doc.font('Helvetica-Bold').fontSize(7.5).fillColor('#6B7280').text('OTP VERIFIED', metaCol2, metaRow2);
-    doc.font('Helvetica').fontSize(8.5).fillColor('#166534').text(otpVerifiedLabel, metaCol2, metaRow2 + 11, { width: 230 });
-
-    // --- PARTIES ---
-    const partyTop = metaTop + metaHeight + 12;
-    const partyWidth = 245;
-    const partyHeight = 92;
-    const partyGap = 15;
-    const farmerLeft = PAGE_MARGIN + partyWidth + partyGap;
-
-    doc.roundedRect(PAGE_MARGIN, partyTop, partyWidth, partyHeight, 6).fillAndStroke('#FFFFFF', '#E5E7EB');
-    doc.rect(PAGE_MARGIN, partyTop, partyWidth, 20).fill('#F3F4F6');
-    doc.font('Helvetica-Bold').fontSize(7.5).fillColor('#374151').text('BUYER / CUSTOMER (PAYER)', PAGE_MARGIN + 10, partyTop + 6);
-    doc.font('Helvetica-Bold').fontSize(9.5).fillColor('#111827').text(buyerName, PAGE_MARGIN + 10, partyTop + 28, { width: partyWidth - 20 });
-    doc.font('Helvetica').fontSize(8).fillColor('#4B5563').text(`Location: ${formatLocation(order.buyer)}`, PAGE_MARGIN + 10, partyTop + 44, { width: partyWidth - 20 });
-    doc.font('Helvetica').fontSize(8).fillColor('#4B5563').text(`Email: ${order.buyer.email || '—'}`, PAGE_MARGIN + 10, partyTop + 58, { width: partyWidth - 20 });
-    doc.font('Helvetica').fontSize(8).fillColor('#4B5563').text(`Phone: ${order.buyer.phone || '—'}`, PAGE_MARGIN + 10, partyTop + 72, { width: partyWidth - 20 });
-
-    doc.roundedRect(farmerLeft, partyTop, partyWidth, partyHeight, 6).fillAndStroke('#FFFFFF', '#E5E7EB');
-    doc.rect(farmerLeft, partyTop, partyWidth, 20).fill('#F3F4F6');
-    doc.font('Helvetica-Bold').fontSize(7.5).fillColor('#374151').text('FARMER / SUPPLIER (RECIPIENT)', farmerLeft + 10, partyTop + 6);
-    doc.font('Helvetica-Bold').fontSize(9.5).fillColor('#111827').text(farmerName, farmerLeft + 10, partyTop + 28, { width: partyWidth - 20 });
-    let farmerDetailY = partyTop + 44;
-    if (farmName) {
-      doc.font('Helvetica-Oblique').fontSize(8).fillColor('#166534').text(`Farm: ${farmName}`, farmerLeft + 10, farmerDetailY, { width: partyWidth - 20 });
-      farmerDetailY += 14;
-    }
-    doc.font('Helvetica').fontSize(8).fillColor('#4B5563').text(`Location: ${formatLocation(order.farmer)}`, farmerLeft + 10, farmerDetailY, { width: partyWidth - 20 });
-    doc.font('Helvetica').fontSize(8).fillColor('#4B5563').text(`Phone: ${order.farmer.phone || '—'}`, farmerLeft + 10, farmerDetailY + 14, { width: partyWidth - 20 });
-
-    // --- LINE ITEMS TABLE ---
-    const tableTop = partyTop + partyHeight + 16;
-    doc.roundedRect(PAGE_MARGIN, tableTop, CONTENT_WIDTH, 22, 4).fill('#166534');
-    doc.font('Helvetica-Bold').fontSize(8).fillColor('#FFFFFF');
-    doc.text('DESCRIPTION / PRODUCT', PAGE_MARGIN + 10, tableTop + 6);
-    doc.text('CATEGORY', 268, tableTop + 6);
-    doc.text('QTY', 368, tableTop + 6, { width: 40, align: 'right' });
-    doc.text('UNIT PRICE', 418, tableTop + 6, { width: 60, align: 'right' });
-    doc.text('LINE TOTAL', 488, tableTop + 6, { width: 52, align: 'right' });
-
-    const rowY = tableTop + 28;
-    const rowHeight = 40;
-    doc.roundedRect(PAGE_MARGIN, rowY, CONTENT_WIDTH, rowHeight, 4).fillAndStroke('#FFFFFF', '#E5E7EB');
-    doc.font('Helvetica-Bold').fontSize(9.5).fillColor('#111827').text(order.listing.title, PAGE_MARGIN + 10, rowY + 8, { width: 195 });
-    doc.font('Helvetica').fontSize(7.5).fillColor('#6B7280').text(`Commodity: ${order.listing.commodity.name}`, PAGE_MARGIN + 10, rowY + 22, { width: 195 });
-    doc.font('Helvetica').fontSize(8.5).fillColor('#374151').text(order.listing.commodity.category.name, 268, rowY + 14, { width: 90 });
-    doc.font('Helvetica').fontSize(8.5).fillColor('#374151').text(`${order.quantity} ${order.unit}`, 368, rowY + 14, { width: 40, align: 'right' });
-    doc.font('Helvetica').fontSize(8.5).fillColor('#374151').text(`GHC ${order.unitPrice.toFixed(2)}`, 418, rowY + 14, { width: 60, align: 'right' });
-    doc.font('Helvetica-Bold').fontSize(8.5).fillColor('#111827').text(totalFormatted, 488, rowY + 14, { width: 52, align: 'right' });
-
-    // --- FINANCIAL BREAKDOWN ---
-    const breakdownTop = rowY + rowHeight + 14;
-    const breakdownHeight = 52;
-    doc.roundedRect(PAGE_MARGIN, breakdownTop, CONTENT_WIDTH, breakdownHeight, 6).fillAndStroke('#FAFAFA', '#E5E7EB');
-
-    doc.font('Helvetica').fontSize(9).fillColor('#374151').text('Subtotal', PAGE_MARGIN + 15, breakdownTop + 12);
-    doc.font('Helvetica').fontSize(9).fillColor('#374151').text(totalFormatted, 400, breakdownTop + 12, { width: 95, align: 'right' });
-
-    doc.font('Helvetica').fontSize(9).fillColor('#374151').text('Escrow & Handling Fee', PAGE_MARGIN + 15, breakdownTop + 28);
-    doc.font('Helvetica').fontSize(9).fillColor('#166534').text('GHC 0.00 (Included)', 400, breakdownTop + 28, { width: 95, align: 'right' });
-
-    // --- PROMINENT TOTAL AMOUNT ---
-    const totalTop = breakdownTop + breakdownHeight + 10;
-    const totalHeight = 54;
-    doc.roundedRect(PAGE_MARGIN, totalTop, CONTENT_WIDTH, totalHeight, 8).fill('#166534');
-    doc.font('Helvetica-Bold').fontSize(12).fillColor('#FFFFFF').text('TOTAL AMOUNT', PAGE_MARGIN + 18, totalTop + 10);
-    doc.font('Helvetica-Bold').fontSize(22).fillColor('#FFFFFF').text(totalFormatted, PAGE_MARGIN + 18, totalTop + 26, {
-      width: CONTENT_WIDTH - 36,
+    // --- PROMINENT TOTAL AMOUNT PAID ---
+    const totalBarHeight = 56;
+    doc.roundedRect(PAGE_MARGIN, y, CONTENT_WIDTH, totalBarHeight, 6).fill(COLORS.totalBar);
+    doc.font('Helvetica-Bold').fontSize(11).fillColor('#BBF7D0');
+    doc.text('TOTAL AMOUNT PAID', PAGE_MARGIN + 16, y + 10);
+    doc.font('Helvetica-Bold').fontSize(26).fillColor(COLORS.white);
+    doc.text(totalFormatted, PAGE_MARGIN + 16, y + 24, {
+      width: CONTENT_WIDTH - 32,
       align: 'right',
     });
+    y += totalBarHeight + 16;
 
-    // --- CONFIRMATION FOOTER ---
-    const footerTop = totalTop + totalHeight + 14;
-    const footerHeight = 42;
-    doc.roundedRect(PAGE_MARGIN, footerTop, CONTENT_WIDTH, footerHeight, 6).fillAndStroke('#F0FDF4', '#BBF7D0');
-    doc.font('Helvetica-Bold').fontSize(8.5).fillColor('#166534').text('ESCROW PAYMENT CONFIRMED & RELEASED', PAGE_MARGIN + 12, footerTop + 10);
-    doc.font('Helvetica').fontSize(8).fillColor('#4B5563').text(
-      `Delivery OTP confirmed on ${order.otpVerifiedAt ? formatStatementDateTime(order.otpVerifiedAt) : 'N/A'}. Payment released to ANI Accountant.`,
-      PAGE_MARGIN + 12,
-      footerTop + 24,
-      { width: CONTENT_WIDTH - 24 }
+    // --- FROM (BUYER) ---
+    y = drawSectionTitle(doc, 'From (Buyer)', y);
+    y = drawKeyValue(doc, 'Name', `${order.buyer.firstName} ${order.buyer.lastName}`, y, { valueBold: true });
+    y = drawKeyValue(doc, 'Location', formatLocation(order.buyer), y);
+    y += 8;
+
+    // --- TO (FARMER) ---
+    y = drawSectionTitle(doc, 'To (Farmer)', y);
+    y = drawKeyValue(doc, 'Name', formatFarmerDisplayName(order), y, { valueBold: true });
+    y = drawKeyValue(doc, 'Location', formatLocation(order.farmer), y);
+    y += 8;
+
+    // --- PAYMENT & ESCROW ---
+    y = drawSectionTitle(doc, 'Payment & Escrow', y);
+    y = drawKeyValue(doc, 'Order status', order.status, y, { valueBold: true });
+    y = drawKeyValue(doc, 'Escrow status', formatEscrowStatus(order.escrowStatus), y, {
+      valueBold: true,
+      valueColor: COLORS.accent,
+    });
+    y = drawKeyValue(
+      doc,
+      'Delivery confirmed',
+      order.otpVerifiedAt ? formatDateTime(order.otpVerifiedAt) : '—',
+      y
     );
+    y = drawKeyValue(
+      doc,
+      'Funds released',
+      order.paymentReleasedAt ? formatDateTime(order.paymentReleasedAt) : '—',
+      y
+    );
+    y += 16;
 
-    doc.font('Helvetica').fontSize(7.5).fillColor('#9CA3AF').text(
-      'This financial statement is an official digital record issued by Agricess Networking International (ANI). All funds are protected under ANI Escrow policy until delivery confirmation.',
-      PAGE_MARGIN,
-      footerTop + footerHeight + 12,
-      { align: 'center', width: CONTENT_WIDTH }
+    // --- FOOTER DISCLAIMER ---
+    doc.roundedRect(PAGE_MARGIN, y, CONTENT_WIDTH, 36, 4).fillAndStroke(COLORS.sectionBg, COLORS.border);
+    doc.font('Helvetica').fontSize(8).fillColor(COLORS.muted);
+    doc.text(
+      'This document is an official ANI Platform financial record. Funds are held in escrow until the buyer confirms delivery.',
+      PAGE_MARGIN + 12,
+      y + 10,
+      { width: CONTENT_WIDTH - 24, align: 'center' }
     );
 
     doc.end();
@@ -331,7 +343,7 @@ export async function generateOrderStatementPdf(
 export async function getOrderDetail(orderId: string, userId: string, roleId: number) {
   const order = await assertOrderStatementAccess(userId, roleId, orderId);
   const canRelease =
-    roleId === ROLES.BUYER &&
+    isMarketplaceBuyerRole(roleId) &&
     order.buyerId === userId &&
     order.status === 'PAID' &&
     order.escrowStatus === 'HELD';
@@ -368,7 +380,7 @@ export async function releaseOrderPayment(
   roleId: number,
   otp: string
 ) {
-  assertAuthorized(roleId === ROLES.BUYER, 'Only buyers can release order payments');
+  assertAuthorized(isMarketplaceBuyerRole(roleId), 'Only buyers and researchers can release order payments');
 
   const order = assertFound(
     await prisma.productOrder.findUnique({ where: { id: orderId } }),

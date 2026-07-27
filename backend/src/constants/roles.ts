@@ -7,6 +7,7 @@ export const ROLES = {
   ANI_ACCOUNTANT: 6,
   ADMIN: 7,
   RESEARCHER: 8,
+  STUDENT: 9,
 } as const;
 
 export const ROLE_NAMES: Record<number, string> = {
@@ -18,7 +19,11 @@ export const ROLE_NAMES: Record<number, string> = {
   6: 'ANI Accountant',
   7: 'Admin',
   8: 'Researcher',
+  9: 'Student',
 };
+
+/** Roles that browse marketplace farms and place product orders (same access flow as buyers). */
+export const MARKETPLACE_BUYER_ROLES = [ROLES.BUYER, ROLES.RESEARCHER] as const;
 
 export const PERMISSIONS = {
   CREATE_LISTING: 'create_listing',
@@ -60,6 +65,7 @@ export const REGISTERABLE_ROLE_IDS = [
   ROLES.BUYER_HANDLER,
   ROLES.ANI_ACCOUNTANT,
   ROLES.RESEARCHER,
+  ROLES.STUDENT,
 ] as const;
 
 export function isFarmerRole(roleId: number): boolean {
@@ -68,6 +74,14 @@ export function isFarmerRole(roleId: number): boolean {
 
 export function isResearcherRole(roleId: number): boolean {
   return roleId === ROLES.RESEARCHER;
+}
+
+export function isStudentRole(roleId: number): boolean {
+  return roleId === ROLES.STUDENT;
+}
+
+export function isMarketplaceBuyerRole(roleId: number): boolean {
+  return (MARKETPLACE_BUYER_ROLES as readonly number[]).includes(roleId);
 }
 
 export function isStaffRole(roleId: number): boolean {

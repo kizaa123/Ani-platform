@@ -4,19 +4,30 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { Connection, ConnectionUser, fullName, isBuyer, isFarmer, isStaff, ROLES } from "@/lib/types";
+import { Connection, ConnectionUser, fullName, isBuyer, isFarmer, isStaff, isMarketplaceBuyer, ROLES } from "@/lib/types";
 import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { CountryBadge } from "@/components/CountrySelect";
 import { VerificationBadge } from "@/components/VerificationBadge";
 
-function canApproveConnection(roleId: number) {
+function canModerateConnection(roleId: number) {
   return isStaff(roleId);
+}
+
+function showVerificationBadge(status?: string | null) {
+  return status === "VERIFIED" || status === "REJECTED";
+}
+
+function showConnectionStatusBadge(status: string, partner?: ConnectionUser) {
+  if (status === "PENDING" && partner?.verificationStatus !== "VERIFIED") {
+    return false;
+  }
+  return true;
 }
 
 function statusLabel(status: string) {
   switch (status) {
     case "ACCEPTED":
-      return "Approved";
+      return "Accepted";
     case "REJECTED":
       return "Declined";
     default:
@@ -64,14 +75,14 @@ export default function ConnectionsPage() {
       <p className="mb-6 text-sm text-gray-500">
         {isFarmer(user.roleId)
           ? "Buyers who requested farm access — ANI admin approves access; you'll be notified when someone requests"
-          : isBuyer(user.roleId)
+          : isMarketplaceBuyer(user.roleId)
             ? "Farmers you requested access from — approved once ANI admin reviews"
             : user.roleId === ROLES.FARMER_HANDLER
               ? "Buyer connections for your farmer clients — view-only; ANI admin approves access"
               : user.roleId === ROLES.BUYER_HANDLER
                 ? "Farmer connections for your buyer clients — see who they connected with"
                 : isStaff(user.roleId)
-                  ? "Pending farm access requests — approve or reject buyer connections"
+                  ? "Pending farm access requests — accept or reject buyer connections"
                   : "Client connection requests"}
       </p>
 
@@ -80,7 +91,7 @@ export default function ConnectionsPage() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {connections.map((c) => {
-            const isBuyerView = isBuyer(user.roleId);
+            const isBuyerView = isMarketplaceBuyer(user.roleId);
             const isFarmerHandlerView = user.roleId === ROLES.FARMER_HANDLER;
             const isBuyerHandlerView = user.roleId === ROLES.BUYER_HANDLER;
             const partner: ConnectionUser | undefined = isBuyerView
@@ -103,8 +114,8 @@ export default function ConnectionsPage() {
                 isBuyerView={isBuyerView}
                 isHandlerView={isFarmerHandlerView}
                 isBuyerHandlerView={isBuyerHandlerView}
-                canApprove={canApproveConnection(user.roleId)}
-                onApprove={() => updateStatus(c.id, "ACCEPTED")}
+                canModerate={canModerateConnection(user.roleId)}
+                onAccept={() => updateStatus(c.id, "ACCEPTED")}
                 onReject={() => updateStatus(c.id, "REJECTED")}
               />
             );
@@ -123,8 +134,8 @@ function ConnectionCard({
   isBuyerView,
   isHandlerView,
   isBuyerHandlerView,
-  canApprove,
-  onApprove,
+  canModerate,
+  onAccept,
   onReject,
 }: {
   connection: Connection;
@@ -134,12 +145,13 @@ function ConnectionCard({
   isBuyerView: boolean;
   isHandlerView?: boolean;
   isBuyerHandlerView?: boolean;
-  canApprove: boolean;
-  onApprove: () => void;
+  canModerate: boolean;
+  onAccept: () => void;
   onReject: () => void;
 }) {
   const farmName = partner && "farmName" in partner ? partner.farmName : null;
-  const showPhone = !isBuyerView && partner?.phone;
+  const showPendingConnectionUi =
+    c.status === "PENDING" && partner?.verificationStatus === "VERIFIED";
 
   return (
     <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
@@ -178,8 +190,8 @@ function ConnectionCard({
             {partner ? fullName(partner) : "Unknown"}
           </p>
 
-          {partner?.verificationStatus && (
-            <VerificationBadge status={partner.verificationStatus} className="mt-0.5" />
+          {showVerificationBadge(partner?.verificationStatus) && (
+            <VerificationBadge status={partner!.verificationStatus} className="mt-0.5" />
           )}
           {farmName && (
             <p className="mt-0.5 truncate text-xs font-medium text-brand-700">{farmName}</p>
@@ -195,36 +207,29 @@ function ConnectionCard({
             <p className="mt-0.5 text-xs text-gray-500">{partner.city}</p>
           )}
 
-          {showPhone && (
-            <a
-              href={`tel:${partner.phone}`}
-              className="mt-1 block text-xs font-medium text-brand-700 hover:underline"
-            >
-              {partner.phone}
-            </a>
-          )}
-
-          {c.accessPaid && c.status === "PENDING" && !isBuyerView && !canApprove && (
+          {c.accessPaid && showPendingConnectionUi && !isBuyerView && !canModerate && (
             <p className="mt-2 text-xs font-medium text-amber-800">
-              Payment received — awaiting ANI admin approval
+              Payment received — awaiting ANI admin review
             </p>
           )}
-          {c.accessPaid && c.status === "PENDING" && isBuyerView && (
+          {c.accessPaid && showPendingConnectionUi && isBuyerView && (
             <p className="mt-2 text-xs font-medium text-amber-800">
-              Payment received — waiting for ANI admin approval
+              Payment received — waiting for ANI admin review
             </p>
           )}
         </div>
 
         <div className="flex shrink-0 flex-col items-end gap-2">
-          <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusClass(c.status)}`}>
-            {statusLabel(c.status)}
-          </span>
+          {showConnectionStatusBadge(c.status, partner) && (
+            <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusClass(c.status)}`}>
+              {statusLabel(c.status)}
+            </span>
+          )}
 
-          {c.status === "PENDING" && canApprove && (
+          {c.status === "PENDING" && canModerate && (
             <div className="flex flex-col gap-1.5">
-              <button type="button" onClick={onApprove} className="btn-primary px-3 py-1.5 text-xs">
-                Approve
+              <button type="button" onClick={onAccept} className="btn-primary px-3 py-1.5 text-xs">
+                Accept
               </button>
               <button
                 type="button"

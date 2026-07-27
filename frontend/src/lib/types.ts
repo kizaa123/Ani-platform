@@ -574,6 +574,7 @@ export const ROLES = {
   ANI_ACCOUNTANT: 6,
   ADMIN: 7,
   RESEARCHER: 8,
+  STUDENT: 9,
 } as const;
 
 export function fullName(u: { firstName: string; lastName: string }) {
@@ -634,6 +635,18 @@ export function filterCategoriesForRole(
 
 export function isBuyer(roleId: number) {
   return roleId === ROLES.BUYER;
+}
+
+export function isMarketplaceBuyer(roleId: number) {
+  return roleId === ROLES.BUYER || roleId === ROLES.RESEARCHER;
+}
+
+export function isStudent(roleId: number) {
+  return roleId === ROLES.STUDENT;
+}
+
+export function canPurchasePublication(roleId: number) {
+  return roleId === ROLES.BUYER || roleId === ROLES.STUDENT;
 }
 
 export function isHandler(roleId: number) {

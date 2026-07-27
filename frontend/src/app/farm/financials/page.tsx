@@ -103,36 +103,26 @@ export default function FinancialStatementPage() {
         <Link href="/farm" className="text-sm text-brand-600 hover:underline">
           Back to My Farm
         </Link>
-        <h1 className="mt-2 text-2xl font-bold text-brand-900">Financial Statement</h1>
-        <p className="text-sm text-gray-500">Overview of your farm products and marketplace activity</p>
+        <h1 className="mt-2 text-2xl font-bold text-brand-900">Money Summary</h1>
+        <p className="text-sm text-gray-500">What you have listed, sold, and earned</p>
       </div>
 
       {/* Summary cards */}
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
-          <p className="text-xs font-semibold uppercase text-gray-500">Listed inventory value</p>
+          <p className="text-xs font-semibold uppercase text-gray-500">Products for sale</p>
           <p className="mt-1 text-xl font-bold text-brand-900">{formatGhc(summary.totalListedValue)}</p>
           <p className="text-xs text-gray-500">{summary.activeListings} active product(s)</p>
         </div>
         <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
-          <p className="text-xs font-semibold uppercase text-gray-500">Sales revenue</p>
+          <p className="text-xs font-semibold uppercase text-gray-500">Total earned</p>
           <p className="mt-1 text-xl font-bold text-green-700">{formatGhc(summary.totalSalesRevenue ?? 0)}</p>
           <p className="text-xs text-gray-500">{summary.totalSalesCount ?? 0} completed sale(s)</p>
         </div>
         <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
-          <p className="text-xs font-semibold uppercase text-gray-500">Sold inventory value</p>
-          <p className="mt-1 text-xl font-bold text-brand-800">{formatGhc(summary.totalSoldValue)}</p>
-          <p className="text-xs text-gray-500">{summary.soldListings} sold out</p>
-        </div>
-        <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
-          <p className="text-xs font-semibold uppercase text-gray-500">Buyer connections</p>
-          <p className="mt-1 text-xl font-bold text-brand-900">{summary.acceptedConnections}</p>
-          <p className="text-xs text-gray-500">{summary.pendingConnections} pending</p>
-        </div>
-        <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
-          <p className="text-xs font-semibold uppercase text-gray-500">Total products</p>
+          <p className="text-xs font-semibold uppercase text-gray-500">All products</p>
           <p className="mt-1 text-xl font-bold text-brand-900">{summary.totalProducts}</p>
-          <p className="text-xs text-gray-500">All time on your farm</p>
+          <p className="text-xs text-gray-500">Listed on your farm</p>
         </div>
       </div>
 
@@ -141,8 +131,8 @@ export default function FinancialStatementPage() {
         <div className="mb-6 overflow-hidden rounded-2xl border border-green-100 bg-white shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-green-100 bg-green-50/50 px-6 py-4">
             <div>
-              <h3 className="text-base font-semibold text-brand-900">Sales & payments received</h3>
-              <p className="text-sm text-gray-500">Buyer purchases with contact details</p>
+              <h3 className="text-base font-semibold text-brand-900">Payments received</h3>
+              <p className="text-sm text-gray-500">Orders buyers have paid for</p>
             </div>
             <Link href="/farm/orders" className="text-sm font-semibold text-brand-700 hover:underline">
               View all orders
@@ -150,7 +140,7 @@ export default function FinancialStatementPage() {
           </div>
           <SalesOrdersTable items={salesOrders} />
           <div className="border-t border-green-100 bg-green-50 px-6 py-3 text-right text-sm font-semibold text-green-800">
-            Total sales revenue: {formatGhc(summary.totalSalesRevenue ?? 0)}
+            Total earned: {formatGhc(summary.totalSalesRevenue ?? 0)}
           </div>
         </div>
       )}
@@ -158,8 +148,8 @@ export default function FinancialStatementPage() {
       {/* Line items table */}
       <div className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
         <div className="border-b border-brand-100 px-6 py-4">
-          <h3 className="text-base font-semibold text-brand-900">Product line items</h3>
-          <p className="text-sm text-gray-500">Each row is a product you listed on the marketplace</p>
+          <h3 className="text-base font-semibold text-brand-900">Your products</h3>
+          <p className="text-sm text-gray-500">Everything you have listed for sale</p>
         </div>
 
         {statement.lineItems.length === 0 ? (
@@ -213,7 +203,7 @@ export default function FinancialStatementPage() {
               <tfoot>
                 <tr className="bg-brand-50 font-semibold text-brand-900">
                   <td colSpan={5} className="px-6 py-4 text-right">
-                    Active inventory total
+                    Total listed value
                   </td>
                   <td className="px-4 py-4 text-right">{formatGhc(summary.totalListedValue)}</td>
                   <td />
@@ -225,7 +215,7 @@ export default function FinancialStatementPage() {
       </div>
 
       <p className="mt-4 text-xs text-gray-400 text-center">
-        Sales revenue reflects confirmed buyer payments. Inventory values reflect current listed stock.
+        Totals show confirmed buyer payments. Listed values reflect products currently for sale.
       </p>
     </div>
   );

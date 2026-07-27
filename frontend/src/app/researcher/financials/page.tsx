@@ -60,15 +60,15 @@ export default function ResearcherFinancialsPage() {
         <Link href="/researcher/publications" className="text-sm text-brand-600 hover:underline">
           Back to Publications
         </Link>
-        <h1 className="mt-2 text-2xl font-bold text-brand-900">Financial Statement</h1>
+        <h1 className="mt-2 text-2xl font-bold text-brand-900">Money Summary</h1>
         <p className="text-sm text-gray-500">
-          Earnings from students who purchased your paid publications
+          What you have earned from paid publications
         </p>
       </div>
 
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
-          <p className="text-xs font-semibold uppercase text-gray-500">Total earnings</p>
+          <p className="text-xs font-semibold uppercase text-gray-500">Total earned</p>
           <p className="mt-1 text-xl font-bold text-green-700">{formatGhc(summary.totalEarnings)}</p>
           <p className="text-xs text-gray-500">{summary.totalSales} sale(s)</p>
         </div>
@@ -94,8 +94,8 @@ export default function ResearcherFinancialsPage() {
       {statement.salesLineItems.length > 0 && (
         <div className="mb-6 overflow-hidden rounded-2xl border border-green-100 bg-white shadow-sm">
           <div className="border-b border-green-100 bg-green-50/50 px-6 py-4">
-            <h3 className="text-base font-semibold text-brand-900">Sales & payments received</h3>
-            <p className="text-sm text-gray-500">Students who purchased your paid content</p>
+            <h3 className="text-base font-semibold text-brand-900">Payments received</h3>
+            <p className="text-sm text-gray-500">Students who bought your paid content</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] text-sm">
@@ -125,7 +125,7 @@ export default function ResearcherFinancialsPage() {
               <tfoot>
                 <tr className="bg-green-50 font-semibold text-green-800">
                   <td colSpan={4} className="px-6 py-4 text-right">
-                    Total earnings
+                    Total earned
                   </td>
                   <td className="px-6 py-4 text-right">{formatGhc(summary.totalEarnings)}</td>
                 </tr>
@@ -137,7 +137,7 @@ export default function ResearcherFinancialsPage() {
 
       <div className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
         <div className="border-b border-brand-100 px-6 py-4">
-          <h3 className="text-base font-semibold text-brand-900">Publication line items</h3>
+          <h3 className="text-base font-semibold text-brand-900">Your publications</h3>
         </div>
         {statement.lineItems.length === 0 ? (
           <div className="px-6 py-12 text-center text-gray-500">No publications yet.</div>

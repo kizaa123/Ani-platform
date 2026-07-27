@@ -19,7 +19,9 @@ import { StaffPortalLayout } from "@/components/StaffSidebar";
 
 import { ResearcherPortalLayout } from "@/components/ResearcherSidebar";
 
-import { isFarmer, isHandler, isBuyer, isStaff, isResearcher } from "@/lib/types";
+import { StudentPortalLayout } from "@/components/StudentSidebar";
+
+import { isFarmer, isHandler, isBuyer, isStaff, isResearcher, isStudent } from "@/lib/types";
 
 
 
@@ -134,6 +136,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <PortalWrap>
 
         <ResearcherPortalLayout>{children}</ResearcherPortalLayout>
+
+      </PortalWrap>
+
+    );
+
+  }
+
+
+
+  if (user && isStudent(user.roleId)) {
+
+    return (
+
+      <PortalWrap>
+
+        <StudentPortalLayout>{children}</StudentPortalLayout>
 
       </PortalWrap>
 

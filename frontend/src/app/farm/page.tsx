@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { Listing, ROLES, defaultListingUnit, listingUnitsForRole, formatListingUnit, isLivestockFarmer, normalizeListingUnit, type ListingUnit, ProductMediaItem } from "@/lib/types";
 import { ProductImage } from "@/components/FarmerAvatar";
 import { Icon } from "@/components/icons";
+import { HarvestCalendarTrigger } from "@/components/HarvestCalendarTrigger";
 import { assetUrl } from "@/lib/assetUrl";
 import { basePriceFromListed, computeListedPrice } from "@/lib/listingPrice";
 
@@ -306,177 +307,260 @@ export default function FarmPage() {
       )}
 
       {showForm && (
-        <div className="mb-6 space-y-3 rounded-2xl border border-brand-200 bg-brand-50 p-6">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-brand-900">
-              {editingId ? "Edit Product" : "Add Product to Your Farm"}
-            </h3>
+        <div className="mb-8 rounded-2xl border border-brand-200 bg-white p-6 shadow-lg sm:p-8">
+          <div className="mb-6 flex items-center justify-between border-b border-brand-100 pb-4">
+            <div>
+              <h3 className="text-xl font-bold text-brand-900">
+                {editingId ? "Edit Product Listing" : "Add New Product to Your Farm"}
+              </h3>
+              <p className="mt-0.5 text-xs text-gray-500">
+                Specify your commodity, pricing, and availability for buyers.
+              </p>
+            </div>
             <button
               type="button"
               onClick={resetForm}
-              className="text-sm text-gray-500 hover:text-gray-700"
+              className="rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-1.5 text-xs font-semibold text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
             >
               Cancel
             </button>
           </div>
-          <select
-            value={form.commodityId}
-            onChange={(e) => {
-              const commodityId = parseInt(e.target.value);
-              const fc = registeredCommodities.find((c) => c.commodity.id === commodityId);
-              setForm({
-                ...form,
-                commodityId,
-                unit: normalizeListingUnit(fc?.unit, user?.roleId ?? ROLES.CROP_FARMER),
-              });
-            }}
-            className="w-full rounded-lg border bg-white px-4 py-2"
-          >
-            <option value={0}>Select your commodity</option>
-            {registeredCommodities.map((fc) => (
-              <option key={fc.id} value={fc.commodity.id}>
-                {fc.commodity.name} ({fc.commodity.category.name})
-              </option>
-            ))}
-          </select>
-          <input
-            placeholder={
-              isLivestockFarmer(user?.roleId ?? 0)
-                ? "Title e.g. Healthy Cattle for Sale"
-                : "Title e.g. Premium Cocoa for Sale"
-            }
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-            className="w-full rounded-lg border bg-white px-4 py-2"
-          />
-          <textarea
-            placeholder="Description"
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-            className="w-full rounded-lg border bg-white px-4 py-2"
-            rows={3}
-          />
-          <div className="space-y-2">
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              <input
-                type="number"
-                placeholder={isLivestockFarmer(user?.roleId ?? 0) ? "No. of animals" : "Quantity"}
-                min={1}
-                step={isLivestockFarmer(user?.roleId ?? 0) ? 1 : "any"}
-                value={form.quantity || ""}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    quantity: isLivestockFarmer(user?.roleId ?? 0)
-                      ? parseInt(e.target.value, 10) || 0
-                      : parseFloat(e.target.value),
-                  })
-                }
-                className="rounded-lg border bg-white px-4 py-2"
-              />
-              <select
-                value={form.unit}
-                onChange={(e) => setForm({ ...form, unit: e.target.value as ListingUnit })}
-                className="rounded-lg border bg-white px-4 py-2"
-              >
-                {listingUnitsForRole(user?.roleId ?? ROLES.CROP_FARMER).map((u) => (
-                  <option key={u} value={u}>
-                    {formatListingUnit(u)}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="number"
-                placeholder="Your price (GHC)"
-                min={0}
-                step="any"
-                value={form.price || ""}
-                onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value) || 0 })}
-                className="col-span-2 rounded-lg border bg-white px-4 py-2 sm:col-span-1"
-              />
+
+          <div className="space-y-6">
+            {/* Commodity & Title */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-brand-900">
+                  Select Commodity <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={form.commodityId}
+                  onChange={(e) => {
+                    const commodityId = parseInt(e.target.value);
+                    const fc = registeredCommodities.find((c) => c.commodity.id === commodityId);
+                    setForm({
+                      ...form,
+                      commodityId,
+                      unit: normalizeListingUnit(fc?.unit, user?.roleId ?? ROLES.CROP_FARMER),
+                    });
+                  }}
+                  className="w-full rounded-xl border border-brand-200 bg-white px-4 py-2.5 text-sm shadow-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                >
+                  <option value={0}>Choose a commodity</option>
+                  {registeredCommodities.map((fc) => (
+                    <option key={fc.id} value={fc.commodity.id}>
+                      {fc.commodity.name} ({fc.commodity.category.name})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-brand-900">
+                  Product Title <span className="text-red-500">*</span>
+                </label>
+                <input
+                  placeholder={
+                    isLivestockFarmer(user?.roleId ?? 0)
+                      ? "e.g. Healthy Cattle for Sale"
+                      : "e.g. Premium Fresh Cocoa Beans"
+                  }
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  className="w-full rounded-xl border border-brand-200 bg-white px-4 py-2.5 text-sm shadow-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                />
+              </div>
             </div>
-            <div className="rounded-lg border border-brand-200 bg-white px-4 py-2.5 text-sm">
-              {form.price > 0 ? (
-                <p className="font-semibold text-brand-800">
-                  Your price: GHC {form.price} → Listed price: GHC {listedPricePreview}/
-                  {formatListingUnit(form.unit)}
-                </p>
-              ) : (
-                <p className="text-gray-500">Enter your price — buyers will see it plus 50% as the listed price.</p>
-              )}
-            </div>
-          </div>
-          <input
-            placeholder="Location e.g. Central Region"
-            value={form.location}
-            onChange={(e) => setForm({ ...form, location: e.target.value })}
-            className="w-full rounded-lg border bg-white px-4 py-2"
-          />
-          <div className="space-y-3 rounded-xl border border-brand-200 bg-white p-4">
+
+            {/* Description */}
             <div>
-              <p className="text-sm font-semibold text-brand-900">Harvest calendar</p>
-              <p className="mt-0.5 text-xs text-gray-500">
-                When this product is ready — buyers with farm access will see these dates.
-              </p>
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-brand-900">
+                Description <span className="text-xs font-normal lowercase text-gray-400">(optional)</span>
+              </label>
+              <textarea
+                placeholder="Provide details about quality, grade, packaging, or special terms..."
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                className="w-full rounded-xl border border-brand-200 bg-white px-4 py-2.5 text-sm shadow-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                rows={3}
+              />
             </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+
+            {/* Quantity, Unit, Price */}
+            <div className="rounded-xl border border-brand-100 bg-brand-50/50 p-4 sm:p-5">
+              <div className="mb-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-brand-900">
+                  Quantity &amp; Pricing
+                </h4>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-gray-700">
+                    {isLivestockFarmer(user?.roleId ?? 0) ? "Number of Animals *" : "Available Quantity *"}
+                  </label>
+                  <input
+                    type="number"
+                    placeholder={isLivestockFarmer(user?.roleId ?? 0) ? "e.g. 10" : "e.g. 500"}
+                    min={1}
+                    step={isLivestockFarmer(user?.roleId ?? 0) ? 1 : "any"}
+                    value={form.quantity || ""}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        quantity: isLivestockFarmer(user?.roleId ?? 0)
+                          ? parseInt(e.target.value, 10) || 0
+                          : parseFloat(e.target.value),
+                      })
+                    }
+                    className="w-full rounded-xl border border-brand-200 bg-white px-4 py-2 text-sm shadow-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-gray-700">Unit *</label>
+                  <select
+                    value={form.unit}
+                    onChange={(e) => setForm({ ...form, unit: e.target.value as ListingUnit })}
+                    className="w-full rounded-xl border border-brand-200 bg-white px-4 py-2 text-sm shadow-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                  >
+                    {listingUnitsForRole(user?.roleId ?? ROLES.CROP_FARMER).map((u) => (
+                      <option key={u} value={u}>
+                        {formatListingUnit(u)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-gray-700">Your Price (GHC) *</label>
+                  <input
+                    type="number"
+                    placeholder="e.g. 150"
+                    min={0}
+                    step="any"
+                    value={form.price || ""}
+                    onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value) || 0 })}
+                    className="w-full rounded-xl border border-brand-200 bg-white px-4 py-2 text-sm shadow-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                  />
+                </div>
+              </div>
+
+              {/* Simplified Price Helper */}
+              <div className="mt-3 rounded-lg border border-brand-200 bg-white px-4 py-2.5 text-xs text-brand-900">
+                {form.price > 0 ? (
+                  <p className="font-medium text-brand-900">
+                    <span className="font-semibold text-brand-700">Price summary:</span> GHC {form.price} per {formatListingUnit(form.unit)}
+                  </p>
+                ) : (
+                  <p className="text-gray-500">Enter your selling price per {formatListingUnit(form.unit)}.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Location & Harvest Dates */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-600">
-                  Harvest start
+                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-brand-900">
+                  Location / Region <span className="text-red-500">*</span>
                 </label>
                 <input
-                  type="date"
-                  value={form.harvestStartDate}
-                  onChange={(e) => setForm({ ...form, harvestStartDate: e.target.value })}
-                  className="w-full rounded-lg border bg-white px-4 py-2"
+                  placeholder="e.g. Central Region, Mankessim"
+                  value={form.location}
+                  onChange={(e) => setForm({ ...form, location: e.target.value })}
+                  className="w-full rounded-xl border border-brand-200 bg-white px-4 py-2.5 text-sm shadow-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
                 />
               </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-gray-600">
-                  Harvest end
-                </label>
-                <input
-                  type="date"
-                  value={form.harvestEndDate}
-                  min={form.harvestStartDate || undefined}
-                  onChange={(e) => setForm({ ...form, harvestEndDate: e.target.value })}
-                  className="w-full rounded-lg border bg-white px-4 py-2"
-                />
+
+              <div className="rounded-xl border border-brand-100 bg-brand-50/50 p-4">
+                <p className="text-xs font-bold uppercase tracking-wider text-brand-900">Harvest / Availability Dates</p>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="mb-1 block text-[10px] font-semibold text-gray-600">Start Date</label>
+                    <input
+                      type="date"
+                      value={form.harvestStartDate}
+                      onChange={(e) => setForm({ ...form, harvestStartDate: e.target.value })}
+                      className="w-full rounded-lg border border-brand-200 bg-white px-3 py-1.5 text-xs shadow-xs focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-[10px] font-semibold text-gray-600">End Date</label>
+                    <input
+                      type="date"
+                      value={form.harvestEndDate}
+                      min={form.harvestStartDate || undefined}
+                      onChange={(e) => setForm({ ...form, harvestEndDate: e.target.value })}
+                      className="w-full rounded-lg border border-brand-200 bg-white px-3 py-1.5 text-xs shadow-xs focus:outline-none"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-          <div>
-            <p className="mb-2 text-sm font-semibold text-brand-900">
-              Product photos &amp; videos
-            </p>
-            <p className="mb-3 text-xs text-gray-500">
-              Up to {MAX_PRODUCT_MEDIA} files per product. Videos max {MAX_VIDEO_DURATION} seconds.
-              Buyers see these when viewing and ordering.
-            </p>
-            <input
-              ref={productMediaRef}
-              type="file"
-              accept="image/*,video/*"
-              className="hidden"
-              onChange={(e) => handleProductMediaUpload(e.target.files)}
-            />
-            <button
-              type="button"
-              onClick={() => productMediaRef.current?.click()}
-              disabled={productMediaUploading || totalProductMediaCount >= MAX_PRODUCT_MEDIA}
-              className="rounded-lg border border-brand-300 bg-white px-4 py-2 text-sm font-medium text-brand-800 disabled:opacity-50"
-            >
-              {productMediaUploading ? "Uploading..." : "+ Add product media"}
-            </button>
-            {(productMedia.length > 0 || pendingMediaFiles.length > 0) && (
-              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5">
-                {productMedia.map((item) => {
-                  const src = assetUrl(item.url);
-                  return (
-                    <div key={item.id} className="relative overflow-hidden rounded-xl border border-brand-100 bg-brand-50">
-                      {item.type === "VIDEO" && src ? (
+
+            {/* Product Media */}
+            <div className="rounded-xl border border-brand-100 bg-white p-4">
+              <div className="mb-2 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-brand-900">
+                    Product Photos &amp; Videos
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Upload up to {MAX_PRODUCT_MEDIA} photos or short videos (max {MAX_VIDEO_DURATION}s).
+                  </p>
+                </div>
+                <input
+                  ref={productMediaRef}
+                  type="file"
+                  accept="image/*,video/*"
+                  className="hidden"
+                  onChange={(e) => handleProductMediaUpload(e.target.files)}
+                />
+                <button
+                  type="button"
+                  onClick={() => productMediaRef.current?.click()}
+                  disabled={productMediaUploading || totalProductMediaCount >= MAX_PRODUCT_MEDIA}
+                  className="rounded-xl border border-brand-300 bg-brand-50 px-4 py-2 text-xs font-bold text-brand-800 transition hover:bg-brand-100 disabled:opacity-50"
+                >
+                  {productMediaUploading ? "Uploading..." : "+ Add Media"}
+                </button>
+              </div>
+
+              {(productMedia.length > 0 || pendingMediaFiles.length > 0) && (
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-5">
+                  {productMedia.map((item) => {
+                    const src = assetUrl(item.url);
+                    return (
+                      <div key={item.id} className="relative overflow-hidden rounded-xl border border-brand-100 bg-brand-50">
+                        {item.type === "VIDEO" && src ? (
+                          <video
+                            src={src}
+                            className="aspect-square w-full object-cover"
+                            muted
+                            loop
+                            playsInline
+                            autoPlay
+                            preload="metadata"
+                          />
+                        ) : src ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={src} alt="" className="aspect-square w-full object-cover" />
+                        ) : null}
+                        <button
+                          type="button"
+                          onClick={() => removeProductMedia(item.id)}
+                          aria-label="Remove media"
+                          className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white hover:bg-black/80"
+                        >
+                          <Icon name="x" className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                  {pendingMediaFiles.map((pending, i) => (
+                    <div key={pending.preview} className="relative overflow-hidden rounded-xl border border-dashed border-brand-200 bg-brand-50">
+                      {pending.file.type.startsWith("video/") ? (
                         <video
-                          src={src}
+                          src={pending.preview}
                           className="aspect-square w-full object-cover"
                           muted
                           loop
@@ -484,60 +568,45 @@ export default function FarmPage() {
                           autoPlay
                           preload="metadata"
                         />
-                      ) : src ? (
+                      ) : (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={src} alt="" className="aspect-square w-full object-cover" />
-                      ) : null}
+                        <img src={pending.preview} alt="" className="aspect-square w-full object-cover" />
+                      )}
+                      <span className="absolute left-1 top-1 rounded bg-brand-700/80 px-1.5 py-0.5 text-[10px] text-white">
+                        New
+                      </span>
                       <button
                         type="button"
-                        onClick={() => removeProductMedia(item.id)}
-                        aria-label="Remove media"
+                        onClick={() => removePendingMedia(i)}
+                        aria-label="Remove pending media"
                         className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white hover:bg-black/80"
                       >
                         <Icon name="x" className="h-3.5 w-3.5" />
                       </button>
                     </div>
-                  );
-                })}
-                {pendingMediaFiles.map((pending, i) => (
-                  <div key={pending.preview} className="relative overflow-hidden rounded-xl border border-dashed border-brand-200 bg-brand-50">
-                    {pending.file.type.startsWith("video/") ? (
-                      <video
-                        src={pending.preview}
-                        className="aspect-square w-full object-cover"
-                        muted
-                        loop
-                        playsInline
-                        autoPlay
-                        preload="metadata"
-                      />
-                    ) : (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={pending.preview} alt="" className="aspect-square w-full object-cover" />
-                    )}
-                    <span className="absolute left-1 top-1 rounded bg-brand-700/80 px-1.5 py-0.5 text-[10px] text-white">
-                      New
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => removePendingMedia(i)}
-                      aria-label="Remove pending media"
-                      className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white hover:bg-black/80"
-                    >
-                      <Icon name="x" className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                onClick={saveListing}
+                disabled={uploading || productMediaUploading}
+                className="rounded-xl bg-brand-700 px-7 py-3 text-sm font-bold text-white shadow-md transition hover:bg-brand-800 active:scale-98 disabled:opacity-50"
+              >
+                {editingId ? "Save Changes" : "Add Product to Farm"}
+              </button>
+              <button
+                type="button"
+                onClick={resetForm}
+                className="rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
-          <button
-            onClick={saveListing}
-            disabled={uploading || productMediaUploading}
-            className="rounded-xl bg-brand-700 px-6 py-2 font-semibold text-white disabled:opacity-50"
-          >
-            {editingId ? "Save Changes" : "Add to Farm"}
-          </button>
         </div>
       )}
 
@@ -592,11 +661,19 @@ export default function FarmPage() {
                       {formatListingUnit(normalizeListingUnit(l.unit, user?.roleId ?? ROLES.CROP_FARMER))}
                     </p>
                   )}
-                  {l.harvestLabel && (
-                    <p className="mt-1 flex items-center gap-1 text-xs text-brand-700">
-                      <Icon name="calendar" className="h-3.5 w-3.5 shrink-0" />
-                      Harvest: {l.harvestLabel}
-                    </p>
+                  {(l.harvestStartDate || l.harvestEndDate || l.harvestLabel) && (
+                    <div className="mt-1">
+                      <HarvestCalendarTrigger
+                        harvestStartDate={l.harvestStartDate}
+                        harvestEndDate={l.harvestEndDate}
+                        harvestLabel={
+                          l.harvestLabel ? `Harvest: ${l.harvestLabel}` : null
+                        }
+                        commodityName={l.commodity?.name}
+                        productTitle={l.title}
+                        className="inline-flex items-center gap-1 rounded-lg px-0 py-0.5 text-xs text-brand-700 hover:bg-brand-50"
+                      />
+                    </div>
                   )}
                   <p className="mt-1 text-xs capitalize text-gray-400">{l.status}</p>
                   <div className="mt-3 flex flex-wrap gap-2">

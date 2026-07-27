@@ -17,10 +17,17 @@ type ChatTarget = {
   partnerPhoto?: string | null;
 };
 
+function showConnectionStatusBadge(status: string, partner?: ConnectionUser) {
+  if (status === "PENDING" && partner?.verificationStatus !== "VERIFIED") {
+    return false;
+  }
+  return true;
+}
+
 function statusLabel(status: string) {
   switch (status) {
     case "ACCEPTED":
-      return "Approved";
+      return "Accepted";
     case "REJECTED":
       return "Declined";
     default:
@@ -154,11 +161,13 @@ function ConnectionRow({
             )}
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span
-                className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusClass(c.status)}`}
-              >
-                {statusLabel(c.status)}
-              </span>
+              {showConnectionStatusBadge(c.status, farmer) && (
+                <span
+                  className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusClass(c.status)}`}
+                >
+                  {statusLabel(c.status)}
+                </span>
+              )}
               <span className="text-xs text-gray-400">{formatDate(c.createdAt)}</span>
             </div>
 

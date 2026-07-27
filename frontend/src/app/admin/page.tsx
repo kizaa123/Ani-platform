@@ -167,7 +167,7 @@ export default function AdminPage() {
                   onClick={() => updateConnection(c.id, "ACCEPTED")}
                   className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-semibold text-white"
                 >
-                  Approve
+                  Accept
                 </button>
                 <button
                   type="button"

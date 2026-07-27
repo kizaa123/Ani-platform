@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import { isHandler } from "@/lib/types";
+import { isValidPhone, normalizePhone, PHONE_VALIDATION_MESSAGE } from "@/lib/phone";
 import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { CountrySelect } from "@/components/CountrySelect";
 import { RolePrefixedName } from "@/components/RolePrefixedName";
@@ -80,11 +81,15 @@ export default function HandlerSettingsPage() {
   };
 
   const saveSettings = async () => {
+    if (!isValidPhone(form.phone)) {
+      setError(PHONE_VALIDATION_MESSAGE);
+      return;
+    }
     setSaving(true);
     setMessage("");
     setError("");
     try {
-      await api.auth.updateProfile(form);
+      await api.auth.updateProfile({ ...form, phone: normalizePhone(form.phone) });
       await refreshUser();
       setPhotoCacheBust(Date.now());
       setMessage("Profile saved successfully.");

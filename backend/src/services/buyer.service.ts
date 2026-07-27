@@ -1,11 +1,11 @@
 import prisma from '../database/prisma';
 import { assertAuthorized, assertFound } from '../utils/errors';
-import { ROLES } from '../constants/roles';
+import { ROLES, isMarketplaceBuyerRole } from '../constants/roles';
 import { buyerOrderInclude, groupBuyerPlacedOrders, type BuyerPlacedOrderRow } from '../utils/orders';
 
 export class BuyerService {
   private assertBuyer(roleId: number) {
-    assertAuthorized(roleId === ROLES.BUYER, 'This feature is only available to buyers');
+    assertAuthorized(isMarketplaceBuyerRole(roleId), 'This feature is only available to buyers and researchers');
   }
 
   async fetchOrdersForBuyer(buyerId: string) {

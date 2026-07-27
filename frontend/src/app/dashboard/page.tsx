@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
-import { isFarmer, isBuyer, isHandler, isStaff, isBuyerHandler, isResearcher } from "@/lib/types";
+import { isFarmer, isBuyer, isHandler, isStaff, isBuyerHandler, isResearcher, isStudent, isMarketplaceBuyer } from "@/lib/types";
 import { PortalNavCard } from "@/components/PortalNavCard";
 import { getPortalNavImage } from "@/lib/portalNavImages";
 import type { IconName } from "@/components/icons";
@@ -35,8 +35,10 @@ export default function DashboardPage() {
     { href: "/researcher/settings", title: "Profile", desc: "Institution & researcher profile", icon: "user", show: isResearcher(user.roleId) },
     { href: "/farm", title: "My Farm", desc: "Manage products & profile", icon: "sprout", show: isFarmer(user.roleId) },
     { href: "/farm/financials", title: "Financial Statement", desc: "View farm product finances", icon: "chart", show: isFarmer(user.roleId) },
-    { href: "/access", title: "Buyer Access", desc: "Pay to access farmer farms", icon: "credit-card", show: isBuyer(user.roleId) },
-    { href: "/financials", title: "Financial Statement", desc: "Spending & farm access fees", icon: "chart", show: isBuyer(user.roleId) },
+    { href: "/access", title: "Buyer Access", desc: "Pay to access farmer farms", icon: "credit-card", show: isMarketplaceBuyer(user.roleId) },
+    { href: "/financials", title: "Financial Statement", desc: "Spending & farm access fees", icon: "chart", show: isMarketplaceBuyer(user.roleId) },
+    { href: "/orders", title: "My Orders", desc: "Track marketplace purchases", icon: "package", show: isMarketplaceBuyer(user.roleId) },
+    { href: "/student/settings", title: "Profile", desc: "Account & contact details", icon: "user", show: isStudent(user.roleId) },
     { href: "/connections", title: "Connections", desc: "Manage buyer-farmer requests", icon: "handshake", all: true },
     { href: "/agents", title: isBuyerHandler(user.roleId) ? "My Buyers" : "My Clients", desc: isBuyerHandler(user.roleId) ? "View orders, spending & connections" : "View assigned farmers/buyers", icon: "users", show: isHandler(user.roleId) },
     { href: "/agents/financials", title: "Financial Statement", desc: isBuyerHandler(user.roleId) ? "Client spending across your buyers" : "Client sales revenue across your farmers", icon: "chart", show: isHandler(user.roleId) },

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { BuyerOrderLineItem, isBuyer } from "@/lib/types";
+import { BuyerOrderLineItem, isMarketplaceBuyer } from "@/lib/types";
 import { ProductOrdersList } from "@/components/ProductOrdersList";
 import { formatGhc } from "@/lib/format";
 
@@ -18,7 +18,7 @@ export default function BuyerOrdersPage() {
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
-    if (user && !isBuyer(user.roleId)) {
+    if (user && !isMarketplaceBuyer(user.roleId)) {
       router.push("/dashboard");
       return;
     }

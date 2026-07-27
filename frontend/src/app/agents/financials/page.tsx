@@ -59,11 +59,11 @@ export default function HandlerFinancialsPage() {
         <Link href="/dashboard" className="text-xs text-brand-600 hover:underline">
           Back to Dashboard
         </Link>
-        <h1 className="mt-2 text-xl font-bold text-brand-900">Financial Statement</h1>
+        <h1 className="mt-2 text-xl font-bold text-brand-900">Money Summary</h1>
         <p className="text-xs text-gray-500">
           {isFarmerHandlerView
-            ? "Client sales revenue across your assigned farmers"
-            : "Client spending across your assigned buyers"}
+            ? "What your farmer clients have earned from sales"
+            : "What your buyer clients have spent"}
         </p>
       </div>
 
@@ -89,18 +89,18 @@ export default function HandlerFinancialsPage() {
         <SummaryCard
           label="Assigned clients"
           value={String(summary.clientCount)}
-          sub="Active client accounts"
+          sub="Clients you manage"
         />
         {isFarmerHandlerView ? (
           <>
             <SummaryCard
-              label="Total client revenue"
+              label="Total earned"
               value={formatGhc(summary.totalRevenue ?? 0)}
               sub={`${summary.totalSalesCount ?? 0} completed sale(s)`}
               accent="green"
             />
             <SummaryCard
-              label="Transactions"
+              label="Orders"
               value={String(summary.transactionCount)}
               sub="Paid product orders"
             />
@@ -108,7 +108,7 @@ export default function HandlerFinancialsPage() {
         ) : (
           <>
             <SummaryCard
-              label="Total client spend"
+              label="Total spent"
               value={formatGhc(summary.totalSpent ?? 0)}
               sub="Products + farm access"
             />
@@ -129,8 +129,8 @@ export default function HandlerFinancialsPage() {
 
       <div className="mb-6 overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
         <div className="border-b border-brand-100 bg-brand-50/40 px-5 py-3">
-          <h3 className="text-sm font-semibold text-brand-900">Client breakdown</h3>
-          <p className="text-xs text-gray-500">Per-client totals from marketplace activity</p>
+          <h3 className="text-sm font-semibold text-brand-900">By client</h3>
+          <p className="text-xs text-gray-500">Totals for each client you manage</p>
         </div>
 
         {statement.clients.length === 0 ? (
@@ -147,7 +147,7 @@ export default function HandlerFinancialsPage() {
                 <tr className="border-b border-brand-50 bg-brand-50/50 text-left text-[10px] font-semibold uppercase text-gray-500">
                   <th className="px-5 py-2.5">Client</th>
                   <th className="px-4 py-2.5 text-right">
-                    {isFarmerHandlerView ? "Revenue" : "Total spent"}
+                    {isFarmerHandlerView ? "Total earned" : "Total spent"}
                   </th>
                   <th className="px-4 py-2.5 text-right">Activity</th>
                   <th className="px-5 py-2.5">Details</th>
@@ -175,7 +175,7 @@ export default function HandlerFinancialsPage() {
                         href={clientFinancialsHref(client.ownerId)}
                         className="font-semibold text-brand-700 hover:underline"
                       >
-                        View statement
+                        View summary
                       </Link>
                     </td>
                   </tr>
@@ -188,13 +188,13 @@ export default function HandlerFinancialsPage() {
 
       <div className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
         <div className="border-b border-brand-100 bg-brand-50/40 px-5 py-3">
-          <h3 className="text-sm font-semibold text-brand-900">Recent transactions</h3>
-          <p className="text-xs text-gray-500">All paid activity across your clients</p>
+          <h3 className="text-sm font-semibold text-brand-900">Recent orders</h3>
+          <p className="text-xs text-gray-500">Paid activity across your clients</p>
         </div>
 
         {statement.transactions.length === 0 ? (
           <div className="px-5 py-10 text-center text-xs text-gray-500">
-            No transactions yet for your assigned clients.
+            No orders yet for your assigned clients.
           </div>
         ) : (
           <div className="overflow-x-auto">

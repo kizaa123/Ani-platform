@@ -1,25 +1,34 @@
 interface VerificationBadgeProps {
   status?: string | null;
   className?: string;
+  showIconOnly?: boolean;
 }
 
-export function VerificationBadge({ status, className = "" }: VerificationBadgeProps) {
+export function VerificationBadge({
+  status,
+  className = "",
+  showIconOnly = false,
+}: VerificationBadgeProps) {
   if (!status) return null;
 
   const verified = status === "VERIFIED";
   const rejected = status === "REJECTED";
 
+  const emoji = verified ? "✅" : rejected ? "❌" : "⏳";
+  const label = verified ? "Verified" : rejected ? "Rejected" : "Pending";
+
   return (
     <span
-      className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold shadow-2xs transition ${
         verified
-          ? "bg-green-100 text-green-800"
+          ? "border border-emerald-200 bg-emerald-100 text-emerald-800"
           : rejected
-            ? "bg-red-100 text-red-800"
-            : "bg-yellow-100 text-yellow-900"
+            ? "border border-red-200 bg-red-100 text-red-800"
+            : "border border-amber-200 bg-amber-100 text-amber-900"
       } ${className}`}
     >
-      {verified ? "Verified" : rejected ? "Rejected" : "Pending"}
+      <span aria-hidden="true" className="text-xs">{emoji}</span>
+      {!showIconOnly && <span>{label}</span>}
     </span>
   );
 }

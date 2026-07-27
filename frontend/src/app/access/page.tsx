@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { FarmerBrowseCard, MarketplaceBrowse, isBuyer } from "@/lib/types";
+import { FarmerBrowseCard, MarketplaceBrowse, isMarketplaceBuyer } from "@/lib/types";
 import { FarmAccessPaymentModal } from "@/components/FarmAccessPaymentModal";
 import { FarmerBrowseCardItem } from "@/components/FarmerBrowseCardItem";
 import { FarmerDetailModal } from "@/components/FarmerDetailModal";
@@ -60,14 +60,12 @@ function getFarmerCategoryGroup(farmer: FarmerBrowseCard) {
 function FarmerRowSection({
   title,
   subtitle,
-  icon,
   farmers,
   browse,
   onSelectFarmer,
 }: {
   title: string;
   subtitle: string;
-  icon: string;
   farmers: FarmerBrowseCard[];
   browse: MarketplaceBrowse | null;
   onSelectFarmer: (farmer: FarmerBrowseCard) => void;
@@ -86,19 +84,9 @@ function FarmerRowSection({
   return (
     <div className="mb-10 rounded-2xl border border-brand-100/80 bg-white/70 p-5 shadow-xs backdrop-blur-xs">
       <div className="mb-4 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-xl shadow-xs">
-            {icon}
-          </span>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl font-bold text-brand-900">{title}</h2>
-              <span className="rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-bold text-brand-800">
-                {farmers.length}
-              </span>
-            </div>
-            <p className="text-xs text-gray-500">{subtitle}</p>
-          </div>
+        <div>
+          <h2 className="text-xl font-bold text-brand-900">{title}</h2>
+          <p className="text-xs text-gray-500">{subtitle}</p>
         </div>
 
         {/* Scroll controls */}
@@ -155,7 +143,7 @@ export default function AccessPage() {
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
-    if (user && !isBuyer(user.roleId)) {
+    if (user && !isMarketplaceBuyer(user.roleId)) {
       router.push("/dashboard");
       return;
     }
@@ -192,7 +180,7 @@ export default function AccessPage() {
     <div className="mx-auto max-w-6xl px-4 py-10">
       <div className="mb-8">
         <Link href="/marketplace" className="text-sm font-medium text-brand-600 hover:underline">
-          &larr; Back to Marketplace
+          Back to Marketplace
         </Link>
         <h1 className="mt-2 text-3xl font-bold text-brand-900">Buyer Access</h1>
         <p className="text-gray-500">
@@ -230,7 +218,6 @@ export default function AccessPage() {
           <FarmerRowSection
             title="Crop Farmers"
             subtitle="Farmers producing grains, cereals, vegetables, fruits, tubers, legumes, and spices."
-            icon="🌾"
             farmers={cropFarmers}
             browse={browse}
             onSelectFarmer={setDetailFarmer}
@@ -239,7 +226,6 @@ export default function AccessPage() {
           <FarmerRowSection
             title="Livestock Farmers"
             subtitle="Farmers producing poultry, cattle, goats, pigs, sheep, dairy, and eggs."
-            icon="🐄"
             farmers={livestockFarmers}
             browse={browse}
             onSelectFarmer={setDetailFarmer}

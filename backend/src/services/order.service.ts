@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import prisma from '../database/prisma';
 import { AppError, assertFound, assertAuthorized } from '../utils/errors';
-import { ROLES } from '../constants/roles';
+import { ROLES, isMarketplaceBuyerRole } from '../constants/roles';
 import { buyerHasApprovedFarmAccess } from '../middleware/access.middleware';
 import { getPaymentProvider } from './payment.provider';
 import { notifyNewOrder, notifyProductPurchase } from './notification.service';
@@ -18,7 +18,7 @@ export const releaseOrderSchema = z.object({
 
 export class OrderService {
   async purchaseProduct(buyerId: string, roleId: number, listingId: string, data: z.infer<typeof purchaseProductSchema>) {
-    assertAuthorized(roleId === ROLES.BUYER, 'Only buyers can purchase products');
+    assertAuthorized(isMarketplaceBuyerRole(roleId), 'Only buyers and researchers can purchase products');
 
     const listing = assertFound(
       await prisma.commodityListing.findUnique({

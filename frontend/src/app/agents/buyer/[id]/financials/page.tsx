@@ -56,8 +56,8 @@ export default function HandlerClientBuyerFinancialsPage() {
       <HandlerBuyerClientNav ownerId={ownerId} buyerName={statement.buyerName} />
 
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-brand-900">Financial statement</h1>
-        <p className="text-sm text-gray-500">Full spending overview for your assigned buyer</p>
+        <h1 className="text-2xl font-bold text-brand-900">Money Summary</h1>
+        <p className="text-sm text-gray-500">What this buyer has spent and paid for</p>
       </div>
 
       <div className="mb-6 rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
@@ -81,7 +81,7 @@ export default function HandlerClientBuyerFinancialsPage() {
         <SummaryCard label="Product purchases" value={formatGhc(summary.totalProductSpend)} sub={`${summary.paidOrders} paid order(s)`} accent="green" />
         <SummaryCard label="Farm access fees" value={formatGhc(summary.totalFarmAccessSpend)} sub={`${summary.farmsAccessed} farm(s) unlocked`} />
         <SummaryCard
-          label="Total orders"
+          label="Orders"
           value={String(summary.totalOrders)}
           sub={
             <Link href={`/agents/buyer/${ownerId}/orders`} className="font-semibold text-brand-700 hover:underline">
@@ -94,7 +94,7 @@ export default function HandlerClientBuyerFinancialsPage() {
       <div className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
         <div className="border-b border-brand-100 bg-brand-50/40 px-6 py-4">
           <h3 className="text-base font-semibold text-brand-900">Farm access payments</h3>
-          <p className="text-sm text-gray-500">Fees your buyer paid to unlock farmer profiles</p>
+          <p className="text-sm text-gray-500">Fees this buyer paid to view and buy from farms</p>
         </div>
 
         {statement.farmAccessPayments.length === 0 ? (

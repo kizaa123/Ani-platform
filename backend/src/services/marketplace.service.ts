@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import prisma from '../database/prisma';
 import { assertFound, AppError } from '../utils/errors';
-import { ROLES, FARMER_ROLES, isFarmerRole, isStaffRole } from '../constants/roles';
+import { ROLES, FARMER_ROLES, isFarmerRole, isStaffRole, isMarketplaceBuyerRole } from '../constants/roles';
 import {
   buyerHasFarmerFarmAccess,
   buyerFarmAccessSet,
@@ -128,7 +128,7 @@ export class MarketplaceService {
     if (isFarmerRole(roleId) || isStaffRole(roleId) || roleId === ROLES.FARMER_HANDLER) {
       return { hasAccess: true, connectionStatus: 'ACCEPTED', hasFarmAccess: true };
     }
-    if (roleId === ROLES.BUYER) {
+    if (isMarketplaceBuyerRole(roleId)) {
       const hasFarmAccess = farmAccessSet?.has(farmerUserId) ?? false;
       const connectionMap = await this.buyerConnectionMap(userId);
       const connectionStatus = connectionMap.get(farmerUserId) ?? 'NONE';
@@ -257,7 +257,7 @@ export class MarketplaceService {
   }
 
   async browseMarketplace(userId: string, roleId: number, search?: string) {
-    const isBuyerRole = roleId === ROLES.BUYER;
+    const isBuyerRole = isMarketplaceBuyerRole(roleId);
     const farmAccessSet = isBuyerRole ? await buyerFarmAccessSet(userId) : new Set<string>();
     const connectionMap = isBuyerRole ? await this.buyerConnectionMap(userId) : new Map<string, string>();
 
@@ -403,7 +403,7 @@ export class MarketplaceService {
       orderBy: { createdAt: 'desc' },
     });
 
-    const isBuyerRole = roleId === ROLES.BUYER;
+    const isBuyerRole = isMarketplaceBuyerRole(roleId);
     const farmAccessSet = isBuyerRole ? await buyerFarmAccessSet(userId) : undefined;
 
     const listingIds = listings.map((l) => l.id);
@@ -431,7 +431,7 @@ export class MarketplaceService {
     );
 
     const farmAccessSet =
-      roleId === ROLES.BUYER ? await buyerFarmAccessSet(userId) : undefined;
+      isMarketplaceBuyerRole(roleId) ? await buyerFarmAccessSet(userId) : undefined;
     const access = await this.listingAccess(
       userId,
       roleId,

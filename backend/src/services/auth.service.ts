@@ -20,6 +20,12 @@ import {
 import { categoryMatchesFarmerRole } from '../constants/commodities';
 import { defaultListingUnit } from '../constants/units';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
+import { normalizePhone, PHONE_VALIDATION_MESSAGE } from '../utils/phone';
+
+const phoneSchema = z.preprocess(
+  normalizePhone,
+  z.string().regex(/^\d{10}$/, PHONE_VALIDATION_MESSAGE)
+);
 
 const emptyToUndefined = (val: unknown) => {
   if (val === '' || val === null || val === undefined) return undefined;
@@ -44,10 +50,7 @@ export const registerSchema = z
     (val) => (typeof val === 'string' ? val.trim().toLowerCase() : val),
     z.string().email()
   ),
-  phone: z.preprocess(
-    (val) => (typeof val === 'string' ? val.trim() : val),
-    z.string().min(9)
-  ),
+  phone: phoneSchema,
   password: z.string().min(8),
   profilePicture: optionalString(),
   country: z.preprocess(
@@ -119,7 +122,7 @@ export const updateHandlerSchema = z.object({
 export const updateUserProfileSchema = z.object({
   firstName: z.string().min(2).optional(),
   lastName: z.string().min(2).optional(),
-  phone: z.string().min(10).optional(),
+  phone: z.preprocess(normalizePhone, z.string().regex(/^\d{10}$/, PHONE_VALIDATION_MESSAGE).optional()),
   country: z.string().min(2).optional(),
   region: z.string().min(2).optional(),
   city: z.string().min(2).optional(),

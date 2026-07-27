@@ -6,6 +6,12 @@ import type { UserProfile } from "@/lib/types";
 export const RESEARCHER_NAV_LINKS: PortalNavLink[] = [
   { href: "/dashboard", label: "Dashboard", icon: "home", match: (p) => p === "/dashboard" },
   {
+    href: "/marketplace",
+    label: "Marketplace",
+    icon: "store",
+    match: (p) => p.startsWith("/marketplace"),
+  },
+  {
     href: "/researcher/publications",
     label: "Publications",
     icon: "book",
@@ -17,6 +23,8 @@ export const RESEARCHER_NAV_LINKS: PortalNavLink[] = [
     icon: "search",
     match: (p) => p.startsWith("/library"),
   },
+  { href: "/access", label: "Farm Access", icon: "credit-card", match: (p) => p.startsWith("/access") },
+  { href: "/orders", label: "My Orders", icon: "package", match: (p) => p.startsWith("/orders") },
   {
     href: "/researcher/financials",
     label: "Financials",

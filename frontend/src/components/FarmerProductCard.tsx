@@ -5,6 +5,7 @@ import { ProductImage } from "@/components/FarmerAvatar";
 import { productMediaIsVideo, productMediaThumbnail } from "@/components/ProductMediaGallery";
 import { assetUrl } from "@/lib/assetUrl";
 import { Icon } from "@/components/icons";
+import { HarvestCalendarTrigger } from "@/components/HarvestCalendarTrigger";
 
 interface FarmerProductCardProps {
   product: Listing;
@@ -24,16 +25,23 @@ export function FarmerProductCard({
   const thumb = productMediaThumbnail(product);
   const isVideo = productMediaIsVideo(product);
 
+  const hasHarvestInfo = Boolean(
+    product.harvestStartDate || product.harvestEndDate || product.harvestLabel
+  );
+
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`group w-full text-left rounded-xl border overflow-hidden transition-all hover:border-brand-300 hover:shadow-md ${
+    <div
+      className={`group w-full rounded-xl border overflow-hidden transition-all hover:border-brand-300 hover:shadow-md ${
         active
           ? "border-brand-500 ring-2 ring-brand-400 shadow-md"
           : "border-brand-100"
       }`}
     >
+      <button
+        type="button"
+        onClick={onClick}
+        className="w-full text-left"
+      >
       {thumb ? (
         <div className="relative">
           {isVideo ? (
@@ -86,13 +94,20 @@ export function FarmerProductCard({
             {product.quantity} {formatListingUnit(product.unit ?? "bags")} left
           </p>
         )}
-        {product.harvestLabel && (
-          <p className="mt-1 flex items-center gap-1 text-xs text-brand-700 line-clamp-1">
-            <Icon name="calendar" className="h-3.5 w-3.5 shrink-0" />
-            {product.harvestLabel}
-          </p>
-        )}
       </div>
-    </button>
+      </button>
+      {hasHarvestInfo && (
+        <div className="border-t border-brand-50 px-3 pb-2 pt-1">
+          <HarvestCalendarTrigger
+            harvestStartDate={product.harvestStartDate}
+            harvestEndDate={product.harvestEndDate}
+            harvestLabel={product.harvestLabel}
+            commodityName={product.commodity?.name}
+            productTitle={product.title}
+            className="inline-flex w-full items-center gap-1 rounded-lg px-1 py-1 text-xs text-brand-700 hover:bg-brand-50"
+          />
+        </div>
+      )}
+    </div>
   );
 }

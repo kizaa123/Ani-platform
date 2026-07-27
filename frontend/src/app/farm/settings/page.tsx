@@ -13,6 +13,7 @@ import {
   farmerCategoryFilter,
   defaultListingUnit,
 } from "@/lib/types";
+import { isValidPhone, normalizePhone, PHONE_VALIDATION_MESSAGE } from "@/lib/phone";
 import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { CountrySelect } from "@/components/CountrySelect";
 import { HandlerSelect } from "@/components/HandlerSelect";
@@ -127,11 +128,15 @@ export default function FarmSettingsPage() {
   };
 
   const savePersonalAndFarm = async () => {
+    if (!isValidPhone(personal.phone)) {
+      setMessage(PHONE_VALIDATION_MESSAGE);
+      return;
+    }
     setSaving(true);
     setMessage("");
     try {
       await Promise.all([
-        api.auth.updateProfile(personal),
+        api.auth.updateProfile({ ...personal, phone: normalizePhone(personal.phone) }),
         api.farm.update({
           farmSize: farm.farmSize,
           experienceYears: farm.experienceYears,

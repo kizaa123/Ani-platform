@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import { CommodityCategory, HandlerProfile, ROLES, farmerCategoryFilter } from "@/lib/types";
+import { isValidPhone, normalizePhone, PHONE_VALIDATION_MESSAGE } from "@/lib/phone";
 import { CountrySelect } from "@/components/CountrySelect";
 import { HandlerSelect } from "@/components/HandlerSelect";
 import { CommodityPicker } from "@/components/CommodityPicker";
@@ -17,7 +18,8 @@ const ALL_ROLES = [
   { group: "Farmers",                  id: ROLES.CROP_FARMER,      label: "Fellow (Crop Farmer)" },
   { group: "Farmers",                  id: ROLES.LIVESTOCK_FARMER, label: "Fellow (Livestock Farmer)" },
   { group: "Research & Commerce",      id: ROLES.RESEARCHER,       label: "Researcher" },
-  { group: "Research & Commerce",      id: ROLES.BUYER,            label: "Client" },
+  { group: "Research & Commerce",      id: ROLES.BUYER,            label: "CLIENT (BUYER)" },
+  { group: "Research & Commerce",      id: ROLES.STUDENT,          label: "Student" },
   { group: "Support & Operations",     id: ROLES.FARMER_HANDLER,   label: "Fellow Liaison Officer" },
   { group: "Support & Operations",     id: ROLES.BUYER_HANDLER,    label: "Client Liaison Officer" },
   { group: "Support & Operations",     id: ROLES.ANI_ACCOUNTANT,   label: "ANI Accountant" },
@@ -59,7 +61,7 @@ function buildRegisterPayload(
     firstName: form.firstName.trim(),
     lastName: form.lastName.trim(),
     email: form.email.trim(),
-    phone: form.phone.trim(),
+    phone: normalizePhone(form.phone),
     password: form.password,
     country: form.country.trim(),
     region: form.region.trim(),
@@ -110,6 +112,7 @@ export default function RegisterPage() {
   const isFarmerRole = form.roleId === ROLES.CROP_FARMER || form.roleId === ROLES.LIVESTOCK_FARMER;
   const isBuyerRole = form.roleId === ROLES.BUYER;
   const isResearcherRole = form.roleId === ROLES.RESEARCHER;
+  const isStudentRole = form.roleId === ROLES.STUDENT;
   const needsHandler = isFarmerRole || isBuyerRole;
   const availableHandlers = isFarmerRole ? farmerHandlers : isBuyerRole ? buyerHandlers : [];
   const handlerLabel = isFarmerRole ? "Choose your Farmer Handler" : "Choose your Buyer Handler";
@@ -140,13 +143,13 @@ export default function RegisterPage() {
     form.firstName.trim().length >= 2 &&
     form.lastName.trim().length >= 2 &&
     form.email.trim() &&
-    form.phone.trim().length >= 9 &&
+    isValidPhone(form.phone) &&
     form.password.length >= 8 &&
     form.country.trim();
 
   const goToStep2 = () => {
     if (!canContinueStep1) {
-      setError("Please fill in all required fields (names at least 2 characters, phone at least 9 digits) and select your country.");
+      setError(`Please fill in all required fields (names at least 2 characters, ${PHONE_VALIDATION_MESSAGE.toLowerCase()}) and select your country.`);
       return;
     }
     setError("");
@@ -193,7 +196,7 @@ export default function RegisterPage() {
       }
 
       router.push(
-        isFarmerRole ? "/farm" : isResearcherRole ? "/researcher/publications" : "/dashboard"
+        isFarmerRole ? "/farm" : isResearcherRole ? "/researcher/publications" : isStudentRole ? "/library" : "/dashboard"
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
@@ -209,7 +212,7 @@ export default function RegisterPage() {
         {/* Background sprout image */}
         <div className="absolute inset-0 z-0 bg-[url('/login_cover.png')] bg-cover bg-center" />
         {/* Dark gradient overlay for readability */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-brand-950/95 via-brand-900/60 to-brand-800/10 z-10" />
+        <div className="absolute inset-0 z-10 bg-gradient-to-tr from-brand-950/95 via-brand-900/80 to-brand-800/40" />
 
         {/* Brand logo */}
         <div className="relative z-20">
@@ -217,11 +220,16 @@ export default function RegisterPage() {
         </div>
 
         {/* Marketing text & stats */}
-        <div className="relative z-20 space-y-6 max-w-xl">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-xs font-semibold text-brand-300 backdrop-blur-md">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-            Agricultural Exchange Platform
-          </span>
+        <div className="relative z-20 max-w-xl space-y-6">
+          <div className="inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 backdrop-blur-sm">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+            </span>
+            <span className="text-sm font-medium tracking-wide text-white/90">
+              Ghana&apos;s Agricultural Exchange Platform
+            </span>
+          </div>
           <h2 className="text-4xl lg:text-5xl font-black leading-tight tracking-tight text-white drop-shadow-sm">
             Connecting African Agriculture to Global Markets
           </h2>

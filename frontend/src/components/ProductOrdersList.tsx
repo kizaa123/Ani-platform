@@ -239,8 +239,23 @@ function CompactOrderCard({
   order: OrderListItem;
   onView: () => void;
 }) {
+  const isServed = order.trackStage === "DELIVERED" || order.escrowStatus === "RELEASED";
+
   return (
-    <article className="flex flex-col overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
+    <article className="flex flex-col overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm transition hover:border-brand-200 hover:shadow-md">
+      <div className="flex items-center justify-between border-b border-brand-50 bg-brand-50/40 px-4 py-2.5">
+        <span className="text-xs font-semibold text-gray-500">{formatDate(order.date)}</span>
+        {isServed ? (
+          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">
+            ✅ Served
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-900">
+            ⏳ Unserved
+          </span>
+        )}
+      </div>
+
       <div className="flex items-center gap-4 p-4">
         {order.productImage ? (
           <ProductImage

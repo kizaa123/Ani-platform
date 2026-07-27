@@ -1,7 +1,7 @@
 import { Response, NextFunction } from 'express';
 import prisma from '../database/prisma';
 import { AuthRequest } from './auth.middleware';
-import { ROLES, isFarmerRole, isStaffRole } from '../constants/roles';
+import { ROLES, isFarmerRole, isStaffRole, isMarketplaceBuyerRole } from '../constants/roles';
 import { normalizeImages, normalizePublicAssetUrl } from './upload.middleware';
 
 export async function buyerHasFarmerFarmAccess(buyerId: string, farmerUserId: string): Promise<boolean> {
@@ -65,7 +65,7 @@ export async function requireBuyerAccess(req: AuthRequest, res: Response, next: 
     if (assignment && (await buyerHasActiveAccess(assignment.ownerId))) return next();
   }
 
-  if (roleId === ROLES.BUYER && (await buyerHasActiveAccess(userId))) {
+  if (isMarketplaceBuyerRole(roleId) && (await buyerHasActiveAccess(userId))) {
     return next();
   }
 

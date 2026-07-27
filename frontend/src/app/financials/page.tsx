@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { BuyerFinancialStatement, isBuyer } from "@/lib/types";
+import { BuyerFinancialStatement, isMarketplaceBuyer } from "@/lib/types";
 import { formatDate, formatGhc, orderStatusStyle } from "@/lib/format";
 
 export default function BuyerFinancialsPage() {
@@ -16,7 +16,7 @@ export default function BuyerFinancialsPage() {
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
-    if (user && !isBuyer(user.roleId)) {
+    if (user && !isMarketplaceBuyer(user.roleId)) {
       router.push("/dashboard");
       return;
     }
@@ -55,8 +55,8 @@ export default function BuyerFinancialsPage() {
         <Link href="/dashboard" className="text-sm text-brand-600 hover:underline">
           Back to Dashboard
         </Link>
-        <h1 className="mt-2 text-2xl font-bold text-brand-900">Financial Statement</h1>
-        <p className="text-sm text-gray-500">Spending overview and farm access fees</p>
+        <h1 className="mt-2 text-2xl font-bold text-brand-900">Money Summary</h1>
+        <p className="text-sm text-gray-500">What you have spent and paid for</p>
       </div>
 
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -76,7 +76,7 @@ export default function BuyerFinancialsPage() {
           <p className="text-xs text-gray-500">{summary.farmsAccessed} farm(s) unlocked</p>
         </div>
         <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
-          <p className="text-xs font-semibold uppercase text-gray-500">Total orders</p>
+          <p className="text-xs font-semibold uppercase text-gray-500">Orders</p>
           <p className="mt-1 text-xl font-bold text-brand-900">{summary.totalOrders}</p>
           <Link href="/orders" className="mt-1 inline-block text-xs font-semibold text-brand-700 hover:underline">
             View all orders
@@ -87,7 +87,7 @@ export default function BuyerFinancialsPage() {
       <div className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
         <div className="border-b border-brand-100 bg-brand-50/40 px-6 py-4">
           <h3 className="text-base font-semibold text-brand-900">Farm access payments</h3>
-          <p className="text-sm text-gray-500">Fees paid to unlock farmer profiles and products</p>
+          <p className="text-sm text-gray-500">Fees paid to view and buy from farms</p>
         </div>
 
         {statement.farmAccessPayments.length === 0 ? (
@@ -139,7 +139,7 @@ export default function BuyerFinancialsPage() {
               <tfoot>
                 <tr className="bg-brand-50 font-semibold text-brand-900">
                   <td colSpan={2} className="px-6 py-4 text-right">
-                    Total farm access spend
+                    Total farm access fees
                   </td>
                   <td className="px-4 py-4 text-right">{formatGhc(summary.totalFarmAccessSpend)}</td>
                   <td colSpan={2} />
@@ -151,11 +151,11 @@ export default function BuyerFinancialsPage() {
       </div>
 
       <p className="mt-4 text-center text-xs text-gray-400">
-        Product purchase details are on{" "}
+        Product order details are on{" "}
         <Link href="/orders" className="text-brand-700 underline">
           My Orders
         </Link>
-        . Totals here include confirmed paid orders only.
+        . Only confirmed paid amounts are included here.
       </p>
     </div>
   );

@@ -8,6 +8,7 @@ import { CountryBadge } from "@/components/CountrySelect";
 import { FarmerProductCard } from "@/components/FarmerProductCard";
 import { ProductMediaGallery } from "@/components/ProductMediaGallery";
 import { PaymentCheckout, TransactionSuccess } from "@/components/PaymentCheckout";
+import { HarvestCalendarTrigger } from "@/components/HarvestCalendarTrigger";
 
 interface PurchaseViewProps {
   listing: Listing;
@@ -169,6 +170,28 @@ export function PurchaseModal({
                 <p className="mt-0.5 text-sm text-gray-600">
                   {listing.quantityLabel || `${maxQty} ${unitLabel} in stock`}
                 </p>
+              </div>
+
+              <div className="mt-3 flex items-center justify-between gap-2 rounded-xl border border-brand-100 px-3 py-2">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Harvest period
+                  </p>
+                  <p className="mt-0.5 truncate text-sm text-brand-800">
+                    {listing.harvestLabel || "Tap calendar to view availability"}
+                  </p>
+                </div>
+                <HarvestCalendarTrigger
+                  harvestStartDate={listing.harvestStartDate}
+                  harvestEndDate={listing.harvestEndDate}
+                  harvestLabel={listing.harvestLabel}
+                  commodityName={listing.commodity?.name}
+                  productTitle={listing.title}
+                  showLabel={false}
+                  alwaysShow
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-brand-200 bg-white text-brand-800 hover:bg-brand-50"
+                  iconClassName="h-5 w-5"
+                />
               </div>
 
               {!orderPlaced && !canPurchase ? (

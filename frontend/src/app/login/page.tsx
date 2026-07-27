@@ -36,7 +36,7 @@ export default function LoginPage() {
         {/* Background sprout image */}
         <div className="absolute inset-0 z-0 bg-[url('/login_cover.png')] bg-cover bg-center" />
         {/* Dark gradient overlay for readability */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-brand-950/95 via-brand-900/60 to-brand-800/10 z-10" />
+        <div className="absolute inset-0 z-10 bg-gradient-to-tr from-brand-950/95 via-brand-900/80 to-brand-800/40" />
 
         {/* Brand logo */}
         <div className="relative z-20">
@@ -44,24 +44,15 @@ export default function LoginPage() {
         </div>
 
         {/* Marketing text & stats */}
-        <div className="relative z-20 space-y-6 max-w-xl">
-          <div className="relative group/badge inline-flex overflow-hidden rounded-2xl p-[1.5px] transition-all hover:scale-[1.01] active:scale-[0.99] duration-300 shadow-xl shadow-brand-950/30 self-start">
-            {/* Background gradient outline glow */}
-            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-emerald-400 to-yellow-500 opacity-80 group-hover/badge:opacity-100 transition-opacity" />
-            
-            {/* Main content body */}
-            <div className="relative flex items-center gap-3 rounded-[15px] bg-brand-950 px-5 py-3 text-white backdrop-blur-xl">
-              <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-yellow-400 text-brand-950 font-bold text-sm shadow-md animate-pulse">
-                ★
-              </span>
-              <span className="text-sm sm:text-base font-extrabold tracking-wide bg-gradient-to-r from-yellow-300 via-white to-emerald-300 bg-clip-text text-transparent">
-                Ghana&apos;s #1 Agricultural Exchange Platform
-              </span>
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
-              </span>
-            </div>
+        <div className="relative z-20 max-w-xl space-y-6">
+          <div className="inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 backdrop-blur-sm">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+            </span>
+            <span className="text-sm font-medium tracking-wide text-white/90">
+              Ghana&apos;s Agricultural Exchange Platform
+            </span>
           </div>
           <h2 className="text-4xl lg:text-5xl font-black leading-tight tracking-tight text-white drop-shadow-sm">
             Connecting African Agriculture to Global Markets

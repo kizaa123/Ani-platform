@@ -9,7 +9,7 @@ import {
   FarmerBrowseCard,
   Listing,
   MarketplaceBrowse,
-  isBuyer,
+  isMarketplaceBuyer,
   isFarmer,
 } from "@/lib/types";
 import { FarmerAvatar } from "@/components/FarmerAvatar";
@@ -201,13 +201,6 @@ export default function MarketplacePage() {
             Browse registered farmers and purchase from farms you have access to
           </p>
         </div>
-        <div className="flex gap-2">
-          {user && isBuyer(user.roleId) && (
-            <Link href="/access" className="btn-gold px-5 py-2.5">
-              Buyer Access
-            </Link>
-          )}
-        </div>
       </div>
 
       <div className="mb-8">
@@ -302,7 +295,7 @@ export default function MarketplacePage() {
                     No products listed yet from this farm.
                   </div>
                 )
-              ) : user && isBuyer(user.roleId) ? (
+              ) : user && isMarketplaceBuyer(user.roleId) ? (
                 <div className="border-t border-brand-50 px-4 py-4 sm:px-5">
                   {farmer.hasFarmAccess && farmer.connectionStatus === "PENDING" ? (
                     <div className="rounded-xl bg-amber-50 px-4 py-3 text-center">

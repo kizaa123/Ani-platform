@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import prisma from '../database/prisma';
 import { AppError, assertFound, assertAuthorized } from '../utils/errors';
-import { ROLES, isFarmerRole, isStaffRole } from '../constants/roles';
+import { ROLES, isFarmerRole, isStaffRole, isMarketplaceBuyerRole } from '../constants/roles';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import {
   notifyConnectionApproved,
@@ -222,7 +222,7 @@ export class ConnectionService {
       return this.formatConnections(rows);
     }
 
-    if (roleId === ROLES.BUYER) {
+    if (isMarketplaceBuyerRole(roleId)) {
       const rows = await prisma.connectionRequest.findMany({
         where: { buyerId: userId },
         include: {

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { Icon, type IconName } from "@/components/icons";
-import { isFarmer, isBuyer, isHandler, isResearcher, isStaff } from "@/lib/types";
+import { isFarmer, isBuyer, isHandler, isResearcher, isStaff, isStudent } from "@/lib/types";
 
 export type BottomNavItem = {
   href: string;
@@ -54,7 +54,7 @@ function buyerNav(): BottomNavItem[] {
 function researcherNav(): BottomNavItem[] {
   return [
     { href: "/dashboard", label: "Home", icon: "home", match: (p) => p === "/dashboard" },
-    { href: "/library", label: "Market", icon: "book", match: (p) => p.startsWith("/library") },
+    { href: "/marketplace", label: "Market", icon: "store", match: (p) => p.startsWith("/marketplace") },
     {
       href: "/researcher/publications",
       label: "Create",
@@ -62,17 +62,25 @@ function researcherNav(): BottomNavItem[] {
       match: (p) => p.startsWith("/researcher/publications"),
       create: true,
     },
-    {
-      href: "/researcher/financials",
-      label: "Financials",
-      icon: "chart",
-      match: (p) => p.startsWith("/researcher/financials"),
-    },
+    { href: "/orders", label: "Orders", icon: "package", match: (p) => p.startsWith("/orders") },
     {
       href: "/researcher/settings",
       label: "Profile",
       icon: "user",
       match: (p) => p.startsWith("/researcher/settings"),
+    },
+  ];
+}
+
+function studentNav(): BottomNavItem[] {
+  return [
+    { href: "/dashboard", label: "Home", icon: "home", match: (p) => p === "/dashboard" },
+    { href: "/library", label: "Library", icon: "book", match: (p) => p.startsWith("/library") },
+    {
+      href: "/student/settings",
+      label: "Profile",
+      icon: "user",
+      match: (p) => p.startsWith("/student/settings"),
     },
   ];
 }
@@ -118,6 +126,7 @@ function navForRole(roleId: number): BottomNavItem[] | null {
   if (isFarmer(roleId)) return farmerNav();
   if (isBuyer(roleId)) return buyerNav();
   if (isResearcher(roleId)) return researcherNav();
+  if (isStudent(roleId)) return studentNav();
   if (isHandler(roleId)) return handlerNav();
   if (isStaff(roleId)) return staffNav();
   return null;

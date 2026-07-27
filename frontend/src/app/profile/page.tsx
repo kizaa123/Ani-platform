@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { isBuyer, isHandler } from "@/lib/types";
+import { isBuyer, isHandler, isStudent } from "@/lib/types";
+import { isValidPhone, normalizePhone, PHONE_VALIDATION_MESSAGE } from "@/lib/phone";
 import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { CountrySelect } from "@/components/CountrySelect";
 import { RolePrefixedName } from "@/components/RolePrefixedName";
@@ -40,6 +41,7 @@ export default function ProfilePage() {
     if (!loading && user) {
       if (isBuyer(user.roleId)) router.replace("/settings");
       else if (isHandler(user.roleId)) router.replace("/agents/settings");
+      else if (isStudent(user.roleId)) router.replace("/student/settings");
     }
   }, [user?.id, loading, router]);
 
@@ -86,11 +88,15 @@ export default function ProfilePage() {
   };
 
   const saveSettings = async () => {
+    if (!isValidPhone(form.phone)) {
+      setError(PHONE_VALIDATION_MESSAGE);
+      return;
+    }
     setSaving(true);
     setMessage("");
     setError("");
     try {
-      await api.auth.updateProfile(form);
+      await api.auth.updateProfile({ ...form, phone: normalizePhone(form.phone) });
       await refreshUser();
       setPhotoCacheBust(Date.now());
       setMessage("Profile saved successfully.");

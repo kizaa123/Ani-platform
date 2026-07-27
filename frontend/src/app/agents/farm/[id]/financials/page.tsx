@@ -110,8 +110,8 @@ export default function HandlerClientFinancialsPage() {
       <HandlerClientNav ownerId={ownerId} farmName={statement.farmName} />
 
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-brand-900">Financial statement</h1>
-        <p className="text-sm text-gray-500">Farmer client revenue and product activity</p>
+        <h1 className="text-2xl font-bold text-brand-900">Money Summary</h1>
+        <p className="text-sm text-gray-500">What this farmer has listed, sold, and earned</p>
       </div>
 
       <div className="mb-6 rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
@@ -130,19 +130,17 @@ export default function HandlerClientFinancialsPage() {
         </div>
       </div>
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <SummaryCard label="Listed inventory value" value={formatGhc(summary.totalListedValue)} sub={`${summary.activeListings} active`} />
-        <SummaryCard label="Sales revenue" value={formatGhc(summary.totalSalesRevenue ?? 0)} sub={`${summary.totalSalesCount ?? 0} sales`} accent="green" />
-        <SummaryCard label="Sold inventory value" value={formatGhc(summary.totalSoldValue)} sub={`${summary.soldListings} sold out`} />
-        <SummaryCard label="Buyer connections" value={String(summary.acceptedConnections)} sub={`${summary.pendingConnections} pending`} />
-        <SummaryCard label="Total products" value={String(summary.totalProducts)} sub="All time" />
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <SummaryCard label="Products for sale" value={formatGhc(summary.totalListedValue)} sub={`${summary.activeListings} active`} />
+        <SummaryCard label="Total earned" value={formatGhc(summary.totalSalesRevenue ?? 0)} sub={`${summary.totalSalesCount ?? 0} sales`} accent="green" />
+        <SummaryCard label="All products" value={String(summary.totalProducts)} sub="Listed on farm" />
       </div>
 
       {salesOrders.length > 0 && (
         <div className="mb-6 overflow-hidden rounded-2xl border border-green-100 bg-white shadow-sm">
           <div className="border-b border-green-100 bg-green-50/50 px-6 py-4">
-            <h3 className="text-base font-semibold text-brand-900">Sales & payments received</h3>
-            <p className="text-sm text-gray-500">Buyer purchases with contact details</p>
+            <h3 className="text-base font-semibold text-brand-900">Payments received</h3>
+            <p className="text-sm text-gray-500">Orders buyers have paid for</p>
           </div>
           <SalesOrdersTable items={salesOrders} />
         </div>
@@ -150,8 +148,8 @@ export default function HandlerClientFinancialsPage() {
 
       <div className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
         <div className="border-b border-brand-100 px-6 py-4">
-          <h3 className="text-base font-semibold text-brand-900">Product line items</h3>
-          <p className="text-sm text-gray-500">Products listed on the marketplace</p>
+          <h3 className="text-base font-semibold text-brand-900">Products listed</h3>
+          <p className="text-sm text-gray-500">Everything this farmer has for sale</p>
         </div>
 
         {statement.lineItems.length === 0 ? (

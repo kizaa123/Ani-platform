@@ -182,6 +182,8 @@ export function ProductMediaGallery({
   const [items, setItems] = useState(initialMedia);
   const [activeIndex, setActiveIndex] = useState(0);
   const [shareOpen, setShareOpen] = useState(false);
+  /** Local liked state for legacy fallback images (no media id for API) */
+  const [fallbackLiked, setFallbackLiked] = useState<Record<number, boolean>>({});
 
   // Touch / mouse drag state
   const dragStartX = useRef<number | null>(null);
@@ -190,7 +192,13 @@ export function ProductMediaGallery({
   useEffect(() => {
     setItems(initialMedia);
     setActiveIndex(0);
+    setFallbackLiked({});
+    setShareOpen(false);
   }, [initialMedia, listingId]);
+
+  useEffect(() => {
+    setShareOpen(false);
+  }, [activeIndex]);
 
   const hasMedia = items.length > 0;
   const hasFallback = fallbackImages.length > 0;
@@ -250,16 +258,22 @@ export function ProductMediaGallery({
   };
 
   const handleLike = async () => {
-    if (!activeItem || !interactive) return;
-    try {
-      const result = await api.marketplace.media.like(listingId, activeItem.id);
-      updateItems(
-        items.map((m) =>
-          m.id === activeItem.id ? { ...m, likedByMe: result.liked, likesCount: result.likesCount } : m
-        )
-      );
-    } catch {
-      /* ignore */
+    if (!interactive) return;
+    if (activeItem) {
+      try {
+        const result = await api.marketplace.media.like(listingId, activeItem.id);
+        updateItems(
+          items.map((m) =>
+            m.id === activeItem.id ? { ...m, likedByMe: result.liked, likesCount: result.likesCount } : m
+          )
+        );
+      } catch {
+        /* ignore */
+      }
+      return;
+    }
+    if (activeFallback) {
+      setFallbackLiked((prev) => ({ ...prev, [activeIndex]: !prev[activeIndex] }));
     }
   };
 
@@ -275,6 +289,9 @@ export function ProductMediaGallery({
     }
   };
 
+  const showControls = interactive && Boolean(activeItem || activeFallback);
+  const likedByMe = activeItem ? activeItem.likedByMe : Boolean(fallbackLiked[activeIndex]);
+
   const shareUrl = activeItem
     ? absoluteMediaUrl(activeItem.url)
     : activeFallback
@@ -283,34 +300,16 @@ export function ProductMediaGallery({
         ? window.location.href
         : "";
 
-  if (totalSlides === 0) {
-    return (
-      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-        <div className="relative aspect-square w-full bg-gray-50">
-          <MainViewer alt={productTitle} active />
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-      {/* ── Main viewer — swipeable / draggable ── */}
-      <div
-        className="group relative aspect-square w-full cursor-grab overflow-hidden bg-gray-50 active:cursor-grabbing select-none"
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
-      >
+  const viewerShell = (
+    <>
+      <div className="absolute inset-0">
         <MainViewer
           item={activeItem}
           fallbackSrc={activeFallback}
           alt={productTitle}
           active
         />
+      </div>
 
         {/* ── Prev / Next arrows — desktop only (md+) ── */}
         {totalSlides > 1 && (
@@ -336,49 +335,80 @@ export function ProductMediaGallery({
           </>
         )}
 
-        {/* ── Like / Share controls ── */}
-        {interactive && activeItem && (
-          <div className="absolute bottom-3 right-3 flex items-center gap-1.5">
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={handleLike}
-                aria-label={activeItem.likedByMe ? "Unlike" : "Like"}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white/95 shadow-sm backdrop-blur transition hover:bg-white"
-              >
-                <Icon
-                  name="heart"
-                  className={`h-5 w-5 ${activeItem.likedByMe ? "fill-red-500 text-red-500" : "fill-none text-gray-600"}`}
-                />
-              </button>
-              {activeItem.likesCount > 0 && (
-                <span className="text-xs font-semibold text-gray-700">{activeItem.likesCount}</span>
-              )}
-            </div>
-
-            <div className="relative flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => setShareOpen((o) => !o)}
-                aria-label="Share"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white/95 shadow-sm backdrop-blur transition hover:bg-white"
-              >
-                <Icon name="share" className="h-5 w-5 text-gray-600" />
-              </button>
-              {activeItem.sharesCount > 0 && (
-                <span className="text-xs font-semibold text-gray-700">{activeItem.sharesCount}</span>
-              )}
-              {shareOpen && (
-                <ShareMenu
-                  shareUrl={shareUrl}
-                  productTitle={productTitle}
-                  onShare={handleShareRecorded}
-                  onClose={() => setShareOpen(false)}
-                />
-              )}
-            </div>
+      {/* ── Like / Share controls ── */}
+      {showControls && (
+        <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={handleLike}
+              aria-label={likedByMe ? "Unlike" : "Like"}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white/95 shadow-sm backdrop-blur transition hover:bg-white"
+            >
+              <Icon
+                name="heart"
+                className={`h-5 w-5 ${likedByMe ? "fill-red-500 text-red-500" : "fill-none text-gray-600"}`}
+              />
+            </button>
+            {activeItem && activeItem.likesCount > 0 && (
+              <span className="text-xs font-semibold text-gray-700">{activeItem.likesCount}</span>
+            )}
           </div>
-        )}
+
+          <div className="relative flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setShareOpen((o) => !o)}
+              aria-label="Share"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white/95 shadow-sm backdrop-blur transition hover:bg-white"
+            >
+              <Icon name="share" className="h-5 w-5 text-gray-600" />
+            </button>
+            {activeItem && activeItem.sharesCount > 0 && (
+              <span className="text-xs font-semibold text-gray-700">{activeItem.sharesCount}</span>
+            )}
+            {shareOpen && (
+              <ShareMenu
+                shareUrl={shareUrl}
+                productTitle={productTitle}
+                onShare={handleShareRecorded}
+                onClose={() => setShareOpen(false)}
+              />
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+
+  const viewerClassName =
+    "group relative aspect-square w-full shrink-0 cursor-grab overflow-hidden bg-gray-50 active:cursor-grabbing select-none";
+
+  if (totalSlides === 0) {
+    return (
+      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+        <div className={viewerClassName}>
+          <div className="absolute inset-0">
+            <MainViewer alt={productTitle} active />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+      {/* ── Main viewer — fixed square, swipeable / draggable ── */}
+      <div
+        className={viewerClassName}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+      >
+        {viewerShell}
       </div>
 
       {/* ── Dot indicators — mobile only ── */}

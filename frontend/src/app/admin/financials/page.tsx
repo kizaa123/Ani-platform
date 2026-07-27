@@ -79,9 +79,9 @@ export default function AdminFinancialsPage() {
         <Link href="/admin" className="text-xs text-brand-600 hover:underline">
           Back to Admin
         </Link>
-        <h1 className="mt-2 text-xl font-bold text-brand-900">Platform Financial Statement</h1>
+        <h1 className="mt-2 text-xl font-bold text-brand-900">Platform Money Summary</h1>
         <p className="text-xs text-gray-500">
-          All completed marketplace, access, and research transactions
+          All completed payments on the platform
         </p>
       </div>
 
@@ -91,13 +91,13 @@ export default function AdminFinancialsPage() {
             <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-600">
               ANI Platform
             </p>
-            <h2 className="text-base font-bold text-brand-900">Revenue overview</h2>
+            <h2 className="text-base font-bold text-brand-900">Money overview</h2>
             <p className="text-xs text-gray-500">Generated {formatDate(statement.generatedAt)}</p>
           </div>
           <div className="text-left sm:text-right">
-            <p className="text-[10px] font-semibold uppercase text-gray-500">Total revenue</p>
+            <p className="text-[10px] font-semibold uppercase text-gray-500">Total earned</p>
             <p className="text-2xl font-bold text-green-700">{formatGhc(summary.totalRevenue)}</p>
-            <p className="text-xs text-gray-500">{summary.transactionCount} transaction(s)</p>
+            <p className="text-xs text-gray-500">{summary.transactionCount} payment(s)</p>
           </div>
         </div>
       </div>
@@ -125,21 +125,21 @@ export default function AdminFinancialsPage() {
           sub={`${summary.accessPackageCount} payment(s)`}
         />
         <SummaryCard
-          label="Total revenue"
+          label="Total earned"
           value={formatGhc(summary.totalRevenue)}
-          sub="All revenue streams"
+          sub="All payment types"
         />
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
         <div className="border-b border-brand-100 bg-brand-50/40 px-5 py-3">
-          <h3 className="text-sm font-semibold text-brand-900">All transactions</h3>
-          <p className="text-xs text-gray-500">Chronological list of completed platform payments</p>
+          <h3 className="text-sm font-semibold text-brand-900">All payments</h3>
+          <p className="text-xs text-gray-500">Completed payments in date order</p>
         </div>
 
         {statement.lineItems.length === 0 ? (
           <div className="px-5 py-10 text-center text-xs text-gray-500">
-            No completed transactions yet.
+            No completed payments yet.
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -188,7 +188,7 @@ export default function AdminFinancialsPage() {
                         ) : (
                           <span
                             className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-[9px] font-semibold text-amber-700 border border-amber-200"
-                            title="PDF locked until delivery release OTP is confirmed"
+                            title="PDF locked until delivery is confirmed"
                           >
                             Locked
                           </span>
@@ -203,7 +203,7 @@ export default function AdminFinancialsPage() {
               <tfoot>
                 <tr className="bg-brand-50 font-semibold text-brand-900">
                   <td colSpan={4} className="px-5 py-3 text-right text-xs">
-                    Total platform revenue
+                    Total platform earnings
                   </td>
                   <td className="px-4 py-3 text-right text-xs">{formatGhc(summary.totalRevenue)}</td>
                   <td colSpan={2} />

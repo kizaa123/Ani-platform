@@ -1,0 +1,83 @@
+/** Map commodity names to display emojis (partial, case-insensitive match). */
+const COMMODITY_EMOJI: Record<string, string> = {
+  maize: "🌽",
+  corn: "🌽",
+  rice: "🌾",
+  wheat: "🌾",
+  sorghum: "🌾",
+  millet: "🌾",
+  fonio: "🌾",
+  cocoa: "🍫",
+  chocolate: "🍫",
+  coffee: "☕",
+  tomato: "🍅",
+  pepper: "🌶️",
+  onion: "🧅",
+  cassava: "🥔",
+  yam: "🍠",
+  potato: "🥔",
+  plantain: "🍌",
+  banana: "🍌",
+  mango: "🥭",
+  pineapple: "🍍",
+  papaya: "🍈",
+  orange: "🍊",
+  lemon: "🍋",
+  lime: "🍋",
+  grapefruit: "🍊",
+  watermelon: "🍉",
+  coconut: "🥥",
+  avocado: "🥑",
+  cashew: "🥜",
+  groundnut: "🥜",
+  peanut: "🥜",
+  guava: "🍈",
+  "passion fruit": "🍈",
+  cabbage: "🥬",
+  lettuce: "🥬",
+  spinach: "🥬",
+  kontomire: "🥬",
+  cucumber: "🥒",
+  carrot: "🥕",
+  eggplant: "🍆",
+  okra: "🫛",
+  beans: "🫘",
+  cowpea: "🫘",
+  soybean: "🫘",
+  ginger: "🫚",
+  turmeric: "🫚",
+  garlic: "🧄",
+  moringa: "🌿",
+  sugarcane: "🎋",
+  cotton: "☁️",
+  sesame: "🌰",
+  cattle: "🐄",
+  goat: "🐐",
+  sheep: "🐑",
+  poultry: "🐔",
+  chicken: "🐔",
+  pig: "🐷",
+  rabbit: "🐰",
+  fish: "🐟",
+  tilapia: "🐟",
+  catfish: "🐟",
+  bee: "🐝",
+  honey: "🍯",
+  snail: "🐌",
+  "oil palm": "🌴",
+  palm: "🌴",
+  rubber: "🌳",
+  shea: "🌰",
+};
+
+const DEFAULT_EMOJI = "🌱";
+
+/** Resolve an emoji for a commodity name; falls back to generic crop emoji. */
+export function getCommodityEmoji(name?: string | null): string {
+  if (!name?.trim()) return DEFAULT_EMOJI;
+  const lower = name.trim().toLowerCase();
+  for (const [key, emoji] of Object.entries(COMMODITY_EMOJI)) {
+    if (lower.includes(key)) return emoji;
+  }
+  return DEFAULT_EMOJI;
+}

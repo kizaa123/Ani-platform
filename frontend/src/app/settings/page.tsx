@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import { HandlerProfile, isBuyer } from "@/lib/types";
+import { isValidPhone, normalizePhone, PHONE_VALIDATION_MESSAGE } from "@/lib/phone";
 import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { CountrySelect } from "@/components/CountrySelect";
 import { HandlerSelect } from "@/components/HandlerSelect";
@@ -89,11 +90,15 @@ export default function BuyerSettingsPage() {
   };
 
   const saveSettings = async () => {
+    if (!isValidPhone(form.phone)) {
+      setError(PHONE_VALIDATION_MESSAGE);
+      return;
+    }
     setSaving(true);
     setMessage("");
     setError("");
     try {
-      await api.auth.updateProfile(form);
+      await api.auth.updateProfile({ ...form, phone: normalizePhone(form.phone) });
       if (handlerId && handlerId !== user?.assignedHandler?.id) {
         await api.auth.updateHandler(handlerId);
       }
