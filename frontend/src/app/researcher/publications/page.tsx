@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import { ResearchPublication, isResearcher } from "@/lib/types";
 import { Icon } from "@/components/icons";
+import { FileUploadZone } from "@/components/FileUploadZone";
+import { PublicationCoverImage } from "@/components/PublicationCoverImage";
 import { assetUrl } from "@/lib/assetUrl";
 
 const emptyForm = {
@@ -20,16 +22,17 @@ const emptyForm = {
 export default function ResearcherPublicationsPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const fileRef = useRef<HTMLInputElement>(null);
-  const coverRef = useRef<HTMLInputElement>(null);
 
   const [publications, setPublications] = useState<ResearchPublication[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
-  const [uploading, setUploading] = useState(false);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [pendingDocName, setPendingDocName] = useState<string | null>(null);
+  const [localCoverPreview, setLocalCoverPreview] = useState<string | null>(null);
 
   const load = () => api.research.my().then(setPublications).catch(console.error);
 
@@ -39,22 +42,43 @@ export default function ResearcherPublicationsPage() {
     if (user && isResearcher(user.roleId)) load();
   }, [user?.id, loading, router]);
 
-  const handleUpload = async (file?: File, cover?: File) => {
-    if (!file && !cover) return;
-    setUploading(true);
+  useEffect(() => {
+    return () => {
+      if (localCoverPreview) URL.revokeObjectURL(localCoverPreview);
+    };
+  }, [localCoverPreview]);
+
+  const handleDocSelect = async (file: File) => {
+    setPendingDocName(file.name);
+    setUploadingDoc(true);
     try {
-      const result = await api.upload.publicationFiles(file, cover);
+      const result = await api.upload.publicationFiles(file, undefined);
       setForm((f) => ({
         ...f,
         fileUrl: result.fileUrl ?? f.fileUrl,
+      }));
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploadingDoc(false);
+      setPendingDocName(null);
+    }
+  };
+
+  const handleCoverSelect = async (file: File) => {
+    if (localCoverPreview) URL.revokeObjectURL(localCoverPreview);
+    setLocalCoverPreview(URL.createObjectURL(file));
+    setUploadingCover(true);
+    try {
+      const result = await api.upload.publicationFiles(undefined, file);
+      setForm((f) => ({
+        ...f,
         coverImage: result.coverImage ?? f.coverImage,
       }));
     } catch (e) {
       alert(e instanceof Error ? e.message : "Upload failed");
     } finally {
-      setUploading(false);
-      if (fileRef.current) fileRef.current.value = "";
-      if (coverRef.current) coverRef.current.value = "";
+      setUploadingCover(false);
     }
   };
 
@@ -68,10 +92,15 @@ export default function ResearcherPublicationsPage() {
       price: pub.price ?? 0,
       isFree: pub.isFree,
     });
+    if (localCoverPreview) URL.revokeObjectURL(localCoverPreview);
+    setLocalCoverPreview(null);
     setShowForm(true);
   };
 
   const resetForm = () => {
+    if (localCoverPreview) URL.revokeObjectURL(localCoverPreview);
+    setLocalCoverPreview(null);
+    setPendingDocName(null);
     setForm(emptyForm);
     setEditingId(null);
     setShowForm(false);
@@ -118,6 +147,11 @@ export default function ResearcherPublicationsPage() {
     load();
   };
 
+  const docFileName = pendingDocName ?? (form.fileUrl ? form.fileUrl.split("/").pop() : undefined);
+  const coverPreviewUrl =
+    localCoverPreview ?? (form.coverImage ? assetUrl(form.coverImage) ?? undefined : undefined);
+  const uploading = uploadingDoc || uploadingCover;
+
   if (loading || !user) {
     return <div className="p-12 text-center text-gray-500">Loading...</div>;
   }
@@ -159,52 +193,27 @@ export default function ResearcherPublicationsPage() {
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
               />
             </div>
-            <div>
-              <label className="auth-label">Document (PDF, EPUB, Word, text)</label>
-              <input
-                ref={fileRef}
-                type="file"
-                className="hidden"
-                accept=".pdf,.epub,.doc,.docx,.txt"
-                onChange={(e) => handleUpload(e.target.files?.[0], undefined)}
-              />
-              <button
-                type="button"
-                className="btn-outline w-full"
-                disabled={uploading}
-                onClick={() => fileRef.current?.click()}
-              >
-                {uploading ? "Uploading..." : form.fileUrl ? "Replace document" : "Choose document"}
-              </button>
-              {form.fileUrl && (
-                <p className="mt-1 truncate text-xs text-green-700">Uploaded: {form.fileUrl.split("/").pop()}</p>
-              )}
-            </div>
-            <div>
-              <label className="auth-label">Cover image (optional)</label>
-              <input
-                ref={coverRef}
-                type="file"
-                className="hidden"
-                accept="image/*"
-                onChange={(e) => handleUpload(undefined, e.target.files?.[0])}
-              />
-              <button
-                type="button"
-                className="btn-outline w-full"
-                disabled={uploading}
-                onClick={() => coverRef.current?.click()}
-              >
-                {form.coverImage ? "Replace cover" : "Choose cover"}
-              </button>
-              {form.coverImage && (
-                <img
-                  src={assetUrl(form.coverImage) || ""}
-                  alt="Cover preview"
-                  className="mt-2 h-24 w-16 rounded object-cover"
-                />
-              )}
-            </div>
+            <FileUploadZone
+              label="Document (PDF, EPUB, Word, text)"
+              accept=".pdf,.epub,.doc,.docx,.txt"
+              icon="file"
+              disabled={uploading}
+              uploading={uploadingDoc}
+              onFileSelect={handleDocSelect}
+              fileName={docFileName}
+              hint="PDF, EPUB, Word or plain text"
+            />
+            <FileUploadZone
+              label="Cover image (optional)"
+              accept="image/*"
+              icon="image"
+              disabled={uploading}
+              uploading={uploadingCover}
+              onFileSelect={handleCoverSelect}
+              previewUrl={coverPreviewUrl}
+              fileName={coverPreviewUrl && !localCoverPreview ? form.coverImage.split("/").pop() : undefined}
+              hint="Recommended 3:4 portrait ratio"
+            />
             <div>
               <label className="flex items-center gap-2 text-sm">
                 <input
@@ -245,46 +254,43 @@ export default function ResearcherPublicationsPage() {
           No publications yet. Upload your first book or research file.
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {publications.map((pub) => (
-            <div key={pub.id} className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
-              {pub.coverImage ? (
-                <img
-                  src={assetUrl(pub.coverImage) || ""}
-                  alt=""
-                  className="mb-3 h-32 w-full rounded-lg object-cover"
-                />
-              ) : (
-                <div className="mb-3 flex h-32 items-center justify-center rounded-lg bg-brand-50">
-                  <Icon name="book" className="h-10 w-10 text-brand-300" />
+            <article
+              key={pub.id}
+              className="flex flex-col overflow-hidden rounded-xl border border-brand-100 bg-white shadow-sm transition hover:border-brand-200 hover:shadow-md"
+            >
+              <PublicationCoverImage coverImage={pub.coverImage} title={pub.title} className="rounded-none" />
+              <div className="flex flex-1 flex-col p-4">
+                <h3 className="font-semibold text-brand-900 line-clamp-2">{pub.title}</h3>
+                {pub.description && (
+                  <p className="mt-1 line-clamp-2 text-sm text-gray-500">{pub.description}</p>
+                )}
+                <div className="mt-auto pt-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-1 text-gray-500">
+                      <Icon name="eye" className="h-4 w-4" />
+                      {pub.viewCount}
+                    </span>
+                    <span className="font-semibold text-brand-700">
+                      {pub.isFree ? "Free" : `GHC ${(pub.price ?? 0).toFixed(2)}`}
+                    </span>
+                  </div>
+                  <div className="mt-4 flex gap-2">
+                    <button type="button" className="btn-outline flex-1 text-sm" onClick={() => startEdit(pub)}>
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-lg border border-red-200 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"
+                      onClick={() => archive(pub.id)}
+                    >
+                      Archive
+                    </button>
+                  </div>
                 </div>
-              )}
-              <h3 className="font-semibold text-brand-900">{pub.title}</h3>
-              {pub.description && (
-                <p className="mt-1 line-clamp-2 text-sm text-gray-500">{pub.description}</p>
-              )}
-              <div className="mt-3 flex items-center justify-between text-sm">
-                <span className="flex items-center gap-1 text-gray-500">
-                  <Icon name="eye" className="h-4 w-4" />
-                  {pub.viewCount}
-                </span>
-                <span className="font-semibold text-brand-700">
-                  {pub.isFree ? "Free" : `GHC ${(pub.price ?? 0).toFixed(2)}`}
-                </span>
               </div>
-              <div className="mt-4 flex gap-2">
-                <button type="button" className="btn-outline flex-1 text-sm" onClick={() => startEdit(pub)}>
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  className="rounded-lg border border-red-200 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"
-                  onClick={() => archive(pub.id)}
-                >
-                  Archive
-                </button>
-              </div>
-            </div>
+            </article>
           ))}
         </div>
       )}

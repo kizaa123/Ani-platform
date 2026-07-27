@@ -2,8 +2,9 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { FarmerBrowseCard } from "@/lib/types";
-import { FarmerAvatar } from "@/components/FarmerAvatar";
+import { useAuth } from "@/context/AuthProvider";
+import { FarmerBrowseCard, isResearcher } from "@/lib/types";
+import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
 import { VerificationBadge } from "@/components/VerificationBadge";
 import { Icon } from "@/components/icons";
@@ -30,6 +31,8 @@ export function FarmerDetailModal({
   onAccessFarm,
   farmAccessPriceLabel,
 }: FarmerDetailModalProps) {
+  const { user } = useAuth();
+  const pendingStatusHref = user && isResearcher(user.roleId) ? "/access" : "/connections";
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => {
@@ -52,15 +55,18 @@ export function FarmerDetailModal({
         <div className="border-b border-brand-100 bg-gradient-to-br from-brand-50/80 to-white p-6">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-4">
-              <FarmerAvatar
+              <AvatarWithVerification
                 src={farmer.profilePicture}
                 name={farmer.farmerName}
                 size="lg"
+                verificationStatus={farmer.verificationStatus}
               />
               <div className="min-w-0">
                 <h2 className="text-xl font-bold text-brand-900">{farmer.farmerName}</h2>
                 <p className="text-sm font-medium text-brand-700">{farmer.farmName}</p>
-                <VerificationBadge status={farmer.verificationStatus} className="mt-1.5" />
+                {farmer.verificationStatus && farmer.verificationStatus !== "VERIFIED" && (
+                  <VerificationBadge status={farmer.verificationStatus} className="mt-1.5" />
+                )}
                 <CountryBadge country={farmer.country} region={farmer.region} className="mt-1.5" />
               </div>
             </div>
@@ -125,11 +131,11 @@ export function FarmerDetailModal({
                   ⏳ Awaiting ANI admin approval
                 </span>
                 <Link
-                  href="/connections"
+                  href={pendingStatusHref}
                   className="btn-outline block w-full py-2.5 text-center"
                   onClick={onClose}
                 >
-                  View connection status
+                  {user && isResearcher(user.roleId) ? "View farm access status" : "View connection status"}
                 </Link>
               </>
             ) : onAccessFarm ? (

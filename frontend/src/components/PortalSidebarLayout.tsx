@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { type UserProfile } from "@/lib/types";
-import { ProfilePhoto } from "@/components/FarmerAvatar";
+import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { RolePrefixedName } from "@/components/RolePrefixedName";
 import { NotificationBell } from "@/components/NotificationBell";
 import { Icon, type IconName } from "@/components/icons";
@@ -59,11 +59,12 @@ function SidebarContent({
       </div>
 
       <div className="flex items-center gap-3 border-b border-brand-100 px-5 py-4">
-        <ProfilePhoto
+        <AvatarWithVerification
           src={user.profilePicture}
           name={user.firstName}
           size={52}
           cacheBust={photoCacheBust}
+          verificationStatus={user.verificationStatus}
         />
         <div className="min-w-0">
           <RolePrefixedName
@@ -162,11 +163,12 @@ function PortalMobileBar({
       {user && (
         <>
           <NotificationBell />
-          <ProfilePhoto
+          <AvatarWithVerification
             src={user.profilePicture}
             name={user.firstName}
             size={44}
             cacheBust={photoCacheBust}
+            verificationStatus={user.verificationStatus}
           />
         </>
       )}

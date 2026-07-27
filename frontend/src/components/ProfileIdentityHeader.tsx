@@ -1,6 +1,7 @@
 "use client";
 
 import { ProfilePhoto } from "@/components/FarmerAvatar";
+import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
 import { VerificationBadge } from "@/components/VerificationBadge";
 import { RolePrefixedName, getRoleNamePrefix } from "@/components/RolePrefixedName";
@@ -30,11 +31,12 @@ export function ProfileIdentityHeader({ user, photoCacheBust, onEditClick }: Pro
   return (
     <section className="mb-8 rounded-2xl border border-brand-100 bg-gradient-to-br from-white to-brand-50/30 p-6 shadow-sm sm:p-8">
       <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start">
-        <ProfilePhoto
+        <AvatarWithVerification
           src={user.profilePicture}
           name={user.firstName}
           size={128}
           cacheBust={cacheBust}
+          verificationStatus={user.verificationStatus}
         />
         <div className="min-w-0 flex-1 text-center sm:text-left">
           <h2 className="text-2xl font-bold">
@@ -76,7 +78,9 @@ export function ProfileIdentityHeader({ user, photoCacheBust, onEditClick }: Pro
               </p>
             </div>
           )}
-          <VerificationBadge status={user.verificationStatus} className="mt-3" />
+          {user.verificationStatus && user.verificationStatus !== "VERIFIED" && (
+            <VerificationBadge status={user.verificationStatus} className="mt-3" />
+          )}
         </div>
       </div>
       {onEditClick && (

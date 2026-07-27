@@ -11,10 +11,10 @@ import {
   MarketplaceBrowse,
   isMarketplaceBuyer,
   isFarmer,
+  isResearcher,
 } from "@/lib/types";
-import { FarmerAvatar } from "@/components/FarmerAvatar";
+import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { FarmerProductCard } from "@/components/FarmerProductCard";
-import { VerificationBadge } from "@/components/VerificationBadge";
 import { PurchaseModal } from "@/components/PurchaseModal";
 import { Icon } from "@/components/icons";
 
@@ -251,17 +251,12 @@ export default function MarketplacePage() {
             >
               <div className="border-b border-brand-50 px-4 py-3 sm:px-5 sm:py-4">
                 <div className="flex flex-row items-center gap-3 sm:items-start sm:gap-4">
-                  <div className="flex shrink-0 flex-col items-center gap-1.5">
-                    <FarmerAvatar
-                      src={farmer.profilePicture}
-                      name={farmer.farmerName}
-                      size="md"
-                    />
-                    <VerificationBadge
-                      status={farmer.verificationStatus}
-                      className="text-[10px] px-2 py-0.5"
-                    />
-                  </div>
+                  <AvatarWithVerification
+                    src={farmer.profilePicture}
+                    name={farmer.farmerName}
+                    size="md"
+                    verificationStatus={farmer.verificationStatus}
+                  />
                   <h3 className="min-w-0 flex-1 text-left font-bold text-brand-900 sm:pt-3">
                     {farmer.farmerName}
                   </h3>
@@ -303,10 +298,10 @@ export default function MarketplacePage() {
                         Payment received — waiting for ANI admin approval
                       </p>
                       <Link
-                        href="/connections"
+                        href={isResearcher(user.roleId) ? "/access" : "/connections"}
                         className="btn-outline mt-3 inline-block w-full max-w-xs py-2.5"
                       >
-                        View connection status
+                        {isResearcher(user.roleId) ? "View farm access status" : "View connection status"}
                       </Link>
                     </div>
                   ) : (

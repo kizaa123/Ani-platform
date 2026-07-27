@@ -1,7 +1,7 @@
 "use client";
 
 import { FarmerBrowseCard } from "@/lib/types";
-import { FarmerAvatar } from "@/components/FarmerAvatar";
+import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
 import { VerificationBadge } from "@/components/VerificationBadge";
 import { Icon } from "@/components/icons";
@@ -69,16 +69,19 @@ export function FarmerBrowseCardItem({
       }`}
     >
       <div className="flex items-start gap-3">
-        <FarmerAvatar
+        <AvatarWithVerification
           src={farmer.profilePicture}
           name={farmer.farmerName}
           size="lg"
+          verificationStatus={farmer.verificationStatus}
         />
         <div className="min-w-0 flex-1">
           <h3 className="truncate font-bold text-brand-900">{farmer.farmerName}</h3>
           <p className="truncate text-sm text-brand-700">{farmer.farmName}</p>
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-            <VerificationBadge status={farmer.verificationStatus} />
+            {farmer.verificationStatus && farmer.verificationStatus !== "VERIFIED" && (
+              <VerificationBadge status={farmer.verificationStatus} />
+            )}
             <CountryBadge country={farmer.country} region={farmer.region} />
           </div>
         </div>

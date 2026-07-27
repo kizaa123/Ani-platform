@@ -151,10 +151,6 @@ export const PORTAL_NAV_IMAGES_RESEARCHER = {
 
   "/researcher/publications": "/Agric researchers.jpg",
 
-  /** Change image here: Researcher Financial Statement card */
-
-  "/researcher/financials": "/accountant-filing-invoice.webp",
-
   /** Change image here: Researcher Profile card */
 
   "/researcher/settings": "/happy-couple-agriculturists-using-touchpad-260nw-2667020919.webp",

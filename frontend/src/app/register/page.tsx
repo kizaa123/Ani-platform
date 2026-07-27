@@ -18,7 +18,7 @@ const ALL_ROLES = [
   { group: "Farmers",                  id: ROLES.CROP_FARMER,      label: "Fellow (Crop Farmer)" },
   { group: "Farmers",                  id: ROLES.LIVESTOCK_FARMER, label: "Fellow (Livestock Farmer)" },
   { group: "Research & Commerce",      id: ROLES.RESEARCHER,       label: "Researcher" },
-  { group: "Research & Commerce",      id: ROLES.BUYER,            label: "CLIENT (BUYER)" },
+  { group: "Research & Commerce",      id: ROLES.BUYER,            label: "Client (buyer)" },
   { group: "Research & Commerce",      id: ROLES.STUDENT,          label: "Student" },
   { group: "Support & Operations",     id: ROLES.FARMER_HANDLER,   label: "Fellow Liaison Officer" },
   { group: "Support & Operations",     id: ROLES.BUYER_HANDLER,    label: "Client Liaison Officer" },

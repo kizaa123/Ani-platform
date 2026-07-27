@@ -39,7 +39,9 @@ export type IconName =
   | "check-circle"
   | "clock"
   | "x-circle"
-  | "logo";
+  | "logo"
+  | "file"
+  | "image";
 
 type IconProps = SVGProps<SVGSVGElement> & { name: IconName };
 
@@ -243,6 +245,16 @@ const paths: Record<IconName, ReactNode> = {
       <polygon points="20 4, 34 12, 34 28, 20 36, 6 28, 6 12" fill="#1F9D68" stroke="#2C3238" strokeWidth="3.5" strokeLinejoin="round" />
       <polygon points="48 4, 62 12, 62 28, 48 36, 34 28, 34 12" fill="none" stroke="#2C3238" strokeWidth="3.5" strokeLinejoin="round" />
     </svg>
+  ),
+  file: (
+    <>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </>
+  ),
+  image: (
+    <>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </>
   ),
 };
 

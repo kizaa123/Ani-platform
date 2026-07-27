@@ -14,7 +14,7 @@ export type RolePrefixConfig = {
 
 export function getRoleNamePrefix(roleId: number): RolePrefixConfig | null {
   if (isFarmer(roleId)) return { prefix: "Fellow", separator: "_" };
-  if (isBuyer(roleId)) return { prefix: "CLIENT (BUYER)", separator: "_" };
+  if (isBuyer(roleId)) return { prefix: "Client", separator: "_" };
   if (isBuyerHandler(roleId)) return { prefix: "Client_Liason_Officer", separator: "_" };
   if (isFarmerHandler(roleId)) return { prefix: "Fellow_Liason_officer", separator: "_" };
   return null;
@@ -35,10 +35,13 @@ export function RolePrefixedName({
   prefixClassName = "text-brand-600",
   separatorClassName = "text-brand-400",
   nameClassName = "text-brand-900",
-  showVerifiedBadge = true,
+  showVerifiedBadge = false,
 }: RolePrefixedNameProps) {
   const config = getRoleNamePrefix(user.roleId);
-  const name = fullName(user);
+  const name =
+    config && (isFarmer(user.roleId) || isBuyer(user.roleId))
+      ? user.firstName
+      : fullName(user);
   const isVerified = user.verificationStatus === "VERIFIED";
 
   if (!config) {

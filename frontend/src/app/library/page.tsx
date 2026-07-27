@@ -17,6 +17,7 @@ import {
   groupPublicationsByCategory,
 } from "@/lib/publicationCategories";
 import { Icon } from "@/components/icons";
+import { PublicationCoverImage } from "@/components/PublicationCoverImage";
 import { VerificationBadge } from "@/components/VerificationBadge";
 import { PaymentCheckout, TransactionSuccess } from "@/components/PaymentCheckout";
 import { assetUrl } from "@/lib/assetUrl";
@@ -191,11 +192,10 @@ function PublicationCard({
   };
 
   return (
-    <article className="flex w-full flex-col overflow-hidden rounded-3xl border border-brand-100 bg-white p-5 shadow-md transition hover:border-brand-200 hover:shadow-lg">
-      <div className="mb-3">
-        <p className="text-base font-bold text-brand-900 line-clamp-1">{pub.title}</p>
-      </div>
+    <article className="flex w-full flex-col overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-md transition hover:border-brand-200 hover:shadow-lg">
+      <PublicationCoverImage coverImage={pub.coverImage} title={pub.title} className="rounded-none" />
 
+      <div className="flex flex-1 flex-col p-5">
       <div className="mb-4 flex items-center gap-4">
         <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full border-2 border-brand-100 bg-brand-50 shadow-xs">
           {pub.researcher.profilePicture ? (
@@ -291,10 +291,11 @@ function PublicationCard({
       <button
         type="button"
         onClick={() => onView(pub)}
-        className="mt-4 w-full rounded-2xl bg-brand-800 py-3.5 text-base font-bold text-white shadow-sm transition hover:bg-brand-900 active:scale-98"
+        className="mt-auto w-full rounded-2xl bg-brand-800 py-3.5 text-base font-bold text-white shadow-sm transition hover:bg-brand-900 active:scale-98"
       >
         {pub.isLocked ? "View & unlock" : "Read now"}
       </button>
+      </div>
     </article>
   );
 }

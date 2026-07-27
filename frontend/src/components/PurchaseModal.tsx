@@ -10,6 +10,8 @@ import { ProductMediaGallery } from "@/components/ProductMediaGallery";
 import { PaymentCheckout, TransactionSuccess } from "@/components/PaymentCheckout";
 import { HarvestCalendarTrigger } from "@/components/HarvestCalendarTrigger";
 
+const EMPTY_MEDIA: never[] = [];
+
 interface PurchaseViewProps {
   listing: Listing;
   relatedProducts: Listing[];
@@ -142,7 +144,7 @@ export function PurchaseModal({
               <ProductMediaGallery
                 listingId={listing.id}
                 productTitle={listing.title}
-                media={listing.media ?? []}
+                media={listing.media ?? EMPTY_MEDIA}
                 fallbackImages={listing.images}
                 interactive
               />

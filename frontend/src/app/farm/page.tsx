@@ -432,8 +432,7 @@ export default function FarmPage() {
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-gray-700">Your Price (GHC) *</label>
-                  <p className="mb-1.5 text-[11px] text-gray-500">Enter your price (X) per {formatListingUnit(form.unit)}</p>
+                  <label className="mb-1 block text-xs font-semibold text-gray-700">Your price (GHC) *</label>
                   <input
                     type="number"
                     placeholder="e.g. 150"
@@ -446,18 +445,15 @@ export default function FarmPage() {
                 </div>
               </div>
 
-              <p className="mt-3 text-xs text-gray-500">
-                Listed price = your price + half of your price
-              </p>
-              <div className="mt-2 rounded-lg border border-brand-200 bg-white px-4 py-2.5 text-xs text-brand-900">
+              <div className="mt-3 rounded-lg border border-brand-200 bg-white px-4 py-2.5 text-xs text-brand-900">
                 {form.price > 0 ? (
                   <p className="font-medium text-brand-900">
-                    <span className="font-semibold text-brand-700">Listed price:</span> GHC {listedPricePreview} per{" "}
+                    <span className="font-semibold text-brand-700">Post price:</span> GHC {listedPricePreview} per{" "}
                     {formatListingUnit(form.unit)}
                   </p>
                 ) : (
                   <p className="text-gray-500">
-                    Enter your price to see the listed price buyers will pay per {formatListingUnit(form.unit)}.
+                    Enter your price to see the post price per {formatListingUnit(form.unit)}.
                   </p>
                 )}
               </div>

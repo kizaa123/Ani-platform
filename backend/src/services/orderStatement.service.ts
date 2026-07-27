@@ -17,29 +17,17 @@ type OrderForStatement = NonNullable<Awaited<ReturnType<typeof loadOrderForState
 
 const PAGE_MARGIN = 45;
 const CONTENT_WIDTH = 505;
-const CONTENT_RIGHT = PAGE_MARGIN + CONTENT_WIDTH;
 
 const COLORS = {
   text: '#111827',
   muted: '#6B7280',
-  border: '#E5E7EB',
-  sectionBg: '#F9FAFB',
   accent: '#166534',
-  accentLight: '#DCFCE7',
-  totalBar: '#166534',
-  white: '#FFFFFF',
 };
 
 function getLogoPath(): string | null {
   const candidates = [
     path.join(__dirname, '..', '..', 'public', 'ani-logo.png'),
     path.join(process.cwd(), 'public', 'ani-logo.png'),
-    path.join(process.cwd(), 'ANI Logo.png'),
-    path.join(process.cwd(), '..', 'ANI Logo.png'),
-    path.join(process.cwd(), '..', 'frontend', 'public', 'login_cover.png'),
-    path.join(__dirname, '..', '..', '..', 'ANI Logo.png'),
-    path.join(__dirname, '..', '..', 'ANI Logo.png'),
-    path.join(__dirname, '..', 'ANI Logo.png'),
   ];
   for (const c of candidates) {
     if (fs.existsSync(c)) return c;
@@ -47,19 +35,21 @@ function getLogoPath(): string | null {
   return null;
 }
 
-function drawTextWatermark(doc: PDFKit.PDFDocument): void {
+function drawLogoWatermark(doc: PDFKit.PDFDocument, logoPath: string): void {
   const pageWidth = doc.page.width;
   const pageHeight = doc.page.height;
+  const logoSize = 300;
   const centerX = pageWidth / 2;
   const centerY = pageHeight / 2;
 
   doc.save();
-  doc.opacity(0.06);
-  doc.font('Helvetica-Bold').fontSize(72).fillColor('#166534');
-  doc.rotate(-35, { origin: [centerX, centerY] });
-  doc.text('ANI Platform', centerX - 220, centerY - 36, {
-    width: 440,
+  doc.opacity(0.07);
+  doc.image(logoPath, centerX - logoSize / 2, centerY - logoSize / 2, {
+    width: logoSize,
+    height: logoSize,
+    fit: [logoSize, logoSize],
     align: 'center',
+    valign: 'center',
   });
   doc.restore();
 }
@@ -190,11 +180,9 @@ function formatFarmerDisplayName(order: OrderForStatement): string {
 }
 
 function drawSectionTitle(doc: PDFKit.PDFDocument, title: string, y: number): number {
-  doc.font('Helvetica-Bold').fontSize(10).fillColor(COLORS.accent);
-  doc.text(title, PAGE_MARGIN, y);
-  const lineY = y + 14;
-  doc.moveTo(PAGE_MARGIN, lineY).lineTo(CONTENT_RIGHT, lineY).strokeColor(COLORS.border).lineWidth(0.75).stroke();
-  return lineY + 10;
+  doc.font('Helvetica-Bold').fontSize(10).fillColor(COLORS.text);
+  doc.text(title, PAGE_MARGIN, y, { underline: true });
+  return y + 18;
 }
 
 function drawKeyValue(
@@ -202,15 +190,23 @@ function drawKeyValue(
   label: string,
   value: string,
   y: number,
-  options?: { valueBold?: boolean; valueColor?: string }
+  options?: { valueBold?: boolean }
 ): number {
-  doc.font('Helvetica').fontSize(9).fillColor(COLORS.muted);
-  doc.text(`${label}:`, PAGE_MARGIN + 4, y, { continued: true, width: 130 });
-  doc.font(options?.valueBold ? 'Helvetica-Bold' : 'Helvetica')
-    .fontSize(9)
-    .fillColor(options?.valueColor ?? COLORS.text);
-  doc.text(` ${value}`, { width: CONTENT_WIDTH - 140 });
+  doc.font('Helvetica').fontSize(9).fillColor(COLORS.text);
+  doc.text(`${label}:`, PAGE_MARGIN, y, { continued: true, width: 130 });
+  doc.font(options?.valueBold ? 'Helvetica-Bold' : 'Helvetica').fontSize(9).fillColor(COLORS.text);
+  doc.text(` ${value}`, { width: CONTENT_WIDTH - 130 });
   return y + 16;
+}
+
+function drawFooter(doc: PDFKit.PDFDocument): void {
+  doc.font('Helvetica').fontSize(8).fillColor(COLORS.muted);
+  doc.text(
+    'This document is an official ANI Platform financial record. Funds are held in escrow until the buyer confirms delivery.',
+    PAGE_MARGIN,
+    doc.page.height - PAGE_MARGIN - 14,
+    { width: CONTENT_WIDTH, align: 'center' }
+  );
 }
 
 export function buildOrderStatementPdf(order: OrderForStatement): Promise<Buffer> {
@@ -222,36 +218,33 @@ export function buildOrderStatementPdf(order: OrderForStatement): Promise<Buffer
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
 
-    drawTextWatermark(doc);
-    doc.on('pageAdded', () => drawTextWatermark(doc));
-
     const logoPath = getLogoPath();
+    if (logoPath) {
+      drawLogoWatermark(doc, logoPath);
+      doc.on('pageAdded', () => drawLogoWatermark(doc, logoPath));
+    }
+
     const totalFormatted = `GHC ${order.totalAmount.toFixed(2)}`;
     const transactionRef = resolveTransactionRef(order);
 
-    // --- HEADER ---
-    let y = 38;
-    if (logoPath) {
-      doc.image(logoPath, PAGE_MARGIN, y, { width: 44 });
-    }
+    let y = 48;
 
-    const headerTextLeft = logoPath ? PAGE_MARGIN + 54 : PAGE_MARGIN;
-    doc.font('Helvetica-Bold').fontSize(14).fillColor(COLORS.text);
-    doc.text('ANI Platform', headerTextLeft, y);
-    doc.font('Helvetica').fontSize(9).fillColor(COLORS.muted);
-    doc.text('Official Financial Statement', headerTextLeft, y + 18);
+    doc.font('Helvetica-Bold').fontSize(16).fillColor(COLORS.accent);
+    doc.text('ANI Platform', PAGE_MARGIN, y, { width: CONTENT_WIDTH, align: 'center' });
+    y += 24;
 
-    y += 48;
-    doc.moveTo(PAGE_MARGIN, y).lineTo(CONTENT_RIGHT, y).strokeColor(COLORS.border).lineWidth(1).stroke();
-    y += 16;
+    doc.font('Helvetica').fontSize(11).fillColor(COLORS.text);
+    doc.text('Financial Statement / Order Receipt', PAGE_MARGIN, y, {
+      width: CONTENT_WIDTH,
+      align: 'center',
+    });
+    y += 32;
 
-    // --- ORDER METADATA ---
     y = drawKeyValue(doc, 'Order ID', order.id, y);
     y = drawKeyValue(doc, 'Date', formatDateTime(order.createdAt), y);
-    y = drawKeyValue(doc, 'Transaction', transactionRef, y, { valueBold: true });
-    y += 8;
+    y = drawKeyValue(doc, 'Transaction', transactionRef, y);
+    y += 10;
 
-    // --- ORDER DETAILS ---
     y = drawSectionTitle(doc, 'Order Details', y);
     y = drawKeyValue(doc, 'Product', order.listing.title, y);
     y = drawKeyValue(doc, 'Commodity', formatCommodityLabel(order), y);
@@ -259,39 +252,21 @@ export function buildOrderStatementPdf(order: OrderForStatement): Promise<Buffer
     y = drawKeyValue(doc, 'Unit price', `GHC ${order.unitPrice.toFixed(2)}`, y);
     y = drawKeyValue(doc, 'Total amount', totalFormatted, y, { valueBold: true });
     y = drawKeyValue(doc, 'Payment method', formatPaymentMethod(order.paymentMethod), y);
-    y += 8;
+    y += 10;
 
-    // --- PROMINENT TOTAL AMOUNT PAID ---
-    const totalBarHeight = 56;
-    doc.roundedRect(PAGE_MARGIN, y, CONTENT_WIDTH, totalBarHeight, 6).fill(COLORS.totalBar);
-    doc.font('Helvetica-Bold').fontSize(11).fillColor('#BBF7D0');
-    doc.text('TOTAL AMOUNT PAID', PAGE_MARGIN + 16, y + 10);
-    doc.font('Helvetica-Bold').fontSize(26).fillColor(COLORS.white);
-    doc.text(totalFormatted, PAGE_MARGIN + 16, y + 24, {
-      width: CONTENT_WIDTH - 32,
-      align: 'right',
-    });
-    y += totalBarHeight + 16;
-
-    // --- FROM (BUYER) ---
     y = drawSectionTitle(doc, 'From (Buyer)', y);
-    y = drawKeyValue(doc, 'Name', `${order.buyer.firstName} ${order.buyer.lastName}`, y, { valueBold: true });
+    y = drawKeyValue(doc, 'Name', `${order.buyer.firstName} ${order.buyer.lastName}`, y);
     y = drawKeyValue(doc, 'Location', formatLocation(order.buyer), y);
-    y += 8;
+    y += 10;
 
-    // --- TO (FARMER) ---
     y = drawSectionTitle(doc, 'To (Farmer)', y);
-    y = drawKeyValue(doc, 'Name', formatFarmerDisplayName(order), y, { valueBold: true });
+    y = drawKeyValue(doc, 'Name', formatFarmerDisplayName(order), y);
     y = drawKeyValue(doc, 'Location', formatLocation(order.farmer), y);
-    y += 8;
+    y += 10;
 
-    // --- PAYMENT & ESCROW ---
     y = drawSectionTitle(doc, 'Payment & Escrow', y);
-    y = drawKeyValue(doc, 'Order status', order.status, y, { valueBold: true });
-    y = drawKeyValue(doc, 'Escrow status', formatEscrowStatus(order.escrowStatus), y, {
-      valueBold: true,
-      valueColor: COLORS.accent,
-    });
+    y = drawKeyValue(doc, 'Order status', order.status, y);
+    y = drawKeyValue(doc, 'Escrow status', formatEscrowStatus(order.escrowStatus), y);
     y = drawKeyValue(
       doc,
       'Delivery confirmed',
@@ -304,17 +279,8 @@ export function buildOrderStatementPdf(order: OrderForStatement): Promise<Buffer
       order.paymentReleasedAt ? formatDateTime(order.paymentReleasedAt) : '—',
       y
     );
-    y += 16;
 
-    // --- FOOTER DISCLAIMER ---
-    doc.roundedRect(PAGE_MARGIN, y, CONTENT_WIDTH, 36, 4).fillAndStroke(COLORS.sectionBg, COLORS.border);
-    doc.font('Helvetica').fontSize(8).fillColor(COLORS.muted);
-    doc.text(
-      'This document is an official ANI Platform financial record. Funds are held in escrow until the buyer confirms delivery.',
-      PAGE_MARGIN + 12,
-      y + 10,
-      { width: CONTENT_WIDTH - 24, align: 'center' }
-    );
+    drawFooter(doc);
 
     doc.end();
   });

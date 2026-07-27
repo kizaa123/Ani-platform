@@ -153,6 +153,7 @@ function MainViewer({
   if (item?.type === "VIDEO") {
     return (
       <video
+        key={src}
         ref={videoRef}
         src={src}
         className="h-full w-full object-contain bg-black"
@@ -167,7 +168,7 @@ function MainViewer({
 
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt={alt} className="h-full w-full object-contain bg-white" />
+    <img key={src} src={src} alt={alt} className="h-full w-full object-contain bg-white" />
   );
 }
 
@@ -189,12 +190,14 @@ export function ProductMediaGallery({
   const dragStartX = useRef<number | null>(null);
   const isDragging = useRef(false);
 
+  // Reset slide only when switching products — not on every parent re-render
+  // (listing.media ?? [] creates a new [] reference each render and was resetting activeIndex)
   useEffect(() => {
     setItems(initialMedia);
     setActiveIndex(0);
     setFallbackLiked({});
     setShareOpen(false);
-  }, [initialMedia, listingId]);
+  }, [listingId]);
 
   useEffect(() => {
     setShareOpen(false);
@@ -215,12 +218,20 @@ export function ProductMediaGallery({
   );
 
   const goTo = (index: number) => {
-    const clamped = Math.max(0, Math.min(index, totalSlides - 1));
-    setActiveIndex(clamped);
+    setActiveIndex((prev) => {
+      const max = Math.max(totalSlides - 1, 0);
+      const target = Number.isFinite(index) ? index : prev;
+      return Math.max(0, Math.min(target, max));
+    });
   };
 
-  const goPrev = () => goTo(activeIndex - 1);
-  const goNext = () => goTo(activeIndex + 1);
+  const goPrev = () => {
+    setActiveIndex((prev) => Math.max(0, prev - 1));
+  };
+
+  const goNext = () => {
+    setActiveIndex((prev) => Math.min(Math.max(totalSlides - 1, 0), prev + 1));
+  };
 
   // ── Touch handlers ──────────────────────────────────────────────────
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -304,6 +315,7 @@ export function ProductMediaGallery({
     <>
       <div className="absolute inset-0">
         <MainViewer
+          key={activeItem?.id ?? activeFallback ?? `slide-${activeIndex}`}
           item={activeItem}
           fallbackSrc={activeFallback}
           alt={productTitle}
@@ -316,6 +328,7 @@ export function ProductMediaGallery({
           <>
             <button
               type="button"
+              onMouseDown={(e) => e.stopPropagation()}
               onClick={(e) => { e.stopPropagation(); goPrev(); }}
               disabled={activeIndex === 0}
               aria-label="Previous image"
@@ -325,6 +338,7 @@ export function ProductMediaGallery({
             </button>
             <button
               type="button"
+              onMouseDown={(e) => e.stopPropagation()}
               onClick={(e) => { e.stopPropagation(); goNext(); }}
               disabled={activeIndex === totalSlides - 1}
               aria-label="Next image"
@@ -411,10 +425,10 @@ export function ProductMediaGallery({
         {viewerShell}
       </div>
 
-      {/* ── Dot indicators — mobile only ── */}
+      {/* ── Dot indicators — manual slide picker ── */}
       {totalSlides > 1 && (
         <div
-          className="flex items-center justify-center gap-2 border-t border-gray-100 bg-white px-3 py-3 md:hidden"
+          className="flex items-center justify-center gap-2 border-t border-gray-100 bg-white px-3 py-3"
           role="tablist"
           aria-label="Product media"
         >
@@ -425,7 +439,11 @@ export function ProductMediaGallery({
               role="tab"
               aria-selected={i === activeIndex}
               aria-label={`View media ${i + 1} of ${totalSlides}`}
-              onClick={() => goTo(i)}
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                goTo(i);
+              }}
               className={`h-2.5 w-2.5 rounded-full transition ${
                 i === activeIndex
                   ? "scale-110 bg-brand-600"

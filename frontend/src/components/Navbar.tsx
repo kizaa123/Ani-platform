@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { isFarmer, isBuyer, isHandler, isStaff } from "@/lib/types";
-import { FarmerAvatar } from "@/components/FarmerAvatar";
+import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { RolePrefixedName, getRoleNamePrefix } from "@/components/RolePrefixedName";
 import { NotificationBell } from "@/components/NotificationBell";
 import { Logo } from "@/components/Logo";
@@ -176,11 +176,12 @@ export function Navbar() {
               href={profileHref}
               className="flex max-w-[12rem] items-center gap-3 rounded-xl border border-brand-100 bg-brand-50/40 px-3 py-1.5 transition hover:border-brand-200 hover:bg-brand-50 sm:max-w-[14rem]"
             >
-              <FarmerAvatar
+              <AvatarWithVerification
                 src={user.profilePicture}
                 name={user.firstName}
                 size="sm"
                 cacheBust={photoCacheBust}
+                verificationStatus={user.verificationStatus}
               />
               <div className="min-w-0 text-left leading-tight">
                 <RolePrefixedName
@@ -249,11 +250,12 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-3 border-b border-brand-100 px-4 py-4">
-          <FarmerAvatar
+          <AvatarWithVerification
             src={user.profilePicture}
             name={user.firstName}
             size="sm"
             cacheBust={photoCacheBust}
+            verificationStatus={user.verificationStatus}
           />
           <div className="min-w-0">
             <RolePrefixedName

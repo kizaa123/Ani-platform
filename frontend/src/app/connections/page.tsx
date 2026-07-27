@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { Connection, ConnectionUser, fullName, isBuyer, isFarmer, isStaff, isMarketplaceBuyer, ROLES } from "@/lib/types";
+import { Connection, ConnectionUser, fullName, isBuyer, isFarmer, isStaff, isMarketplaceBuyer, isResearcher, ROLES } from "@/lib/types";
 import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { CountryBadge } from "@/components/CountrySelect";
 import { VerificationBadge } from "@/components/VerificationBadge";
@@ -59,7 +59,8 @@ export default function ConnectionsPage() {
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
-    if (user) load();
+    if (user && isResearcher(user.roleId)) router.push("/dashboard");
+    if (user && !isResearcher(user.roleId)) load();
   }, [user?.id, loading, router]);
 
   const updateStatus = async (id: string, status: string) => {
