@@ -440,19 +440,26 @@ enum PublicationStatus {
   ARCHIVED
 }
 
+enum ResearchPublicationCategory {
+  CROP_FARM
+  LIVESTOCK_FARM
+  OTHER
+}
+
 model ResearchPublication {
-  id           String            @id @default(uuid())
-  researcherId String            @map("researcher_id")
+  id           String                      @id @default(uuid())
+  researcherId String                      @map("researcher_id")
   title        String
   description  String?
-  fileUrl      String            @map("file_url") @db.Text
-  coverImage   String?           @map("cover_image") @db.Text
+  fileUrl      String                      @map("file_url") @db.Text
+  coverImage   String?                     @map("cover_image") @db.Text
+  category     ResearchPublicationCategory @default(OTHER)
   price        Float?
-  isFree       Boolean           @default(true) @map("is_free")
-  viewCount    Int               @default(0) @map("view_count")
-  likesCount   Int               @default(0) @map("likes_count")
-  sharesCount  Int               @default(0) @map("shares_count")
-  status       PublicationStatus @default(ACTIVE)
+  isFree       Boolean                     @default(true) @map("is_free")
+  viewCount    Int                         @default(0) @map("view_count")
+  likesCount   Int                         @default(0) @map("likes_count")
+  sharesCount  Int                         @default(0) @map("shares_count")
+  status       PublicationStatus           @default(ACTIVE)
   createdAt    DateTime          @default(now()) @map("created_at")
   updatedAt    DateTime          @updatedAt @map("updated_at")
 

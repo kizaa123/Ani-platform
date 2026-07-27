@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { ResearchPublication, isResearcher } from "@/lib/types";
+import { ResearchPublication, ResearchPublicationCategory, isResearcher } from "@/lib/types";
+import { PUBLICATION_CATEGORY_OPTIONS } from "@/lib/publicationCategories";
 import { Icon } from "@/components/icons";
 import { FileUploadZone } from "@/components/FileUploadZone";
 import { PublicationCoverImage } from "@/components/PublicationCoverImage";
@@ -15,6 +16,7 @@ const emptyForm = {
   description: "",
   fileUrl: "",
   coverImage: "",
+  category: "CROP_FARM" as ResearchPublicationCategory,
   price: 0,
   isFree: true,
 };
@@ -89,6 +91,7 @@ export default function ResearcherPublicationsPage() {
       description: pub.description || "",
       fileUrl: pub.fileUrl || "",
       coverImage: pub.coverImage || "",
+      category: pub.category ?? "OTHER",
       price: pub.price ?? 0,
       isFree: pub.isFree,
     });
@@ -112,6 +115,10 @@ export default function ResearcherPublicationsPage() {
       setError("Title and document file are required");
       return;
     }
+    if (!form.category) {
+      setError("Publisher type is required");
+      return;
+    }
     if (!form.isFree && form.price <= 0) {
       setError("Paid publications need a price greater than 0");
       return;
@@ -124,6 +131,7 @@ export default function ResearcherPublicationsPage() {
         description: form.description || undefined,
         fileUrl: form.fileUrl,
         coverImage: form.coverImage || undefined,
+        category: form.category,
         isFree: form.isFree,
         price: form.isFree ? undefined : form.price,
       };
@@ -171,74 +179,117 @@ export default function ResearcherPublicationsPage() {
       </div>
 
       {showForm && (
-        <div className="mb-8 rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold text-brand-900">
-            {editingId ? "Edit publication" : "New publication"}
-          </h2>
+        <div className="mx-auto mb-8 max-w-lg rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
+          <div className="mb-5 border-b border-brand-50 pb-4">
+            <h2 className="text-lg font-semibold text-brand-900">
+              {editingId ? "Edit publication" : "New publication"}
+            </h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Add your research document, cover art, and a clear description for readers.
+            </p>
+          </div>
           {error && <p className="auth-error mb-4">{error}</p>}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2">
+
+          <div className="space-y-5">
+            <div>
               <label className="auth-label">Title</label>
               <input
                 className="auth-input"
+                placeholder="Publication title"
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
               />
             </div>
-            <div className="sm:col-span-2">
-              <label className="auth-label">Description</label>
-              <textarea
-                className="auth-input min-h-[80px]"
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-              />
-            </div>
-            <FileUploadZone
-              label="Document (PDF, EPUB, Word, text)"
-              accept=".pdf,.epub,.doc,.docx,.txt"
-              icon="file"
-              disabled={uploading}
-              uploading={uploadingDoc}
-              onFileSelect={handleDocSelect}
-              fileName={docFileName}
-              hint="PDF, EPUB, Word or plain text"
-            />
-            <FileUploadZone
-              label="Cover image (optional)"
-              accept="image/*"
-              icon="image"
-              disabled={uploading}
-              uploading={uploadingCover}
-              onFileSelect={handleCoverSelect}
-              previewUrl={coverPreviewUrl}
-              fileName={coverPreviewUrl && !localCoverPreview ? form.coverImage.split("/").pop() : undefined}
-              hint="Recommended 3:4 portrait ratio"
-            />
+
             <div>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={form.isFree}
-                  onChange={(e) => setForm({ ...form, isFree: e.target.checked })}
-                />
-                Free to read
-              </label>
+              <label className="auth-label">Publisher type</label>
+              <select
+                className="auth-input"
+                value={form.category}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    category: e.target.value as typeof form.category,
+                  })
+                }
+              >
+                {PUBLICATION_CATEGORY_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </div>
-            {!form.isFree && (
-              <div>
-                <label className="auth-label">Price (GHC)</label>
-                <input
-                  type="number"
-                  min={1}
-                  step={0.01}
-                  className="auth-input"
-                  value={form.price}
-                  onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value) || 0 })}
+
+            <div className="grid gap-5 md:grid-cols-[11rem_minmax(0,1fr)]">
+              <div className="space-y-4">
+                <FileUploadZone
+                  compact
+                  label="Document"
+                  accept=".pdf,.epub,.doc,.docx,.txt"
+                  icon="file"
+                  disabled={uploading}
+                  uploading={uploadingDoc}
+                  onFileSelect={handleDocSelect}
+                  fileName={docFileName}
+                  hint="PDF, EPUB, Word or text"
+                />
+                <FileUploadZone
+                  compact
+                  label="Cover (optional)"
+                  accept="image/*"
+                  icon="image"
+                  disabled={uploading}
+                  uploading={uploadingCover}
+                  onFileSelect={handleCoverSelect}
+                  previewUrl={coverPreviewUrl}
+                  fileName={
+                    coverPreviewUrl && !localCoverPreview
+                      ? form.coverImage.split("/").pop()
+                      : undefined
+                  }
+                  hint="16:9 or 4:3 works best"
+                />
+                <div className="rounded-xl border border-brand-100 bg-brand-50/40 p-3">
+                  <label className="flex items-center gap-2 text-sm font-medium text-brand-900">
+                    <input
+                      type="checkbox"
+                      checked={form.isFree}
+                      onChange={(e) => setForm({ ...form, isFree: e.target.checked })}
+                    />
+                    Free to read
+                  </label>
+                  {!form.isFree && (
+                    <div className="mt-3">
+                      <label className="auth-label">Price (GHC)</label>
+                      <input
+                        type="number"
+                        min={1}
+                        step={0.01}
+                        className="auth-input"
+                        value={form.price}
+                        onChange={(e) =>
+                          setForm({ ...form, price: parseFloat(e.target.value) || 0 })
+                        }
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex min-h-[14rem] flex-col md:min-h-0">
+                <label className="auth-label">Description</label>
+                <textarea
+                  className="auth-input min-h-[12rem] flex-1 resize-y md:min-h-[18rem]"
+                  placeholder="Describe what readers will learn, your qualifications, and key topics covered..."
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
                 />
               </div>
-            )}
+            </div>
           </div>
-          <div className="mt-6 flex gap-3">
+
+          <div className="mt-6 flex gap-3 border-t border-brand-50 pt-5">
             <button type="button" className="btn-primary" disabled={saving || uploading} onClick={save}>
               {saving ? "Saving..." : editingId ? "Update" : "Publish"}
             </button>

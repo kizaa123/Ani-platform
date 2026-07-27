@@ -11,6 +11,7 @@ export const publicationSchema = z.object({
   description: z.string().optional(),
   fileUrl: z.string().min(1),
   coverImage: z.string().optional(),
+  category: z.enum(['CROP_FARM', 'LIVESTOCK_FARM', 'OTHER']),
   price: z.coerce.number().min(0).optional(),
   isFree: z.boolean().optional(),
 });
@@ -48,6 +49,7 @@ function formatPublication(
     description: string | null;
     fileUrl: string;
     coverImage: string | null;
+    category: string;
     price: number | null;
     isFree: boolean;
     viewCount: number;
@@ -74,6 +76,7 @@ function formatPublication(
     description: pub.description,
     fileUrl: canAccess && options.includeFile !== false ? normalizePublicAssetUrl(pub.fileUrl) : null,
     coverImage: normalizePublicAssetUrl(pub.coverImage),
+    category: pub.category,
     price: pub.price,
     isFree: pub.isFree,
     viewCount: pub.viewCount,
@@ -178,6 +181,7 @@ export class ResearcherService {
         description: data.description,
         fileUrl: data.fileUrl,
         coverImage: data.coverImage,
+        category: data.category,
         price: isFree ? null : data.price,
         isFree,
       },
@@ -229,6 +233,7 @@ export class ResearcherService {
         description: data.description,
         fileUrl: data.fileUrl,
         coverImage: data.coverImage,
+        category: data.category,
         price: isFree ? null : (data.price ?? existing.price),
         isFree,
       },

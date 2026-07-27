@@ -9,7 +9,6 @@ import {
   ResearchPublication,
   canPurchasePublication,
   isResearcher,
-  isStudent,
 } from "@/lib/types";
 import {
   PUBLICATION_CATEGORY_LABELS,
@@ -192,7 +191,7 @@ function PublicationCard({
   };
 
   return (
-    <article className="flex w-full flex-col overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-md transition hover:border-brand-200 hover:shadow-lg">
+    <article className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-md transition hover:border-brand-200 hover:shadow-lg">
       <PublicationCoverImage coverImage={pub.coverImage} title={pub.title} className="rounded-none" />
 
       <div className="flex flex-1 flex-col p-5">
@@ -314,7 +313,6 @@ export default function LibraryPage() {
   const [modalLiking, setModalLiking] = useState(false);
   const [modalSharing, setModalSharing] = useState(false);
 
-  const studentView = user ? isStudent(user.roleId) : false;
   const groupedPublications = useMemo(
     () => groupPublicationsByCategory(publications),
     [publications]
@@ -430,13 +428,11 @@ export default function LibraryPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
+    <div className="mx-auto max-w-6xl px-4 py-8">
       <div className="mb-6">
         <h1 className="text-3xl font-extrabold text-brand-900">Research Library</h1>
         <p className="mt-1 text-sm text-gray-500">
-          {studentView
-            ? "Explore researcher publications by farming category"
-            : "Browse books and research publications from verified researchers"}
+          Browse books and research publications by farming category
         </p>
       </div>
 
@@ -465,7 +461,7 @@ export default function LibraryPage() {
         <div className="rounded-2xl border border-dashed border-brand-200 bg-white p-12 text-center text-gray-500">
           No publications found.
         </div>
-      ) : studentView ? (
+      ) : (
         <div className="space-y-8">
           {PUBLICATION_CATEGORY_ORDER.map((category) => {
             const items = groupedPublications[category];
@@ -473,44 +469,37 @@ export default function LibraryPage() {
             return (
               <section
                 key={category}
-                className="overflow-hidden rounded-2xl border border-brand-100 bg-white p-5 shadow-xs"
+                className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm"
               >
-                <div className="mb-4 border-b border-brand-50 pb-3">
-                  <h2 className="text-xl font-bold text-brand-900">
+                <div className="border-b border-brand-50 px-4 py-3 sm:px-5 sm:py-4">
+                  <h2 className="text-lg font-bold text-brand-900 sm:text-xl">
                     {PUBLICATION_CATEGORY_LABELS[category]}
                   </h2>
                   <p className="text-xs text-gray-500">
                     {items.length} publication{items.length === 1 ? "" : "s"}
                   </p>
                 </div>
-                <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2">
-                  {items.map((pub) => (
-                    <PublicationCard
-                      key={pub.id}
-                      pub={pub}
-                      viewCount={viewCounts[pub.id] ?? pub.viewCount}
-                      onView={handleView}
-                      onLike={handleLike}
-                      onShare={handleShare}
-                    />
-                  ))}
+                <div className="p-4 sm:p-5">
+                  <div className="-mx-1 flex gap-5 overflow-x-auto px-1 pb-1 snap-x snap-mandatory scrollbar-hide sm:gap-6">
+                    {items.map((pub) => (
+                      <div
+                        key={pub.id}
+                        className="w-80 shrink-0 snap-start sm:w-[22rem]"
+                      >
+                        <PublicationCard
+                          pub={pub}
+                          viewCount={viewCounts[pub.id] ?? pub.viewCount}
+                          onView={handleView}
+                          onLike={handleLike}
+                          onShare={handleShare}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </section>
             );
           })}
-        </div>
-      ) : (
-        <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2">
-          {publications.map((pub) => (
-            <PublicationCard
-              key={pub.id}
-              pub={pub}
-              viewCount={viewCounts[pub.id] ?? pub.viewCount}
-              onView={handleView}
-              onLike={handleLike}
-              onShare={handleShare}
-            />
-          ))}
         </div>
       )}
 

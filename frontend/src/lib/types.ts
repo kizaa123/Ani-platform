@@ -686,12 +686,15 @@ export function isResearcher(roleId: number) {
   return roleId === ROLES.RESEARCHER;
 }
 
+export type ResearchPublicationCategory = "CROP_FARM" | "LIVESTOCK_FARM" | "OTHER";
+
 export interface ResearchPublication {
   id: string;
   title: string;
   description?: string | null;
   fileUrl?: string | null;
   coverImage?: string | null;
+  category?: ResearchPublicationCategory;
   price?: number | null;
   isFree: boolean;
   viewCount: number;

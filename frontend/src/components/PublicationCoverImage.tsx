@@ -12,7 +12,7 @@ export function PublicationCoverImage({
   coverImage,
   title,
   className = "",
-  aspectClass = "aspect-[3/4]",
+  aspectClass = "aspect-video",
 }: PublicationCoverImageProps) {
   const src = coverImage ? assetUrl(coverImage) : null;
 

@@ -132,17 +132,23 @@ export default function HomePage() {
 
         <div className="relative z-10 mx-auto w-full max-w-6xl px-6 py-24">
           <div className="max-w-2xl">
-              {/* Clean badge pill */}
-            <div className="mb-6 inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 backdrop-blur-sm">
+            {/* Live badge */}
+            <div className="mb-5 inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 backdrop-blur-sm">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
               </span>
               <span className="text-sm font-medium tracking-wide text-white/90">
-                Ghana&apos;s Agricultural Exchange Platform
+                Ghana&apos;s #1 Agricultural Exchange Platform
               </span>
             </div>
 
+            {/* Platform name */}
+            <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-emerald-400">
+              Agricess Network International &mdash; ANI Platform
+            </p>
+
+            {/* Main headline */}
             <h1 className="mb-6 text-5xl font-black leading-tight tracking-tight text-white md:text-6xl lg:text-7xl">
               Where Farmers{" "}
               <span className="bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-300 bg-clip-text text-transparent">
@@ -150,6 +156,7 @@ export default function HomePage() {
               </span>
             </h1>
 
+            {/* Sub-copy */}
             <p className="mb-10 text-xl font-light leading-relaxed text-brand-100 md:text-2xl">
               Connect verified farmers with trusted buyers across Ghana. Secure commodity trading with full privacy protection until payment is complete.
             </p>

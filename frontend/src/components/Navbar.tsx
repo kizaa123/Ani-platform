@@ -8,7 +8,7 @@ import { isFarmer, isBuyer, isHandler, isStaff } from "@/lib/types";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { RolePrefixedName, getRoleNamePrefix } from "@/components/RolePrefixedName";
 import { NotificationBell } from "@/components/NotificationBell";
-import { Logo } from "@/components/Logo";
+import { Logo, LogoIcon } from "@/components/Logo";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard" },
@@ -102,9 +102,20 @@ export function Navbar() {
   if (loading || pathname === "/" || pathname === "/login" || pathname === "/register") {
     if (pathname === "/" || pathname === "/login" || pathname === "/register") {
       return (
-        <header className="sticky top-0 z-50 border-b border-brand-200 bg-white/90 backdrop-blur">
-          <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-            <Logo href="/" size="sm" />
+        <header className="sticky top-0 z-50 border-b border-brand-200 bg-white/95 shadow-sm backdrop-blur-md">
+          <div className="mx-auto flex h-24 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+            {/* Brand — logo + full name + motto */}
+            <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-85">
+              <LogoIcon className="h-14 w-auto flex-shrink-0" theme="dark" />
+              <div className="flex flex-col justify-center">
+                <span className="text-base font-extrabold leading-tight tracking-tight text-gray-900 sm:text-lg">
+                  Agricess Network International
+                </span>
+                <span className="mt-0.5 text-[11px] italic tracking-wide text-emerald-600">
+                  Together for all
+                </span>
+              </div>
+            </Link>
             <div className="flex gap-2 sm:gap-3">
               <Link
                 href="/login"

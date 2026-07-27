@@ -13,6 +13,7 @@ type FileUploadZoneProps = {
   fileName?: string;
   previewUrl?: string;
   hint?: string;
+  compact?: boolean;
 };
 
 export function FileUploadZone({
@@ -25,6 +26,7 @@ export function FileUploadZone({
   fileName,
   previewUrl,
   hint,
+  compact = false,
 }: FileUploadZoneProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const hasSelection = Boolean(fileName || previewUrl);
@@ -34,6 +36,10 @@ export function FileUploadZone({
     const file = e.target.files?.[0];
     if (file) onFileSelect(file);
   };
+
+  const zonePadding = compact ? "px-3 py-3" : "px-4 py-8";
+  const iconSize = compact ? "h-9 w-9" : "h-12 w-12";
+  const iconInner = compact ? "h-4 w-4" : "h-6 w-6";
 
   return (
     <div>
@@ -57,19 +63,38 @@ export function FileUploadZone({
         } ${disabled || uploading ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
       >
         {isImage && previewUrl ? (
-          <div className="relative aspect-[3/4] w-full">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={previewUrl} alt="Cover preview" className="h-full w-full object-cover" />
-            <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/50 to-transparent p-3 opacity-0 transition group-hover:opacity-100">
-              <span className="rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-brand-800">
-                {uploading ? "Uploading..." : "Replace cover"}
-              </span>
+          compact ? (
+            <div className={`flex items-center gap-3 ${zonePadding}`}>
+              <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-lg border border-brand-200 bg-brand-50">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={previewUrl} alt="Cover preview" className="h-full w-full object-cover" />
+              </div>
+              <div className="min-w-0 flex-1 text-left">
+                <p className="text-sm font-semibold text-brand-800">
+                  {uploading ? "Uploading..." : "Replace cover"}
+                </p>
+                {fileName && (
+                  <p className="mt-0.5 truncate text-xs text-brand-600">{fileName}</p>
+                )}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="relative aspect-[3/4] w-full">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={previewUrl} alt="Cover preview" className="h-full w-full object-cover" />
+              <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/50 to-transparent p-3 opacity-0 transition group-hover:opacity-100">
+                <span className="rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-brand-800">
+                  {uploading ? "Uploading..." : "Replace cover"}
+                </span>
+              </div>
+            </div>
+          )
         ) : (
-          <div className="flex flex-col items-center px-4 py-8 text-center">
-            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-100 text-brand-600 transition group-hover:bg-brand-200">
-              <Icon name={icon} className="h-6 w-6" />
+          <div className={`flex flex-col items-center text-center ${zonePadding}`}>
+            <div
+              className={`mb-2 flex ${iconSize} items-center justify-center rounded-xl bg-brand-100 text-brand-600 transition group-hover:bg-brand-200`}
+            >
+              <Icon name={icon} className={iconInner} />
             </div>
             {uploading ? (
               <p className="text-sm font-medium text-brand-700">Uploading...</p>
@@ -84,9 +109,7 @@ export function FileUploadZone({
               </>
             ) : (
               <>
-                <p className="text-sm font-semibold text-brand-800">
-                  Click to upload
-                </p>
+                <p className="text-sm font-semibold text-brand-800">Click to upload</p>
                 <p className="mt-1 text-xs text-gray-500">
                   {hint ?? (isImage ? "PNG, JPG or WebP" : "PDF, EPUB, Word or text")}
                 </p>

@@ -39,7 +39,7 @@ export function AvatarWithVerification({
 
   return (
     <div
-      className={`relative inline-flex shrink-0 overflow-visible ${isVerified ? "mb-2" : ""} ${className}`}
+      className={`relative inline-flex shrink-0 overflow-visible ${className}`}
       style={{ width: px, height: px }}
     >
       <ProfilePhoto
@@ -52,7 +52,7 @@ export function AvatarWithVerification({
       />
       {isVerified && (
         <span
-          className="absolute bottom-0 left-1/2 z-10 -translate-x-1/2 translate-y-1/2"
+          className="absolute -bottom-0.5 -right-0.5 z-10"
           title="Verified User"
         >
           <VerifiedBadgeIcon className={`${badgeSize(px)} drop-shadow-sm`} />
