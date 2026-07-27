@@ -121,7 +121,7 @@ export default function HomePage() {
       <section className="relative flex min-h-[92vh] items-center overflow-hidden bg-brand-900">
         <div className="absolute inset-0 z-0">
           <Image
-            src="/login_cover.png"
+            src="/ani background color.jpg"
             alt="Agricultural field background"
             fill
             className="object-cover object-center"

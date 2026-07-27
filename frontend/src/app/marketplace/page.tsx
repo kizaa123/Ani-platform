@@ -21,7 +21,24 @@ import { CardGridSkeleton, PageContentSkeleton } from "@/components/LoadingPrimi
 function filterFarmers(farmers: FarmerBrowseCard[], query: string): FarmerBrowseCard[] {
   const term = query.trim().toLowerCase();
   if (!term) return farmers;
-  return farmers.filter((f) => (f.searchTerms ?? "").includes(term));
+  return farmers.filter((f) => (f.searchTerms ?? "").toLowerCase().includes(term));
+}
+
+function AccessMoreFarmsCTA() {
+  return (
+    <div className="rounded-2xl border border-brand-200 bg-gradient-to-br from-brand-50/80 via-white to-brand-50/40 p-6 text-center sm:p-8">
+      <p className="mb-4 text-sm text-gray-600">
+        Discover registered farmers and pay for one-time access to browse their products.
+      </p>
+      <Link
+        href="/access"
+        className="btn-gold inline-flex items-center justify-center gap-2 px-6 py-2.5"
+      >
+        <Icon name="lock" className="h-4 w-4 shrink-0" />
+        Access more farms
+      </Link>
+    </div>
+  );
 }
 
 function filterListings(listings: Listing[], query: string): Listing[] {
@@ -80,10 +97,16 @@ export default function MarketplacePage() {
     if (user) loadBrowse();
   }, [user?.id, loading, router, loadBrowse]);
 
-  const filteredFarmers = useMemo(
-    () => filterFarmers(browse?.farmers ?? [], search),
+  const accessibleFarmers = useMemo(
+    () =>
+      filterFarmers(
+        (browse?.farmers ?? []).filter((f) => f.canViewProducts),
+        search
+      ),
     [browse?.farmers, search]
   );
+
+  const showAccessCta = !!user && isMarketplaceBuyer(user.roleId);
 
   const filteredMyListings = useMemo(
     () => filterListings(myListings, search),
@@ -211,7 +234,7 @@ export default function MarketplacePage() {
         <div>
           <h1 className="text-3xl font-bold text-brand-900">Marketplace</h1>
           <p className="text-gray-500">
-            Browse registered farmers and purchase from farms you have access to
+            Purchase from farms you have paid access to
           </p>
         </div>
       </div>
@@ -236,7 +259,7 @@ export default function MarketplacePage() {
         </div>
         {search.trim() && (
           <p className="mt-2 text-sm text-gray-500">
-            {filteredFarmers.length} farmer{filteredFarmers.length !== 1 ? "s" : ""} found
+            {accessibleFarmers.length} farmer{accessibleFarmers.length !== 1 ? "s" : ""} found
           </p>
         )}
       </div>
@@ -253,22 +276,27 @@ export default function MarketplacePage() {
 
       {browseLoading ? (
         <CardGridSkeleton />
-      ) : filteredFarmers.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-brand-200 p-12 text-center text-gray-500">
-          {search.trim() ? "No farmers match your search." : "No farmers registered yet."}
+      ) : accessibleFarmers.length === 0 ? (
+        <div className="space-y-6">
+          <div className="rounded-2xl border border-dashed border-brand-200 p-12 text-center text-gray-500">
+            {search.trim()
+              ? "No accessible farms match your search."
+              : showAccessCta
+                ? "You don't have access to any farms yet."
+                : "No farmers registered yet."}
+          </div>
+          {showAccessCta && <AccessMoreFarmsCTA />}
         </div>
       ) : (
         <div className="space-y-6 md:space-y-7">
-          {filteredFarmers.map((farmer) => (
+          {accessibleFarmers.map((farmer) => (
             <MarketplaceFarmerSection
               key={farmer.farmerId}
               farmer={farmer}
-              farmAccessPriceLabel={browse?.farmAccessPriceLabel}
-              showAccessPanel={!!user && isMarketplaceBuyer(user.roleId)}
-              userRoleId={user!.roleId}
               onProductClick={(product) => openPurchase(farmer, product)}
             />
           ))}
+          {showAccessCta && <AccessMoreFarmsCTA />}
         </div>
       )}
 

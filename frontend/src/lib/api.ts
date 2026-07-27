@@ -94,7 +94,7 @@ class ApiClient {
     return json.data as T;
   }
 
-  private async downloadRequest(path: string): Promise<void> {
+  private async openPdfRequest(path: string): Promise<void> {
     const headers: Record<string, string> = {};
     if (this.accessToken) headers.Authorization = `Bearer ${this.accessToken}`;
 
@@ -123,21 +123,21 @@ class ApiClient {
       const contentType = res.headers.get("content-type") || "";
       if (contentType.includes("application/json")) {
         const json = await res.json();
-        throw new Error(json.error || "Download failed");
+        throw new Error(json.error || "Could not open PDF");
       }
-      throw new Error(`Download failed (${res.status})`);
+      throw new Error(`Could not open PDF (${res.status})`);
     }
 
     const blob = await res.blob();
-    const disposition = res.headers.get("content-disposition") || "";
-    const match = disposition.match(/filename="([^"]+)"/);
-    const filename = match?.[1] || "download.pdf";
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = filename;
-    anchor.click();
-    URL.revokeObjectURL(url);
+    const pdfBlob =
+      blob.type === "application/pdf" ? blob : new Blob([blob], { type: "application/pdf" });
+    const url = URL.createObjectURL(pdfBlob);
+    const tab = window.open(url, "_blank", "noopener,noreferrer");
+    if (!tab) {
+      URL.revokeObjectURL(url);
+      throw new Error("Could not open PDF. Please allow pop-ups for this site.");
+    }
+    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
   }
 
   private async uploadRequest<T>(path: string, formData: FormData): Promise<T> {
@@ -258,7 +258,7 @@ class ApiClient {
   orders = {
     get: (id: string) =>
       this.request<import("./types").OrderDetail>(`/orders/${id}`),
-    statement: (id: string) => this.downloadRequest(`/orders/${id}/statement`),
+    statement: (id: string) => this.openPdfRequest(`/orders/${id}/statement`),
     release: (id: string, otp: string) =>
       this.request<import("./types").OrderReleaseResult>(`/orders/${id}/release`, {
         method: "POST",

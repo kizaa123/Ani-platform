@@ -42,17 +42,17 @@ export default function AdminFinancialsPage() {
   const router = useRouter();
   const [statement, setStatement] = useState<PlatformFinancialStatement | null>(null);
   const [error, setError] = useState("");
-  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [openingId, setOpeningId] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<FinancialFilter>("ALL");
 
-  const downloadOrderStatement = async (orderId: string) => {
-    setDownloadingId(orderId);
+  const openOrderStatement = async (orderId: string) => {
+    setOpeningId(orderId);
     try {
       await api.orders.statement(orderId);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not download statement");
+      setError(e instanceof Error ? e.message : "Could not open statement");
     } finally {
-      setDownloadingId(null);
+      setOpeningId(null);
     }
   };
 
@@ -217,11 +217,11 @@ export default function AdminFinancialsPage() {
                         item.escrowStatus === "RELEASED" || Boolean("otpVerifiedAt" in item && item.otpVerifiedAt) ? (
                           <button
                             type="button"
-                            onClick={() => downloadOrderStatement(item.id)}
-                            disabled={downloadingId === item.id}
+                            onClick={() => openOrderStatement(item.id)}
+                            disabled={openingId === item.id}
                             className="text-[10px] font-semibold text-brand-700 hover:underline disabled:opacity-50"
                           >
-                            {downloadingId === item.id ? "…" : "PDF"}
+                            {openingId === item.id ? "…" : "View PDF"}
                           </button>
                         ) : (
                           <span

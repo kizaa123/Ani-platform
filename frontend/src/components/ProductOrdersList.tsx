@@ -63,7 +63,7 @@ function OrderEscrowPanel({
 }) {
   const [otp, setOtp] = useState("");
   const [releasing, setReleasing] = useState(false);
-  const [downloading, setDownloading] = useState(false);
+  const [opening, setOpening] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -71,16 +71,16 @@ function OrderEscrowPanel({
   const escrowStatus = order.escrowStatus ?? "HELD";
   const canRelease = perspective === "buyer" && order.canRelease && escrowStatus === "HELD";
 
-  const downloadStatement = async () => {
+  const openStatement = async () => {
     if (!statementId) return;
-    setDownloading(true);
+    setOpening(true);
     setError("");
     try {
       await api.orders.statement(statementId);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not download statement");
+      setError(e instanceof Error ? e.message : "Could not open statement");
     } finally {
-      setDownloading(false);
+      setOpening(false);
     }
   };
 
@@ -166,12 +166,12 @@ function OrderEscrowPanel({
         (escrowStatus === "RELEASED" || Boolean(order.otpVerifiedAt)) ? (
           <button
             type="button"
-            onClick={downloadStatement}
-            disabled={downloading}
+            onClick={openStatement}
+            disabled={opening}
             className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-brand-200 bg-white px-3 py-2 text-sm font-semibold text-brand-800 hover:bg-brand-50 disabled:opacity-50 shadow-sm"
           >
             <Icon name="download" className="h-4 w-4 text-brand-600" />
-            {downloading ? "Preparing PDF…" : "Download financial statement (PDF)"}
+            {opening ? "Opening PDF…" : "View financial statement (PDF)"}
           </button>
         ) : (
           <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50/70 p-3 text-center">
@@ -180,7 +180,7 @@ function OrderEscrowPanel({
               <span>Financial statement (PDF) locked</span>
             </div>
             <p className="mt-1 text-[11px] text-amber-700">
-              PDF download will be enabled once delivery is confirmed via OTP code.
+              PDF will be available once delivery is confirmed via OTP code.
             </p>
           </div>
         )
