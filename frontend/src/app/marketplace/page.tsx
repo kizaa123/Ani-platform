@@ -11,10 +11,9 @@ import {
   MarketplaceBrowse,
   isMarketplaceBuyer,
   isFarmer,
-  isResearcher,
 } from "@/lib/types";
-import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { FarmerProductCard } from "@/components/FarmerProductCard";
+import { MarketplaceFarmerSection } from "@/components/MarketplaceFarmerSection";
 import { PurchaseModal } from "@/components/PurchaseModal";
 import { Icon } from "@/components/icons";
 import { CardGridSkeleton, PageContentSkeleton } from "@/components/LoadingPrimitives";
@@ -259,85 +258,16 @@ export default function MarketplacePage() {
           {search.trim() ? "No farmers match your search." : "No farmers registered yet."}
         </div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-6 md:space-y-7">
           {filteredFarmers.map((farmer) => (
-            <section
+            <MarketplaceFarmerSection
               key={farmer.farmerId}
-              className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm"
-            >
-              <div className="border-b border-brand-50 px-4 py-3 sm:px-5 sm:py-4">
-                <div className="flex flex-row items-center gap-3 sm:items-start sm:gap-4">
-                  <AvatarWithVerification
-                    src={farmer.profilePicture}
-                    name={farmer.farmerName}
-                    size="md"
-                    verificationStatus={farmer.verificationStatus}
-                  />
-                  <h3 className="min-w-0 flex-1 text-left font-bold text-brand-900 sm:pt-3">
-                    {farmer.farmerName}
-                  </h3>
-                </div>
-              </div>
-
-              {farmer.canViewProducts ? (
-                farmer.products.length > 0 ? (
-                  <div className="p-4 sm:p-5">
-                    <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      Products ({farmer.products.length})
-                    </p>
-                    <div className="-mx-1 flex gap-5 overflow-x-auto px-1 pb-1 snap-x snap-mandatory scrollbar-hide sm:gap-6">
-                      {farmer.products.map((product) => (
-                        <div
-                          key={product.id}
-                          className="w-72 shrink-0 snap-start sm:w-80"
-                        >
-                          <FarmerProductCard
-                            product={product}
-                            onClick={() => openPurchase(farmer, product)}
-                            imageClassName="h-44 w-full object-cover sm:h-52 md:h-56"
-                            contentClassName="p-4"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="p-6 text-center text-sm text-gray-500">
-                    No products listed yet from this farm.
-                  </div>
-                )
-              ) : user && isMarketplaceBuyer(user.roleId) ? (
-                <div className="border-t border-brand-50 px-4 py-4 sm:px-5">
-                  {farmer.hasFarmAccess && farmer.connectionStatus === "PENDING" ? (
-                    <div className="rounded-xl bg-amber-50 px-4 py-3 text-center">
-                      <p className="text-sm font-semibold text-amber-900">
-                        Payment received — waiting for ANI admin approval
-                      </p>
-                      <Link
-                        href={isResearcher(user.roleId) ? "/access" : "/connections"}
-                        className="btn-outline mt-3 inline-block w-full max-w-xs py-2.5"
-                      >
-                        {isResearcher(user.roleId) ? "View farm access status" : "View connection status"}
-                      </Link>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center gap-3 rounded-xl bg-brand-50 px-4 py-4 text-center sm:flex-row sm:justify-between sm:text-left">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                          Farm access required
-                        </p>
-                        <p className="mt-0.5 text-lg font-bold text-brand-900">
-                          {farmer.farmAccessPriceLabel ?? browse?.farmAccessPriceLabel ?? "—"}
-                        </p>
-                      </div>
-                      <Link href="/access" className="btn-gold shrink-0 px-6 py-2.5">
-                        Pay to Access Farm
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              ) : null}
-            </section>
+              farmer={farmer}
+              farmAccessPriceLabel={browse?.farmAccessPriceLabel}
+              showAccessPanel={!!user && isMarketplaceBuyer(user.roleId)}
+              userRoleId={user!.roleId}
+              onProductClick={(product) => openPurchase(farmer, product)}
+            />
           ))}
         </div>
       )}

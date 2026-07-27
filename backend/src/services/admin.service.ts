@@ -91,7 +91,7 @@ const verifiableUserInclude = {
 
 export class AdminService {
   async getFinancialStatement() {
-    const [productOrders, farmAccess, researchPurchases, accessPayments] = await Promise.all([
+    const [productOrders, farmAccess, researchPurchases] = await Promise.all([
       prisma.productOrder.findMany({
         where: { status: 'PAID' },
         include: {
@@ -121,14 +121,6 @@ export class AdminService {
           student: { select: { firstName: true, lastName: true } },
           researcher: { select: { firstName: true, lastName: true } },
           publication: { select: { title: true } },
-        },
-        orderBy: { createdAt: 'desc' },
-      }),
-      prisma.payment.findMany({
-        where: { status: 'COMPLETED' },
-        include: {
-          user: { select: { firstName: true, lastName: true } },
-          package: { select: { name: true } },
         },
         orderBy: { createdAt: 'desc' },
       }),
@@ -172,43 +164,27 @@ export class AdminService {
       transactionId: purchase.transactionId,
     }));
 
-    const accessPackageLineItems = accessPayments.map((payment) => ({
-      id: payment.id,
-      date: payment.createdAt.toISOString(),
-      type: 'ACCESS_PACKAGE' as const,
-      description: payment.package.name,
-      partyName: `${payment.user.firstName} ${payment.user.lastName}`,
-      amount: payment.amount,
-      paymentMethod: payment.paymentMethod,
-      status: payment.status,
-      transactionId: payment.transactionId,
-    }));
-
     const lineItems = [
       ...productLineItems,
       ...farmAccessLineItems,
       ...researchLineItems,
-      ...accessPackageLineItems,
     ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     const productOrderRevenue = productLineItems.reduce((sum, item) => sum + item.amount, 0);
     const farmAccessRevenue = farmAccessLineItems.reduce((sum, item) => sum + item.amount, 0);
     const researchRevenue = researchLineItems.reduce((sum, item) => sum + item.amount, 0);
-    const accessPackageRevenue = accessPackageLineItems.reduce((sum, item) => sum + item.amount, 0);
 
     return {
       generatedAt: new Date().toISOString(),
       summary: {
-        totalRevenue: productOrderRevenue + farmAccessRevenue + researchRevenue + accessPackageRevenue,
+        totalRevenue: productOrderRevenue + farmAccessRevenue + researchRevenue,
         productOrderRevenue,
         farmAccessRevenue,
         researchRevenue,
-        accessPackageRevenue,
         transactionCount: lineItems.length,
         productOrderCount: productLineItems.length,
         farmAccessCount: farmAccessLineItems.length,
         researchSaleCount: researchLineItems.length,
-        accessPackageCount: accessPackageLineItems.length,
       },
       lineItems,
     };
@@ -225,7 +201,10 @@ export class AdminService {
       activeConnections,
       pendingVerifications,
       pendingConnections,
-      financials,
+      productRevenue,
+      farmAccessRevenue,
+      researchRevenue,
+      accessPaymentRevenue,
     ] = await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { roleId: { in: [...FARMER_ROLES] } } }),
@@ -241,8 +220,29 @@ export class AdminService {
         },
       }),
       prisma.connectionRequest.count({ where: { status: 'PENDING' } }),
-      this.getFinancialStatement(),
+      prisma.productOrder.aggregate({
+        where: { status: 'PAID' },
+        _sum: { totalAmount: true },
+      }),
+      prisma.buyerFarmerAccess.aggregate({
+        where: { status: 'COMPLETED' },
+        _sum: { amount: true },
+      }),
+      prisma.researchPurchase.aggregate({
+        where: { status: 'COMPLETED' },
+        _sum: { amount: true },
+      }),
+      prisma.payment.aggregate({
+        where: { status: 'COMPLETED' },
+        _sum: { amount: true },
+      }),
     ]);
+
+    const totalRevenue =
+      (productRevenue._sum.totalAmount ?? 0) +
+      (farmAccessRevenue._sum.amount ?? 0) +
+      (researchRevenue._sum.amount ?? 0) +
+      (accessPaymentRevenue._sum.amount ?? 0);
 
     return {
       users,
@@ -251,7 +251,7 @@ export class AdminService {
       buyerHandlers,
       farmerHandlers,
       listings,
-      totalRevenue: financials.summary.totalRevenue,
+      totalRevenue,
       activeConnections,
       pendingVerifications,
       pendingConnections,
@@ -306,7 +306,7 @@ export class AdminService {
         _count: { id: true },
       }),
       prisma.user.findMany({
-        take: 6,
+        take: 10,
         orderBy: { createdAt: 'desc' },
         select: {
           id: true,
@@ -317,7 +317,7 @@ export class AdminService {
         },
       }),
       prisma.productOrder.findMany({
-        take: 6,
+        take: 10,
         orderBy: { createdAt: 'desc' },
         select: {
           id: true,
@@ -328,7 +328,7 @@ export class AdminService {
         },
       }),
       prisma.connectionRequest.findMany({
-        take: 6,
+        take: 10,
         orderBy: { createdAt: 'desc' },
         select: {
           id: true,
@@ -408,7 +408,7 @@ export class AdminService {
       })),
     ]
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, 8);
+      .slice(0, 10);
 
     return {
       generatedAt: new Date().toISOString(),

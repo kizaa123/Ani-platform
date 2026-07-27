@@ -22,10 +22,43 @@ import { VerificationBadge } from "@/components/VerificationBadge";
 import { AdminStatCard } from "@/components/admin/AdminStatCard";
 import { AdminDashboardChartsPanel } from "@/components/admin/AdminDashboardCharts";
 import { formatDate, formatGhc } from "@/lib/format";
+import { Skeleton, PageContentSkeleton } from "@/components/LoadingPrimitives";
 
 type RoleFilter = "all" | "farmers" | "buyers" | "handlers";
 type StatusFilter = "all" | "PENDING" | "VERIFIED" | "REJECTED";
 type AdminTab = "verification" | "connections";
+
+function AdminDashboardSkeleton() {
+  return (
+    <>
+      <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="card-elevated rounded-2xl p-5 sm:p-6">
+            <Skeleton className="h-11 w-11 rounded-xl" />
+            <Skeleton className="mt-4 h-8 w-16" />
+            <Skeleton className="mt-2 h-4 w-28" />
+          </div>
+        ))}
+      </div>
+      <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="card-elevated rounded-2xl p-4 sm:p-5">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="mt-3 h-7 w-20" />
+          </div>
+        ))}
+      </div>
+      <div className="mb-10 grid gap-4 lg:grid-cols-2">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="card-elevated rounded-2xl p-5 sm:p-6">
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="mt-4 h-40 w-full rounded-xl" />
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
 
 function matchesRoleFilter(user: AdminVerificationUser, roleFilter: RoleFilter) {
   if (roleFilter === "all") return true;
@@ -55,6 +88,8 @@ export default function AdminPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("PENDING");
   const [activeTab, setActiveTab] = useState<AdminTab>("verification");
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
+  const [dashboardLoading, setDashboardLoading] = useState(true);
+  const [dashboardError, setDashboardError] = useState<string | null>(null);
 
   const loadConnections = useCallback(() => {
     api.connections
@@ -72,8 +107,20 @@ export default function AdminPage() {
   }, [statusFilter]);
 
   const loadDashboard = useCallback(() => {
-    api.admin.stats().then(setStats).catch(console.error);
-    api.admin.dashboardCharts().then(setCharts).catch(console.error);
+    setDashboardLoading(true);
+    setDashboardError(null);
+    Promise.all([api.admin.stats(), api.admin.dashboardCharts()])
+      .then(([statsData, chartsData]) => {
+        setStats(statsData);
+        setCharts(chartsData);
+      })
+      .catch((err) => {
+        console.error(err);
+        setDashboardError(
+          err instanceof Error ? err.message : "Could not load dashboard analytics."
+        );
+      })
+      .finally(() => setDashboardLoading(false));
   }, []);
 
   useEffect(() => {
@@ -107,7 +154,7 @@ export default function AdminPage() {
   const filteredUsers = users.filter((u) => matchesRoleFilter(u, roleFilter));
   const pendingCount = users.filter((u) => u.verificationStatus === "PENDING").length;
 
-  if (loading || !user) return <div className="p-12 text-center">Loading...</div>;
+  if (loading || !user) return <PageContentSkeleton maxWidth="max-w-7xl" />;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:py-10">
@@ -130,6 +177,21 @@ export default function AdminPage() {
           </Link>
         </div>
       </div>
+
+      {dashboardError && (
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <span>{dashboardError}</span>
+          <button
+            type="button"
+            onClick={loadDashboard}
+            className="rounded-lg bg-red-700 px-3 py-1.5 text-xs font-semibold text-white"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {dashboardLoading && !stats && <AdminDashboardSkeleton />}
 
       {stats && (
         <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">

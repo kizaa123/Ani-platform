@@ -52,7 +52,7 @@ export default function DashboardPage() {
     { href: "/connections", title: "Connections", desc: "Manage buyer-farmer requests", icon: "handshake", show: !isResearcher(user.roleId) },
     { href: "/agents", title: isBuyerHandler(user.roleId) ? "My Buyers" : "My Clients", desc: isBuyerHandler(user.roleId) ? "View orders, spending & connections" : "View assigned farmers/buyers", icon: "users", show: isHandler(user.roleId) },
     { href: "/agents/financials", title: "Financial Statement", desc: isBuyerHandler(user.roleId) ? "Client spending across your buyers" : "Client sales revenue across your farmers", icon: "chart", show: isHandler(user.roleId) },
-    { href: "/admin", title: "Admin Panel", desc: "Verification & payments", icon: "shield", show: isStaff(user.roleId) },
+    { href: "/admin", title: "Admin Panel", desc: "Analytics, verification & access", icon: "shield", show: isStaff(user.roleId) },
     { href: "/admin/financials", title: "Financial Statement", desc: "Platform-wide revenue & transactions", icon: "chart", show: isStaff(user.roleId) },
     { href: "/farm/settings", title: "Profile", desc: "Profile, handler, farm & commodities", icon: "user", show: isFarmer(user.roleId) },
     { href: "/settings", title: "Profile", desc: "Profile, location & handler", icon: "user", show: isBuyer(user.roleId) },

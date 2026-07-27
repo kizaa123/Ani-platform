@@ -8,18 +8,32 @@ import { api } from "@/lib/api";
 import { PlatformFinancialStatement, isStaff } from "@/lib/types";
 import { formatDate, formatGhc, orderStatusStyle } from "@/lib/format";
 
-function typeLabel(type: PlatformFinancialStatement["lineItems"][number]["type"]) {
+type LineItemType = PlatformFinancialStatement["lineItems"][number]["type"];
+type FinancialFilter = LineItemType | "ALL";
+
+function typeLabel(type: LineItemType) {
   switch (type) {
     case "PRODUCT_ORDER":
       return "Product order";
     case "FARM_ACCESS":
-      return "Farm access";
+      return "Farm access payment";
     case "RESEARCH_SALE":
       return "Research sale";
-    case "ACCESS_PACKAGE":
-      return "Access package";
     default:
       return type;
+  }
+}
+
+function filterLabel(filter: FinancialFilter) {
+  switch (filter) {
+    case "PRODUCT_ORDER":
+      return "Product orders";
+    case "FARM_ACCESS":
+      return "Farm access payments";
+    case "RESEARCH_SALE":
+      return "Research sales";
+    default:
+      return "All payments";
   }
 }
 
@@ -29,6 +43,7 @@ export default function AdminFinancialsPage() {
   const [statement, setStatement] = useState<PlatformFinancialStatement | null>(null);
   const [error, setError] = useState("");
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<FinancialFilter>("ALL");
 
   const downloadOrderStatement = async (orderId: string) => {
     setDownloadingId(orderId);
@@ -39,6 +54,10 @@ export default function AdminFinancialsPage() {
     } finally {
       setDownloadingId(null);
     }
+  };
+
+  const toggleFilter = (filter: FinancialFilter) => {
+    setActiveFilter((current) => (current === filter ? "ALL" : filter));
   };
 
   useEffect(() => {
@@ -72,6 +91,11 @@ export default function AdminFinancialsPage() {
   }
 
   const { summary } = statement;
+  const filteredLineItems =
+    activeFilter === "ALL"
+      ? statement.lineItems
+      : statement.lineItems.filter((item) => item.type === activeFilter);
+  const filteredTotal = filteredLineItems.reduce((sum, item) => sum + item.amount, 0);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -102,44 +126,53 @@ export default function AdminFinancialsPage() {
         </div>
       </div>
 
-      <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryCard
           label="Product orders"
           value={formatGhc(summary.productOrderRevenue)}
           sub={`${summary.productOrderCount} sale(s)`}
           accent="green"
+          active={activeFilter === "PRODUCT_ORDER"}
+          onClick={() => toggleFilter("PRODUCT_ORDER")}
         />
         <SummaryCard
-          label="Farm access"
+          label="Farm access payments"
           value={formatGhc(summary.farmAccessRevenue)}
           sub={`${summary.farmAccessCount} payment(s)`}
+          active={activeFilter === "FARM_ACCESS"}
+          onClick={() => toggleFilter("FARM_ACCESS")}
         />
         <SummaryCard
           label="Research sales"
           value={formatGhc(summary.researchRevenue)}
           sub={`${summary.researchSaleCount} sale(s)`}
-        />
-        <SummaryCard
-          label="Access packages"
-          value={formatGhc(summary.accessPackageRevenue)}
-          sub={`${summary.accessPackageCount} payment(s)`}
+          active={activeFilter === "RESEARCH_SALE"}
+          onClick={() => toggleFilter("RESEARCH_SALE")}
         />
         <SummaryCard
           label="Total earned"
           value={formatGhc(summary.totalRevenue)}
           sub="All payment types"
+          active={activeFilter === "ALL"}
+          onClick={() => toggleFilter("ALL")}
         />
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
         <div className="border-b border-brand-100 bg-brand-50/40 px-5 py-3">
-          <h3 className="text-sm font-semibold text-brand-900">All payments</h3>
-          <p className="text-xs text-gray-500">Completed payments in date order</p>
+          <h3 className="text-sm font-semibold text-brand-900">{filterLabel(activeFilter)}</h3>
+          <p className="text-xs text-gray-500">
+            {activeFilter === "ALL"
+              ? "Completed payments in date order — click a summary card to filter"
+              : `${filteredLineItems.length} matching payment(s) — click the card again to show all`}
+          </p>
         </div>
 
-        {statement.lineItems.length === 0 ? (
+        {filteredLineItems.length === 0 ? (
           <div className="px-5 py-10 text-center text-xs text-gray-500">
-            No completed payments yet.
+            {activeFilter === "ALL"
+              ? "No completed payments yet."
+              : `No ${filterLabel(activeFilter).toLowerCase()} yet.`}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -156,8 +189,13 @@ export default function AdminFinancialsPage() {
                 </tr>
               </thead>
               <tbody>
-                {statement.lineItems.map((item) => (
-                  <tr key={item.id} className="border-b border-brand-50 hover:bg-brand-50/30">
+                {filteredLineItems.map((item) => (
+                  <tr
+                    key={item.id}
+                    className={`border-b border-brand-50 hover:bg-brand-50/30 ${
+                      activeFilter !== "ALL" ? "bg-brand-50/20" : ""
+                    }`}
+                  >
                     <td className="px-5 py-2.5 whitespace-nowrap text-gray-600">
                       {formatDate(item.date)}
                     </td>
@@ -203,9 +241,11 @@ export default function AdminFinancialsPage() {
               <tfoot>
                 <tr className="bg-brand-50 font-semibold text-brand-900">
                   <td colSpan={4} className="px-5 py-3 text-right text-xs">
-                    Total platform earnings
+                    {activeFilter === "ALL" ? "Total platform earnings" : `${filterLabel(activeFilter)} total`}
                   </td>
-                  <td className="px-4 py-3 text-right text-xs">{formatGhc(summary.totalRevenue)}</td>
+                  <td className="px-4 py-3 text-right text-xs">
+                    {formatGhc(activeFilter === "ALL" ? summary.totalRevenue : filteredTotal)}
+                  </td>
                   <td colSpan={2} />
                 </tr>
               </tfoot>
@@ -222,14 +262,26 @@ function SummaryCard({
   value,
   sub,
   accent,
+  active,
+  onClick,
 }: {
   label: string;
   value: string;
   sub: string;
   accent?: "green";
+  active?: boolean;
+  onClick?: () => void;
 }) {
   return (
-    <div className="rounded-xl border border-brand-100 bg-white p-3.5 shadow-sm">
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-xl border bg-white p-3.5 text-left shadow-sm transition-colors ${
+        active
+          ? "border-brand-500 bg-brand-50/60 ring-2 ring-brand-200"
+          : "border-brand-100 hover:border-brand-200 hover:bg-brand-50/30"
+      }`}
+    >
       <p className="text-[10px] font-semibold uppercase text-gray-500">{label}</p>
       <p
         className={`mt-1 text-lg font-bold ${accent === "green" ? "text-green-700" : "text-brand-900"}`}
@@ -237,6 +289,6 @@ function SummaryCard({
         {value}
       </p>
       <p className="text-[11px] text-gray-500">{sub}</p>
-    </div>
+    </button>
   );
 }

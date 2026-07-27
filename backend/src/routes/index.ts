@@ -286,8 +286,18 @@ router.patch('/notifications/read-all', authenticate, notificationController.mar
 router.patch('/notifications/:id/read', authenticate, notificationController.markRead);
 
 // Admin
-router.get('/admin/stats', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), adminController.stats);
-router.get('/admin/dashboard-charts', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), adminController.dashboardCharts);
+router.get(
+  '/admin/stats',
+  authenticate,
+  requirePermission(PERMISSIONS.MANAGE_PAYMENTS, PERMISSIONS.VERIFY_USERS),
+  adminController.stats
+);
+router.get(
+  '/admin/dashboard-charts',
+  authenticate,
+  requirePermission(PERMISSIONS.MANAGE_PAYMENTS, PERMISSIONS.VERIFY_USERS),
+  adminController.dashboardCharts
+);
 router.get('/admin/financial-statement', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), adminController.financialStatement);
 router.get('/admin/pending', authenticate, requirePermission(PERMISSIONS.VERIFY_USERS), adminController.pendingUsers);
 router.get('/admin/users', authenticate, requirePermission(PERMISSIONS.VERIFY_USERS), adminController.listUsers);

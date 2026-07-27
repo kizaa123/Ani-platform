@@ -810,7 +810,7 @@ export interface AdminDashboardCharts {
 export interface PlatformFinancialStatementLineItem {
   id: string;
   date: string;
-  type: 'PRODUCT_ORDER' | 'FARM_ACCESS' | 'RESEARCH_SALE' | 'ACCESS_PACKAGE';
+  type: 'PRODUCT_ORDER' | 'FARM_ACCESS' | 'RESEARCH_SALE';
   description: string;
   partyName: string;
   amount: number;
@@ -828,12 +828,10 @@ export interface PlatformFinancialStatement {
     productOrderRevenue: number;
     farmAccessRevenue: number;
     researchRevenue: number;
-    accessPackageRevenue: number;
     transactionCount: number;
     productOrderCount: number;
     farmAccessCount: number;
     researchSaleCount: number;
-    accessPackageCount: number;
   };
   lineItems: PlatformFinancialStatementLineItem[];
 }
