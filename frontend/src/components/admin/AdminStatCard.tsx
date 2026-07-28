@@ -1,3 +1,4 @@
+import { AnimatedStat } from "@/components/AnimatedStat";
 import { Icon, type IconName } from "@/components/icons";
 
 type AdminStatCardProps = {
@@ -6,6 +7,10 @@ type AdminStatCardProps = {
   icon: IconName;
   accent: "green" | "gold" | "teal" | "emerald" | "forest";
   hint?: string;
+  /** Count-up animation when value is numeric. */
+  animated?: boolean;
+  /** Delay passed to AnimatedStat (ms). */
+  animationDelay?: number;
 };
 
 const accentStyles = {
@@ -36,8 +41,17 @@ const accentStyles = {
   },
 } as const;
 
-export function AdminStatCard({ label, value, icon, accent, hint }: AdminStatCardProps) {
+export function AdminStatCard({
+  label,
+  value,
+  icon,
+  accent,
+  hint,
+  animated = false,
+  animationDelay = 0,
+}: AdminStatCardProps) {
   const styles = accentStyles[accent];
+  const valueClass = `text-2xl font-bold tabular-nums sm:text-3xl ${styles.value}`;
 
   return (
     <div className="card-elevated flex flex-col gap-3 rounded-2xl p-5 sm:p-6">
@@ -52,7 +66,15 @@ export function AdminStatCard({ label, value, icon, accent, hint }: AdminStatCar
         )}
       </div>
       <div>
-        <p className={`text-2xl font-bold tabular-nums sm:text-3xl ${styles.value}`}>{value}</p>
+        {animated && typeof value === "number" ? (
+          <AnimatedStat
+            value={String(value)}
+            delay={animationDelay}
+            className={valueClass}
+          />
+        ) : (
+          <p className={valueClass}>{value}</p>
+        )}
         <p className="mt-1 text-sm font-medium text-gray-500">{label}</p>
       </div>
     </div>

@@ -5,11 +5,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { Icon } from "@/components/icons";
-import { Logo } from "@/components/Logo";
 import { PlatformBrandTitle } from "@/components/PlatformBrandTitle";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
-import { authPanelBackgroundUrl, LOGIN_PANEL_BACKGROUND } from "@/lib/authImages";
+import { authPanelBackgroundStyle, LOGIN_PANEL_BACKGROUND } from "@/lib/authImages";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -39,29 +38,19 @@ export default function LoginPage() {
       <div className="hidden lg:col-span-7 lg:flex relative overflow-hidden bg-brand-900 flex-col justify-between p-12 lg:p-16 text-white min-h-[500px]">
         {/* Background sprout image */}
         <div
-          className="absolute inset-0 z-0 bg-cover bg-center"
-          style={{ backgroundImage: authPanelBackgroundUrl(LOGIN_PANEL_BACKGROUND) }}
+          className="absolute inset-0 z-0"
+          style={authPanelBackgroundStyle(LOGIN_PANEL_BACKGROUND)}
         />
         {/* Dark gradient overlay for readability */}
         <div className="absolute inset-0 z-10 bg-gradient-to-tr from-brand-950/95 via-brand-900/80 to-brand-800/40" />
 
-        {/* Brand logo */}
+        {/* Brand */}
         <ScrollReveal trigger="mount" delay={scrollStagger(0, 80)} duration={500} direction="fade-up" className="relative z-20">
-          <Logo theme="light" size="lg" />
+          <PlatformBrandTitle theme="light" size="panel" showIcon />
         </ScrollReveal>
 
         {/* Marketing text & stats */}
         <ScrollReveal trigger="mount" delay={scrollStagger(1, 80)} duration={500} direction="fade-up" className="relative z-20 max-w-xl space-y-6">
-          <div className="inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 backdrop-blur-sm">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-            </span>
-            <span className="text-sm font-medium tracking-wide text-white/90">
-              Ghana&apos;s Agricultural Exchange
-            </span>
-          </div>
-          <PlatformBrandTitle theme="light" size="panel" />
           <h2 className="text-2xl font-bold leading-snug tracking-tight text-white/95 lg:text-3xl">
             Connecting African Agriculture to Global Markets
           </h2>

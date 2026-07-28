@@ -18,7 +18,31 @@ export const LOGIN_PANEL_BACKGROUND = "/login_cover.png";
 /** Register side panel — `frontend/public/images (4).jpg` */
 export const REGISTER_PANEL_BACKGROUND = "/images (4).jpg";
 
+/**
+ * Register panel focal point — seedling sits slightly above the image center;
+ * nudge vertical position so it stays visible in the tall side panel.
+ */
+export const REGISTER_PANEL_BACKGROUND_POSITION = "center 42%";
+
 /** CSS `url(...)` value safe for public paths that may contain spaces. */
 export function authPanelBackgroundUrl(path: string): string {
   return `url('${encodeURI(path)}')`;
+}
+
+/** Inline styles for auth side-panel background images (cover + centered). */
+export function authPanelBackgroundStyle(
+  path: string,
+  position = "center center",
+): {
+  backgroundImage: string;
+  backgroundSize: "cover";
+  backgroundPosition: string;
+  backgroundRepeat: "no-repeat";
+} {
+  return {
+    backgroundImage: authPanelBackgroundUrl(path),
+    backgroundSize: "cover",
+    backgroundPosition: position,
+    backgroundRepeat: "no-repeat",
+  };
 }

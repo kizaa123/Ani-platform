@@ -134,19 +134,7 @@ export default function HomePage() {
         <div className="relative z-10 mx-auto w-full max-w-6xl px-6 py-24">
           <div className="max-w-2xl">
             <ScrollReveal trigger="mount" delay={0} duration={500} direction="fade-up">
-              <div className="mb-5 inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 backdrop-blur-sm">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-                </span>
-                <span className="text-sm font-medium tracking-wide text-white/90">
-                  Ghana&apos;s #1 Agricultural Exchange
-                </span>
-              </div>
-            </ScrollReveal>
-
-            <ScrollReveal trigger="mount" delay={scrollStagger(1, 100)} duration={500} direction="fade-up">
-              <PlatformBrandTitle theme="light" size="hero" className="mb-8" />
+              <PlatformBrandTitle theme="light" size="hero" showIcon className="mb-8" />
             </ScrollReveal>
 
             <ScrollReveal trigger="mount" delay={scrollStagger(2, 100)} duration={550} direction="fade-up">

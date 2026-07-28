@@ -17,11 +17,14 @@ import { CountrySelect } from "@/components/CountrySelect";
 import { HandlerSelect } from "@/components/HandlerSelect";
 import { CommodityPicker } from "@/components/CommodityPicker";
 import { Icon } from "@/components/icons";
-import { Logo } from "@/components/Logo";
 import { PlatformBrandTitle } from "@/components/PlatformBrandTitle";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
-import { authPanelBackgroundUrl, REGISTER_PANEL_BACKGROUND } from "@/lib/authImages";
+import {
+  authPanelBackgroundStyle,
+  REGISTER_PANEL_BACKGROUND,
+  REGISTER_PANEL_BACKGROUND_POSITION,
+} from "@/lib/authImages";
 
 /** Flat list of all roles for the <select> dropdown */
 const ALL_ROLES = [
@@ -236,29 +239,22 @@ export default function RegisterPage() {
       <div className="hidden lg:col-span-6 lg:flex relative overflow-hidden bg-brand-900 flex-col justify-between p-12 lg:p-16 text-white min-h-[500px]">
         {/* Background sprout image */}
         <div
-          className="absolute inset-0 z-0 bg-cover bg-center"
-          style={{ backgroundImage: authPanelBackgroundUrl(REGISTER_PANEL_BACKGROUND) }}
+          className="absolute inset-0 z-0"
+          style={authPanelBackgroundStyle(
+            REGISTER_PANEL_BACKGROUND,
+            REGISTER_PANEL_BACKGROUND_POSITION,
+          )}
         />
         {/* Dark gradient overlay for readability */}
         <div className="absolute inset-0 z-10 bg-gradient-to-tr from-brand-950/95 via-brand-900/80 to-brand-800/40" />
 
-        {/* Brand logo */}
+        {/* Brand */}
         <ScrollReveal trigger="mount" delay={scrollStagger(0, 80)} duration={500} direction="fade-up" className="relative z-20">
-          <Logo theme="light" size="lg" />
+          <PlatformBrandTitle theme="light" size="panel" showIcon />
         </ScrollReveal>
 
         {/* Marketing text & stats */}
         <ScrollReveal trigger="mount" delay={scrollStagger(1, 80)} duration={500} direction="fade-up" className="relative z-20 max-w-xl space-y-6">
-          <div className="inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 backdrop-blur-sm">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-            </span>
-            <span className="text-sm font-medium tracking-wide text-white/90">
-              Ghana&apos;s Agricultural Exchange
-            </span>
-          </div>
-          <PlatformBrandTitle theme="light" size="panel" />
           <h2 className="text-2xl font-bold leading-snug tracking-tight text-white/95 lg:text-3xl">
             Connecting African Agriculture to Global Markets
           </h2>
@@ -380,6 +376,16 @@ export default function RegisterPage() {
             </div>
 
             <div className="auth-field">
+              <label className="auth-label">Country</label>
+              <CountrySelect
+                value={form.country}
+                onChange={handleCountryChange}
+                required
+              />
+              <p className="auth-hint">Select the African country where you are based</p>
+            </div>
+
+            <div className="auth-field">
               <label htmlFor="reg-phone" className="auth-label">
                 Phone
               </label>
@@ -443,16 +449,6 @@ export default function RegisterPage() {
                   You will only select {categoryFilter?.toLowerCase()} commodities in step 3.
                 </p>
               )}
-            </div>
-
-            <div className="auth-field">
-              <label className="auth-label">Country</label>
-              <CountrySelect
-                value={form.country}
-                onChange={handleCountryChange}
-                required
-              />
-              <p className="auth-hint">Select the African country where you are based</p>
             </div>
 
             <button

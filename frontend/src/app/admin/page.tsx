@@ -21,7 +21,10 @@ import { CountryBadge } from "@/components/CountrySelect";
 import { VerificationBadge } from "@/components/VerificationBadge";
 import { AdminStatCard } from "@/components/admin/AdminStatCard";
 import { AdminDashboardChartsPanel } from "@/components/admin/AdminDashboardCharts";
+import { AnimatedStat } from "@/components/AnimatedStat";
+import { ScrollReveal } from "@/components/ScrollReveal";
 import { formatDate, formatGhc } from "@/lib/format";
+import { scrollStagger } from "@/lib/scrollStagger";
 import { Skeleton, PageContentSkeleton } from "@/components/LoadingPrimitives";
 
 type RoleFilter = "all" | "farmers" | "buyers" | "handlers";
@@ -195,49 +198,94 @@ export default function AdminPage() {
 
       {stats && (
         <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-          <AdminStatCard label="Total Users" value={stats.users} icon="users" accent="forest" />
-          <AdminStatCard label="Farmers" value={stats.farmers} icon="sprout" accent="green" />
-          <AdminStatCard label="Buyers" value={stats.buyers} icon="store" accent="teal" />
-          <AdminStatCard
-            label="Client Liaison Officers"
-            value={stats.buyerHandlers}
-            icon="handshake"
-            accent="gold"
-            hint="Buyer handlers"
-          />
-          <AdminStatCard
-            label="Fellow Liaison Officers"
-            value={stats.farmerHandlers}
-            icon="user-plus"
-            accent="emerald"
-            hint="Farmer handlers"
-          />
+          {(
+            [
+              { label: "Total Users", value: stats.users, icon: "users" as const, accent: "forest" as const },
+              { label: "Farmers", value: stats.farmers, icon: "sprout" as const, accent: "green" as const },
+              { label: "Buyers", value: stats.buyers, icon: "store" as const, accent: "teal" as const },
+              {
+                label: "Client Liaison Officers",
+                value: stats.buyerHandlers,
+                icon: "handshake" as const,
+                accent: "gold" as const,
+                hint: "Buyer handlers",
+              },
+              {
+                label: "Fellow Liaison Officers",
+                value: stats.farmerHandlers,
+                icon: "user-plus" as const,
+                accent: "emerald" as const,
+                hint: "Farmer handlers",
+              },
+            ] as const
+          ).map((card, i) => {
+            const delay = scrollStagger(i, 90);
+            return (
+              <ScrollReveal key={card.label} delay={delay} duration={450} direction="fade-up">
+                <AdminStatCard
+                  label={card.label}
+                  value={card.value}
+                  icon={card.icon}
+                  accent={card.accent}
+                  hint={"hint" in card ? card.hint : undefined}
+                  animated
+                  animationDelay={delay}
+                />
+              </ScrollReveal>
+            );
+          })}
         </div>
       )}
 
       {stats && (
         <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="card-elevated rounded-2xl p-4 sm:p-5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Platform revenue</p>
-            <p className="mt-1 text-xl font-bold text-brand-800">{formatGhc(stats.totalRevenue)}</p>
-          </div>
-          <div className="card-elevated rounded-2xl p-4 sm:p-5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Active listings</p>
-            <p className="mt-1 text-xl font-bold text-brand-800">{stats.listings}</p>
-          </div>
-          <div className="card-elevated rounded-2xl p-4 sm:p-5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Active connections</p>
-            <p className="mt-1 text-xl font-bold text-brand-800">{stats.activeConnections}</p>
-          </div>
-          <div className="card-elevated rounded-2xl p-4 sm:p-5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Pending actions</p>
-            <p className="mt-1 text-xl font-bold text-amber-700">
-              {stats.pendingVerifications + stats.pendingConnections}
-            </p>
-            <p className="mt-0.5 text-xs text-gray-500">
-              {stats.pendingVerifications} verifications · {stats.pendingConnections} access requests
-            </p>
-          </div>
+          {(
+            [
+              {
+                label: "Platform revenue",
+                value: stats.totalRevenue.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                }),
+                prefix: "GHC ",
+                valueClass: "text-xl font-bold text-brand-800",
+              },
+              {
+                label: "Active listings",
+                value: String(stats.listings),
+                valueClass: "text-xl font-bold text-brand-800",
+              },
+              {
+                label: "Active connections",
+                value: String(stats.activeConnections),
+                valueClass: "text-xl font-bold text-brand-800",
+              },
+              {
+                label: "Pending actions",
+                value: String(stats.pendingVerifications + stats.pendingConnections),
+                valueClass: "text-xl font-bold text-amber-700",
+                subtext: `${stats.pendingVerifications} verifications · ${stats.pendingConnections} access requests`,
+              },
+            ] as const
+          ).map((kpi, i) => {
+            const delay = scrollStagger(i, 90);
+            return (
+              <ScrollReveal key={kpi.label} delay={delay} duration={450} direction="fade-up">
+                <div className="card-elevated rounded-2xl p-4 sm:p-5">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">{kpi.label}</p>
+                  <AnimatedStat
+                    value={kpi.value}
+                    prefix={"prefix" in kpi ? kpi.prefix : undefined}
+                    delay={delay}
+                    className={`mt-1 block ${kpi.valueClass}`}
+                  />
+                  {"subtext" in kpi && kpi.subtext && (
+                    <p className="mt-0.5 text-xs text-gray-500">{kpi.subtext}</p>
+                  )}
+                </div>
+              </ScrollReveal>
+            );
+          })}
         </div>
       )}
 

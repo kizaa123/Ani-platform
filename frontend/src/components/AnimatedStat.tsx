@@ -6,26 +6,36 @@ type ParsedStat = {
   end: number;
   suffix: string;
   useCommas: boolean;
+  decimals: number;
 };
 
 function parseStatValue(value: string): ParsedStat {
-  const match = value.trim().match(/^([\d,]+)(.*)$/);
+  const match = value.trim().match(/^([\d,]+(?:\.\d+)?)(.*)$/);
   if (!match) {
-    return { end: 0, suffix: value, useCommas: false };
+    return { end: 0, suffix: value, useCommas: false, decimals: 0 };
   }
 
   const raw = match[1];
-  const end = Number.parseInt(raw.replace(/,/g, ""), 10);
+  const end = Number.parseFloat(raw.replace(/,/g, ""));
   const suffix = match[2] ?? "";
+  const decimals = raw.includes(".") ? (raw.split(".")[1]?.length ?? 0) : 0;
 
   return {
     end: Number.isFinite(end) ? end : 0,
     suffix,
     useCommas: raw.includes(",") || end >= 1000,
+    decimals,
   };
 }
 
-function formatNumber(value: number, useCommas: boolean): string {
+function formatNumber(value: number, useCommas: boolean, decimals: number): string {
+  if (decimals > 0) {
+    return value.toLocaleString("en-US", {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
+  }
+
   const rounded = Math.round(value);
   return useCommas ? rounded.toLocaleString("en-US") : String(rounded);
 }
@@ -46,6 +56,8 @@ function getReducedMotionSnapshot() {
 
 export type AnimatedStatProps = {
   value: string;
+  /** Prepended text (e.g. currency code). */
+  prefix?: string;
   /** Animation duration in ms. Default 1800. */
   duration?: number;
   /** Delay before count starts (ms). */
@@ -58,6 +70,7 @@ export type AnimatedStatProps = {
 /** Count-up stat with Intersection Observer trigger. Respects prefers-reduced-motion. */
 export function AnimatedStat({
   value,
+  prefix = "",
   duration = 1800,
   delay = 0,
   startFrom = 0,
@@ -114,11 +127,12 @@ export function AnimatedStat({
   }, [reducedMotion, duration, delay, startFrom, parsed.end]);
 
   const displayValue = reducedMotion
-    ? formatNumber(parsed.end, parsed.useCommas) + parsed.suffix
-    : formatNumber(current, parsed.useCommas) + parsed.suffix;
+    ? formatNumber(parsed.end, parsed.useCommas, parsed.decimals) + parsed.suffix
+    : formatNumber(current, parsed.useCommas, parsed.decimals) + parsed.suffix;
 
   return (
     <span ref={ref} className={className}>
+      {prefix}
       {displayValue}
     </span>
   );

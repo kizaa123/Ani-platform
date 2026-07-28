@@ -4,6 +4,9 @@ import { useRef, useState } from "react";
 import type { AdminDashboardCharts } from "@/lib/types";
 import { formatDate, formatGhc } from "@/lib/format";
 import { Icon } from "@/components/icons";
+import { ScrollReveal } from "@/components/ScrollReveal";
+import { useAnimateOnView } from "@/hooks/useAnimateOnView";
+import { scrollStagger } from "@/lib/scrollStagger";
 
 const CHART_COLORS = [
   "#2d6a4f",
@@ -30,6 +33,18 @@ type TooltipState = {
   x: number;
   y: number;
 } | null;
+
+function mergeRefs<T>(...refs: (React.RefObject<T | null> | React.Ref<T | null>)[]) {
+  return (node: T | null) => {
+    for (const ref of refs) {
+      if (typeof ref === "function") {
+        ref(node);
+      } else if (ref) {
+        ref.current = node;
+      }
+    }
+  };
+}
 
 function ChartPanel({
   title,
@@ -93,24 +108,27 @@ function AreaChart({
   height?: number;
 }) {
   const { containerRef, tooltip, showTooltip, hideTooltip } = useChartTooltip();
+  const { ref: viewRef, progress } = useAnimateOnView({ delay: 120, duration: 1400 });
   const width = 320;
   const pad = { top: 8, right: 8, bottom: 28, left: 36 };
   const innerW = width - pad.left - pad.right;
   const innerH = height - pad.top - pad.bottom;
   const max = Math.max(...data.map((d) => d.value), 1);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const baselineY = pad.top + innerH;
 
   const points = data.map((d, i) => {
     const x = pad.left + (i / Math.max(data.length - 1, 1)) * innerW;
-    const y = pad.top + innerH - (d.value / max) * innerH;
+    const finalY = pad.top + innerH - (d.value / max) * innerH;
+    const y = baselineY - (baselineY - finalY) * progress;
     return { x, y, ...d, index: i };
   });
 
   const linePath = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
-  const areaPath = `${linePath} L ${points[points.length - 1]?.x ?? pad.left} ${pad.top + innerH} L ${points[0]?.x ?? pad.left} ${pad.top + innerH} Z`;
+  const areaPath = `${linePath} L ${points[points.length - 1]?.x ?? pad.left} ${baselineY} L ${points[0]?.x ?? pad.left} ${baselineY} Z`;
 
   return (
-    <div ref={containerRef} className="relative" onMouseLeave={hideTooltip}>
+    <div ref={mergeRefs(containerRef, viewRef)} className="relative" onMouseLeave={hideTooltip}>
       <svg viewBox={`0 0 ${width} ${height}`} className="h-auto w-full cursor-crosshair" role="img" aria-label="Area chart">
         {[0, 0.5, 1].map((t) => {
           const y = pad.top + innerH * (1 - t);
@@ -191,6 +209,7 @@ function DualBarChart({
   height?: number;
 }) {
   const { containerRef, tooltip, showTooltip, hideTooltip } = useChartTooltip();
+  const { ref: viewRef, progress } = useAnimateOnView({ delay: 120, duration: 1200 });
   const width = 320;
   const pad = { top: 8, right: 8, bottom: 28, left: 36 };
   const innerW = width - pad.left - pad.right;
@@ -210,7 +229,7 @@ function DualBarChart({
   );
 
   return (
-    <div ref={containerRef} className="relative" onMouseLeave={hideTooltip}>
+    <div ref={mergeRefs(containerRef, viewRef)} className="relative" onMouseLeave={hideTooltip}>
       <svg viewBox={`0 0 ${width} ${height}`} className="h-auto w-full cursor-crosshair" role="img" aria-label="Orders and revenue chart">
         {[0, 0.5, 1].map((t) => {
           const y = pad.top + innerH * (1 - t);
@@ -220,8 +239,8 @@ function DualBarChart({
         })}
         {data.map((d, i) => {
           const cx = pad.left + barGroupW * i + barGroupW / 2;
-          const orderH = (d.orders / maxOrders) * innerH;
-          const revH = (d.revenue / maxRevenue) * innerH;
+          const orderH = (d.orders / maxOrders) * innerH * progress;
+          const revH = (d.revenue / maxRevenue) * innerH * progress;
           const active = hoveredIndex === i;
           return (
             <g key={d.label}>
@@ -282,6 +301,7 @@ function DonutChart({
   segments: { label: string; count: number; color: string }[];
 }) {
   const { containerRef, tooltip, showTooltip, hideTooltip } = useChartTooltip();
+  const { ref: viewRef, progress } = useAnimateOnView({ delay: 120, duration: 1300 });
   const total = segments.reduce((s, seg) => s + seg.count, 0) || 1;
   const size = 160;
   const cx = size / 2;
@@ -317,11 +337,12 @@ function DonutChart({
   };
 
   return (
-    <div ref={containerRef} className="relative flex flex-col items-center gap-4 sm:flex-row sm:items-start" onMouseLeave={hideTooltip}>
+    <div ref={mergeRefs(containerRef, viewRef)} className="relative flex flex-col items-center gap-4 sm:flex-row sm:items-start" onMouseLeave={hideTooltip}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0 cursor-default" role="img" aria-label="Role distribution">
         <circle cx={cx} cy={cy} r={r} fill="none" stroke="#f3f4f6" strokeWidth={stroke} />
         {arcs.map((seg) => {
           const active = hoveredLabel === seg.label;
+          const animatedDash = seg.dash * progress;
           return (
             <circle
               key={seg.label}
@@ -331,8 +352,8 @@ function DonutChart({
               fill="none"
               stroke={seg.color}
               strokeWidth={active ? stroke + 4 : stroke}
-              strokeDasharray={`${seg.dash} ${circumference - seg.dash}`}
-              strokeDashoffset={-seg.offset}
+              strokeDasharray={`${animatedDash} ${circumference - animatedDash}`}
+              strokeDashoffset={-seg.offset * progress}
               transform={`rotate(-90 ${cx} ${cy})`}
               opacity={hoveredLabel && !active ? 0.4 : 1}
               className="cursor-pointer transition-all"
@@ -346,7 +367,7 @@ function DonutChart({
           );
         })}
         <text x={cx} y={cy - 4} textAnchor="middle" className="fill-brand-900 text-lg font-bold" pointerEvents="none">
-          {total}
+          {Math.round(total * progress)}
         </text>
         <text x={cx} y={cy + 12} textAnchor="middle" className="fill-gray-500 text-[10px]" pointerEvents="none">
           users
@@ -393,6 +414,7 @@ function VerificationBars({
   items: { status: string; count: number }[];
 }) {
   const { containerRef, tooltip, showTooltip, hideTooltip } = useChartTooltip();
+  const { ref: viewRef, progress } = useAnimateOnView({ delay: 120, duration: 1100 });
   const max = Math.max(...items.map((i) => i.count), 1);
   const total = items.reduce((sum, item) => sum + item.count, 0) || 1;
   const [hoveredStatus, setHoveredStatus] = useState<string | null>(null);
@@ -403,11 +425,12 @@ function VerificationBars({
   };
 
   return (
-    <div ref={containerRef} className="relative space-y-2" onMouseLeave={hideTooltip}>
+    <div ref={mergeRefs(containerRef, viewRef)} className="relative space-y-2" onMouseLeave={hideTooltip}>
       {items.map((item) => {
         const active = hoveredStatus === item.status;
         const pct = Math.round((item.count / total) * 100);
         const label = labels[item.status] ?? item.status;
+        const animatedCount = Math.round(item.count * progress);
         return (
           <div
             key={item.status}
@@ -439,13 +462,13 @@ function VerificationBars({
           >
             <div className="mb-0.5 flex items-center justify-between text-sm">
               <span className="font-medium text-gray-600">{label}</span>
-              <span className="font-bold tabular-nums text-brand-900">{item.count}</span>
+              <span className="font-bold tabular-nums text-brand-900">{animatedCount}</span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-gray-100">
               <div
                 className="h-full rounded-full transition-all"
                 style={{
-                  width: `${(item.count / max) * 100}%`,
+                  width: `${(item.count / max) * 100 * progress}%`,
                   backgroundColor: VERIFICATION_COLORS[item.status] ?? "#95d5b2",
                   opacity: hoveredStatus && !active ? 0.45 : 1,
                 }}
@@ -489,28 +512,37 @@ export function AdminDashboardChartsPanel({ charts }: { charts: AdminDashboardCh
   return (
     <div className="space-y-6">
       <div className="grid gap-4 lg:grid-cols-2">
-        <ChartPanel title="Platform user growth" subtitle="Cumulative registered users (6 months)">
-          <AreaChart data={userGrowthData} />
-        </ChartPanel>
+        <ScrollReveal delay={scrollStagger(0, 100)} duration={500} direction="fade-up">
+          <ChartPanel title="Platform user growth" subtitle="Cumulative registered users (6 months)">
+            <AreaChart data={userGrowthData} />
+          </ChartPanel>
+        </ScrollReveal>
 
-        <ChartPanel title="Orders & revenue" subtitle="Paid orders and platform revenue by month">
-          <DualBarChart data={charts.ordersTrend} />
-        </ChartPanel>
+        <ScrollReveal delay={scrollStagger(1, 100)} duration={500} direction="fade-up">
+          <ChartPanel title="Orders & revenue" subtitle="Paid orders and platform revenue by month">
+            <DualBarChart data={charts.ordersTrend} />
+          </ChartPanel>
+        </ScrollReveal>
 
-        <ChartPanel title="Role distribution" subtitle="All registered accounts by role">
-          <DonutChart segments={roleSegments} />
-        </ChartPanel>
+        <ScrollReveal delay={scrollStagger(2, 100)} duration={500} direction="fade-up">
+          <ChartPanel title="Role distribution" subtitle="All registered accounts by role">
+            <DonutChart segments={roleSegments} />
+          </ChartPanel>
+        </ScrollReveal>
 
-        <ChartPanel title="Verification queue" subtitle="Verifiable roles by review status">
-          <VerificationBars items={charts.verificationStatus} />
-        </ChartPanel>
+        <ScrollReveal delay={scrollStagger(3, 100)} duration={500} direction="fade-up">
+          <ChartPanel title="Verification queue" subtitle="Verifiable roles by review status">
+            <VerificationBars items={charts.verificationStatus} />
+          </ChartPanel>
+        </ScrollReveal>
       </div>
 
-      <ChartPanel
-        title="Recent activity"
-        subtitle="Latest registrations, orders, and connections"
-        className="!p-4 sm:!p-5"
-      >
+      <ScrollReveal delay={scrollStagger(4, 100)} duration={500} direction="fade-up">
+        <ChartPanel
+          title="Recent activity"
+          subtitle="Latest registrations, orders, and connections"
+          className="!p-4 sm:!p-5"
+        >
         {recentActivity.length === 0 ? (
           <p className="text-sm text-gray-500">No recent activity yet.</p>
         ) : (
@@ -531,7 +563,8 @@ export function AdminDashboardChartsPanel({ charts }: { charts: AdminDashboardCh
             ))}
           </ul>
         )}
-      </ChartPanel>
+        </ChartPanel>
+      </ScrollReveal>
     </div>
   );
 }
