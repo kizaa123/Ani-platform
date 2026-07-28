@@ -4,7 +4,7 @@ import { Icon, type IconName } from "@/components/icons";
 import { PortalNavCard } from "@/components/PortalNavCard";
 import { PlatformBrandTitle } from "@/components/PlatformBrandTitle";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import { scrollStagger } from "@/hooks/useScrollAnimation";
+import { scrollStagger } from "@/lib/scrollStagger";
 import { HOW_IT_WORKS_IMAGES } from "@/lib/homepageImages";
 
 const STATS = [

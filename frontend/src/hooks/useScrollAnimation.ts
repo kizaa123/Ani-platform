@@ -71,8 +71,3 @@ export function useScrollAnimation({
 
   return { ref, isVisible, style, className };
 }
-
-/** Stagger helper — index × interval (default 100ms). */
-export function scrollStagger(index: number, interval = 100): number {
-  return index * interval;
-}

@@ -6,7 +6,7 @@ import { useAuth } from "@/context/AuthProvider";
 import { isFarmer, isBuyer, isHandler, isStaff, isBuyerHandler, isResearcher, isStudent, isMarketplaceBuyer } from "@/lib/types";
 import { PortalNavCard, PortalNavCardSkeleton } from "@/components/PortalNavCard";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import { scrollStagger } from "@/hooks/useScrollAnimation";
+import { scrollStagger } from "@/lib/scrollStagger";
 import { getPortalNavImage } from "@/lib/portalNavImages";
 import type { IconName } from "@/components/icons";
 

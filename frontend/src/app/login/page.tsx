@@ -8,7 +8,7 @@ import { Icon } from "@/components/icons";
 import { Logo } from "@/components/Logo";
 import { PlatformBrandTitle } from "@/components/PlatformBrandTitle";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import { scrollStagger } from "@/hooks/useScrollAnimation";
+import { scrollStagger } from "@/lib/scrollStagger";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");

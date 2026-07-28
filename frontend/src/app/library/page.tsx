@@ -22,7 +22,7 @@ import { PaymentCheckout, TransactionSuccess } from "@/components/PaymentCheckou
 import { CardGridSkeleton, PageContentSkeleton, SpinnerLabel } from "@/components/LoadingPrimitives";
 import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import { scrollStagger } from "@/hooks/useScrollAnimation";
+import { scrollStagger } from "@/lib/scrollStagger";
 import { assetUrl } from "@/lib/assetUrl";
 
 function formatGhc(amount: number) {

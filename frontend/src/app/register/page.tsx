@@ -20,7 +20,7 @@ import { Icon } from "@/components/icons";
 import { Logo } from "@/components/Logo";
 import { PlatformBrandTitle } from "@/components/PlatformBrandTitle";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import { scrollStagger } from "@/hooks/useScrollAnimation";
+import { scrollStagger } from "@/lib/scrollStagger";
 
 /** Flat list of all roles for the <select> dropdown */
 const ALL_ROLES = [
