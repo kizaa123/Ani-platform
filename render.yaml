@@ -3,6 +3,7 @@ services:
     name: ani-platform-api
     runtime: node
     rootDir: backend
+    # Do not append db:setup — build already runs dedupe, push, and seed.
     buildCommand: npm install && npm run build
     startCommand: npm start
     envVars:

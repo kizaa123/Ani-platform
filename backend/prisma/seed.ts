@@ -380,7 +380,24 @@ async function main() {
       }
       return;
     }
-    await prisma.agentAssignment.create({ data });
+    try {
+      await prisma.agentAssignment.create({ data });
+    } catch (error: unknown) {
+      const code =
+        error && typeof error === 'object' && 'code' in error
+          ? (error as { code?: string }).code
+          : undefined;
+      if (code !== 'P2002') throw error;
+      const raced = await prisma.agentAssignment.findFirst({
+        where: { ownerId: data.ownerId, relationshipType: data.relationshipType },
+      });
+      if (raced && raced.agentId !== data.agentId) {
+        await prisma.agentAssignment.update({
+          where: { id: raced.id },
+          data: { agentId: data.agentId },
+        });
+      }
+    }
   }
 
   await upsertAgentAssignment({
@@ -419,6 +436,7 @@ async function main() {
   });
   if (!existingPub) {
     await prisma.researchPublication.createMany({
+      skipDuplicates: true,
       data: [
         {
           researcherId: researcherProfile.id,
