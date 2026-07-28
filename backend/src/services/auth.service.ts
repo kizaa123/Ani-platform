@@ -98,7 +98,8 @@ export const registerSchema = z
   .superRefine((data, ctx) => {
     const needsHandler =
       FARMER_ROLES.includes(data.roleId as typeof ROLES.CROP_FARMER) ||
-      data.roleId === ROLES.BUYER;
+      data.roleId === ROLES.BUYER ||
+      data.roleId === ROLES.RESEARCHER;
     if (needsHandler && !data.handlerId) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -186,17 +187,20 @@ export class AuthService {
     if (
       input.handlerId &&
       (FARMER_ROLES.includes(input.roleId as typeof ROLES.CROP_FARMER) ||
-        input.roleId === ROLES.BUYER)
+        input.roleId === ROLES.BUYER ||
+        input.roleId === ROLES.RESEARCHER)
     ) {
       const handler = assertFound(
         await prisma.user.findUnique({ where: { id: input.handlerId } }),
         'Selected handler not found'
       );
       const expectedFarmer = FARMER_ROLES.includes(input.roleId as typeof ROLES.CROP_FARMER);
+      const expectedBuyerHandler =
+        input.roleId === ROLES.BUYER || input.roleId === ROLES.RESEARCHER;
       if (expectedFarmer && !isFarmerHandler(handler.roleId)) {
         throw new AppError(400, 'Selected handler is not a farmer handler');
       }
-      if (!expectedFarmer && !isBuyerHandler(handler.roleId)) {
+      if (expectedBuyerHandler && !isBuyerHandler(handler.roleId)) {
         throw new AppError(400, 'Selected handler is not a buyer handler');
       }
     }
@@ -276,7 +280,8 @@ export class AuthService {
       if (
         input.handlerId &&
         (FARMER_ROLES.includes(input.roleId as typeof ROLES.CROP_FARMER) ||
-          input.roleId === ROLES.BUYER)
+          input.roleId === ROLES.BUYER ||
+          input.roleId === ROLES.RESEARCHER)
       ) {
         const relationshipType = FARMER_ROLES.includes(
           input.roleId as typeof ROLES.CROP_FARMER
@@ -417,7 +422,7 @@ export class AuthService {
 
   async getAssignedHandler(userId: string, roleId: number) {
     const relationshipType =
-      roleId === ROLES.BUYER
+      roleId === ROLES.BUYER || roleId === ROLES.RESEARCHER
         ? 'BUYER_REPRESENTATIVE'
         : FARMER_ROLES.includes(roleId as typeof ROLES.CROP_FARMER)
           ? 'FARMER_REPRESENTATIVE'
@@ -463,14 +468,14 @@ export class AuthService {
 
   async updateAssignedHandler(userId: string, roleId: number, handlerId: string) {
     const relationshipType =
-      roleId === ROLES.BUYER
+      roleId === ROLES.BUYER || roleId === ROLES.RESEARCHER
         ? 'BUYER_REPRESENTATIVE'
         : FARMER_ROLES.includes(roleId as typeof ROLES.CROP_FARMER)
           ? 'FARMER_REPRESENTATIVE'
           : null;
 
     if (!relationshipType) {
-      throw new AppError(403, 'Only farmers and buyers can update their handler here');
+      throw new AppError(403, 'Only fellows, clients, and researchers can update their handler here');
     }
 
     const handler = assertFound(

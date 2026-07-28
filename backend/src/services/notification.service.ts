@@ -31,6 +31,7 @@ export type NotificationTypeValue =
   | 'NEW_ORDER'
   | 'ORDER_TRACKED'
   | 'ORDER_PAYMENT_RELEASED'
+  | 'MONEY_DISTRIBUTED'
   | 'CONNECTION_REQUEST'
   | 'CONNECTION_APPROVED'
   | 'CONNECTION_DECLINED'
@@ -552,6 +553,24 @@ export async function notifyResearchPurchase(
     title: 'Access granted',
     body: `You now have access to "${publicationTitle}".`,
     link: '/library',
+  }).catch(() => undefined);
+}
+
+export async function notifyMoneyDistributed(
+  recipientId: string,
+  recipientFirstName: string,
+  amount: number,
+  buyerName: string,
+  orderDescription: string
+) {
+  const formatted = amount.toFixed(2);
+  await createNotification({
+    userId: recipientId,
+    type: 'MONEY_DISTRIBUTED',
+    title: 'Payment received from ANI',
+    body: `Dear ${recipientFirstName}, you have received GHC ${formatted} from ANI for the successful ${buyerName} order delivery.`,
+    link: '/financials',
+    metadata: { price: amount, priceLabel: `GHC ${formatted}`, actionLabel: orderDescription },
   }).catch(() => undefined);
 }
 

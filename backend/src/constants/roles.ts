@@ -82,7 +82,6 @@ export const REGISTERABLE_ROLE_IDS = [
   ROLES.BUYER_HANDLER,
   ROLES.ANI_ACCOUNTANT,
   ROLES.RESEARCHER,
-  ROLES.STUDENT,
 ] as const;
 
 export function isFarmerRole(roleId: number): boolean {
@@ -98,7 +97,12 @@ export function isStudentRole(roleId: number): boolean {
 }
 
 export function isMarketplaceBuyerRole(roleId: number): boolean {
-  return (MARKETPLACE_BUYER_ROLES as readonly number[]).includes(roleId);
+  return (MARKETPLACE_BUYER_ROLES as readonly number[]).includes(roleId) || isStudentRole(roleId);
+}
+
+/** Legacy student accounts are treated as clients (buyers). */
+export function isClientRole(roleId: number): boolean {
+  return roleId === ROLES.BUYER || isStudentRole(roleId);
 }
 
 export function isStaffRole(roleId: number): boolean {

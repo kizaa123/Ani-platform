@@ -83,8 +83,13 @@ export const verifyUserSchema = z.object({
   status: z.enum(['VERIFIED', 'REJECTED', 'PENDING']),
 });
 
+export const assignVerificationTagSchema = z.object({
+  tagType: z.enum(['STANDARD', 'INTERNATIONAL_FARMER', 'INTERNATIONAL_BUYER']),
+});
+
 const verifiableUserInclude = {
   role: true,
+  verificationTags: true,
   farmerProfile: { select: { farmName: true, verificationStatus: true } },
   buyerProfile: { select: { company: true } },
   agentProfile: { select: { agentType: true } },
@@ -472,6 +477,70 @@ export class AdminService {
     }
 
     return user;
+  }
+
+  async listUserVerificationTags(userId: string) {
+    assertFound(await prisma.user.findUnique({ where: { id: userId } }), 'User not found');
+    return prisma.userVerificationTag.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  async assignVerificationTag(
+    userId: string,
+    tagType: 'STANDARD' | 'INTERNATIONAL_FARMER' | 'INTERNATIONAL_BUYER',
+    assignedBy: string
+  ) {
+    const user = assertFound(
+      await prisma.user.findUnique({ where: { id: userId } }),
+      'User not found'
+    );
+
+    if (STAFF_ROLES.includes(user.roleId as (typeof STAFF_ROLES)[number])) {
+      throw new AppError(403, 'Staff accounts cannot receive verification tags');
+    }
+
+    if (!(VERIFIABLE_ROLE_IDS as readonly number[]).includes(user.roleId)) {
+      throw new AppError(400, 'Only buyers, farmers, and handlers can receive verification tags');
+    }
+
+    if (tagType === 'STANDARD' && user.verificationStatus !== 'VERIFIED') {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { verificationStatus: 'VERIFIED' },
+      });
+      if (user.farmerProfile) {
+        await prisma.farmerProfile.update({
+          where: { userId },
+          data: { verificationStatus: 'VERIFIED' },
+        });
+      }
+    }
+
+    return prisma.userVerificationTag.upsert({
+      where: { userId_tagType: { userId, tagType } },
+      create: { userId, tagType, assignedBy },
+      update: { assignedBy },
+    });
+  }
+
+  async removeVerificationTag(
+    userId: string,
+    tagType: 'STANDARD' | 'INTERNATIONAL_FARMER' | 'INTERNATIONAL_BUYER'
+  ) {
+    assertFound(
+      await prisma.userVerificationTag.findUnique({
+        where: { userId_tagType: { userId, tagType } },
+      }),
+      'Verification tag not found'
+    );
+
+    await prisma.userVerificationTag.delete({
+      where: { userId_tagType: { userId, tagType } },
+    });
+
+    return { removed: true };
   }
 
   async getAuditLogs(limit = 100) {

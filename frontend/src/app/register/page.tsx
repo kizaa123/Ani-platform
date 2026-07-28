@@ -28,11 +28,10 @@ import {
 
 /** Flat list of all roles for the <select> dropdown */
 const ALL_ROLES = [
-  { group: "Farmers",                  id: ROLES.CROP_FARMER,      label: "Fellow (Crop Farmer)" },
-  { group: "Farmers",                  id: ROLES.LIVESTOCK_FARMER, label: "Fellow (Livestock Farmer)" },
+  { group: "Farmers",                  id: ROLES.CROP_FARMER,      label: "Fellow — Crop" },
+  { group: "Farmers",                  id: ROLES.LIVESTOCK_FARMER, label: "Fellow — Livestock" },
   { group: "Research & Commerce",      id: ROLES.RESEARCHER,       label: "Researcher" },
-  { group: "Research & Commerce",      id: ROLES.BUYER,            label: "Client (buyer)" },
-  { group: "Research & Commerce",      id: ROLES.STUDENT,          label: "Student" },
+  { group: "Research & Commerce",      id: ROLES.BUYER,            label: "Client" },
   { group: "Support & Operations",     id: ROLES.FARMER_HANDLER,   label: "Fellow Liaison Officer" },
   { group: "Support & Operations",     id: ROLES.BUYER_HANDLER,    label: "Client Liaison Officer" },
   { group: "Support & Operations",     id: ROLES.ANI_ACCOUNTANT,   label: "ANI Accountant" },
@@ -125,13 +124,18 @@ export default function RegisterPage() {
   const isFarmerRole = form.roleId === ROLES.CROP_FARMER || form.roleId === ROLES.LIVESTOCK_FARMER;
   const isBuyerRole = form.roleId === ROLES.BUYER;
   const isResearcherRole = form.roleId === ROLES.RESEARCHER;
-  const isStudentRole = form.roleId === ROLES.STUDENT;
-  const needsHandler = isFarmerRole || isBuyerRole;
-  const availableHandlers = isFarmerRole ? farmerHandlers : isBuyerRole ? buyerHandlers : [];
-  const handlerLabel = isFarmerRole ? "Choose your Farmer Handler" : "Choose your Buyer Handler";
+  const needsHandler = isFarmerRole || isBuyerRole || isResearcherRole;
+  const availableHandlers = isFarmerRole
+    ? farmerHandlers
+    : isBuyerRole || isResearcherRole
+      ? buyerHandlers
+      : [];
+  const handlerLabel = isFarmerRole
+    ? "Choose your Fellow Liaison Officer"
+    : "Choose your Client Liaison Officer";
   const handlerEmptyMessage = isFarmerRole
-    ? "No farmer handlers registered yet. A farmer handler must register first."
-    : "No buyer handlers registered yet. A buyer handler must register first.";
+    ? "No fellow liaison officers registered yet. One must register first."
+    : "No client liaison officers registered yet. One must register first.";
   const categoryFilter = farmerCategoryFilter(form.roleId);
   const totalSteps = isFarmerRole ? 3 : 2;
   const stepLabels = isFarmerRole ? STEP_LABELS : STEP_LABELS.slice(0, 2);

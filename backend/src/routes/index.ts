@@ -25,9 +25,10 @@ import { publicationSchema, updatePublicationSchema, purchasePublicationSchema, 
 import { connectionSchema } from '../services/connection.service';
 import { assignmentSchema } from '../services/agent.service';
 import { messageSchema } from '../services/chat.service';
-import { verifyUserSchema } from '../services/admin.service';
+import { verifyUserSchema, assignVerificationTagSchema } from '../services/admin.service';
 import { createStaffSchema, updateStaffSchema } from '../services/staff.service';
 import { createWithdrawalSchema, updateWithdrawalSchema } from '../services/accountant.service';
+import { distributeLineSchema } from '../services/orderDistribution.service';
 import { uploadController } from '../controllers/upload.controller';
 import { farmerMediaController } from '../controllers/farmerMedia.controller';
 import { productMediaController } from '../controllers/productMedia.controller';
@@ -308,6 +309,9 @@ router.get('/admin/financial-statement', authenticate, requirePermission(PERMISS
 router.get('/admin/pending', authenticate, requirePermission(PERMISSIONS.VERIFY_USERS), adminController.pendingUsers);
 router.get('/admin/users', authenticate, requirePermission(PERMISSIONS.VERIFY_USERS), adminController.listUsers);
 router.patch('/admin/users/:id/verify', authenticate, requirePermission(PERMISSIONS.VERIFY_USERS), validateBody(verifyUserSchema), adminController.verifyUser);
+router.get('/admin/users/:id/verification-tags', authenticate, requirePermission(PERMISSIONS.VERIFY_USERS), adminController.listUserVerificationTags);
+router.post('/admin/users/:id/verification-tags', authenticate, requirePermission(PERMISSIONS.VERIFY_USERS), validateBody(assignVerificationTagSchema), adminController.assignVerificationTag);
+router.delete('/admin/users/:id/verification-tags/:tagType', authenticate, requirePermission(PERMISSIONS.VERIFY_USERS), adminController.removeVerificationTag);
 router.get('/admin/audit-logs', authenticate, requirePermission(PERMISSIONS.VIEW_AUDIT_LOGS), adminController.auditLogs);
 
 // Admin staff management (ANI team)
@@ -323,6 +327,9 @@ router.get('/accountant/financial-statement', authenticate, requirePermission(PE
 router.get('/accountant/withdrawals', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), accountantController.listWithdrawals);
 router.post('/accountant/withdrawals', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), validateBody(createWithdrawalSchema), accountantController.createWithdrawal);
 router.patch('/accountant/withdrawals/:id', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), validateBody(updateWithdrawalSchema), accountantController.updateWithdrawal);
+router.get('/accountant/orders/:orderId/distribution', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), accountantController.getOrderDistribution);
+router.post('/accountant/orders/:orderId/distribution/lines/:lineId/distribute', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), validateBody(distributeLineSchema), accountantController.distributeOrderLine);
+router.post('/accountant/orders/:orderId/distribution/distribute-all', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), validateBody(distributeLineSchema.pick({ paymentMethod: true })), accountantController.distributeOrderAll);
 
 // AI (future-ready)
 router.get('/ai/matches', authenticate, aiController.matches);

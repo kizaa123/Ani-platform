@@ -12,7 +12,10 @@ import {
   createWithdrawalSchema,
   updateWithdrawalSchema,
 } from '../services/accountant.service';
-import { createAuditLog } from '../middleware/audit.middleware';
+import {
+  orderDistributionService,
+  distributeLineSchema,
+} from '../services/orderDistribution.service';
 import {
   matchingService,
   assistantService,
@@ -304,6 +307,47 @@ export class AdminController {
     }
   };
 
+  listUserVerificationTags = async (req: AuthRequest, res: Response) => {
+    try {
+      ApiResponse.success(res, await adminService.listUserVerificationTags(req.params.id as string));
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  assignVerificationTag = async (req: AuthRequest, res: Response) => {
+    try {
+      const tag = await adminService.assignVerificationTag(
+        req.params.id as string,
+        req.body.tagType,
+        req.user!.userId
+      );
+      await createAuditLog(req, 'VERIFICATION_TAG_ASSIGNED', 'users', {
+        userId: req.params.id,
+        tagType: req.body.tagType,
+      });
+      ApiResponse.success(res, tag, 201);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  removeVerificationTag = async (req: AuthRequest, res: Response) => {
+    try {
+      const result = await adminService.removeVerificationTag(
+        req.params.id as string,
+        req.params.tagType as 'STANDARD' | 'INTERNATIONAL_FARMER' | 'INTERNATIONAL_BUYER'
+      );
+      await createAuditLog(req, 'VERIFICATION_TAG_REMOVED', 'users', {
+        userId: req.params.id,
+        tagType: req.params.tagType,
+      });
+      ApiResponse.success(res, result);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
   auditLogs = async (_req: AuthRequest, res: Response) => {
     try {
       ApiResponse.success(res, await adminService.getAuditLogs());
@@ -399,6 +443,49 @@ export class AccountantController {
       );
       await createAuditLog(req, `WITHDRAWAL_${req.body.status}`, 'platform_withdrawals');
       ApiResponse.success(res, withdrawal);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  getOrderDistribution = async (req: AuthRequest, res: Response) => {
+    try {
+      ApiResponse.success(
+        res,
+        await orderDistributionService.getOrCreateDistribution(req.params.orderId as string)
+      );
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  distributeOrderLine = async (req: AuthRequest, res: Response) => {
+    try {
+      const result = await orderDistributionService.distributeLine(
+        req.params.orderId as string,
+        req.params.lineId as string,
+        req.body
+      );
+      await createAuditLog(req, 'ORDER_DISTRIBUTION_LINE', 'order_distribution', {
+        orderId: req.params.orderId,
+        lineId: req.params.lineId,
+      });
+      ApiResponse.success(res, result);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  distributeOrderAll = async (req: AuthRequest, res: Response) => {
+    try {
+      const result = await orderDistributionService.distributeAll(
+        req.params.orderId as string,
+        req.body.paymentMethod
+      );
+      await createAuditLog(req, 'ORDER_DISTRIBUTION_ALL', 'order_distribution', {
+        orderId: req.params.orderId,
+      });
+      ApiResponse.success(res, result);
     } catch (e) {
       ApiResponse.error(res, e);
     }

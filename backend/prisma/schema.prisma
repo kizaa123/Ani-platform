@@ -60,6 +60,7 @@ model User {
   gpsLongitude       Float?             @map("gps_longitude")
   roleId             Int                @map("role_id")
   verificationStatus VerificationStatus @default(PENDING) @map("verification_status")
+  internationalVerified Boolean         @default(false) @map("international_verified")
   isActive           Boolean            @default(true) @map("is_active")
   createdAt          DateTime           @default(now()) @map("created_at")
   updatedAt          DateTime           @updatedAt @map("updated_at")
@@ -93,6 +94,9 @@ model User {
   researchPublicationLikes   ResearchPublicationLike[]
   researchComments             ResearchComment[]
   platformWithdrawals        PlatformWithdrawal[]
+  verificationTags           UserVerificationTag[] @relation("UserVerificationTags")
+  assignedVerificationTags   UserVerificationTag[] @relation("AssignedVerificationTags")
+  distributionLines          OrderDistributionLine[] @relation("DistributionRecipients")
 
   @@map("users")
 }
@@ -306,6 +310,7 @@ model ProductOrder {
   buyer   User             @relation("BuyerOrders", fields: [buyerId], references: [id])
   farmer  User             @relation("FarmerOrders", fields: [farmerId], references: [id])
   listing CommodityListing @relation(fields: [listingId], references: [id])
+  moneyDistribution MoneyDistribution?
 
   @@map("product_orders")
 }
@@ -425,6 +430,7 @@ enum NotificationType {
   NEW_ORDER
   ORDER_TRACKED
   ORDER_PAYMENT_RELEASED
+  MONEY_DISTRIBUTED
   CONNECTION_REQUEST
   CONNECTION_APPROVED
   CONNECTION_DECLINED
@@ -434,6 +440,26 @@ enum NotificationType {
   NEW_PRODUCT
   NEW_FARMER
   NEW_PUBLICATION
+}
+
+enum VerificationTagType {
+  STANDARD
+  INTERNATIONAL_FARMER
+  INTERNATIONAL_BUYER
+}
+
+model UserVerificationTag {
+  id         String              @id @default(uuid())
+  userId     String              @map("user_id")
+  tagType    VerificationTagType @map("tag_type")
+  assignedBy String              @map("assigned_by")
+  createdAt  DateTime            @default(now()) @map("created_at")
+
+  user     User @relation("UserVerificationTags", fields: [userId], references: [id], onDelete: Cascade)
+  assigner User @relation("AssignedVerificationTags", fields: [assignedBy], references: [id])
+
+  @@unique([userId, tagType])
+  @@map("user_verification_tags")
 }
 
 // ─── Research Library ────────────────────────────────────────────────────────
@@ -649,6 +675,51 @@ model PlatformWithdrawal {
 
   @@index([createdAt])
   @@map("platform_withdrawals")
+}
+
+// ─── Order money distribution (accountant) ───────────────────────────────────
+
+enum DistributionRecipientRole {
+  FARMER
+  FARMER_HANDLER
+  BUYER_HANDLER
+  ANI_PLATFORM
+}
+
+enum DistributionLineStatus {
+  PENDING
+  DISTRIBUTED
+}
+
+model OrderMoneyDistribution {
+  id          String   @id @default(uuid())
+  orderId     String   @unique @map("order_id")
+  totalAmount Float    @map("total_amount")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  lines OrderDistributionLine[]
+
+  @@map("order_money_distributions")
+}
+
+model OrderDistributionLine {
+  id              String                   @id @default(uuid())
+  distributionId  String                   @map("distribution_id")
+  recipientUserId String?                  @map("recipient_user_id")
+  role            DistributionRecipientRole
+  percentage      Float
+  amount          Float
+  status          DistributionLineStatus   @default(PENDING)
+  paymentMethod   String?                  @map("payment_method")
+  distributedAt   DateTime?                @map("distributed_at")
+  transactionId   String?                  @unique @map("transaction_id")
+  createdAt       DateTime                 @default(now()) @map("created_at")
+
+  distribution OrderMoneyDistribution @relation(fields: [distributionId], references: [id], onDelete: Cascade)
+  recipient    User?                  @relation("DistributionRecipients", fields: [recipientUserId], references: [id])
+
+  @@map("order_distribution_lines")
 }
 
 // ─── Audit ─────────────────────────────────────────────────────────────────────

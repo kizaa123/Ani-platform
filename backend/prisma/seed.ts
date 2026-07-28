@@ -67,6 +67,19 @@ async function main() {
   console.log('🌱 Seeding ANI Platform...');
   await dedupeAgentAssignments();
 
+  const legacyStudents = await prisma.user.findMany({ where: { roleId: 9 } });
+  for (const student of legacyStudents) {
+    await prisma.user.update({ where: { id: student.id }, data: { roleId: 4 } });
+    await prisma.buyerProfile.upsert({
+      where: { userId: student.id },
+      create: { userId: student.id },
+      update: {},
+    });
+  }
+  if (legacyStudents.length > 0) {
+    console.log(`↪ Migrated ${legacyStudents.length} legacy student account(s) to Client (Buyer) role`);
+  }
+
   for (const role of ROLES) {
     await prisma.role.upsert({ where: { id: role.id }, update: { roleName: role.roleName }, create: role });
   }

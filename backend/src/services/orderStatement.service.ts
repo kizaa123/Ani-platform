@@ -94,6 +94,19 @@ function drawPageWatermark(doc: PDFKit.PDFDocument, logoPath: string | null): vo
   drawPlatformNameWatermark(doc);
 }
 
+function drawHeaderLogo(doc: PDFKit.PDFDocument, logoPath: string | null, y: number): number {
+  if (logoPath) {
+    const logoSize = 44;
+    doc.image(logoPath, PAGE_MARGIN, y, {
+      width: logoSize,
+      height: logoSize,
+      fit: [logoSize, logoSize],
+    });
+    return y + logoSize + 8;
+  }
+  return y;
+}
+
 async function loadOrderForStatement(orderId: string) {
   return prisma.productOrder.findUnique({
     where: { id: orderId },
@@ -318,7 +331,8 @@ export function buildOrderStatementPdf(
     const totalFormatted = `GHC ${order.totalAmount.toFixed(2)}`;
     const transactionRef = resolveTransactionRef(order);
 
-    let y = 48;
+    let y = drawHeaderLogo(doc, logoPath, 36);
+    y += 4;
 
     doc.font('Helvetica-Bold').fontSize(16).fillColor(COLORS.accent);
     doc.text(PLATFORM_NAME, PAGE_MARGIN, y, { width: CONTENT_WIDTH, align: 'center' });
