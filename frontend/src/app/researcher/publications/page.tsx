@@ -319,23 +319,28 @@ export default function ResearcherPublicationsPage() {
               key={pub.id}
               className="flex flex-col overflow-hidden rounded-xl border border-brand-100 bg-white shadow-sm transition hover:border-brand-200 hover:shadow-md"
             >
-              <PublicationCoverImage coverImage={pub.coverImage} title={pub.title} className="rounded-none" />
-              <div className="flex flex-1 flex-col p-4">
-                <h3 className="font-semibold text-brand-900 line-clamp-2">{pub.title}</h3>
+              <PublicationCoverImage
+                coverImage={pub.coverImage}
+                title={pub.title}
+                className="rounded-none"
+                aspectClass="aspect-[2/1]"
+              />
+              <div className="flex flex-1 flex-col gap-1.5 p-3">
+                <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-brand-900">{pub.title}</h3>
                 {pub.description && (
-                  <p className="mt-1 line-clamp-2 text-sm text-gray-500">{pub.description}</p>
+                  <p className="line-clamp-2 text-xs leading-snug text-gray-500">{pub.description}</p>
                 )}
-                <div className="mt-auto pt-3">
-                  <div className="flex items-center justify-between text-sm">
+                <div className="mt-auto pt-2">
+                  <div className="flex items-center justify-between text-xs">
                     <span className="flex items-center gap-1 text-gray-500">
-                      <Icon name="eye" className="h-4 w-4" />
+                      <Icon name="eye" className="h-3.5 w-3.5" />
                       {pub.viewCount}
                     </span>
-                    <span className="font-semibold text-brand-700">
+                    <span className="text-sm font-semibold text-brand-700">
                       {pub.isFree ? "Free" : `GHC ${(pub.price ?? 0).toFixed(2)}`}
                     </span>
                   </div>
-                  <div className="mt-4 flex gap-2">
+                  <div className="mt-2.5 flex gap-1.5">
                     <button type="button" className="btn-outline flex-1 text-sm" onClick={() => startEdit(pub)}>
                       Edit
                     </button>

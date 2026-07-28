@@ -6,6 +6,9 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { Icon } from "@/components/icons";
 import { Logo } from "@/components/Logo";
+import { PlatformBrandTitle } from "@/components/PlatformBrandTitle";
+import { ScrollReveal } from "@/components/ScrollReveal";
+import { scrollStagger } from "@/hooks/useScrollAnimation";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -34,17 +37,17 @@ export default function LoginPage() {
       {/* Left Column: Platform Overview & Sprout Image */}
       <div className="hidden lg:col-span-7 lg:flex relative overflow-hidden bg-brand-900 flex-col justify-between p-12 lg:p-16 text-white min-h-[500px]">
         {/* Background sprout image */}
-        <div className="absolute inset-0 z-0 bg-[url('/login_cover.png')] bg-cover bg-center" />
+        <div className="absolute inset-0 z-0 bg-[url('/ani background color.jpg')] bg-cover bg-center" />
         {/* Dark gradient overlay for readability */}
         <div className="absolute inset-0 z-10 bg-gradient-to-tr from-brand-950/95 via-brand-900/80 to-brand-800/40" />
 
         {/* Brand logo */}
-        <div className="relative z-20">
+        <ScrollReveal trigger="mount" delay={scrollStagger(0, 80)} duration={500} direction="fade-up" className="relative z-20">
           <Logo theme="light" size="lg" />
-        </div>
+        </ScrollReveal>
 
         {/* Marketing text & stats */}
-        <div className="relative z-20 max-w-xl space-y-6">
+        <ScrollReveal trigger="mount" delay={scrollStagger(1, 80)} duration={500} direction="fade-up" className="relative z-20 max-w-xl space-y-6">
           <div className="inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 backdrop-blur-sm">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
@@ -54,7 +57,8 @@ export default function LoginPage() {
               Ghana&apos;s Agricultural Exchange Platform
             </span>
           </div>
-          <h2 className="text-4xl lg:text-5xl font-black leading-tight tracking-tight text-white drop-shadow-sm">
+          <PlatformBrandTitle theme="light" size="panel" />
+          <h2 className="text-2xl font-bold leading-snug tracking-tight text-white/95 lg:text-3xl">
             Connecting African Agriculture to Global Markets
           </h2>
           <p className="text-brand-100 text-lg leading-relaxed font-light">
@@ -75,22 +79,26 @@ export default function LoginPage() {
               <p className="text-[10px] text-brand-200 uppercase tracking-widest font-semibold mt-1">Handler Support</p>
             </div>
           </div>
-        </div>
+        </ScrollReveal>
 
-        <div className="relative z-20 text-xs text-brand-300 font-medium">
-          © {new Date().getFullYear()} ANI Agricultural Exchange Platform. All rights reserved.
-        </div>
+        <ScrollReveal trigger="mount" delay={scrollStagger(2, 80)} duration={450} direction="fade-in" className="relative z-20 text-xs text-brand-300 font-medium">
+          © {new Date().getFullYear()} Agricess Network International — ANI Platform. All rights reserved.
+        </ScrollReveal>
       </div>
 
       {/* Right Column: Form Container */}
       <div className="lg:col-span-5 flex items-center justify-center p-6 sm:p-12 lg:p-16">
-        <div className="w-full max-w-md space-y-8 bg-white p-8 rounded-2xl border border-brand-100 shadow-xl">
+        <ScrollReveal trigger="mount" delay={120} duration={500} direction="fade-up" className="w-full max-w-md">
+        <div className="space-y-8 bg-white p-8 rounded-2xl border border-brand-100 shadow-xl">
           <header className="text-center lg:text-left">
-            <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-100 text-brand-700 mb-4">
+            <div className="mb-6 lg:hidden">
+              <PlatformBrandTitle theme="dark" size="compact" showIcon />
+            </div>
+            <div className="hidden lg:inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-100 text-brand-700 mb-4">
               <Icon name="lock" className="h-6 w-6" />
             </div>
             <h1 className="text-3xl font-extrabold text-brand-900 tracking-tight">Welcome Back</h1>
-            <p className="mt-2 text-sm text-gray-500">Sign in to your ANI Exchange account</p>
+            <p className="mt-2 text-sm text-gray-500">Sign in to your ANI Platform account</p>
           </header>
 
           {error && (
@@ -159,6 +167,7 @@ export default function LoginPage() {
             </p>
           </div>
         </div>
+        </ScrollReveal>
       </div>
     </div>
   );

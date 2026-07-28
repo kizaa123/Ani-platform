@@ -175,3 +175,48 @@
 body {
   @apply bg-brand-50 text-gray-900 antialiased;
 }
+
+/* Scroll-triggered reveal animations (Intersection Observer + CSS) */
+@layer components {
+  .scroll-reveal {
+    opacity: 0;
+    will-change: opacity, transform;
+    transition:
+      opacity var(--scroll-reveal-duration, 500ms) cubic-bezier(0.22, 1, 0.36, 1),
+      transform var(--scroll-reveal-duration, 500ms) cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--scroll-reveal-delay, 0ms);
+  }
+
+  .scroll-reveal-fade-up {
+    transform: translateY(20px);
+  }
+
+  .scroll-reveal-fade-down {
+    transform: translateY(-20px);
+  }
+
+  .scroll-reveal-fade-left {
+    transform: translateX(20px);
+  }
+
+  .scroll-reveal-fade-right {
+    transform: translateX(-20px);
+  }
+
+  .scroll-reveal-fade-in {
+    transform: none;
+  }
+
+  .scroll-reveal-visible {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}

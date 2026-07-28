@@ -21,6 +21,8 @@ import { VerificationBadge } from "@/components/VerificationBadge";
 import { PaymentCheckout, TransactionSuccess } from "@/components/PaymentCheckout";
 import { CardGridSkeleton, PageContentSkeleton, SpinnerLabel } from "@/components/LoadingPrimitives";
 import { ProfilePhoto } from "@/components/FarmerAvatar";
+import { ScrollReveal } from "@/components/ScrollReveal";
+import { scrollStagger } from "@/hooks/useScrollAnimation";
 import { assetUrl } from "@/lib/assetUrl";
 
 function formatGhc(amount: number) {
@@ -201,97 +203,100 @@ function PublicationCard({
 
   return (
     <article className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-md transition hover:border-brand-200 hover:shadow-lg">
-      <PublicationCoverImage coverImage={pub.coverImage} title={pub.title} className="rounded-none" />
+      <PublicationCoverImage
+        coverImage={pub.coverImage}
+        title={pub.title}
+        className="rounded-none"
+        aspectClass="aspect-[2/1]"
+      />
 
-      <div className="flex flex-1 flex-col p-5">
-      <div className="mb-4 flex items-center gap-4">
-        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full border-2 border-gray-100 bg-white shadow-xs">
-          {pub.researcher.profilePicture ? (
-            <ProfilePhoto
-              src={pub.researcher.profilePicture}
-              name={pub.researcher.name}
-              size={80}
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gray-100 text-xl font-bold text-gray-400">
-              {pub.researcher.name.charAt(0)}
-            </div>
-          )}
+      <div className="flex flex-1 flex-col gap-2 p-3.5 sm:p-4">
+        <div className="flex items-center gap-2.5">
+          <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full border border-gray-100 bg-white shadow-xs">
+            {pub.researcher.profilePicture ? (
+              <ProfilePhoto
+                src={pub.researcher.profilePicture}
+                name={pub.researcher.name}
+                size={44}
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-gray-100 text-sm font-bold text-gray-400">
+                {pub.researcher.name.charAt(0)}
+              </div>
+            )}
+          </div>
+
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+            <span className="truncate text-sm font-semibold text-gray-700">{pub.researcher.name}</span>
+            <VerificationBadge status={pub.researcher.verificationStatus} />
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-base font-semibold text-gray-700">{pub.researcher.name}</span>
-          <VerificationBadge status={pub.researcher.verificationStatus} />
-        </div>
-      </div>
+        <h3 className="line-clamp-2 text-base font-bold leading-snug text-gray-900">{pub.title}</h3>
 
-      <h3 className="text-lg font-bold text-gray-900 leading-snug">{pub.title}</h3>
-
-      <div className="mt-2.5 text-sm text-gray-600 leading-relaxed">
-        <p>
-          <span className="font-semibold text-gray-900">Qualifications: </span>
+        <p className="line-clamp-2 text-xs leading-snug text-gray-600">
+          <span className="font-semibold text-gray-800">Qualifications: </span>
           {pub.description ||
             "PhD Crop Science (KNUST), MSc Sustainable Agriculture (UCC), Senior Agronomist at CSIR-Crops Research Institute. 15+ years experience in climate-resilient farming."}
         </p>
-      </div>
 
-      <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3 text-sm">
-        <span className="flex items-center gap-1.5 font-medium text-gray-600">
-          <Icon name="eye" className="h-4 w-4 text-gray-500" />
-          {viewCount}
-        </span>
-
-        <span className="font-bold text-brand-700 text-base">
-          {pub.isFree ? "Free" : formatGhc(pub.price ?? 0)}
-        </span>
-      </div>
-
-      <div className="mt-4 grid grid-cols-3 gap-2">
-        <button
-          type="button"
-          onClick={handleLike}
-          disabled={liking}
-          className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-100/70 px-2 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-200/80"
-        >
-          <span
-            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full transition ${
-              pub.likedByMe
-                ? "bg-emerald-600 text-white shadow-xs"
-                : "bg-emerald-200/80 text-emerald-800"
-            }`}
-          >
-            <Icon name="thumbs-up" className="h-3.5 w-3.5" />
+        <div className="flex items-center justify-between border-t border-gray-100 pt-2 text-xs">
+          <span className="flex items-center gap-1 font-medium text-gray-600">
+            <Icon name="eye" className="h-3.5 w-3.5 text-gray-500" />
+            {viewCount}
           </span>
-          <span>{pub.likesCount > 0 ? pub.likesCount : "Like"}</span>
-        </button>
+
+          <span className="text-sm font-bold text-brand-700">
+            {pub.isFree ? "Free" : formatGhc(pub.price ?? 0)}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-3 gap-1.5">
+          <button
+            type="button"
+            onClick={handleLike}
+            disabled={liking}
+            className="flex items-center justify-center gap-1 rounded-lg bg-emerald-100/70 px-1.5 py-1.5 text-[11px] font-semibold text-emerald-800 transition hover:bg-emerald-200/80"
+          >
+            <span
+              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition ${
+                pub.likedByMe
+                  ? "bg-emerald-600 text-white shadow-xs"
+                  : "bg-emerald-200/80 text-emerald-800"
+              }`}
+            >
+              <Icon name="thumbs-up" className="h-3 w-3" />
+            </span>
+            <span>{pub.likesCount > 0 ? pub.likesCount : "Like"}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onView(pub)}
+            className="flex items-center justify-center gap-1 rounded-lg bg-emerald-100/70 px-1.5 py-1.5 text-[11px] font-semibold text-emerald-800 transition hover:bg-emerald-200/80"
+          >
+            <Icon name="comment" className="h-3 w-3 shrink-0" />
+            <span>{(pub.commentsCount ?? 0) > 0 ? pub.commentsCount : "Comment"}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleShare}
+            disabled={sharing}
+            className="flex items-center justify-center gap-1 rounded-lg bg-emerald-100/70 px-1.5 py-1.5 text-[11px] font-semibold text-emerald-800 transition hover:bg-emerald-200/80"
+          >
+            <Icon name="share" className="h-3 w-3 shrink-0" />
+            <span>{pub.sharesCount > 0 ? pub.sharesCount : "Share"}</span>
+          </button>
+        </div>
 
         <button
           type="button"
-          onClick={() => onView(pub)}
-          className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-100/70 px-2 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-200/80"
+          onClick={() => (pub.isLocked ? onView(pub) : onReadNow(pub))}
+          className="mt-auto w-full rounded-xl bg-brand-700 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-900 active:scale-98"
         >
-          <Icon name="comment" className="h-3.5 w-3.5 shrink-0" />
-          <span>{(pub.commentsCount ?? 0) > 0 ? pub.commentsCount : "Comment"}</span>
+          {pub.isLocked ? "View & unlock" : "Read now"}
         </button>
-
-        <button
-          type="button"
-          onClick={handleShare}
-          disabled={sharing}
-          className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-100/70 px-2 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-200/80"
-        >
-          <Icon name="share" className="h-3.5 w-3.5 shrink-0" />
-          <span>{pub.sharesCount > 0 ? pub.sharesCount : "Share"}</span>
-        </button>
-      </div>
-
-      <button
-        type="button"
-        onClick={() => (pub.isLocked ? onView(pub) : onReadNow(pub))}
-        className="mt-auto w-full rounded-2xl bg-brand-800 py-3.5 text-base font-bold text-white shadow-sm transition hover:bg-brand-900 active:scale-98"
-      >
-        {pub.isLocked ? "View & unlock" : "Read now"}
-      </button>
       </div>
     </article>
   );
@@ -457,14 +462,15 @@ export default function LibraryPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      <div className="mb-6">
+      <ScrollReveal trigger="mount" delay={0} duration={450} direction="fade-up" className="mb-6">
         <h1 className="text-3xl font-extrabold text-brand-900">Research Library</h1>
         <p className="mt-1 text-sm text-gray-500">
           Browse books and research publications by farming category
         </p>
-      </div>
+      </ScrollReveal>
 
-      <form onSubmit={handleSearch} className="mb-8 flex gap-3">
+      <ScrollReveal trigger="mount" delay={80} duration={450} direction="fade-up" className="mb-8">
+      <form onSubmit={handleSearch} className="flex gap-3">
         <div className="relative flex-1">
           <Icon name="search" className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
           <input
@@ -478,6 +484,7 @@ export default function LibraryPage() {
           Search
         </button>
       </form>
+      </ScrollReveal>
 
       {loadError && (
         <p className="mb-4 rounded-xl bg-red-50 p-4 text-red-700">
@@ -486,19 +493,24 @@ export default function LibraryPage() {
       )}
 
       {dataLoading ? (
-        <CardGridSkeleton count={4} columns="sm:grid-cols-2" imageHeight="h-36" />
+        <CardGridSkeleton count={4} columns="sm:grid-cols-2" imageHeight="h-28" />
       ) : publications.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-brand-200 bg-white p-12 text-center text-gray-500">
           No publications found.
         </div>
       ) : (
         <div className="space-y-8">
-          {PUBLICATION_CATEGORY_ORDER.map((category) => {
+          {PUBLICATION_CATEGORY_ORDER.map((category, sectionIndex) => {
             const items = groupedPublications[category];
             if (items.length === 0) return null;
             return (
-              <section
+              <ScrollReveal
                 key={category}
+                delay={scrollStagger(sectionIndex, 100)}
+                duration={500}
+                direction="fade-up"
+              >
+              <section
                 className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm"
               >
                 <div className="border-b border-brand-50 px-4 py-3 sm:px-5 sm:py-4">
@@ -511,9 +523,12 @@ export default function LibraryPage() {
                 </div>
                 <div className="p-4 sm:p-5">
                   <div className="-mx-1 flex gap-5 overflow-x-auto px-1 pb-1 snap-x snap-mandatory scrollbar-hide sm:gap-6">
-                    {items.map((pub) => (
-                      <div
+                    {items.map((pub, i) => (
+                      <ScrollReveal
                         key={pub.id}
+                        delay={scrollStagger(i, 80)}
+                        duration={450}
+                        direction="fade-up"
                         className="w-80 shrink-0 snap-start sm:w-[22rem]"
                       >
                         <PublicationCard
@@ -524,11 +539,12 @@ export default function LibraryPage() {
                           onLike={handleLike}
                           onShare={handleShare}
                         />
-                      </div>
+                      </ScrollReveal>
                     ))}
                   </div>
                 </div>
               </section>
+              </ScrollReveal>
             );
           })}
         </div>

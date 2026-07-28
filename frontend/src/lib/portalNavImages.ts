@@ -133,7 +133,7 @@ export const PORTAL_NAV_IMAGES_BUYER = {
 
   /** Change image here: My Orders card */
 
-  "/orders": "/stock-photo-couple-of-male-and-female-farmers-harvest-crop-of-green-lettuce-on-a-plantation-1978085750.jpg",
+  "/orders": "/order agric image.jpg",
 
   /** Change image here: Buyer Profile card */
 
@@ -185,7 +185,7 @@ export const PORTAL_NAV_IMAGES_STAFF = {
 
   /** Change image here: Admin Panel card */
 
-  "/admin": "/team_1.png",
+  "/admin": "/9846eee5-004a-42b1-8e4f-e5bac031dfbf-cover.png",
 
   /** Change image here: Platform Financial Statement card */
 

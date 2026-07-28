@@ -2,6 +2,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { Icon, type IconName } from "@/components/icons";
 import { PortalNavCard } from "@/components/PortalNavCard";
+import { PlatformBrandTitle } from "@/components/PlatformBrandTitle";
+import { ScrollReveal } from "@/components/ScrollReveal";
+import { scrollStagger } from "@/hooks/useScrollAnimation";
+import { HOW_IT_WORKS_IMAGES } from "@/lib/homepageImages";
 
 const STATS = [
   { value: "10,000+", label: "Verified Users" },
@@ -9,34 +13,30 @@ const STATS = [
   { value: "100%", label: "Secure Transactions" },
 ];
 
-const HOW_IT_WORKS: { icon: IconName; step: string; title: string; desc: string; color: string }[] = [
+const HOW_IT_WORKS: { step: number; title: string; desc: string; image: string }[] = [
   {
-    icon: "user",
-    step: "01",
+    step: 1,
     title: "Farmers Register",
     desc: "Create a verified profile, select your crops or livestock, and list your commodities with prices, quantities and harvest dates.",
-    color: "from-brand-600 to-brand-800",
+    image: HOW_IT_WORKS_IMAGES.farmersRegister,
   },
   {
-    icon: "credit-card",
-    step: "02",
+    step: 2,
     title: "Buyers Pay for Access",
     desc: "Browse previews freely. Pay a one-time access fee to unlock full farmer data, quantities, contact details and direct messaging.",
-    color: "from-yellow-500 to-yellow-700",
+    image: HOW_IT_WORKS_IMAGES.buyersPay,
   },
   {
-    icon: "handshake",
-    step: "03",
+    step: 3,
     title: "Agents Represent",
     desc: "Farmer Handlers and Buyer Handlers negotiate on behalf of clients, manage relationships and streamline deals.",
-    color: "from-emerald-600 to-brand-700",
+    image: HOW_IT_WORKS_IMAGES.agentsRepresent,
   },
   {
-    icon: "check",
-    step: "04",
+    step: 4,
     title: "Connect & Trade",
     desc: "Request connections, chat securely, finalise orders and track financials — all in one protected platform.",
-    color: "from-brand-700 to-brand-900",
+    image: HOW_IT_WORKS_IMAGES.connectTrade,
   },
 ];
 
@@ -132,51 +132,54 @@ export default function HomePage() {
 
         <div className="relative z-10 mx-auto w-full max-w-6xl px-6 py-24">
           <div className="max-w-2xl">
-            {/* Live badge */}
-            <div className="mb-5 inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 backdrop-blur-sm">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-              </span>
-              <span className="text-sm font-medium tracking-wide text-white/90">
-                Ghana&apos;s #1 Agricultural Exchange Platform
-              </span>
-            </div>
+            <ScrollReveal trigger="mount" delay={0} duration={500} direction="fade-up">
+              <div className="mb-5 inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 backdrop-blur-sm">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                </span>
+                <span className="text-sm font-medium tracking-wide text-white/90">
+                  Ghana&apos;s #1 Agricultural Exchange Platform
+                </span>
+              </div>
+            </ScrollReveal>
 
-            {/* Platform name */}
-            <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-emerald-400">
-              Agricess Network International &mdash; ANI Platform
-            </p>
+            <ScrollReveal trigger="mount" delay={scrollStagger(1, 100)} duration={500} direction="fade-up">
+              <PlatformBrandTitle theme="light" size="hero" className="mb-8" />
+            </ScrollReveal>
 
-            {/* Main headline */}
-            <h1 className="mb-6 text-5xl font-black leading-tight tracking-tight text-white md:text-6xl lg:text-7xl">
-              Where Farmers{" "}
-              <span className="bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-300 bg-clip-text text-transparent">
-                Meet Markets
-              </span>
-            </h1>
+            <ScrollReveal trigger="mount" delay={scrollStagger(2, 100)} duration={550} direction="fade-up">
+              <h1 className="mb-6 text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl">
+                Where Farmers{" "}
+                <span className="bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-300 bg-clip-text text-transparent">
+                  Meet Markets
+                </span>
+              </h1>
+            </ScrollReveal>
 
-            {/* Sub-copy */}
-            <p className="mb-10 text-xl font-light leading-relaxed text-brand-100 md:text-2xl">
-              Connect verified farmers with trusted buyers across Ghana. Secure commodity trading with full privacy protection until payment is complete.
-            </p>
+            <ScrollReveal trigger="mount" delay={scrollStagger(3, 100)} duration={500} direction="fade-up">
+              <p className="mb-10 text-xl font-light leading-relaxed text-brand-100 md:text-2xl">
+                Connect verified farmers with trusted buyers across Ghana. Secure commodity trading with full privacy protection until payment is complete.
+              </p>
+            </ScrollReveal>
 
-            <div className="flex flex-wrap gap-4">
-              <Link
-                href="/register"
-                className="inline-flex items-center gap-2 rounded-2xl bg-yellow-400 px-8 py-4 text-base font-bold text-brand-900 shadow-lg transition-all hover:scale-105 hover:bg-yellow-300"
-              >
-                <Icon name="sprout" className="h-5 w-5" />
-                Join the Platform
-              </Link>
-              <Link
-                href="/login"
-                className="inline-flex items-center gap-2 rounded-2xl border-2 border-white/30 px-8 py-4 text-base font-semibold text-white backdrop-blur-sm transition-all hover:border-white/60 hover:bg-white/10"
-              >
-                Sign In
-              </Link>
-            </div>
-
+            <ScrollReveal trigger="mount" delay={scrollStagger(4, 100)} duration={500} direction="fade-up">
+              <div className="flex flex-wrap gap-4">
+                <Link
+                  href="/register"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-yellow-400 px-8 py-4 text-base font-bold text-brand-900 shadow-lg transition-all hover:scale-105 hover:bg-yellow-300"
+                >
+                  <Icon name="sprout" className="h-5 w-5" />
+                  Join the Platform
+                </Link>
+                <Link
+                  href="/login"
+                  className="inline-flex items-center gap-2 rounded-2xl border-2 border-white/30 px-8 py-4 text-base font-semibold text-white backdrop-blur-sm transition-all hover:border-white/60 hover:bg-white/10"
+                >
+                  Sign In
+                </Link>
+              </div>
+            </ScrollReveal>
           </div>
         </div>
       </section>
@@ -185,11 +188,13 @@ export default function HomePage() {
       <section className="bg-brand-800 py-8">
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid grid-cols-3 gap-6">
-            {STATS.map((s) => (
-              <div key={s.label} className="text-center">
-                <p className="text-3xl font-black text-yellow-400">{s.value}</p>
-                <p className="mt-1 text-sm font-medium text-brand-200">{s.label}</p>
-              </div>
+            {STATS.map((s, i) => (
+              <ScrollReveal key={s.label} delay={scrollStagger(i, 90)} duration={450} direction="fade-up">
+                <div className="text-center">
+                  <p className="text-3xl font-black text-yellow-400">{s.value}</p>
+                  <p className="mt-1 text-sm font-medium text-brand-200">{s.label}</p>
+                </div>
+              </ScrollReveal>
             ))}
           </div>
         </div>
@@ -198,7 +203,7 @@ export default function HomePage() {
       {/* ── WHO IS IT FOR ── */}
       <section className="bg-brand-50 py-20">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="mb-12 text-center">
+          <ScrollReveal className="mb-12 text-center" duration={500} direction="fade-up">
             <span className="mb-3 inline-block rounded-full bg-brand-100 px-4 py-1 text-xs font-bold uppercase tracking-widest text-brand-700">
               Built for Everyone
             </span>
@@ -206,17 +211,18 @@ export default function HomePage() {
             <p className="mx-auto mt-4 max-w-xl text-gray-500">
               Whether you grow it, buy it, or broker it — ANI Platform has a tailored experience designed for your role.
             </p>
-          </div>
+          </ScrollReveal>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {ROLE_CARDS.map((r) => (
-              <PortalNavCard
-                key={r.label}
-                href="/login"
-                title={r.label}
-                desc={r.desc}
-                icon={r.icon}
-                image={r.image}
-              />
+            {ROLE_CARDS.map((r, i) => (
+              <ScrollReveal key={r.label} delay={scrollStagger(i, 100)} duration={500} direction="fade-up">
+                <PortalNavCard
+                  href="/login"
+                  title={r.label}
+                  desc={r.desc}
+                  icon={r.icon}
+                  image={r.image}
+                />
+              </ScrollReveal>
             ))}
           </div>
         </div>
@@ -225,7 +231,7 @@ export default function HomePage() {
       {/* ── HOW IT WORKS ── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="mb-14 text-center">
+          <ScrollReveal className="mb-14 text-center" duration={500} direction="fade-up">
             <span className="mb-3 inline-block rounded-full bg-brand-100 px-4 py-1 text-xs font-bold uppercase tracking-widest text-brand-700">
               Simple Process
             </span>
@@ -233,23 +239,31 @@ export default function HomePage() {
             <p className="mx-auto mt-4 max-w-xl text-gray-500">
               Four simple steps from registration to closed deal — all protected by our secure escrow system.
             </p>
-          </div>
+          </ScrollReveal>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {HOW_IT_WORKS.map((item) => (
-              <div
-                key={item.step}
-                className="card-elevated relative flex flex-col gap-4 overflow-hidden rounded-2xl bg-brand-50 p-6"
-              >
-                <div className={`absolute -right-4 -top-4 h-20 w-20 rounded-full bg-gradient-to-br ${item.color} opacity-10`} />
-                <span className="text-5xl font-black text-brand-100">{item.step}</span>
-                <div className={`flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br ${item.color} text-white shadow-sm`}>
-                  <Icon name={item.icon} className="h-5 w-5" />
+            {HOW_IT_WORKS.map((item, i) => (
+              <ScrollReveal key={item.step} delay={scrollStagger(i, 100)} duration={500} direction="fade-up">
+                <div className="card-elevated group flex h-full flex-col overflow-hidden rounded-2xl bg-white">
+                  <div className="relative h-44 w-full overflow-hidden">
+                    <Image
+                      src={item.image}
+                      alt={item.title}
+                      fill
+                      className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-brand-900/70 via-brand-900/25 to-transparent" />
+                  </div>
+                  <div className="flex flex-1 flex-col gap-2 p-5">
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white shadow-sm">
+                        {item.step}
+                      </span>
+                      <h3 className="font-bold text-brand-900">{item.title}</h3>
+                    </div>
+                    <p className="text-sm leading-relaxed text-gray-500">{item.desc}</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-bold text-brand-900">{item.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-gray-500">{item.desc}</p>
-                </div>
-              </div>
+              </ScrollReveal>
             ))}
           </div>
         </div>
@@ -258,7 +272,7 @@ export default function HomePage() {
       {/* ── TEAM ── */}
       <section className="bg-brand-900 py-24">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="mb-14 text-center">
+          <ScrollReveal className="mb-14 text-center" duration={500} direction="fade-up">
             <span className="mb-3 inline-block rounded-full bg-brand-700 px-4 py-1 text-xs font-bold uppercase tracking-widest text-brand-200">
               The People Behind It
             </span>
@@ -266,28 +280,27 @@ export default function HomePage() {
             <p className="mx-auto mt-4 max-w-xl text-brand-300">
               A passionate team of agricultural and technology experts dedicated to transforming African commodity trading.
             </p>
-          </div>
+          </ScrollReveal>
           <div className="grid gap-8 md:grid-cols-3">
-            {TEAM.map((member) => (
-              <div
-                key={member.name}
-                className="group flex flex-col overflow-hidden rounded-2xl border border-brand-700 bg-brand-800 shadow-md transition-all hover:border-brand-500 hover:shadow-xl"
-              >
-                <div className="relative h-64 w-full overflow-hidden">
-                  <Image
-                    src={member.img}
-                    alt={member.name}
-                    fill
-                    className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-brand-900/80 to-transparent" />
+            {TEAM.map((member, i) => (
+              <ScrollReveal key={member.name} delay={scrollStagger(i, 110)} duration={550} direction="fade-up">
+                <div className="group flex h-full flex-col overflow-hidden rounded-2xl border border-brand-700 bg-brand-800 shadow-md transition-all hover:border-brand-500 hover:shadow-xl">
+                  <div className="relative h-64 w-full overflow-hidden">
+                    <Image
+                      src={member.img}
+                      alt={member.name}
+                      fill
+                      className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-brand-900/80 to-transparent" />
+                  </div>
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-white">{member.name}</h3>
+                    <p className="mt-1 text-sm font-semibold text-yellow-400">{member.role}</p>
+                    <p className="mt-3 text-sm leading-relaxed text-brand-300">{member.bio}</p>
+                  </div>
                 </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-white">{member.name}</h3>
-                  <p className="mt-1 text-sm font-semibold text-yellow-400">{member.role}</p>
-                  <p className="mt-3 text-sm leading-relaxed text-brand-300">{member.bio}</p>
-                </div>
-              </div>
+              </ScrollReveal>
             ))}
           </div>
         </div>
@@ -296,7 +309,7 @@ export default function HomePage() {
       {/* ── FINAL CTA ── */}
       <section className="relative overflow-hidden bg-gradient-to-br from-brand-700 via-brand-600 to-brand-500 py-24 text-white">
         <div className="absolute inset-0 bg-[url('/login_cover.png')] bg-cover bg-center opacity-10" />
-        <div className="relative z-10 mx-auto max-w-3xl px-6 text-center">
+        <ScrollReveal className="relative z-10 mx-auto max-w-3xl px-6 text-center" duration={550} direction="fade-up">
           <h2 className="mb-4 text-4xl font-black leading-tight md:text-5xl">
             Ready to Transform How You Trade?
           </h2>
@@ -318,7 +331,7 @@ export default function HomePage() {
               Browse Marketplace
             </Link>
           </div>
-        </div>
+        </ScrollReveal>
       </section>
 
     </div>

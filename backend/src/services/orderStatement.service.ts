@@ -5,7 +5,6 @@ import prisma from '../database/prisma';
 import { AppError, assertFound, assertAuthorized } from '../utils/errors';
 import { verifyReleaseOtp } from '../utils/orderOtp';
 import {
-  ROLES,
   isFarmerHandler,
   isBuyerHandler,
   isStaffRole,
@@ -15,15 +14,18 @@ import { notifyOrderPaymentReleased } from './notification.service';
 
 type OrderForStatement = NonNullable<Awaited<ReturnType<typeof loadOrderForStatement>>>;
 
+/** Who is viewing the receipt — drives payment status wording. */
+export type StatementViewerPerspective = 'sender' | 'receiver' | 'admin';
+
 const PAGE_MARGIN = 45;
 const CONTENT_WIDTH = 505;
 
-const PLATFORM_NAME = 'ANI Agricultural Exchange Platform';
-const PLATFORM_SHORT_NAME = 'ANI Platform';
+const PLATFORM_NAME = 'Agricess Network International - ANI';
+const PLATFORM_SHORT_NAME = 'Agricess Network International - ANI';
 
-/** Fixed label column + generous gap before values for readable alignment. */
-const KEY_VALUE_LABEL_WIDTH = 185;
-const KEY_VALUE_GAP = 52;
+/** Fixed label column + gap before values for readable alignment. */
+const KEY_VALUE_LABEL_WIDTH = 155;
+const KEY_VALUE_GAP = 28;
 const KEY_VALUE_VALUE_X = PAGE_MARGIN + KEY_VALUE_LABEL_WIDTH + KEY_VALUE_GAP;
 const KEY_VALUE_VALUE_WIDTH = CONTENT_WIDTH - KEY_VALUE_LABEL_WIDTH - KEY_VALUE_GAP;
 const KEY_VALUE_ROW_HEIGHT = 15;
@@ -69,17 +71,20 @@ function drawPlatformNameWatermark(doc: PDFKit.PDFDocument): void {
   const pageHeight = doc.page.height;
   const centerX = pageWidth / 2;
   const centerY = pageHeight / 2;
+  const textWidth = 560;
 
   doc.save();
   doc.opacity(0.05);
   doc.translate(centerX, centerY);
   doc.rotate(-35);
 
-  doc.font('Helvetica-Bold').fontSize(34).fillColor(COLORS.accent);
-  doc.text(PLATFORM_SHORT_NAME, -260, -48, { width: 520, align: 'center' });
-
-  doc.font('Helvetica').fontSize(14).fillColor(COLORS.muted);
-  doc.text('Agricultural Exchange Platform', -260, -8, { width: 520, align: 'center' });
+  doc.font('Helvetica-Bold').fontSize(26).fillColor(COLORS.accent);
+  doc.text('Agricess Network International', -textWidth / 2, 130, {
+    width: textWidth,
+    align: 'center',
+  });
+  doc.font('Helvetica-Bold').fontSize(22).fillColor(COLORS.accent);
+  doc.text('- ANI', -textWidth / 2, 162, { width: textWidth, align: 'center' });
 
   doc.restore();
 }
@@ -236,6 +241,54 @@ function drawKeyValue(
   return y + KEY_VALUE_ROW_HEIGHT;
 }
 
+export function resolveStatementViewerPerspective(
+  userId: string,
+  roleId: number,
+  order: { buyerId: string; farmerId: string }
+): StatementViewerPerspective {
+  if (isStaffRole(roleId)) return 'admin';
+  if (order.buyerId === userId || isBuyerHandler(roleId)) return 'sender';
+  if (order.farmerId === userId || isFarmerHandler(roleId)) return 'receiver';
+  return 'admin';
+}
+
+function paymentStatusMessage(perspective: StatementViewerPerspective): string {
+  if (perspective === 'sender') return 'Payment made successfully';
+  if (perspective === 'receiver') return 'Payment received successfully';
+  return 'Payment completed successfully';
+}
+
+function formatDeliveryReleaseSentence(order: OrderForStatement): string {
+  const deliveryDate = order.otpVerifiedAt ? formatDateTime(order.otpVerifiedAt) : null;
+  const releaseDate = order.paymentReleasedAt ? formatDateTime(order.paymentReleasedAt) : null;
+
+  if (deliveryDate && releaseDate) {
+    return `Delivery confirmed on ${deliveryDate}; funds released on ${releaseDate}.`;
+  }
+  if (deliveryDate) {
+    return `Delivery confirmed on ${deliveryDate}; funds release pending.`;
+  }
+  if (releaseDate) {
+    return `Funds released on ${releaseDate}; delivery confirmation pending.`;
+  }
+  return 'Delivery and fund release pending.';
+}
+
+function drawPaymentStatus(
+  doc: PDFKit.PDFDocument,
+  perspective: StatementViewerPerspective,
+  y: number
+): number {
+  const message = paymentStatusMessage(perspective);
+  const checkmark = '\u2713';
+  const statusText = `${checkmark}  ${message}`;
+
+  doc.font('Helvetica-Bold').fontSize(10).fillColor(COLORS.accent);
+  doc.text(statusText, PAGE_MARGIN, y, { width: CONTENT_WIDTH });
+
+  return y + KEY_VALUE_ROW_HEIGHT + 4;
+}
+
 function drawFooter(doc: PDFKit.PDFDocument): void {
   doc.font('Helvetica').fontSize(8).fillColor(COLORS.muted);
   doc.text(
@@ -246,7 +299,10 @@ function drawFooter(doc: PDFKit.PDFDocument): void {
   );
 }
 
-export function buildOrderStatementPdf(order: OrderForStatement): Promise<Buffer> {
+export function buildOrderStatementPdf(
+  order: OrderForStatement,
+  perspective: StatementViewerPerspective
+): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: PAGE_MARGIN, size: 'A4' });
     const chunks: Buffer[] = [];
@@ -302,21 +358,13 @@ export function buildOrderStatementPdf(order: OrderForStatement): Promise<Buffer
     y = drawSectionTitle(doc, 'Payment & Escrow', y);
     y = drawKeyValue(doc, 'Order status', order.status, y);
     y = drawKeyValue(doc, 'Escrow status', formatEscrowStatus(order.escrowStatus), y);
-    y += 10;
+    y = drawPaymentStatus(doc, perspective, y);
+    y += 6;
 
     y = drawSectionTitle(doc, 'Delivery & Release', y);
-    y = drawKeyValue(
-      doc,
-      'Delivery confirmed',
-      order.otpVerifiedAt ? formatDateTime(order.otpVerifiedAt) : '—',
-      y
-    );
-    y = drawKeyValue(
-      doc,
-      'Funds released',
-      order.paymentReleasedAt ? formatDateTime(order.paymentReleasedAt) : '—',
-      y
-    );
+    doc.font('Helvetica').fontSize(9).fillColor(COLORS.text);
+    doc.text(formatDeliveryReleaseSentence(order), PAGE_MARGIN, y, { width: CONTENT_WIDTH });
+    y += KEY_VALUE_ROW_HEIGHT + 4;
 
     drawFooter(doc);
 
@@ -339,7 +387,8 @@ export async function generateOrderStatementPdf(
     );
   }
 
-  const buffer = await buildOrderStatementPdf(order);
+  const perspective = resolveStatementViewerPerspective(userId, roleId, order);
+  const buffer = await buildOrderStatementPdf(order, perspective);
   const filename = `ani-order-${orderId.slice(0, 8)}.pdf`;
   return { buffer, filename };
 }

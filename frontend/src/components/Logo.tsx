@@ -64,11 +64,11 @@ export function Logo({
     lg: "text-4xl font-extrabold tracking-tight leading-none",
   };
 
-  // "Together for all" — light, elegant subtitle
+  // Platform subtitle — compact form for nav & sidebars
   const taglineSizes = {
-    sm: "text-[10px] font-normal tracking-widest uppercase leading-none mt-1 opacity-75",
-    md: "text-[11px] font-normal tracking-widest uppercase leading-none mt-1 opacity-75",
-    lg: "text-xs font-normal tracking-widest uppercase leading-none mt-1.5 opacity-75",
+    sm: "text-[9px] font-medium tracking-wide leading-none mt-1 opacity-80",
+    md: "text-[10px] font-medium tracking-wide leading-none mt-1 opacity-80",
+    lg: "text-[11px] font-medium tracking-wide leading-none mt-1.5 opacity-80",
   };
 
   const brandColor = theme === "light" ? "text-white" : "text-gray-900";
@@ -82,7 +82,7 @@ export function Logo({
           <span className={`${brandSizes[size]} ${brandColor}`}>ANI</span>
           {(showTagline || variant === "full") && (
             <span className={`${taglineSizes[size]} ${taglineColor}`}>
-              Together for all
+              Agricess Network International
             </span>
           )}
         </div>

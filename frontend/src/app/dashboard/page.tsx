@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { isFarmer, isBuyer, isHandler, isStaff, isBuyerHandler, isResearcher, isStudent, isMarketplaceBuyer } from "@/lib/types";
 import { PortalNavCard, PortalNavCardSkeleton } from "@/components/PortalNavCard";
+import { ScrollReveal } from "@/components/ScrollReveal";
+import { scrollStagger } from "@/hooks/useScrollAnimation";
 import { getPortalNavImage } from "@/lib/portalNavImages";
 import type { IconName } from "@/components/icons";
 
@@ -62,20 +64,21 @@ export default function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
-      <div className="mb-8">
+      <ScrollReveal trigger="mount" delay={0} duration={450} direction="fade-up" className="mb-8">
         <h1 className="text-3xl font-bold text-brand-900">Welcome, {user.firstName}</h1>
-      </div>
+      </ScrollReveal>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {cards.map((c) => (
-          <PortalNavCard
-            key={c.href}
-            href={c.href}
-            title={c.title}
-            desc={c.desc}
-            icon={c.icon}
-            image={getPortalNavImage(c.href, user.roleId)}
-          />
+        {cards.map((c, i) => (
+          <ScrollReveal key={c.href} delay={scrollStagger(i, 90)} duration={500} direction="fade-up">
+            <PortalNavCard
+              href={c.href}
+              title={c.title}
+              desc={c.desc}
+              icon={c.icon}
+              image={getPortalNavImage(c.href, user.roleId)}
+            />
+          </ScrollReveal>
         ))}
       </div>
     </div>
