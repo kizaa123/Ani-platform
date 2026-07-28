@@ -8,7 +8,8 @@ import { api } from "@/lib/api";
 import { isAccountant, type AccountantOverview, type AccountantDashboardCharts } from "@/lib/types";
 import { AccountantDashboardChartsPanel } from "@/components/accountant/AccountantDashboardCharts";
 import { AnimatedStat } from "@/components/AnimatedStat";
-import { formatGhc } from "@/lib/format";
+import { ScrollReveal } from "@/components/ScrollReveal";
+import { scrollStagger } from "@/lib/scrollStagger";
 import { PageContentSkeleton, Skeleton } from "@/components/LoadingPrimitives";
 
 function OverviewSkeleton() {
@@ -119,64 +120,118 @@ export default function AccountantOverviewPage() {
               [
                 {
                   label: "Total platform income",
-                  value: formatGhc(overview.totalRevenue),
+                  value: overview.totalRevenue.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }),
+                  prefix: "GHC ",
                   sub: `${overview.transactionCount} transaction(s)`,
-                  valueClass: "text-xl font-bold text-green-700",
+                  valueClass: "text-lg font-bold text-green-700",
                 },
                 {
                   label: "Available balance",
-                  value: formatGhc(overview.availableBalance),
+                  value: overview.availableBalance.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }),
+                  prefix: "GHC ",
                   sub: "After completed withdrawals",
-                  valueClass: "text-xl font-bold text-brand-800",
+                  valueClass: "text-lg font-bold text-brand-800",
                 },
                 {
                   label: "Total withdrawn",
-                  value: formatGhc(overview.totalWithdrawn),
+                  value: overview.totalWithdrawn.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }),
+                  prefix: "GHC ",
                   sub: `${overview.withdrawalCount} withdrawal(s)`,
-                  valueClass: "text-xl font-bold text-brand-800",
+                  valueClass: "text-lg font-bold text-brand-800",
                 },
                 {
                   label: "Pending farm access",
                   value: String(overview.pendingPaidConnections),
                   sub: "Paid — awaiting approval",
-                  valueClass: "text-xl font-bold text-amber-700",
+                  valueClass: "text-lg font-bold text-amber-700",
                   href: "/accountant/farm-access",
                 },
               ] as const
-            ).map((kpi) => {
+            ).map((kpi, i) => {
+              const delay = scrollStagger(i, 90);
               const card = (
                 <div className="rounded-2xl border border-brand-100 bg-white p-4 shadow-sm sm:p-5">
                   <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">{kpi.label}</p>
-                  <AnimatedStat value={kpi.value} className={`mt-1 block ${kpi.valueClass}`} />
+                  <AnimatedStat
+                    value={kpi.value}
+                    prefix={"prefix" in kpi ? kpi.prefix : undefined}
+                    delay={delay}
+                    className={`mt-1 block ${kpi.valueClass}`}
+                  />
                   <p className="mt-0.5 text-xs text-gray-500">{kpi.sub}</p>
                 </div>
               );
-              return "href" in kpi && kpi.href ? (
-                <Link key={kpi.label} href={kpi.href} className="block transition hover:opacity-90">
-                  {card}
-                </Link>
-              ) : (
-                <div key={kpi.label}>{card}</div>
+              return (
+                <ScrollReveal key={kpi.label} delay={delay} duration={450} direction="fade-up">
+                  {"href" in kpi && kpi.href ? (
+                    <Link href={kpi.href} className="block transition hover:opacity-90">
+                      {card}
+                    </Link>
+                  ) : (
+                    card
+                  )}
+                </ScrollReveal>
               );
             })}
           </div>
 
           <div className="mb-8 grid gap-4 sm:grid-cols-3">
-            <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
-              <p className="text-[10px] font-semibold uppercase text-gray-500">Product orders</p>
-              <p className="mt-1 text-lg font-bold text-brand-900">{formatGhc(overview.productOrderRevenue)}</p>
-              <p className="text-xs text-gray-500">{overview.productOrderCount} sale(s)</p>
-            </div>
-            <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
-              <p className="text-[10px] font-semibold uppercase text-gray-500">Farm access</p>
-              <p className="mt-1 text-lg font-bold text-brand-900">{formatGhc(overview.farmAccessRevenue)}</p>
-              <p className="text-xs text-gray-500">{overview.farmAccessCount} payment(s)</p>
-            </div>
-            <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
-              <p className="text-[10px] font-semibold uppercase text-gray-500">Research sales</p>
-              <p className="mt-1 text-lg font-bold text-brand-900">{formatGhc(overview.researchRevenue)}</p>
-              <p className="text-xs text-gray-500">{overview.researchSaleCount} sale(s)</p>
-            </div>
+            {(
+              [
+                {
+                  label: "Product orders",
+                  value: overview.productOrderRevenue.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }),
+                  prefix: "GHC ",
+                  sub: `${overview.productOrderCount} sale(s)`,
+                },
+                {
+                  label: "Farm access",
+                  value: overview.farmAccessRevenue.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }),
+                  prefix: "GHC ",
+                  sub: `${overview.farmAccessCount} payment(s)`,
+                },
+                {
+                  label: "Research sales",
+                  value: overview.researchRevenue.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }),
+                  prefix: "GHC ",
+                  sub: `${overview.researchSaleCount} sale(s)`,
+                },
+              ] as const
+            ).map((item, i) => {
+              const delay = scrollStagger(i + 4, 90);
+              return (
+                <ScrollReveal key={item.label} delay={delay} duration={450} direction="fade-up">
+                  <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
+                    <p className="text-[10px] font-semibold uppercase text-gray-500">{item.label}</p>
+                    <AnimatedStat
+                      value={item.value}
+                      prefix={item.prefix}
+                      delay={delay}
+                      className="mt-1 block text-base font-bold text-brand-900"
+                    />
+                    <p className="text-xs text-gray-500">{item.sub}</p>
+                  </div>
+                </ScrollReveal>
+              );
+            })}
           </div>
         </>
       )}

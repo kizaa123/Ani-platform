@@ -229,8 +229,8 @@ export async function notifyNewProductListing(params: {
       .map(async (buyer) => {
         const accessSet = await buyerFarmAccessSet(buyer.id);
         const hasAccess = accessSet.has(farmerUserId);
-        const link = hasAccess ? '/marketplace' : '/access';
-        const actionLabel = hasAccess ? 'View product' : 'Access farm';
+        const link = '/marketplace';
+        const actionLabel = hasAccess ? 'View product' : 'Pay to access';
 
         await createNotification({
           userId: buyer.id,
@@ -280,15 +280,15 @@ export async function notifyNewFarmerJoined(params: {
           type: 'NEW_FARMER',
           title: `New farmer: ${farmerName}`,
           body: 'Browse their farm and request access.',
-          link: '/access',
+          link: '/marketplace',
           metadata: {
             farmerUserId,
             farmerName,
             farmSize: farmSize ?? null,
             location,
             commodities,
-            actionUrl: '/access',
-            actionLabel: 'Access farm',
+            actionUrl: '/marketplace',
+            actionLabel: 'Pay to access',
           },
         }).catch(() => undefined);
       })

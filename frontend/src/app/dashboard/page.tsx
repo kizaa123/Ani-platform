@@ -48,7 +48,6 @@ export default function DashboardPage() {
     { href: "/researcher/settings", title: "Profile", desc: "Institution & researcher profile", icon: "user", show: isResearcher(user.roleId) },
     { href: "/farm", title: "My Farm", desc: "Manage products & profile", icon: "sprout", show: isFarmer(user.roleId) },
     { href: "/farm/financials", title: "Financial Statement", desc: "View farm product finances", icon: "chart", show: isFarmer(user.roleId) },
-    { href: "/access", title: "Buyer Access", desc: "Pay to access farmer farms", icon: "credit-card", show: isMarketplaceBuyer(user.roleId) },
     { href: "/financials", title: "Financial Statement", desc: "Spending & farm access fees", icon: "chart", show: isMarketplaceBuyer(user.roleId) },
     { href: "/orders", title: "My Orders", desc: "Track marketplace purchases", icon: "package", show: isMarketplaceBuyer(user.roleId) },
     { href: "/student/settings", title: "Profile", desc: "Account & contact details", icon: "user", show: isStudent(user.roleId) },

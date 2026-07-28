@@ -23,7 +23,6 @@ export const RESEARCHER_NAV_LINKS: PortalNavLink[] = [
     icon: "search",
     match: (p) => p.startsWith("/library"),
   },
-  { href: "/access", label: "Farm Access", icon: "credit-card", match: (p) => p.startsWith("/access") },
   { href: "/orders", label: "My Orders", icon: "package", match: (p) => p.startsWith("/orders") },
   {
     href: "/researcher/financials",

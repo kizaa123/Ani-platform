@@ -2,6 +2,20 @@ export function formatGhc(amount: number) {
   return `GHC ${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+/** Compact axis label for currency charts — no prefix, abbreviated at scale. */
+export function formatGhcAxis(amount: number): string {
+  const abs = Math.abs(amount);
+  if (abs >= 1_000_000) {
+    const v = amount / 1_000_000;
+    return `${Number.isInteger(v) ? v.toFixed(0) : v.toFixed(1)}M`;
+  }
+  if (abs >= 1_000) {
+    const v = amount / 1_000;
+    return `${Number.isInteger(v) ? v.toFixed(0) : v.toFixed(1)}k`;
+  }
+  return Math.round(amount).toLocaleString();
+}
+
 export function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, {
     year: "numeric",

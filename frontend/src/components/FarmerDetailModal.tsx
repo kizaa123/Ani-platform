@@ -31,7 +31,7 @@ export function FarmerDetailModal({
   farmAccessPriceLabel,
 }: FarmerDetailModalProps) {
   const { user } = useAuth();
-  const pendingStatusHref = user && isResearcher(user.roleId) ? "/access" : "/connections";
+  const pendingStatusHref = "/connections";
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => {
@@ -153,7 +153,7 @@ export function FarmerDetailModal({
                   <p className="mt-1 text-2xl font-bold text-brand-900">{accessLabel}</p>
                 </div>
                 <Link
-                  href="/access"
+                  href="/marketplace"
                   className="btn-gold block w-full py-2.5 text-center"
                   onClick={onClose}
                 >

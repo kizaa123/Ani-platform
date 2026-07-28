@@ -9,11 +9,11 @@ import {
   FarmerBrowseCard,
   Listing,
   MarketplaceBrowse,
-  isMarketplaceBuyer,
   isFarmer,
 } from "@/lib/types";
 import { FarmerProductCard } from "@/components/FarmerProductCard";
-import { MarketplaceFarmerSection } from "@/components/MarketplaceFarmerSection";
+import { MarketplaceFarmerCard } from "@/components/MarketplaceFarmerCard";
+import { FarmAccessPaymentModal } from "@/components/FarmAccessPaymentModal";
 import { PurchaseModal } from "@/components/PurchaseModal";
 import { Icon } from "@/components/icons";
 import { CardGridSkeleton, PageContentSkeleton } from "@/components/LoadingPrimitives";
@@ -22,23 +22,6 @@ function filterFarmers(farmers: FarmerBrowseCard[], query: string): FarmerBrowse
   const term = query.trim().toLowerCase();
   if (!term) return farmers;
   return farmers.filter((f) => (f.searchTerms ?? "").toLowerCase().includes(term));
-}
-
-function AccessMoreFarmsCTA() {
-  return (
-    <div className="rounded-2xl border border-brand-200 bg-gradient-to-br from-brand-50/80 via-white to-brand-50/40 p-6 text-center sm:p-8">
-      <p className="mb-4 text-sm text-gray-600">
-        Discover registered farmers and pay for one-time access to browse their products.
-      </p>
-      <Link
-        href="/access"
-        className="btn-gold inline-flex items-center justify-center gap-2 px-6 py-2.5"
-      >
-        <Icon name="lock" className="h-4 w-4 shrink-0" />
-        Access more farms
-      </Link>
-    </div>
-  );
 }
 
 function filterListings(listings: Listing[], query: string): Listing[] {
@@ -59,6 +42,13 @@ function filterListings(listings: Listing[], query: string): Listing[] {
   });
 }
 
+function firstOrderableProduct(farmer: FarmerBrowseCard): Listing | null {
+  const available = farmer.products.find(
+    (p) => p.available !== false && (p.quantity ?? 0) > 0
+  );
+  return available ?? farmer.products[0] ?? null;
+}
+
 export default function MarketplacePage() {
   const { user, loading } = useAuth();
   const [browse, setBrowse] = useState<MarketplaceBrowse | null>(null);
@@ -66,7 +56,9 @@ export default function MarketplacePage() {
   const [search, setSearch] = useState("");
   const [purchaseFarmer, setPurchaseFarmer] = useState<FarmerBrowseCard | null>(null);
   const [activeListingId, setActiveListingId] = useState<string | null>(null);
+  const [payFarmer, setPayFarmer] = useState<FarmerBrowseCard | null>(null);
   const [orderPlacedMessage, setOrderPlacedMessage] = useState("");
+  const [farmAccessMessage, setFarmAccessMessage] = useState("");
   const router = useRouter();
 
   const farmerView = user ? isFarmer(user.roleId) : false;
@@ -97,16 +89,10 @@ export default function MarketplacePage() {
     if (user) loadBrowse();
   }, [user?.id, loading, router, loadBrowse]);
 
-  const accessibleFarmers = useMemo(
-    () =>
-      filterFarmers(
-        (browse?.farmers ?? []).filter((f) => f.canViewProducts),
-        search
-      ),
+  const filteredFarmers = useMemo(
+    () => filterFarmers(browse?.farmers ?? [], search),
     [browse?.farmers, search]
   );
-
-  const showAccessCta = !!user && isMarketplaceBuyer(user.roleId);
 
   const filteredMyListings = useMemo(
     () => filterListings(myListings, search),
@@ -123,17 +109,37 @@ export default function MarketplacePage() {
     setActiveListingId(null);
   };
 
+  const handleViewFarm = (farmer: FarmerBrowseCard) => {
+    const product = firstOrderableProduct(farmer);
+    if (!product) {
+      setFarmAccessMessage(`${farmer.farmName || farmer.farmerName} has no products listed yet.`);
+      return;
+    }
+    openPurchase(farmer, product);
+  };
+
   const handleOrderSuccess = useCallback(() => {
     setBrowseLoading(true);
     loadBrowse();
     setOrderPlacedMessage("Order placed successfully!");
   }, [loadBrowse]);
 
+  const handleAccessPaymentSuccess = () => {
+    setBrowseLoading(true);
+    loadBrowse();
+  };
+
   useEffect(() => {
     if (!orderPlacedMessage) return;
     const timer = window.setTimeout(() => setOrderPlacedMessage(""), 8000);
     return () => window.clearTimeout(timer);
   }, [orderPlacedMessage]);
+
+  useEffect(() => {
+    if (!farmAccessMessage) return;
+    const timer = window.setTimeout(() => setFarmAccessMessage(""), 6000);
+    return () => window.clearTimeout(timer);
+  }, [farmAccessMessage]);
 
   const activeListing = useMemo(() => {
     if (!purchaseFarmer || !activeListingId) return null;
@@ -234,7 +240,7 @@ export default function MarketplacePage() {
         <div>
           <h1 className="text-3xl font-bold text-brand-900">Marketplace</h1>
           <p className="text-gray-500">
-            Purchase from farms you have paid access to
+            Discover farmers, pay for farm access, and place orders
           </p>
         </div>
       </div>
@@ -259,7 +265,7 @@ export default function MarketplacePage() {
         </div>
         {search.trim() && (
           <p className="mt-2 text-sm text-gray-500">
-            {accessibleFarmers.length} farmer{accessibleFarmers.length !== 1 ? "s" : ""} found
+            {filteredFarmers.length} farmer{filteredFarmers.length !== 1 ? "s" : ""} found
           </p>
         )}
       </div>
@@ -274,30 +280,41 @@ export default function MarketplacePage() {
         </div>
       )}
 
+      {farmAccessMessage && (
+        <div
+          role="status"
+          className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-900"
+        >
+          {farmAccessMessage}
+        </div>
+      )}
+
       {browseLoading ? (
         <CardGridSkeleton />
-      ) : accessibleFarmers.length === 0 ? (
-        <div className="space-y-6">
-          <div className="rounded-2xl border border-dashed border-brand-200 p-12 text-center text-gray-500">
-            {search.trim()
-              ? "No accessible farms match your search."
-              : showAccessCta
-                ? "You don't have access to any farms yet."
-                : "No farmers registered yet."}
-          </div>
-          {showAccessCta && <AccessMoreFarmsCTA />}
+      ) : filteredFarmers.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-brand-200 p-12 text-center text-gray-500">
+          {search.trim() ? "No farmers match your search." : "No farmers registered yet."}
         </div>
       ) : (
-        <div className="space-y-6 md:space-y-7">
-          {accessibleFarmers.map((farmer) => (
-            <MarketplaceFarmerSection
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredFarmers.map((farmer) => (
+            <MarketplaceFarmerCard
               key={farmer.farmerId}
               farmer={farmer}
-              onProductClick={(product) => openPurchase(farmer, product)}
+              accessPriceLabel={browse?.farmAccessPriceLabel}
+              onPayToAccess={setPayFarmer}
+              onViewFarm={handleViewFarm}
             />
           ))}
-          {showAccessCta && <AccessMoreFarmsCTA />}
         </div>
+      )}
+
+      {payFarmer && (
+        <FarmAccessPaymentModal
+          farmer={payFarmer}
+          onClose={() => setPayFarmer(null)}
+          onSuccess={handleAccessPaymentSuccess}
+        />
       )}
 
       {purchaseFarmer && activeListing && (

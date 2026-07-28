@@ -93,8 +93,8 @@ export default function BuyerFinancialsPage() {
         {statement.farmAccessPayments.length === 0 ? (
           <div className="px-6 py-12 text-center text-gray-500">
             No farm access payments yet.{" "}
-            <Link href="/access" className="font-semibold text-brand-700 underline">
-              Access a farm
+            <Link href="/marketplace" className="font-semibold text-brand-700 underline">
+              Browse the marketplace
             </Link>{" "}
             to browse and purchase products.
           </div>

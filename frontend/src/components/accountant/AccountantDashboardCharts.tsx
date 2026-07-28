@@ -2,7 +2,10 @@
 
 import { useRef, useState } from "react";
 import type { AccountantDashboardCharts } from "@/lib/types";
-import { formatGhc } from "@/lib/format";
+import { formatGhc, formatGhcAxis } from "@/lib/format";
+import { ScrollReveal } from "@/components/ScrollReveal";
+import { useAnimateOnView } from "@/hooks/useAnimateOnView";
+import { scrollStagger } from "@/lib/scrollStagger";
 
 const SOURCE_COLORS = {
   productOrders: "#2d6a4f",
@@ -19,6 +22,18 @@ type TooltipState = {
   y: number;
 } | null;
 
+function mergeRefs<T>(...refs: (React.RefObject<T | null> | React.Ref<T | null>)[]) {
+  return (node: T | null) => {
+    for (const ref of refs) {
+      if (typeof ref === "function") {
+        ref(node);
+      } else if (ref) {
+        ref.current = node;
+      }
+    }
+  };
+}
+
 function ChartPanel({
   title,
   subtitle,
@@ -32,9 +47,9 @@ function ChartPanel({
 }) {
   return (
     <section className={`rounded-2xl border border-brand-100 bg-white p-5 shadow-sm sm:p-6 ${className}`}>
-      <div className="mb-4">
-        <h3 className="text-base font-bold text-brand-900">{title}</h3>
-        {subtitle && <p className="mt-0.5 text-xs text-gray-500">{subtitle}</p>}
+      <div className="mb-3">
+        <h3 className="text-sm font-bold text-brand-900">{title}</h3>
+        {subtitle && <p className="mt-0.5 text-[11px] text-gray-500">{subtitle}</p>}
       </div>
       {children}
     </section>
@@ -45,8 +60,8 @@ function ChartTooltip({ tooltip }: { tooltip: TooltipState }) {
   if (!tooltip) return null;
   return (
     <div
-      className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-full rounded-lg border border-brand-100 bg-white px-2.5 py-1.5 text-xs shadow-md"
-      style={{ left: tooltip.x, top: tooltip.y - 8 }}
+      className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-full rounded-md border border-brand-100 bg-white px-2 py-1 text-[10px] leading-snug shadow-md"
+      style={{ left: tooltip.x, top: tooltip.y - 6 }}
     >
       {tooltip.content}
     </div>
@@ -72,14 +87,15 @@ function useChartTooltip() {
 
 function RevenueAreaChart({
   data,
-  height = 180,
+  height = 140,
 }: {
   data: { label: string; revenue: number }[];
   height?: number;
 }) {
   const { containerRef, tooltip, showTooltip, hideTooltip } = useChartTooltip();
-  const width = 480;
-  const pad = { top: 12, right: 12, bottom: 32, left: 48 };
+  const { ref: viewRef, progress } = useAnimateOnView({ delay: 120, duration: 1400 });
+  const width = 320;
+  const pad = { top: 8, right: 8, bottom: 26, left: 36 };
   const innerW = width - pad.left - pad.right;
   const innerH = height - pad.top - pad.bottom;
   const max = Math.max(...data.map((d) => d.revenue), 1);
@@ -88,7 +104,8 @@ function RevenueAreaChart({
 
   const points = data.map((d, i) => {
     const x = pad.left + (i / Math.max(data.length - 1, 1)) * innerW;
-    const y = pad.top + innerH - (d.revenue / max) * innerH;
+    const finalY = pad.top + innerH - (d.revenue / max) * innerH;
+    const y = baselineY - (baselineY - finalY) * progress;
     return { x, y, ...d, index: i };
   });
 
@@ -96,21 +113,21 @@ function RevenueAreaChart({
   const areaPath = `${linePath} L ${points[points.length - 1]?.x ?? pad.left} ${baselineY} L ${points[0]?.x ?? pad.left} ${baselineY} Z`;
 
   return (
-    <div ref={containerRef} className="relative" onMouseLeave={hideTooltip}>
+    <div ref={mergeRefs(containerRef, viewRef)} className="relative" onMouseLeave={hideTooltip}>
       <svg viewBox={`0 0 ${width} ${height}`} className="h-auto w-full cursor-crosshair" role="img" aria-label="Monthly revenue trend">
         {[0, 0.5, 1].map((t) => {
           const y = pad.top + innerH * (1 - t);
           return (
             <g key={t}>
               <line x1={pad.left} y1={y} x2={width - pad.right} y2={y} stroke="#e5e7eb" strokeWidth="1" />
-              <text x={pad.left - 8} y={y + 4} textAnchor="end" className="fill-gray-400 text-[9px]">
-                {formatGhc(max * t).replace("GHC ", "")}
+              <text x={pad.left - 5} y={y + 3} textAnchor="end" className="fill-gray-400 text-[8px]">
+                {formatGhcAxis(max * t)}
               </text>
             </g>
           );
         })}
         <path d={areaPath} fill="url(#accountantRevenueGradient)" opacity={0.35} />
-        <path d={linePath} fill="none" stroke="#2d6a4f" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d={linePath} fill="none" stroke="#2d6a4f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         {points.map((p) => {
           const active = hoveredIndex === p.index;
           return (
@@ -118,7 +135,7 @@ function RevenueAreaChart({
               <circle
                 cx={p.x}
                 cy={p.y}
-                r="16"
+                r="14"
                 fill="transparent"
                 onMouseEnter={(event) => {
                   setHoveredIndex(p.index);
@@ -141,12 +158,12 @@ function RevenueAreaChart({
                 }}
                 onMouseLeave={() => setHoveredIndex(null)}
               />
-              <circle cx={p.x} cy={p.y} r={active ? 5.5 : 3.5} fill={active ? "#1b4332" : "#2d6a4f"} pointerEvents="none" />
+              <circle cx={p.x} cy={p.y} r={active ? 4.5 : 3} fill={active ? "#1b4332" : "#2d6a4f"} pointerEvents="none" />
             </g>
           );
         })}
         {points.map((p) => (
-          <text key={`${p.label}-x`} x={p.x} y={height - 8} textAnchor="middle" className="fill-gray-500 text-[9px]">
+          <text key={`${p.label}-x`} x={p.x} y={height - 6} textAnchor="middle" className="fill-gray-500 text-[8px]">
             {p.label}
           </text>
         ))}
@@ -164,14 +181,15 @@ function RevenueAreaChart({
 
 function StackedSourceChart({
   data,
-  height = 200,
+  height = 160,
 }: {
   data: AccountantDashboardCharts["revenueBySource"];
   height?: number;
 }) {
   const { containerRef, tooltip, showTooltip, hideTooltip } = useChartTooltip();
-  const width = 480;
-  const pad = { top: 20, right: 12, bottom: 32, left: 48 };
+  const { ref: viewRef, progress } = useAnimateOnView({ delay: 120, duration: 1200 });
+  const width = 320;
+  const pad = { top: 18, right: 8, bottom: 26, left: 36 };
   const innerW = width - pad.left - pad.right;
   const innerH = height - pad.top - pad.bottom;
   const max = Math.max(
@@ -179,7 +197,7 @@ function StackedSourceChart({
     1
   );
   const barGroupW = innerW / Math.max(data.length, 1);
-  const barW = Math.min(barGroupW * 0.55, 36);
+  const barW = Math.min(barGroupW * 0.55, 28);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const segments = [
@@ -190,15 +208,15 @@ function StackedSourceChart({
   ];
 
   return (
-    <div ref={containerRef} className="relative" onMouseLeave={hideTooltip}>
+    <div ref={mergeRefs(containerRef, viewRef)} className="relative" onMouseLeave={hideTooltip}>
       <svg viewBox={`0 0 ${width} ${height}`} className="h-auto w-full cursor-crosshair" role="img" aria-label="Revenue by source">
         {[0, 0.5, 1].map((t) => {
           const y = pad.top + innerH * (1 - t);
           return (
             <g key={t}>
               <line x1={pad.left} y1={y} x2={width - pad.right} y2={y} stroke="#e5e7eb" strokeWidth="1" />
-              <text x={pad.left - 8} y={y + 4} textAnchor="end" className="fill-gray-400 text-[9px]">
-                {formatGhc(max * t).replace("GHC ", "")}
+              <text x={pad.left - 5} y={y + 3} textAnchor="end" className="fill-gray-400 text-[8px]">
+                {formatGhcAxis(max * t)}
               </text>
             </g>
           );
@@ -251,7 +269,7 @@ function StackedSourceChart({
               {segments.map((seg) => {
                 const value = d[seg.key];
                 if (value <= 0) return null;
-                const segH = (value / max) * innerH;
+                const segH = (value / max) * innerH * progress;
                 stackY -= segH;
                 return (
                   <rect
@@ -266,17 +284,17 @@ function StackedSourceChart({
                   />
                 );
               })}
-              <text x={cx} y={height - 8} textAnchor="middle" className="fill-gray-500 text-[9px]">
+              <text x={cx} y={height - 6} textAnchor="middle" className="fill-gray-500 text-[8px]">
                 {d.label}
               </text>
             </g>
           );
         })}
-        <g transform={`translate(${pad.left}, 8)`}>
+        <g transform={`translate(${pad.left}, 6)`}>
           {segments.map((seg, i) => (
-            <g key={seg.key} transform={`translate(${i * 88}, 0)`}>
-              <rect width="8" height="8" rx="2" fill={seg.color} />
-              <text x="12" y="7" className="fill-gray-600 text-[8px]">
+            <g key={seg.key} transform={`translate(${i * 72}, 0)`}>
+              <rect width="6" height="6" rx="1.5" fill={seg.color} />
+              <text x="10" y="5.5" className="fill-gray-600 text-[7px]">
                 {seg.label}
               </text>
             </g>
@@ -290,84 +308,104 @@ function StackedSourceChart({
 
 function DonutChart({
   segments,
-  size = 160,
+  size = 140,
 }: {
   segments: { label: string; amount: number; color: string }[];
   size?: number;
 }) {
   const { containerRef, tooltip, showTooltip, hideTooltip } = useChartTooltip();
+  const { ref: viewRef, progress } = useAnimateOnView({ delay: 120, duration: 1300 });
   const total = segments.reduce((sum, s) => sum + s.amount, 0) || 1;
   const cx = size / 2;
   const cy = size / 2;
-  const radius = size * 0.36;
-  const stroke = size * 0.14;
-  let angle = -Math.PI / 2;
+  const r = size * 0.37;
+  const stroke = size * 0.13;
+  const circumference = 2 * Math.PI * r;
+  const [hoveredLabel, setHoveredLabel] = useState<string | null>(null);
 
-  const arcs = segments.map((seg, i) => {
-    const slice = (seg.amount / total) * Math.PI * 2;
-    const start = angle;
-    angle += slice;
-    const end = angle;
-    const large = slice > Math.PI ? 1 : 0;
-    const x1 = cx + radius * Math.cos(start);
-    const y1 = cy + radius * Math.sin(start);
-    const x2 = cx + radius * Math.cos(end);
-    const y2 = cy + radius * Math.sin(end);
-    const path = `M ${x1} ${y1} A ${radius} ${radius} 0 ${large} 1 ${x2} ${y2}`;
-    return { ...seg, path, color: seg.color || DONUT_COLORS[i % DONUT_COLORS.length], index: i };
-  });
+  const arcs = segments.reduce<
+    { label: string; amount: number; color: string; dash: number; offset: number }[]
+  >((acc, seg) => {
+    const dash = (seg.amount / total) * circumference;
+    const offset = acc.reduce((sum, item) => sum + item.dash, 0);
+    acc.push({ ...seg, dash, offset });
+    return acc;
+  }, []);
+
+  const showSegmentTooltip = (
+    event: React.MouseEvent,
+    seg: { label: string; amount: number; color: string }
+  ) => {
+    const pct = Math.round((seg.amount / total) * 100);
+    showTooltip(
+      event,
+      <>
+        <p className="font-semibold text-brand-900">{seg.label}</p>
+        <p className="tabular-nums text-green-700">{formatGhc(seg.amount)}</p>
+        <p className="text-gray-500">{pct}%</p>
+      </>
+    );
+  };
 
   return (
-    <div ref={containerRef} className="relative flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-      <svg viewBox={`0 0 ${size} ${size}`} className="h-40 w-40 shrink-0" role="img" aria-label="Revenue source breakdown">
-        {arcs.map((arc) => (
-          <path
-            key={arc.label}
-            d={arc.path}
-            fill="none"
-            stroke={arc.color}
-            strokeWidth={stroke}
-            strokeLinecap="butt"
-            onMouseEnter={(event) =>
-              showTooltip(
-                event,
-                <>
-                  <p className="font-semibold text-brand-900">{arc.label}</p>
-                  <p className="tabular-nums text-green-700">{formatGhc(arc.amount)}</p>
-                  <p className="text-gray-500">{Math.round((arc.amount / total) * 100)}%</p>
-                </>
-              )
-            }
-            onMouseMove={(event) =>
-              showTooltip(
-                event,
-                <>
-                  <p className="font-semibold text-brand-900">{arc.label}</p>
-                  <p className="tabular-nums text-green-700">{formatGhc(arc.amount)}</p>
-                  <p className="text-gray-500">{Math.round((arc.amount / total) * 100)}%</p>
-                </>
-              )
-            }
-            onMouseLeave={hideTooltip}
-          />
-        ))}
-        <text x={cx} y={cy - 4} textAnchor="middle" className="fill-brand-900 text-[11px] font-bold">
-          {formatGhc(total).replace("GHC ", "GHC\n")}
+    <div ref={mergeRefs(containerRef, viewRef)} className="relative flex flex-col items-center gap-3 sm:flex-row sm:items-start" onMouseLeave={hideTooltip}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="h-36 w-36 shrink-0" role="img" aria-label="Revenue source breakdown">
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#f3f4f6" strokeWidth={stroke} />
+        {arcs.map((seg) => {
+          const active = hoveredLabel === seg.label;
+          const animatedDash = seg.dash * progress;
+          return (
+            <circle
+              key={seg.label}
+              cx={cx}
+              cy={cy}
+              r={r}
+              fill="none"
+              stroke={seg.color}
+              strokeWidth={active ? stroke + 3 : stroke}
+              strokeDasharray={`${animatedDash} ${circumference - animatedDash}`}
+              strokeDashoffset={-seg.offset * progress}
+              transform={`rotate(-90 ${cx} ${cy})`}
+              opacity={hoveredLabel && !active ? 0.4 : 1}
+              className="cursor-pointer transition-all"
+              onMouseEnter={(event) => {
+                setHoveredLabel(seg.label);
+                showSegmentTooltip(event, seg);
+              }}
+              onMouseMove={(event) => showSegmentTooltip(event, seg)}
+              onMouseLeave={() => setHoveredLabel(null)}
+            />
+          );
+        })}
+        <text x={cx} y={cy - 2} textAnchor="middle" className="fill-brand-900 text-[10px] font-bold" pointerEvents="none">
+          {formatGhcAxis(total * progress)}
         </text>
-        <text x={cx} y={cy + 10} textAnchor="middle" className="fill-gray-500 text-[8px]">
+        <text x={cx} y={cy + 9} textAnchor="middle" className="fill-gray-500 text-[7px]" pointerEvents="none">
           total
         </text>
       </svg>
-      <ul className="min-w-0 flex-1 space-y-2">
-        {arcs.map((arc) => (
-          <li key={arc.label} className="flex items-center justify-between gap-3 text-xs">
-            <span className="flex min-w-0 items-center gap-2">
-              <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: arc.color }} />
-              <span className="truncate text-gray-700">{arc.label}</span>
-            </span>
-            <span className="shrink-0 tabular-nums font-semibold text-brand-900">{formatGhc(arc.amount)}</span>
-          </li>
-        ))}
+      <ul className="min-w-0 flex-1 space-y-1.5">
+        {arcs.map((arc) => {
+          const active = hoveredLabel === arc.label;
+          return (
+            <li
+              key={arc.label}
+              className={`flex cursor-default items-center justify-between gap-2 rounded-md px-1 py-0.5 text-[11px] transition-colors ${active ? "bg-brand-50" : ""}`}
+              onMouseEnter={(event) => {
+                setHoveredLabel(arc.label);
+                showSegmentTooltip(event, arc);
+              }}
+              onMouseMove={(event) => showSegmentTooltip(event, arc)}
+              onMouseLeave={() => setHoveredLabel(null)}
+            >
+              <span className="flex min-w-0 items-center gap-1.5">
+                <span className="h-2 w-2 shrink-0 rounded-sm" style={{ backgroundColor: arc.color }} />
+                <span className="truncate text-gray-700">{arc.label}</span>
+              </span>
+              <span className="shrink-0 tabular-nums font-semibold text-brand-900">{formatGhc(arc.amount)}</span>
+            </li>
+          );
+        })}
       </ul>
       <ChartTooltip tooltip={tooltip} />
     </div>
@@ -376,32 +414,38 @@ function DonutChart({
 
 function VolumeBarChart({
   data,
-  height = 160,
+  height = 140,
 }: {
   data: { label: string; count: number }[];
   height?: number;
 }) {
   const { containerRef, tooltip, showTooltip, hideTooltip } = useChartTooltip();
+  const { ref: viewRef, progress } = useAnimateOnView({ delay: 120, duration: 1100 });
   const width = 320;
-  const pad = { top: 8, right: 8, bottom: 28, left: 36 };
+  const pad = { top: 8, right: 8, bottom: 26, left: 36 };
   const innerW = width - pad.left - pad.right;
   const innerH = height - pad.top - pad.bottom;
   const max = Math.max(...data.map((d) => d.count), 1);
   const barGroupW = innerW / Math.max(data.length, 1);
-  const barW = Math.min(barGroupW * 0.5, 28);
+  const barW = Math.min(barGroupW * 0.5, 24);
 
   return (
-    <div ref={containerRef} className="relative" onMouseLeave={hideTooltip}>
+    <div ref={mergeRefs(containerRef, viewRef)} className="relative" onMouseLeave={hideTooltip}>
       <svg viewBox={`0 0 ${width} ${height}`} className="h-auto w-full cursor-crosshair" role="img" aria-label="Transaction volume">
         {[0, 0.5, 1].map((t) => {
           const y = pad.top + innerH * (1 - t);
           return (
-            <line key={t} x1={pad.left} y1={y} x2={width - pad.right} y2={y} stroke="#e5e7eb" strokeWidth="1" />
+            <g key={t}>
+              <line x1={pad.left} y1={y} x2={width - pad.right} y2={y} stroke="#e5e7eb" strokeWidth="1" />
+              <text x={pad.left - 5} y={y + 3} textAnchor="end" className="fill-gray-400 text-[8px]">
+                {Math.round(max * t)}
+              </text>
+            </g>
           );
         })}
         {data.map((d, i) => {
           const cx = pad.left + barGroupW * i + barGroupW / 2;
-          const barH = (d.count / max) * innerH;
+          const barH = (d.count / max) * innerH * progress;
           return (
             <g key={d.label}>
               <rect
@@ -434,11 +478,11 @@ function VolumeBarChart({
                 y={pad.top + innerH - barH}
                 width={barW}
                 height={barH}
-                rx="3"
+                rx="2"
                 fill="#357a5b"
                 pointerEvents="none"
               />
-              <text x={cx} y={height - 6} textAnchor="middle" className="fill-gray-500 text-[9px]">
+              <text x={cx} y={height - 6} textAnchor="middle" className="fill-gray-500 text-[8px]">
                 {d.label}
               </text>
             </g>
@@ -452,38 +496,39 @@ function VolumeBarChart({
 
 function CashFlowChart({
   data,
-  height = 180,
+  height = 140,
 }: {
   data: { label: string; income: number; withdrawals: number }[];
   height?: number;
 }) {
   const { containerRef, tooltip, showTooltip, hideTooltip } = useChartTooltip();
+  const { ref: viewRef, progress } = useAnimateOnView({ delay: 120, duration: 1200 });
   const width = 320;
-  const pad = { top: 20, right: 8, bottom: 28, left: 48 };
+  const pad = { top: 18, right: 8, bottom: 26, left: 36 };
   const innerW = width - pad.left - pad.right;
   const innerH = height - pad.top - pad.bottom;
   const max = Math.max(...data.flatMap((d) => [d.income, d.withdrawals]), 1);
   const barGroupW = innerW / Math.max(data.length, 1);
-  const barW = Math.min(barGroupW * 0.32, 18);
+  const barW = Math.min(barGroupW * 0.32, 16);
 
   return (
-    <div ref={containerRef} className="relative" onMouseLeave={hideTooltip}>
+    <div ref={mergeRefs(containerRef, viewRef)} className="relative" onMouseLeave={hideTooltip}>
       <svg viewBox={`0 0 ${width} ${height}`} className="h-auto w-full cursor-crosshair" role="img" aria-label="Income versus withdrawals">
         {[0, 0.5, 1].map((t) => {
           const y = pad.top + innerH * (1 - t);
           return (
             <g key={t}>
               <line x1={pad.left} y1={y} x2={width - pad.right} y2={y} stroke="#e5e7eb" strokeWidth="1" />
-              <text x={pad.left - 8} y={y + 4} textAnchor="end" className="fill-gray-400 text-[9px]">
-                {formatGhc(max * t).replace("GHC ", "")}
+              <text x={pad.left - 5} y={y + 3} textAnchor="end" className="fill-gray-400 text-[8px]">
+                {formatGhcAxis(max * t)}
               </text>
             </g>
           );
         })}
         {data.map((d, i) => {
           const cx = pad.left + barGroupW * i + barGroupW / 2;
-          const incomeH = (d.income / max) * innerH;
-          const withdrawalH = (d.withdrawals / max) * innerH;
+          const incomeH = (d.income / max) * innerH * progress;
+          const withdrawalH = (d.withdrawals / max) * innerH * progress;
           return (
             <g key={d.label}>
               <rect
@@ -513,18 +558,18 @@ function CashFlowChart({
                   )
                 }
               />
-              <rect x={cx - barW - 2} y={pad.top + innerH - incomeH} width={barW} height={incomeH} rx="3" fill="#40916c" pointerEvents="none" />
-              <rect x={cx + 2} y={pad.top + innerH - withdrawalH} width={barW} height={withdrawalH} rx="3" fill="#d4a853" pointerEvents="none" />
-              <text x={cx} y={height - 6} textAnchor="middle" className="fill-gray-500 text-[9px]">
+              <rect x={cx - barW - 2} y={pad.top + innerH - incomeH} width={barW} height={incomeH} rx="2" fill="#40916c" pointerEvents="none" />
+              <rect x={cx + 2} y={pad.top + innerH - withdrawalH} width={barW} height={withdrawalH} rx="2" fill="#d4a853" pointerEvents="none" />
+              <text x={cx} y={height - 6} textAnchor="middle" className="fill-gray-500 text-[8px]">
                 {d.label}
               </text>
             </g>
           );
         })}
-        <text x={pad.left} y={12} className="fill-brand-700 text-[9px] font-semibold">
+        <text x={pad.left} y={10} className="fill-brand-700 text-[8px] font-semibold">
           ● Income
         </text>
-        <text x={pad.left + 48} y={12} className="fill-amber-600 text-[9px] font-semibold">
+        <text x={pad.left + 44} y={10} className="fill-amber-600 text-[8px] font-semibold">
           ● Withdrawals
         </text>
       </svg>
@@ -541,31 +586,41 @@ export function AccountantDashboardChartsPanel({ charts }: { charts: AccountantD
   }));
 
   return (
-    <div className="space-y-6">
-      <ChartPanel title="Monthly revenue trend" subtitle="Total platform income by month (last 6 months)">
-        <RevenueAreaChart data={charts.monthlyRevenue} />
-      </ChartPanel>
+    <div className="space-y-4">
+      <ScrollReveal delay={scrollStagger(0, 100)} duration={500} direction="fade-up">
+        <ChartPanel title="Monthly revenue trend" subtitle="Total platform income by month (last 6 months)">
+          <RevenueAreaChart data={charts.monthlyRevenue} />
+        </ChartPanel>
+      </ScrollReveal>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <ChartPanel title="Revenue by source" subtitle="Stacked monthly breakdown by income type">
-          <StackedSourceChart data={charts.revenueBySource} />
-        </ChartPanel>
+        <ScrollReveal delay={scrollStagger(1, 100)} duration={500} direction="fade-up">
+          <ChartPanel title="Revenue by source" subtitle="Stacked monthly breakdown by income type">
+            <StackedSourceChart data={charts.revenueBySource} />
+          </ChartPanel>
+        </ScrollReveal>
 
-        <ChartPanel title="Revenue mix" subtitle="All-time share by income source">
-          {donutSegments.length === 0 ? (
-            <p className="text-sm text-gray-500">No revenue recorded yet.</p>
-          ) : (
-            <DonutChart segments={donutSegments} />
-          )}
-        </ChartPanel>
+        <ScrollReveal delay={scrollStagger(2, 100)} duration={500} direction="fade-up">
+          <ChartPanel title="Revenue mix" subtitle="All-time share by income source">
+            {donutSegments.length === 0 ? (
+              <p className="text-xs text-gray-500">No revenue recorded yet.</p>
+            ) : (
+              <DonutChart segments={donutSegments} />
+            )}
+          </ChartPanel>
+        </ScrollReveal>
 
-        <ChartPanel title="Transaction volume" subtitle="Number of completed payments by month">
-          <VolumeBarChart data={charts.transactionVolume} />
-        </ChartPanel>
+        <ScrollReveal delay={scrollStagger(3, 100)} duration={500} direction="fade-up">
+          <ChartPanel title="Transaction volume" subtitle="Number of completed payments by month">
+            <VolumeBarChart data={charts.transactionVolume} />
+          </ChartPanel>
+        </ScrollReveal>
 
-        <ChartPanel title="Income vs withdrawals" subtitle="Cash received compared to completed withdrawals">
-          <CashFlowChart data={charts.cashFlow} />
-        </ChartPanel>
+        <ScrollReveal delay={scrollStagger(4, 100)} duration={500} direction="fade-up">
+          <ChartPanel title="Income vs withdrawals" subtitle="Cash received compared to completed withdrawals">
+            <CashFlowChart data={charts.cashFlow} />
+          </ChartPanel>
+        </ScrollReveal>
       </div>
     </div>
   );

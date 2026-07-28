@@ -10,6 +10,9 @@ const nextConfig: NextConfig = {
     ],
     unoptimized: true,
   },
+  async redirects() {
+    return [{ source: "/access", destination: "/marketplace", permanent: true }];
+  },
   async rewrites() {
     return [
       { source: "/api/:path*", destination: `${backend}/api/:path*` },

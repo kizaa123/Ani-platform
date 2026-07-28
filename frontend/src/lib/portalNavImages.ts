@@ -123,10 +123,6 @@ export const PORTAL_NAV_IMAGES_BUYER = {
 
   "/marketplace": "/farmer market place.png",
 
-  /** Change image here: Buyer Access card */
-
-  "/access": "/Acess card farm.jpg",
-
   /** Change image here: Buyer Financial Statement card */
 
   "/financials": "/accountant-filing-invoice.webp",

@@ -2,7 +2,8 @@
 
 import { useRef, useState } from "react";
 import type { AccountantIncomeChart } from "@/lib/types";
-import { formatGhc } from "@/lib/format";
+import { formatGhc, formatGhcAxis } from "@/lib/format";
+import { useAnimateOnView } from "@/hooks/useAnimateOnView";
 
 type TooltipState = {
   content: React.ReactNode;
@@ -10,12 +11,24 @@ type TooltipState = {
   y: number;
 } | null;
 
+function mergeRefs<T>(...refs: (React.RefObject<T | null> | React.Ref<T | null>)[]) {
+  return (node: T | null) => {
+    for (const ref of refs) {
+      if (typeof ref === "function") {
+        ref(node);
+      } else if (ref) {
+        ref.current = node;
+      }
+    }
+  };
+}
+
 function ChartTooltip({ tooltip }: { tooltip: TooltipState }) {
   if (!tooltip) return null;
   return (
     <div
-      className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-full rounded-lg border border-brand-100 bg-white px-2.5 py-1.5 text-xs shadow-md"
-      style={{ left: tooltip.x, top: tooltip.y - 8 }}
+      className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-full rounded-md border border-brand-100 bg-white px-2 py-1 text-[10px] leading-snug shadow-md"
+      style={{ left: tooltip.x, top: tooltip.y - 6 }}
     >
       {tooltip.content}
     </div>
@@ -41,14 +54,15 @@ function useChartTooltip() {
 
 function IncomeAreaChart({
   data,
-  height = 200,
+  height = 140,
 }: {
   data: { label: string; revenue: number }[];
   height?: number;
 }) {
   const { containerRef, tooltip, showTooltip, hideTooltip } = useChartTooltip();
-  const width = 480;
-  const pad = { top: 12, right: 12, bottom: 32, left: 48 };
+  const { ref: viewRef, progress } = useAnimateOnView({ delay: 120, duration: 1400 });
+  const width = 320;
+  const pad = { top: 8, right: 8, bottom: 26, left: 36 };
   const innerW = width - pad.left - pad.right;
   const innerH = height - pad.top - pad.bottom;
   const max = Math.max(...data.map((d) => d.revenue), 1);
@@ -57,7 +71,8 @@ function IncomeAreaChart({
 
   const points = data.map((d, i) => {
     const x = pad.left + (i / Math.max(data.length - 1, 1)) * innerW;
-    const y = pad.top + innerH - (d.revenue / max) * innerH;
+    const finalY = pad.top + innerH - (d.revenue / max) * innerH;
+    const y = baselineY - (baselineY - finalY) * progress;
     return { x, y, ...d, index: i };
   });
 
@@ -65,21 +80,21 @@ function IncomeAreaChart({
   const areaPath = `${linePath} L ${points[points.length - 1]?.x ?? pad.left} ${baselineY} L ${points[0]?.x ?? pad.left} ${baselineY} Z`;
 
   return (
-    <div ref={containerRef} className="relative" onMouseLeave={hideTooltip}>
+    <div ref={mergeRefs(containerRef, viewRef)} className="relative" onMouseLeave={hideTooltip}>
       <svg viewBox={`0 0 ${width} ${height}`} className="h-auto w-full cursor-crosshair" role="img" aria-label="Platform income by month">
         {[0, 0.5, 1].map((t) => {
           const y = pad.top + innerH * (1 - t);
           return (
             <g key={t}>
               <line x1={pad.left} y1={y} x2={width - pad.right} y2={y} stroke="#e5e7eb" strokeWidth="1" />
-              <text x={pad.left - 8} y={y + 4} textAnchor="end" className="fill-gray-400 text-[9px]">
-                {formatGhc(max * t).replace("GHC ", "")}
+              <text x={pad.left - 5} y={y + 3} textAnchor="end" className="fill-gray-400 text-[8px]">
+                {formatGhcAxis(max * t)}
               </text>
             </g>
           );
         })}
         <path d={areaPath} fill="url(#incomeGradient)" opacity={0.35} />
-        <path d={linePath} fill="none" stroke="#2d6a4f" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d={linePath} fill="none" stroke="#2d6a4f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         {points.map((p) => {
           const active = hoveredIndex === p.index;
           return (
@@ -87,7 +102,7 @@ function IncomeAreaChart({
               <circle
                 cx={p.x}
                 cy={p.y}
-                r="16"
+                r="14"
                 fill="transparent"
                 onMouseEnter={(event) => {
                   setHoveredIndex(p.index);
@@ -113,7 +128,7 @@ function IncomeAreaChart({
               <circle
                 cx={p.x}
                 cy={p.y}
-                r={active ? 5.5 : 3.5}
+                r={active ? 4.5 : 3}
                 fill={active ? "#1b4332" : "#2d6a4f"}
                 pointerEvents="none"
               />
@@ -121,7 +136,7 @@ function IncomeAreaChart({
           );
         })}
         {points.map((p) => (
-          <text key={`${p.label}-x`} x={p.x} y={height - 8} textAnchor="middle" className="fill-gray-500 text-[9px]">
+          <text key={`${p.label}-x`} x={p.x} y={height - 6} textAnchor="middle" className="fill-gray-500 text-[8px]">
             {p.label}
           </text>
         ))}
@@ -140,9 +155,9 @@ function IncomeAreaChart({
 export function AccountantIncomeChartPanel({ chart }: { chart: AccountantIncomeChart }) {
   return (
     <section className="rounded-2xl border border-brand-100 bg-white p-5 shadow-sm sm:p-6">
-      <div className="mb-4">
-        <h3 className="text-base font-bold text-brand-900">Platform income growth</h3>
-        <p className="mt-0.5 text-xs text-gray-500">Total revenue received by month (last 6 months)</p>
+      <div className="mb-3">
+        <h3 className="text-sm font-bold text-brand-900">Platform income growth</h3>
+        <p className="mt-0.5 text-[11px] text-gray-500">Total revenue received by month (last 6 months)</p>
       </div>
       <IncomeAreaChart data={chart.monthlyIncome} />
     </section>
