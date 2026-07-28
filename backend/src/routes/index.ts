@@ -11,6 +11,7 @@ import {
   chatController,
   notificationController,
   adminController,
+  accountantController,
   aiController,
 } from '../controllers/platform.controller';
 import { authenticate, requirePermission } from '../middleware/auth.middleware';
@@ -25,6 +26,7 @@ import { connectionSchema } from '../services/connection.service';
 import { assignmentSchema } from '../services/agent.service';
 import { messageSchema } from '../services/chat.service';
 import { verifyUserSchema } from '../services/admin.service';
+import { createWithdrawalSchema, updateWithdrawalSchema } from '../services/accountant.service';
 import { uploadController } from '../controllers/upload.controller';
 import { farmerMediaController } from '../controllers/farmerMedia.controller';
 import { productMediaController } from '../controllers/productMedia.controller';
@@ -186,6 +188,7 @@ router.get('/research/my', authenticate, requirePermission(PERMISSIONS.MANAGE_PU
 router.get('/research/financial-statement', authenticate, requirePermission(PERMISSIONS.MANAGE_PUBLICATIONS), researcherController.financialStatement);
 router.put('/research/profile', authenticate, requirePermission(PERMISSIONS.MANAGE_PUBLICATIONS), researcherController.updateProfile);
 router.get('/research/:id', authenticate, researcherController.getOne);
+router.get('/research/:id/document', authenticate, researcherController.document);
 router.get('/research/:id/comments', authenticate, researcherController.listComments);
 router.post('/research/:id/comments', authenticate, validateBody(commentSchema), researcherController.addComment);
 router.post('/research/:id/like', authenticate, researcherController.toggleLike);
@@ -256,7 +259,7 @@ router.post('/payments/packages', authenticate, requirePermission(PERMISSIONS.MA
 // Connections
 router.get('/connections', authenticate, connectionController.list);
 router.post('/connections', authenticate, requirePermission(PERMISSIONS.REQUEST_CONNECTION), validateBody(connectionSchema), connectionController.create);
-router.patch('/connections/:id/status', authenticate, requirePermission(PERMISSIONS.APPROVE_CONNECTION, PERMISSIONS.VERIFY_USERS), connectionController.updateStatus);
+router.patch('/connections/:id/status', authenticate, requirePermission(PERMISSIONS.APPROVE_CONNECTION), connectionController.updateStatus);
 
 // Agents
 router.get('/agents/profile', authenticate, agentController.profile);
@@ -285,17 +288,17 @@ router.get('/notifications/unread-count', authenticate, notificationController.u
 router.patch('/notifications/read-all', authenticate, notificationController.markAllRead);
 router.patch('/notifications/:id/read', authenticate, notificationController.markRead);
 
-// Admin
+// Admin (user verification & platform analytics)
 router.get(
   '/admin/stats',
   authenticate,
-  requirePermission(PERMISSIONS.MANAGE_PAYMENTS, PERMISSIONS.VERIFY_USERS),
+  requirePermission(PERMISSIONS.VERIFY_USERS),
   adminController.stats
 );
 router.get(
   '/admin/dashboard-charts',
   authenticate,
-  requirePermission(PERMISSIONS.MANAGE_PAYMENTS, PERMISSIONS.VERIFY_USERS),
+  requirePermission(PERMISSIONS.VERIFY_USERS),
   adminController.dashboardCharts
 );
 router.get('/admin/financial-statement', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), adminController.financialStatement);
@@ -303,6 +306,13 @@ router.get('/admin/pending', authenticate, requirePermission(PERMISSIONS.VERIFY_
 router.get('/admin/users', authenticate, requirePermission(PERMISSIONS.VERIFY_USERS), adminController.listUsers);
 router.patch('/admin/users/:id/verify', authenticate, requirePermission(PERMISSIONS.VERIFY_USERS), validateBody(verifyUserSchema), adminController.verifyUser);
 router.get('/admin/audit-logs', authenticate, requirePermission(PERMISSIONS.VIEW_AUDIT_LOGS), adminController.auditLogs);
+
+// Accountant (financial portal)
+router.get('/accountant/overview', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), accountantController.overview);
+router.get('/accountant/income-chart', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), accountantController.incomeChart);
+router.get('/accountant/withdrawals', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), accountantController.listWithdrawals);
+router.post('/accountant/withdrawals', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), validateBody(createWithdrawalSchema), accountantController.createWithdrawal);
+router.patch('/accountant/withdrawals/:id', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), validateBody(updateWithdrawalSchema), accountantController.updateWithdrawal);
 
 // AI (future-ready)
 router.get('/ai/matches', authenticate, aiController.matches);

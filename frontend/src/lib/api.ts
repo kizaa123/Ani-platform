@@ -94,7 +94,7 @@ class ApiClient {
     return json.data as T;
   }
 
-  private async openPdfRequest(path: string): Promise<void> {
+  private async fetchPdfBlobUrl(path: string): Promise<string> {
     const headers: Record<string, string> = {};
     if (this.accessToken) headers.Authorization = `Bearer ${this.accessToken}`;
 
@@ -123,15 +123,19 @@ class ApiClient {
       const contentType = res.headers.get("content-type") || "";
       if (contentType.includes("application/json")) {
         const json = await res.json();
-        throw new Error(json.error || "Could not open PDF");
+        throw new Error(json.error || "Could not load PDF");
       }
-      throw new Error(`Could not open PDF (${res.status})`);
+      throw new Error(`Could not load PDF (${res.status})`);
     }
 
     const blob = await res.blob();
     const pdfBlob =
       blob.type === "application/pdf" ? blob : new Blob([blob], { type: "application/pdf" });
-    const url = URL.createObjectURL(pdfBlob);
+    return URL.createObjectURL(pdfBlob);
+  }
+
+  private async openPdfRequest(path: string): Promise<void> {
+    const url = await this.fetchPdfBlobUrl(path);
     const tab = window.open(url, "_blank", "noopener,noreferrer");
     if (!tab) {
       URL.revokeObjectURL(url);
@@ -357,6 +361,7 @@ class ApiClient {
       }),
     share: (id: string) =>
       this.request<{ sharesCount: number }>(`/research/${id}/share`, { method: "POST" }),
+    openDocument: (id: string) => this.fetchPdfBlobUrl(`/research/${id}/document`),
     comments: {
       list: (id: string) =>
         this.request<import("./types").ResearchComment[]>(`/research/${id}/comments`),
@@ -440,6 +445,26 @@ class ApiClient {
       this.request(`/admin/users/${id}/verify`, { method: "PATCH", body: JSON.stringify({ status }) }),
     auditLogs: () => this.request("/admin/audit-logs"),
     payments: () => this.request("/payments/admin"),
+  };
+
+  accountant = {
+    overview: () => this.request<import("./types").AccountantOverview>("/accountant/overview"),
+    incomeChart: () =>
+      this.request<import("./types").AccountantIncomeChart>("/accountant/income-chart"),
+    financialStatement: () =>
+      this.request<import("./types").PlatformFinancialStatement>("/admin/financial-statement"),
+    listWithdrawals: () =>
+      this.request<import("./types").PlatformWithdrawal[]>("/accountant/withdrawals"),
+    createWithdrawal: (body: { amount: number; notes?: string }) =>
+      this.request<import("./types").PlatformWithdrawal>("/accountant/withdrawals", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    updateWithdrawal: (id: string, body: { status: string; notes?: string }) =>
+      this.request<import("./types").PlatformWithdrawal>(`/accountant/withdrawals/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
   };
 }
 

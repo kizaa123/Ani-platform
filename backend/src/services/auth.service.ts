@@ -493,25 +493,19 @@ export class AuthService {
       },
     } as const;
 
-    const existing = await prisma.agentAssignment.findFirst({
-      where: { ownerId: userId, relationshipType },
-    });
+    return prisma.$transaction(async (tx) => {
+      await tx.agentAssignment.deleteMany({
+        where: { ownerId: userId, relationshipType },
+      });
 
-    if (existing) {
-      return prisma.agentAssignment.update({
-        where: { id: existing.id },
-        data: { agentId: handlerId },
+      return tx.agentAssignment.create({
+        data: {
+          agentId: handlerId,
+          ownerId: userId,
+          relationshipType,
+        },
         include: { agent: agentSelect },
       });
-    }
-
-    return prisma.agentAssignment.create({
-      data: {
-        agentId: handlerId,
-        ownerId: userId,
-        relationshipType,
-      },
-      include: { agent: agentSelect },
     });
   }
 

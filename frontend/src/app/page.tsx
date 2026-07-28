@@ -119,22 +119,23 @@ export default function HomePage() {
     <div className="overflow-x-hidden">
 
       {/* ── HERO ── */}
-      <section className="relative flex min-h-[92vh] items-center overflow-hidden bg-brand-900">
+      <section className="relative flex min-h-[min(100dvh,720px)] items-end overflow-hidden bg-brand-900 sm:min-h-[85vh] sm:items-center lg:min-h-[92vh]">
         <div className="absolute inset-0 z-0">
           <Image
             src="/ani background color.jpg"
             alt="Agricultural field background"
             fill
-            className="object-cover object-center"
+            className="object-cover object-[center_25%] sm:object-center"
+            sizes="100vw"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-brand-950/95 via-brand-900/80 to-brand-800/30" />
+          <div className="absolute inset-0 bg-gradient-to-b from-brand-900/90 via-brand-900/75 to-brand-900/60 sm:bg-gradient-to-r sm:from-brand-950/95 sm:via-brand-900/80 sm:to-brand-800/30" />
         </div>
 
-        <div className="relative z-10 mx-auto w-full max-w-6xl px-6 py-24">
+        <div className="relative z-10 mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
           <div className="max-w-2xl">
             <ScrollReveal trigger="mount" delay={0} duration={500} direction="fade-up">
-              <PlatformBrandTitle theme="light" size="hero" showIcon className="mb-8" />
+              <PlatformBrandTitle theme="light" size="hero" showIcon className="mb-4 sm:mb-6" />
             </ScrollReveal>
 
             <ScrollReveal trigger="mount" delay={scrollStagger(2, 100)} duration={550} direction="fade-up">

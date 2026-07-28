@@ -11,8 +11,13 @@
   --color-brand-700: #2d6a4f;
   --color-brand-800: #245843;
   --color-brand-900: #1b4332;
+  --color-brand-950: #0d2818;
   --color-gold: #d4a853;
   --font-sans: var(--font-geist-sans);
+}
+
+html {
+  color-scheme: light only;
 }
 
 @layer components {
@@ -174,6 +179,8 @@
 
 body {
   @apply bg-brand-50 text-gray-900 antialiased;
+  background-color: #fbfdfb;
+  color-scheme: light only;
 }
 
 /* Scroll-triggered reveal animations (Intersection Observer + CSS) */

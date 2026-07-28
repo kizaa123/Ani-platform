@@ -112,11 +112,11 @@ export async function notifyFarmerTeam(
   farmerId: string,
   input: Omit<CreateNotificationInput, 'userId'>
 ) {
-  const handlers = await prisma.agentAssignment.findMany({
+  const handler = await prisma.agentAssignment.findFirst({
     where: { ownerId: farmerId, relationshipType: 'FARMER_REPRESENTATIVE' },
     select: { agentId: true },
   });
-  const userIds = [farmerId, ...handlers.map((h) => h.agentId)];
+  const userIds = handler ? [farmerId, handler.agentId] : [farmerId];
   await notifyUsers(userIds, input);
 }
 

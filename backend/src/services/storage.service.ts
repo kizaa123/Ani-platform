@@ -1,6 +1,7 @@
 import fs from 'fs';
+import path from 'path';
 import { v2 as cloudinary } from 'cloudinary';
-import { publicUrl } from '../middleware/upload.middleware';
+import { normalizePublicAssetUrl, publicUrl } from '../middleware/upload.middleware';
 
 export type UploadFolder = 'profiles' | 'listings' | 'publications' | 'farm-media' | 'product-media';
 
@@ -94,4 +95,30 @@ export async function persistProductMediaFile(
     return result;
   }
   return { url: publicUrl(`product-media/${file.filename}`) };
+}
+
+const UPLOADS_ROOT = path.join(process.cwd(), 'uploads');
+
+/** Fetch an uploaded file as a buffer for authenticated streaming (local disk or remote URL). */
+export async function fetchUploadedFileBuffer(storedUrl: string): Promise<Buffer> {
+  const normalized = normalizePublicAssetUrl(storedUrl) ?? storedUrl;
+
+  if (normalized.startsWith('/uploads/')) {
+    const relative = normalized.slice('/uploads/'.length);
+    const filePath = path.join(UPLOADS_ROOT, relative);
+    if (!fs.existsSync(filePath)) {
+      throw new Error('File not found');
+    }
+    return fs.readFileSync(filePath);
+  }
+
+  if (normalized.startsWith('http://') || normalized.startsWith('https://')) {
+    const res = await fetch(normalized);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch file (${res.status})`);
+    }
+    return Buffer.from(await res.arrayBuffer());
+  }
+
+  throw new Error('Unsupported file location');
 }

@@ -5,6 +5,7 @@ import { ROLES, isResearcherRole } from '../constants/roles';
 import { getPaymentProvider } from './payment.provider';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import { notifyResearchPurchase, notifyNewPublication } from './notification.service';
+import { fetchUploadedFileBuffer } from './storage.service';
 
 export const publicationSchema = z.object({
   title: z.string().min(2),
@@ -70,11 +71,15 @@ function formatPublication(
   options: { includeFile?: boolean; hasAccess?: boolean; isOwner?: boolean; likedByMe?: boolean; commentsCount?: number } = {}
 ) {
   const canAccess = options.isOwner || pub.isFree || options.hasAccess;
+  const exposeFileUrl =
+    canAccess &&
+    options.includeFile !== false &&
+    (options.isOwner || pub.isFree);
   return {
     id: pub.id,
     title: pub.title,
     description: pub.description,
-    fileUrl: canAccess && options.includeFile !== false ? normalizePublicAssetUrl(pub.fileUrl) : null,
+    fileUrl: exposeFileUrl ? normalizePublicAssetUrl(pub.fileUrl) : null,
     coverImage: normalizePublicAssetUrl(pub.coverImage),
     category: pub.category,
     price: pub.price,
@@ -340,6 +345,20 @@ export class ResearcherService {
     ]);
 
     return formatPublication(pub, { hasAccess, isOwner, includeFile: hasAccess, likedByMe, commentsCount });
+  }
+
+  async getPublicationDocument(userId: string, publicationId: string) {
+    const pub = await this.getActivePublication(publicationId);
+    const hasAccess = await this.userHasPublicationAccess(userId, pub);
+    assertAuthorized(hasAccess, 'You must unlock this publication before reading');
+
+    if (!pub.fileUrl?.trim()) {
+      throw new AppError(404, 'Publication file not found');
+    }
+
+    const buffer = await fetchUploadedFileBuffer(pub.fileUrl);
+    const safeTitle = pub.title.replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-') || 'publication';
+    return { buffer, filename: `${safeTitle}.pdf` };
   }
 
   async recordView(userId: string, publicationId: string) {

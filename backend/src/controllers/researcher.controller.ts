@@ -152,6 +152,21 @@ export class ResearcherController {
       ApiResponse.error(res, e);
     }
   };
+
+  document = async (req: AuthRequest, res: Response) => {
+    try {
+      const { buffer, filename } = await researcherService.getPublicationDocument(
+        req.user!.userId,
+        req.params.id as string
+      );
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+      res.setHeader('Cache-Control', 'no-store');
+      res.send(buffer);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
 }
 
 export const researcherController = new ResearcherController();

@@ -6,30 +6,26 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import {
-  isStaff,
+  isAdmin,
   isFarmer,
   isHandler,
   isBuyer,
   fullName,
-  type Connection,
   type AdminStats,
   type AdminDashboardCharts,
   type AdminVerificationUser,
 } from "@/lib/types";
-import { ProfilePhoto } from "@/components/FarmerAvatar";
-import { CountryBadge } from "@/components/CountrySelect";
 import { VerificationBadge } from "@/components/VerificationBadge";
 import { AdminStatCard } from "@/components/admin/AdminStatCard";
 import { AdminDashboardChartsPanel } from "@/components/admin/AdminDashboardCharts";
 import { AnimatedStat } from "@/components/AnimatedStat";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import { formatDate, formatGhc } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import { scrollStagger } from "@/lib/scrollStagger";
 import { Skeleton, PageContentSkeleton } from "@/components/LoadingPrimitives";
 
 type RoleFilter = "all" | "farmers" | "buyers" | "handlers";
 type StatusFilter = "all" | "PENDING" | "VERIFIED" | "REJECTED";
-type AdminTab = "verification" | "connections";
 
 function AdminDashboardSkeleton() {
   return (
@@ -86,20 +82,11 @@ export default function AdminPage() {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [charts, setCharts] = useState<AdminDashboardCharts | null>(null);
   const [users, setUsers] = useState<AdminVerificationUser[]>([]);
-  const [pendingConnections, setPendingConnections] = useState<Connection[]>([]);
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("PENDING");
-  const [activeTab, setActiveTab] = useState<AdminTab>("verification");
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
-
-  const loadConnections = useCallback(() => {
-    api.connections
-      .list()
-      .then((rows) => setPendingConnections(rows.filter((c) => c.status === "PENDING")))
-      .catch(console.error);
-  }, []);
 
   const loadUsers = useCallback(() => {
     const params = statusFilter === "all" ? undefined : { status: statusFilter };
@@ -128,12 +115,27 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
-    if (user && isStaff(user.roleId)) {
-      loadDashboard();
-      loadUsers();
-      loadConnections();
-    } else if (user) router.push("/dashboard");
-  }, [user, loading, router, loadConnections, loadUsers, loadDashboard]);
+    if (user && !isAdmin(user.roleId)) {
+      router.push("/dashboard");
+      return;
+    }
+    if (!user || !isAdmin(user.roleId)) return;
+
+    const params = statusFilter === "all" ? undefined : { status: statusFilter };
+    Promise.all([api.admin.stats(), api.admin.dashboardCharts(), api.admin.users(params)])
+      .then(([statsData, chartsData, userRows]) => {
+        setStats(statsData);
+        setCharts(chartsData);
+        setUsers(userRows);
+      })
+      .catch((err) => {
+        console.error(err);
+        setDashboardError(
+          err instanceof Error ? err.message : "Could not load dashboard analytics."
+        );
+      })
+      .finally(() => setDashboardLoading(false));
+  }, [user, loading, router, statusFilter]);
 
   const verify = async (id: string, status: string) => {
     setVerifyingId(id);
@@ -146,12 +148,6 @@ export default function AdminPage() {
     } finally {
       setVerifyingId(null);
     }
-  };
-
-  const updateConnection = async (id: string, status: string) => {
-    await api.connections.updateStatus(id, status);
-    loadConnections();
-    loadDashboard();
   };
 
   const filteredUsers = users.filter((u) => matchesRoleFilter(u, roleFilter));
@@ -299,12 +295,7 @@ export default function AdminPage() {
         <div className="flex flex-wrap gap-1 border-b border-brand-100 bg-brand-50/50 p-2">
           <button
             type="button"
-            onClick={() => setActiveTab("verification")}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
-              activeTab === "verification"
-                ? "bg-white text-brand-900 shadow-sm"
-                : "text-gray-500 hover:text-brand-700"
-            }`}
+            className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-brand-900 shadow-sm"
           >
             User Verification
             {pendingCount > 0 && (
@@ -313,88 +304,10 @@ export default function AdminPage() {
               </span>
             )}
           </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("connections")}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
-              activeTab === "connections"
-                ? "bg-white text-brand-900 shadow-sm"
-                : "text-gray-500 hover:text-brand-700"
-            }`}
-          >
-            Farm Access Requests
-            {pendingConnections.length > 0 && (
-              <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">
-                {pendingConnections.length}
-              </span>
-            )}
-          </button>
         </div>
 
         <div className="p-4 sm:p-6">
-          {activeTab === "connections" ? (
-            <>
-              <p className="mb-4 text-sm text-gray-500">
-                Review buyer requests for farm access after payment.
-              </p>
-              {pendingConnections.length === 0 ? (
-                <p className="text-gray-500">No pending access requests.</p>
-              ) : (
-                <div className="space-y-3">
-                  {pendingConnections.map((c) => (
-                    <div
-                      key={c.id}
-                      className="flex flex-wrap items-start justify-between gap-4 rounded-xl border border-brand-100 bg-white p-4"
-                    >
-                      <div className="flex min-w-0 items-start gap-3">
-                        <ProfilePhoto src={c.buyer?.profilePicture} name={c.buyer?.firstName} size={56} />
-                        <div className="min-w-0">
-                          <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Buyer</p>
-                          <p className="font-bold text-brand-900">
-                            {c.buyer ? fullName(c.buyer) : "Unknown buyer"}
-                          </p>
-                          {c.buyer?.verificationStatus && (
-                            <VerificationBadge adminView status={c.buyer.verificationStatus} className="mt-1" />
-                          )}
-                          <p className="mt-2 text-sm text-brand-700">
-                            {c.farmer?.farmName ?? (c.farmer ? fullName(c.farmer) : "Unknown farm")}
-                          </p>
-                          {c.farmer && (
-                            <CountryBadge country={c.farmer.country} region={c.farmer.region} className="mt-1" />
-                          )}
-                          {c.accessPaid && c.farmAccess && (
-                            <p className="mt-2 text-xs text-gray-600">
-                              Paid: {formatGhc(c.farmAccess.amount)} ·{" "}
-                              {c.farmAccess.paymentMethod.replace("_", " ")}
-                            </p>
-                          )}
-                          <p className="mt-1 text-xs text-gray-400">{formatDate(c.createdAt)}</p>
-                        </div>
-                      </div>
-                      <div className="flex shrink-0 gap-2">
-                        <button
-                          type="button"
-                          onClick={() => updateConnection(c.id, "ACCEPTED")}
-                          className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-semibold text-white"
-                        >
-                          Accept
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => updateConnection(c.id, "REJECTED")}
-                          className="rounded-lg border border-red-200 px-4 py-2 text-sm font-semibold text-red-600"
-                        >
-                          Reject
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
-          ) : (
-            <>
-              <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
                 <div>
                   <h2 className="text-lg font-bold text-brand-900">User Verification</h2>
                   <p className="mt-1 text-sm text-gray-500">
@@ -521,10 +434,8 @@ export default function AdminPage() {
                   })}
                 </div>
               )}
-            </>
-          )}
+          </div>
         </div>
-      </div>
     </div>
   );
 }

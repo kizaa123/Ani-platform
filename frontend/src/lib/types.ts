@@ -682,6 +682,14 @@ export function isStaff(roleId: number) {
   return roleId === ROLES.ANI_ACCOUNTANT || roleId === ROLES.ADMIN;
 }
 
+export function isAdmin(roleId: number) {
+  return roleId === ROLES.ADMIN;
+}
+
+export function isAccountant(roleId: number) {
+  return roleId === ROLES.ANI_ACCOUNTANT;
+}
+
 export function isResearcher(roleId: number) {
   return roleId === ROLES.RESEARCHER;
 }
@@ -834,6 +842,46 @@ export interface PlatformFinancialStatement {
     researchSaleCount: number;
   };
   lineItems: PlatformFinancialStatementLineItem[];
+}
+
+export interface AccountantOverview {
+  generatedAt: string;
+  totalRevenue: number;
+  productOrderRevenue: number;
+  farmAccessRevenue: number;
+  researchRevenue: number;
+  transactionCount: number;
+  productOrderCount: number;
+  farmAccessCount: number;
+  researchSaleCount: number;
+  totalWithdrawn: number;
+  withdrawalCount: number;
+  availableBalance: number;
+  pendingPaidConnections: number;
+}
+
+export interface AccountantIncomeChart {
+  generatedAt: string;
+  monthlyIncome: {
+    month: string;
+    label: string;
+    revenue: number;
+  }[];
+}
+
+export interface PlatformWithdrawal {
+  id: string;
+  amount: number;
+  status: "PENDING" | "COMPLETED" | "CANCELLED";
+  notes?: string | null;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  creator: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
 }
 
 export interface HandlerFinancialClientSummary {

@@ -23,7 +23,6 @@ import { CardGridSkeleton, PageContentSkeleton, SpinnerLabel } from "@/component
 import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
-import { assetUrl } from "@/lib/assetUrl";
 
 function formatGhc(amount: number) {
   return `GHC ${amount.toFixed(2)}`;
@@ -316,6 +315,10 @@ export default function LibraryPage() {
   const [loadError, setLoadError] = useState("");
   const [modalLiking, setModalLiking] = useState(false);
   const [modalSharing, setModalSharing] = useState(false);
+  const [readingPublication, setReadingPublication] = useState<ResearchPublication | null>(null);
+  const [readerUrl, setReaderUrl] = useState<string | null>(null);
+  const [readerLoading, setReaderLoading] = useState(false);
+  const [readerError, setReaderError] = useState("");
 
   const groupedPublications = useMemo(
     () => groupPublicationsByCategory(publications),
@@ -382,8 +385,13 @@ export default function LibraryPage() {
       await api.research.purchase(selected.id, paymentMethod);
       const updated = await api.research.get(selected.id);
       setSelected(updated);
+      updatePublication(selected.id, {
+        isLocked: false,
+        hasAccess: true,
+        fileUrl: updated.fileUrl,
+      });
       setPurchaseSuccess(`You now have access to "${selected.title}".`);
-      load(search.trim() || undefined);
+      await api.research.browse(search.trim() || undefined).then(setPublications);
     } catch (e) {
       setPurchaseError(e instanceof Error ? e.message : "Purchase failed");
     } finally {
@@ -425,9 +433,37 @@ export default function LibraryPage() {
     }
   };
 
-  const openDocument = (url: string) => {
-    const href = assetUrl(url);
-    if (href) window.open(href, "_blank", "noopener,noreferrer");
+  const closeReader = useCallback(() => {
+    setReadingPublication(null);
+    setReaderError("");
+    setReaderUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (readerUrl) URL.revokeObjectURL(readerUrl);
+    };
+  }, [readerUrl]);
+
+  const openPublicationReader = async (pub: ResearchPublication) => {
+    setReadingPublication(pub);
+    setReaderLoading(true);
+    setReaderError("");
+    setReaderUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+    try {
+      const url = await api.research.openDocument(pub.id);
+      setReaderUrl(url);
+    } catch (e) {
+      setReaderError(e instanceof Error ? e.message : "Could not load publication");
+    } finally {
+      setReaderLoading(false);
+    }
   };
 
   const handleReadNow = async (pub: ResearchPublication) => {
@@ -438,22 +474,12 @@ export default function LibraryPage() {
       // non-blocking
     }
 
-    if (pub.fileUrl) {
-      openDocument(pub.fileUrl);
+    if (pub.isLocked) {
+      await handleView(pub);
       return;
     }
 
-    try {
-      const full = await api.research.get(pub.id);
-      if (full.fileUrl) {
-        openDocument(full.fileUrl);
-        return;
-      }
-    } catch {
-      /* fall through to modal */
-    }
-
-    await handleView(pub);
+    await openPublicationReader(pub);
   };
 
   if (loading || !user) {
@@ -617,14 +643,14 @@ export default function LibraryPage() {
               </button>
             </div>
 
-            {selected.hasAccess && selected.fileUrl ? (
+            {selected.hasAccess ? (
               <div className="space-y-4">
                 {purchaseSuccess && (
                   <TransactionSuccess
                     title="Unlocked successfully"
                     message={purchaseSuccess}
-                    actionLabel="Read PDF"
-                    onAction={() => openDocument(selected.fileUrl!)}
+                    actionLabel="Read now"
+                    onAction={() => openPublicationReader(selected)}
                     onDismiss={() => setPurchaseSuccess("")}
                     dismissLabel="Close"
                   />
@@ -635,9 +661,9 @@ export default function LibraryPage() {
                     <button
                       type="button"
                       className="btn-primary w-full"
-                      onClick={() => openDocument(selected.fileUrl!)}
+                      onClick={() => openPublicationReader(selected)}
                     >
-                      Read PDF
+                      Read now
                     </button>
                   </div>
                 )}
@@ -677,6 +703,47 @@ export default function LibraryPage() {
               publicationId={selected.id}
               canComment={!!selected.hasAccess}
             />
+          </div>
+        </div>
+      )}
+
+      {readingPublication && (
+        <div className="fixed inset-0 z-[60] flex flex-col bg-brand-900">
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-brand-800 bg-brand-900 px-4 py-3">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-white">{readingPublication.title}</p>
+              <p className="text-xs text-brand-200">In-platform reader — download disabled</p>
+            </div>
+            <button
+              type="button"
+              className="rounded-lg p-2 text-brand-100 hover:bg-brand-800"
+              onClick={closeReader}
+              aria-label="Close reader"
+            >
+              <Icon name="x" className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="relative min-h-0 flex-1 bg-brand-950">
+            {readerLoading && (
+              <div className="flex h-full items-center justify-center">
+                <SpinnerLabel label="Loading publication…" />
+              </div>
+            )}
+            {readerError && !readerLoading && (
+              <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
+                <p className="text-sm text-red-200">{readerError}</p>
+                <button type="button" className="btn-outline" onClick={closeReader}>
+                  Close
+                </button>
+              </div>
+            )}
+            {readerUrl && !readerLoading && !readerError && (
+              <iframe
+                title={readingPublication.title}
+                src={`${readerUrl}#toolbar=0&navpanes=0`}
+                className="h-full w-full border-0 bg-white"
+              />
+            )}
           </div>
         </div>
       )}

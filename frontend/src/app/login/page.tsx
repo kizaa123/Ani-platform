@@ -35,7 +35,7 @@ export default function LoginPage() {
   return (
     <div className="flex-1 w-full grid lg:grid-cols-12 bg-brand-50">
       {/* Left Column: Platform Overview & Sprout Image */}
-      <div className="hidden lg:col-span-7 lg:flex relative overflow-hidden bg-brand-900 flex-col justify-between p-12 lg:p-16 text-white min-h-[500px]">
+      <div className="hidden lg:col-span-7 lg:flex relative overflow-hidden bg-brand-900 flex-col justify-start gap-8 p-12 lg:p-16 text-white min-h-[500px]">
         {/* Background sprout image */}
         <div
           className="absolute inset-0 z-0"

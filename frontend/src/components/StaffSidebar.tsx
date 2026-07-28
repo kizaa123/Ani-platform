@@ -2,9 +2,9 @@
 
 import { useAuth } from "@/context/AuthProvider";
 import { PortalSidebarLayout, type PortalNavLink } from "@/components/PortalSidebarLayout";
-import { ROLES, type UserProfile } from "@/lib/types";
+import { ROLES, isAdmin, type UserProfile } from "@/lib/types";
 
-export const STAFF_NAV_LINKS: PortalNavLink[] = [
+export const ADMIN_NAV_LINKS: PortalNavLink[] = [
   { href: "/dashboard", label: "Dashboard", icon: "home", match: (p) => p === "/dashboard" },
   { href: "/marketplace", label: "Marketplace", icon: "store", match: (p) => p.startsWith("/marketplace") },
   { href: "/library", label: "Research Library", icon: "book", match: (p) => p.startsWith("/library") },
@@ -14,15 +14,46 @@ export const STAFF_NAV_LINKS: PortalNavLink[] = [
     icon: "handshake",
     match: (p) => p.startsWith("/connections"),
   },
-  { href: "/admin", label: "Admin", icon: "shield", match: (p) => p === "/admin" },
+  { href: "/admin", label: "Admin", icon: "shield", match: (p) => p.startsWith("/admin") },
+  { href: "/profile", label: "Profile", icon: "user", match: (p) => p.startsWith("/profile") },
+];
+
+export const ACCOUNTANT_NAV_LINKS: PortalNavLink[] = [
   {
-    href: "/admin/financials",
-    label: "Financials",
+    href: "/accountant",
+    label: "Financial Overview",
     icon: "chart",
-    match: (p) => p.startsWith("/admin/financials"),
+    match: (p) => p === "/accountant",
+  },
+  {
+    href: "/accountant/transactions",
+    label: "Transactions",
+    icon: "credit-card",
+    match: (p) => p.startsWith("/accountant/transactions"),
+  },
+  {
+    href: "/accountant/receipts",
+    label: "Order Receipts",
+    icon: "package",
+    match: (p) => p.startsWith("/accountant/receipts"),
+  },
+  {
+    href: "/accountant/withdrawals",
+    label: "Withdrawals",
+    icon: "coins",
+    match: (p) => p.startsWith("/accountant/withdrawals"),
+  },
+  {
+    href: "/accountant/farm-access",
+    label: "Farm Access",
+    icon: "handshake",
+    match: (p) => p.startsWith("/accountant/farm-access"),
   },
   { href: "/profile", label: "Profile", icon: "user", match: (p) => p.startsWith("/profile") },
 ];
+
+/** @deprecated Use ADMIN_NAV_LINKS or ACCOUNTANT_NAV_LINKS */
+export const STAFF_NAV_LINKS = ADMIN_NAV_LINKS;
 
 function staffPortalTitle(roleId: number) {
   if (roleId === ROLES.ADMIN) return "Admin Portal";
@@ -30,13 +61,19 @@ function staffPortalTitle(roleId: number) {
   return "Staff Portal";
 }
 
+function navLinksForRole(roleId: number): PortalNavLink[] {
+  if (isAdmin(roleId)) return ADMIN_NAV_LINKS;
+  return ACCOUNTANT_NAV_LINKS;
+}
+
 export function StaffPortalLayout({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const portalTitle = user ? staffPortalTitle(user.roleId) : "Staff Portal";
+  const navLinks = user ? navLinksForRole(user.roleId) : ADMIN_NAV_LINKS;
 
   return (
     <PortalSidebarLayout
-      navLinks={STAFF_NAV_LINKS}
+      navLinks={navLinks}
       portalTitle={portalTitle}
       getSubtitle={(u: UserProfile) => u.role}
       defaultMobileTitle="Staff Portal"

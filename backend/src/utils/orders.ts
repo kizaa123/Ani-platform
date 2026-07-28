@@ -26,10 +26,17 @@ type FarmerFields = {
   farmerProfile: { farmName: string } | null;
 };
 
+type ListingMediaFields = {
+  type: string;
+  url: string;
+  orderIndex: number;
+};
+
 type ListingFields = {
   title: string;
   location: string | null;
   images: unknown;
+  media?: ListingMediaFields[];
   commodity: { name: string; category: { name: string } };
 };
 
@@ -68,6 +75,11 @@ export function formatUserLocation(user: {
 }
 
 function productImage(listing: ListingFields): string | null {
+  const media = listing.media ?? [];
+  const imageMedia = media.find((m) => m.type === 'IMAGE') ?? media[0];
+  if (imageMedia?.url) {
+    return normalizePublicAssetUrl(imageMedia.url) ?? imageMedia.url;
+  }
   const images = normalizeImages(listing.images).map((img) => normalizePublicAssetUrl(img) ?? img);
   return images[0] ?? null;
 }
@@ -295,7 +307,12 @@ export function groupBuyerPlacedOrders(orders: BuyerPlacedOrderRow[]) {
 }
 
 export const orderInclude = {
-  listing: { include: { commodity: { include: { category: true } } } },
+  listing: {
+    include: {
+      commodity: { include: { category: true } },
+      media: { orderBy: { orderIndex: 'asc' as const } },
+    },
+  },
   buyer: {
     select: {
       firstName: true,
@@ -312,7 +329,12 @@ export const orderInclude = {
 } as const;
 
 export const buyerOrderInclude = {
-  listing: { include: { commodity: { include: { category: true } } } },
+  listing: {
+    include: {
+      commodity: { include: { category: true } },
+      media: { orderBy: { orderIndex: 'asc' as const } },
+    },
+  },
   farmer: {
     select: {
       firstName: true,

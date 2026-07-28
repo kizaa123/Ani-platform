@@ -346,6 +346,16 @@ export class AgentService {
       ? 'FARMER_REPRESENTATIVE'
       : 'BUYER_REPRESENTATIVE';
 
+    const existing = await prisma.agentAssignment.findFirst({
+      where: { ownerId, relationshipType },
+    });
+    if (existing) {
+      throw new AppError(
+        409,
+        'This user already has a handler assigned. They must change their handler in profile settings.'
+      );
+    }
+
     return prisma.agentAssignment.create({
       data: { agentId, ownerId, relationshipType },
       include: {

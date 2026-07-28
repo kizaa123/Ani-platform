@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { Icon, type IconName } from "@/components/icons";
-import { isFarmer, isBuyer, isHandler, isResearcher, isStaff, isStudent } from "@/lib/types";
+import { isFarmer, isBuyer, isHandler, isResearcher, isAdmin, isAccountant, isStudent } from "@/lib/types";
 
 export type BottomNavItem = {
   href: string;
@@ -112,12 +112,36 @@ function handlerNav(): BottomNavItem[] {
   ];
 }
 
-function staffNav(): BottomNavItem[] {
+function adminNav(): BottomNavItem[] {
   return [
     { href: "/dashboard", label: "Home", icon: "home", match: (p) => p === "/dashboard" },
     { href: "/marketplace", label: "Market", icon: "store", match: (p) => p.startsWith("/marketplace") },
-    { href: "/admin/financials", label: "Financials", icon: "chart", match: (p) => p.startsWith("/admin/financials") },
-    { href: "/admin", label: "Admin", icon: "shield", match: (p) => p === "/admin" },
+    { href: "/admin", label: "Admin", icon: "shield", match: (p) => p.startsWith("/admin") },
+    { href: "/profile", label: "Profile", icon: "user", match: (p) => p.startsWith("/profile") },
+  ];
+}
+
+function accountantNav(): BottomNavItem[] {
+  return [
+    { href: "/accountant", label: "Overview", icon: "chart", match: (p) => p === "/accountant" },
+    {
+      href: "/accountant/transactions",
+      label: "Transactions",
+      icon: "credit-card",
+      match: (p) => p.startsWith("/accountant/transactions"),
+    },
+    {
+      href: "/accountant/receipts",
+      label: "Receipts",
+      icon: "package",
+      match: (p) => p.startsWith("/accountant/receipts"),
+    },
+    {
+      href: "/accountant/farm-access",
+      label: "Access",
+      icon: "handshake",
+      match: (p) => p.startsWith("/accountant/farm-access"),
+    },
     { href: "/profile", label: "Profile", icon: "user", match: (p) => p.startsWith("/profile") },
   ];
 }
@@ -128,7 +152,8 @@ function navForRole(roleId: number): BottomNavItem[] | null {
   if (isResearcher(roleId)) return researcherNav();
   if (isStudent(roleId)) return studentNav();
   if (isHandler(roleId)) return handlerNav();
-  if (isStaff(roleId)) return staffNav();
+  if (isAdmin(roleId)) return adminNav();
+  if (isAccountant(roleId)) return accountantNav();
   return null;
 }
 

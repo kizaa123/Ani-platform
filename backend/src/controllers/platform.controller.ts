@@ -6,6 +6,11 @@ import { agentService } from '../services/agent.service';
 import { chatService } from '../services/chat.service';
 import { notificationService } from '../services/notification.service';
 import { adminService, verifyUserSchema } from '../services/admin.service';
+import {
+  accountantService,
+  createWithdrawalSchema,
+  updateWithdrawalSchema,
+} from '../services/accountant.service';
 import { createAuditLog } from '../middleware/audit.middleware';
 import {
   matchingService,
@@ -307,6 +312,58 @@ export class AdminController {
   };
 }
 
+export class AccountantController {
+  overview = async (_req: AuthRequest, res: Response) => {
+    try {
+      ApiResponse.success(res, await accountantService.getOverview());
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  incomeChart = async (_req: AuthRequest, res: Response) => {
+    try {
+      ApiResponse.success(res, await accountantService.getIncomeChart());
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  listWithdrawals = async (_req: AuthRequest, res: Response) => {
+    try {
+      ApiResponse.success(res, await accountantService.listWithdrawals());
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  createWithdrawal = async (req: AuthRequest, res: Response) => {
+    try {
+      const withdrawal = await accountantService.createWithdrawal(
+        req.user!.userId,
+        req.body
+      );
+      await createAuditLog(req, 'WITHDRAWAL_CREATED', 'platform_withdrawals');
+      ApiResponse.success(res, withdrawal, 201);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  updateWithdrawal = async (req: AuthRequest, res: Response) => {
+    try {
+      const withdrawal = await accountantService.updateWithdrawal(
+        req.params.id as string,
+        req.body
+      );
+      await createAuditLog(req, `WITHDRAWAL_${req.body.status}`, 'platform_withdrawals');
+      ApiResponse.success(res, withdrawal);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+}
+
 export class AiController {
   matches = async (req: AuthRequest, res: Response) => {
     try {
@@ -347,4 +404,5 @@ export const agentController = new AgentController();
 export const chatController = new ChatController();
 export const notificationController = new NotificationController();
 export const adminController = new AdminController();
+export const accountantController = new AccountantController();
 export const aiController = new AiController();

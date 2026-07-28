@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { PlatformFinancialStatement, isStaff } from "@/lib/types";
+import { PlatformFinancialStatement, isAdmin } from "@/lib/types";
 import { formatDate, formatGhc, orderStatusStyle } from "@/lib/format";
 
 type LineItemType = PlatformFinancialStatement["lineItems"][number]["type"];
@@ -62,11 +62,11 @@ export default function AdminFinancialsPage() {
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
-    if (user && !isStaff(user.roleId)) {
+    if (user && !isAdmin(user.roleId)) {
       router.push("/dashboard");
       return;
     }
-    if (user) {
+    if (user && isAdmin(user.roleId)) {
       api.admin
         .financialStatement()
         .then(setStatement)

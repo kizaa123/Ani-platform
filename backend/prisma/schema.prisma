@@ -91,6 +91,7 @@ model User {
   productMediaLikes          ProductMediaLike[]
   researchPublicationLikes   ResearchPublicationLike[]
   researchComments             ResearchComment[]
+  platformWithdrawals        PlatformWithdrawal[]
 
   @@map("users")
 }
@@ -180,6 +181,7 @@ model AgentAssignment {
   owner User @relation("OwnerUser", fields: [ownerId], references: [id], onDelete: Cascade)
 
   @@unique([agentId, ownerId])
+  @@unique([ownerId, relationshipType])
   @@map("agent_assignment")
 }
 
@@ -623,6 +625,29 @@ model ProductMediaLike {
 
   @@unique([mediaId, buyerId])
   @@map("product_media_likes")
+}
+
+// ─── Platform withdrawals (accountant) ───────────────────────────────────────
+
+enum WithdrawalStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+model PlatformWithdrawal {
+  id        String           @id @default(uuid())
+  amount    Float
+  status    WithdrawalStatus @default(PENDING)
+  notes     String?
+  createdBy String           @map("created_by")
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @updatedAt @map("updated_at")
+
+  creator User @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@map("platform_withdrawals")
 }
 
 // ─── Audit ─────────────────────────────────────────────────────────────────────

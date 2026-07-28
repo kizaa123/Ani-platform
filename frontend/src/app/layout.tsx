@@ -23,12 +23,15 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#1b4332",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#1b4332" },
+    { media: "(prefers-color-scheme: dark)", color: "#1b4332" },
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${geist.variable} h-full`}>
+    <html lang="en" className={`${geist.variable} h-full`} style={{ colorScheme: "light" }}>
       <body className="min-h-full flex flex-col font-sans">
         <Providers>{children}</Providers>
       </body>
