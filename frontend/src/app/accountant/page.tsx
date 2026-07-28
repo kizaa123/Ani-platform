@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { isAccountant, type AccountantOverview, type AccountantIncomeChart } from "@/lib/types";
-import { AccountantIncomeChartPanel } from "@/components/accountant/AccountantIncomeChart";
+import { isAccountant, type AccountantOverview, type AccountantDashboardCharts } from "@/lib/types";
+import { AccountantDashboardChartsPanel } from "@/components/accountant/AccountantDashboardCharts";
 import { AnimatedStat } from "@/components/AnimatedStat";
 import { formatGhc } from "@/lib/format";
 import { PageContentSkeleton, Skeleton } from "@/components/LoadingPrimitives";
@@ -23,9 +23,13 @@ function OverviewSkeleton() {
           </div>
         ))}
       </div>
-      <div className="rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
-        <Skeleton className="h-5 w-48" />
-        <Skeleton className="mt-4 h-48 w-full rounded-xl" />
+      <div className="space-y-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
+            <Skeleton className="h-5 w-48" />
+            <Skeleton className="mt-4 h-48 w-full rounded-xl" />
+          </div>
+        ))}
       </div>
     </>
   );
@@ -35,9 +39,26 @@ export default function AccountantOverviewPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [overview, setOverview] = useState<AccountantOverview | null>(null);
-  const [chart, setChart] = useState<AccountantIncomeChart | null>(null);
+  const [charts, setCharts] = useState<AccountantDashboardCharts | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pageLoading, setPageLoading] = useState(true);
+
+  const loadDashboard = useCallback(async () => {
+    setPageLoading(true);
+    setError(null);
+    try {
+      const [overviewData, chartsData] = await Promise.all([
+        api.accountant.overview(),
+        api.accountant.dashboardCharts(),
+      ]);
+      setOverview(overviewData);
+      setCharts(chartsData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not load financial overview.");
+    } finally {
+      setPageLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
@@ -46,17 +67,8 @@ export default function AccountantOverviewPage() {
       return;
     }
     if (!user || !isAccountant(user.roleId)) return;
-
-    Promise.all([api.accountant.overview(), api.accountant.incomeChart()])
-      .then(([overviewData, chartData]) => {
-        setOverview(overviewData);
-        setChart(chartData);
-      })
-      .catch((err) => {
-        setError(err instanceof Error ? err.message : "Could not load financial overview.");
-      })
-      .finally(() => setPageLoading(false));
-  }, [user, loading, router]);
+    loadDashboard();
+  }, [user, loading, router, loadDashboard]);
 
   if (loading || !user) return <PageContentSkeleton maxWidth="max-w-6xl" />;
 
@@ -66,7 +78,7 @@ export default function AccountantOverviewPage() {
         <div>
           <h1 className="text-3xl font-bold text-brand-900">Financial Overview</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Platform income, balances, and monthly growth
+            Platform income, balances, and financial growth
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -76,6 +88,12 @@ export default function AccountantOverviewPage() {
           >
             All transactions
           </Link>
+          <Link
+            href="/accountant/withdrawals"
+            className="rounded-lg border border-brand-200 bg-white px-4 py-2 text-sm font-semibold text-brand-800 hover:bg-brand-50"
+          >
+            Withdrawals
+          </Link>
         </div>
       </div>
 
@@ -84,19 +102,7 @@ export default function AccountantOverviewPage() {
           <span>{error}</span>
           <button
             type="button"
-            onClick={() => {
-              setPageLoading(true);
-              setError(null);
-              Promise.all([api.accountant.overview(), api.accountant.incomeChart()])
-                .then(([overviewData, chartData]) => {
-                  setOverview(overviewData);
-                  setChart(chartData);
-                })
-                .catch((err) => {
-                  setError(err instanceof Error ? err.message : "Could not load financial overview.");
-                })
-                .finally(() => setPageLoading(false));
-            }}
+            onClick={loadDashboard}
             className="rounded-lg bg-red-700 px-3 py-1.5 text-xs font-semibold text-white"
           >
             Retry
@@ -175,9 +181,9 @@ export default function AccountantOverviewPage() {
         </>
       )}
 
-      {chart && (
+      {charts && (
         <div className="mb-6">
-          <AccountantIncomeChartPanel chart={chart} />
+          <AccountantDashboardChartsPanel charts={charts} />
         </div>
       )}
     </div>

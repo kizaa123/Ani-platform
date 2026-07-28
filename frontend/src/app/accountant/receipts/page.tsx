@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import { isAccountant, type PlatformFinancialStatement } from "@/lib/types";
 import { OrderReceiptsTable } from "@/components/accountant/PlatformTransactionsTable";
+import { PdfViewerModal } from "@/components/PdfViewerModal";
 
 export default function AccountantReceiptsPage() {
   const { user, loading } = useAuth();
@@ -14,16 +15,24 @@ export default function AccountantReceiptsPage() {
   const [statement, setStatement] = useState<PlatformFinancialStatement | null>(null);
   const [error, setError] = useState("");
   const [openingId, setOpeningId] = useState<string | null>(null);
+  const [pdfTitle, setPdfTitle] = useState("");
+  const [pdfOpen, setPdfOpen] = useState(false);
 
-  const openOrderStatement = async (orderId: string) => {
+  const loadStatementPdf = useCallback(async () => {
+    if (!openingId) throw new Error("No statement selected");
+    return api.orders.statementUrl(openingId);
+  }, [openingId]);
+
+  const openOrderStatement = (orderId: string) => {
+    setError("");
     setOpeningId(orderId);
-    try {
-      await api.orders.statement(orderId);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not open statement");
-    } finally {
-      setOpeningId(null);
-    }
+    setPdfTitle(`Order statement ${orderId.slice(0, 8)}…`);
+    setPdfOpen(true);
+  };
+
+  const closePdf = () => {
+    setPdfOpen(false);
+    setOpeningId(null);
   };
 
   useEffect(() => {
@@ -67,7 +76,7 @@ export default function AccountantReceiptsPage() {
         </Link>
         <h1 className="mt-2 text-xl font-bold text-brand-900">Order Receipts</h1>
         <p className="text-xs text-gray-500">
-          Print or open buyer release / order financial statement PDFs
+          View buyer release / order financial statement PDFs in-app
         </p>
       </div>
 
@@ -80,7 +89,7 @@ export default function AccountantReceiptsPage() {
           <div className="rounded-xl border border-green-200 bg-green-50/50 p-4">
             <p className="text-[10px] font-semibold uppercase text-green-700">Unlocked receipts</p>
             <p className="mt-1 text-2xl font-bold text-green-800">{unlockedCount}</p>
-            <p className="text-xs text-green-700">Available to print / open</p>
+            <p className="text-xs text-green-700">Available to view</p>
           </div>
           <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4">
             <p className="text-[10px] font-semibold uppercase text-amber-700">Locked receipts</p>
@@ -96,9 +105,16 @@ export default function AccountantReceiptsPage() {
         <OrderReceiptsTable
           statement={statement}
           onOpenStatement={openOrderStatement}
-          openingId={openingId}
+          openingId={pdfOpen ? openingId : null}
         />
       )}
+
+      <PdfViewerModal
+        title={pdfTitle}
+        open={pdfOpen}
+        onClose={closePdf}
+        loadUrl={loadStatementPdf}
+      />
     </div>
   );
 }

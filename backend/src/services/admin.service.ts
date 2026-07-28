@@ -73,6 +73,8 @@ const ROLE_CHART_LABELS: Record<number, string> = {
   [ROLES.BUYER_HANDLER]: 'Client Liaison Officers',
   [ROLES.ANI_ACCOUNTANT]: 'Accountants',
   [ROLES.ADMIN]: 'Admins',
+  [ROLES.CTO]: 'CTO',
+  [ROLES.COMMUNICATION_OFFICER]: 'Communications',
   [ROLES.RESEARCHER]: 'Researchers',
   [ROLES.STUDENT]: 'Students',
 };

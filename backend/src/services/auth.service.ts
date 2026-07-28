@@ -344,6 +344,10 @@ export class AuthService {
       throw new AppError(401, 'Invalid email or password');
     }
 
+    if (!user.isActive) {
+      throw new AppError(403, 'Account is deactivated. Contact an administrator.');
+    }
+
     const tokenPayload = { userId: user.id, email: user.email, roleId: user.roleId };
     const accessToken = generateAccessToken(tokenPayload);
     const refreshToken = generateRefreshToken(tokenPayload);

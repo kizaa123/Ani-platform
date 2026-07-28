@@ -592,7 +592,16 @@ export const ROLES = {
   ADMIN: 7,
   RESEARCHER: 8,
   STUDENT: 9,
+  CTO: 10,
+  COMMUNICATION_OFFICER: 11,
 } as const;
+
+export const STAFF_ROLE_OPTIONS = [
+  { id: ROLES.ADMIN, label: "Admin" },
+  { id: ROLES.ANI_ACCOUNTANT, label: "ANI Accountant" },
+  { id: ROLES.CTO, label: "CTO" },
+  { id: ROLES.COMMUNICATION_OFFICER, label: "Communication Officer" },
+] as const;
 
 export function fullName(u: { firstName: string; lastName: string }) {
   return `${u.firstName} ${u.lastName}`;
@@ -679,7 +688,12 @@ export function isFarmerHandler(roleId: number) {
 }
 
 export function isStaff(roleId: number) {
-  return roleId === ROLES.ANI_ACCOUNTANT || roleId === ROLES.ADMIN;
+  return (
+    roleId === ROLES.ANI_ACCOUNTANT ||
+    roleId === ROLES.ADMIN ||
+    roleId === ROLES.CTO ||
+    roleId === ROLES.COMMUNICATION_OFFICER
+  );
 }
 
 export function isAdmin(roleId: number) {
@@ -869,6 +883,39 @@ export interface AccountantIncomeChart {
   }[];
 }
 
+export interface AccountantDashboardCharts {
+  generatedAt: string;
+  monthlyRevenue: {
+    month: string;
+    label: string;
+    revenue: number;
+  }[];
+  revenueBySource: {
+    month: string;
+    label: string;
+    productOrders: number;
+    farmAccess: number;
+    research: number;
+    legacyAccess: number;
+  }[];
+  revenueSourceTotals: {
+    key: string;
+    label: string;
+    amount: number;
+  }[];
+  transactionVolume: {
+    month: string;
+    label: string;
+    count: number;
+  }[];
+  cashFlow: {
+    month: string;
+    label: string;
+    income: number;
+    withdrawals: number;
+  }[];
+}
+
 export interface PlatformWithdrawal {
   id: string;
   amount: number;
@@ -942,3 +989,16 @@ export interface AdminVerificationUser {
 }
 
 export type PendingVerificationUser = AdminVerificationUser;
+
+export interface StaffMember {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  roleId: number;
+  roleName: string;
+  isActive: boolean;
+  verificationStatus: string;
+  createdAt: string;
+}

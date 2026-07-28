@@ -187,6 +187,8 @@ export const PORTAL_NAV_IMAGES_STAFF = {
 
   "/admin": "/9846eee5-004a-42b1-8e4f-e5bac031dfbf-cover.png",
 
+  "/admin/staff": "/9846eee5-004a-42b1-8e4f-e5bac031dfbf-cover.png",
+
   /** Change image here: Platform Financial Statement card */
 
   "/admin/financials": "/accountant-filing-invoice.webp",

@@ -8,6 +8,8 @@ export const ROLES = {
   ADMIN: 7,
   RESEARCHER: 8,
   STUDENT: 9,
+  CTO: 10,
+  COMMUNICATION_OFFICER: 11,
 } as const;
 
 export const ROLE_NAMES: Record<number, string> = {
@@ -20,6 +22,8 @@ export const ROLE_NAMES: Record<number, string> = {
   7: 'Admin',
   8: 'Researcher',
   9: 'Student',
+  10: 'CTO',
+  11: 'Communication Officer',
 };
 
 /** Roles that browse marketplace farms and place product orders (same access flow as buyers). */
@@ -53,7 +57,20 @@ export const PERMISSIONS = {
 
 export const FARMER_ROLES = [ROLES.CROP_FARMER, ROLES.LIVESTOCK_FARMER];
 export const AGENT_ROLES = [ROLES.FARMER_HANDLER, ROLES.BUYER_HANDLER];
-export const STAFF_ROLES = [ROLES.ANI_ACCOUNTANT, ROLES.ADMIN];
+export const STAFF_ROLES = [
+  ROLES.ANI_ACCOUNTANT,
+  ROLES.ADMIN,
+  ROLES.CTO,
+  ROLES.COMMUNICATION_OFFICER,
+];
+
+/** Staff roles an admin may assign when creating or updating team members. */
+export const MANAGEABLE_STAFF_ROLE_IDS = [
+  ROLES.ANI_ACCOUNTANT,
+  ROLES.ADMIN,
+  ROLES.CTO,
+  ROLES.COMMUNICATION_OFFICER,
+] as const;
 export const VERIFIABLE_ROLE_IDS = [...FARMER_ROLES, ROLES.BUYER, ROLES.RESEARCHER, ...AGENT_ROLES];
 
 /** Roles exposed on the public registration form (Admin is staff-only). */

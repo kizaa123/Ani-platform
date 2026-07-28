@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { Icon, type IconName } from "@/components/icons";
-import { isFarmer, isBuyer, isHandler, isResearcher, isAdmin, isAccountant, isStudent } from "@/lib/types";
+import { isFarmer, isBuyer, isHandler, isResearcher, isAdmin, isAccountant, isStudent, isStaff } from "@/lib/types";
 
 export type BottomNavItem = {
   href: string;
@@ -146,6 +146,15 @@ function accountantNav(): BottomNavItem[] {
   ];
 }
 
+function staffGeneralNav(): BottomNavItem[] {
+  return [
+    { href: "/dashboard", label: "Home", icon: "home", match: (p) => p === "/dashboard" },
+    { href: "/marketplace", label: "Market", icon: "store", match: (p) => p.startsWith("/marketplace") },
+    { href: "/library", label: "Library", icon: "book", match: (p) => p.startsWith("/library") },
+    { href: "/profile", label: "Profile", icon: "user", match: (p) => p.startsWith("/profile") },
+  ];
+}
+
 function navForRole(roleId: number): BottomNavItem[] | null {
   if (isFarmer(roleId)) return farmerNav();
   if (isBuyer(roleId)) return buyerNav();
@@ -154,6 +163,7 @@ function navForRole(roleId: number): BottomNavItem[] | null {
   if (isHandler(roleId)) return handlerNav();
   if (isAdmin(roleId)) return adminNav();
   if (isAccountant(roleId)) return accountantNav();
+  if (isStaff(roleId)) return staffGeneralNav();
   return null;
 }
 

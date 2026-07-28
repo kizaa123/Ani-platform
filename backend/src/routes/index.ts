@@ -26,6 +26,7 @@ import { connectionSchema } from '../services/connection.service';
 import { assignmentSchema } from '../services/agent.service';
 import { messageSchema } from '../services/chat.service';
 import { verifyUserSchema } from '../services/admin.service';
+import { createStaffSchema, updateStaffSchema } from '../services/staff.service';
 import { createWithdrawalSchema, updateWithdrawalSchema } from '../services/accountant.service';
 import { uploadController } from '../controllers/upload.controller';
 import { farmerMediaController } from '../controllers/farmerMedia.controller';
@@ -187,7 +188,6 @@ router.get('/research/browse', authenticate, researcherController.browse);
 router.get('/research/my', authenticate, requirePermission(PERMISSIONS.MANAGE_PUBLICATIONS), researcherController.myPublications);
 router.get('/research/financial-statement', authenticate, requirePermission(PERMISSIONS.MANAGE_PUBLICATIONS), researcherController.financialStatement);
 router.put('/research/profile', authenticate, requirePermission(PERMISSIONS.MANAGE_PUBLICATIONS), researcherController.updateProfile);
-router.get('/research/:id', authenticate, researcherController.getOne);
 router.get('/research/:id/document', authenticate, researcherController.document);
 router.get('/research/:id/comments', authenticate, researcherController.listComments);
 router.post('/research/:id/comments', authenticate, validateBody(commentSchema), researcherController.addComment);
@@ -201,6 +201,7 @@ router.post(
   validateBody(purchasePublicationSchema),
   researcherController.purchase
 );
+router.get('/research/:id', authenticate, researcherController.getOne);
 router.post(
   '/research',
   authenticate,
@@ -307,9 +308,16 @@ router.get('/admin/users', authenticate, requirePermission(PERMISSIONS.VERIFY_US
 router.patch('/admin/users/:id/verify', authenticate, requirePermission(PERMISSIONS.VERIFY_USERS), validateBody(verifyUserSchema), adminController.verifyUser);
 router.get('/admin/audit-logs', authenticate, requirePermission(PERMISSIONS.VIEW_AUDIT_LOGS), adminController.auditLogs);
 
+// Admin staff management (ANI team)
+router.get('/admin/staff', authenticate, requirePermission(PERMISSIONS.MANAGE_USERS), adminController.listStaff);
+router.post('/admin/staff', authenticate, requirePermission(PERMISSIONS.MANAGE_USERS), validateBody(createStaffSchema), adminController.createStaff);
+router.patch('/admin/staff/:id', authenticate, requirePermission(PERMISSIONS.MANAGE_USERS), validateBody(updateStaffSchema), adminController.updateStaff);
+
 // Accountant (financial portal)
 router.get('/accountant/overview', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), accountantController.overview);
 router.get('/accountant/income-chart', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), accountantController.incomeChart);
+router.get('/accountant/dashboard-charts', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), accountantController.dashboardCharts);
+router.get('/accountant/financial-statement', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), adminController.financialStatement);
 router.get('/accountant/withdrawals', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), accountantController.listWithdrawals);
 router.post('/accountant/withdrawals', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), validateBody(createWithdrawalSchema), accountantController.createWithdrawal);
 router.patch('/accountant/withdrawals/:id', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), validateBody(updateWithdrawalSchema), accountantController.updateWithdrawal);

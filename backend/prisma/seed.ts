@@ -1,7 +1,29 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import fs from 'fs';
+import path from 'path';
+import PDFDocument from 'pdfkit';
 
 const prisma = new PrismaClient();
+
+async function ensureSamplePublicationPdf(filename: string, title: string) {
+  const dir = path.join(process.cwd(), 'uploads', 'publications');
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  const filePath = path.join(dir, filename);
+  if (fs.existsSync(filePath)) return;
+
+  await new Promise<void>((resolve, reject) => {
+    const doc = new PDFDocument();
+    const stream = fs.createWriteStream(filePath);
+    stream.on('finish', () => resolve());
+    stream.on('error', reject);
+    doc.pipe(stream);
+    doc.fontSize(18).text(title, { align: 'center' });
+    doc.moveDown();
+    doc.fontSize(12).text('Sample publication for the ANI Platform Research Library.');
+    doc.end();
+  });
+}
 
 const ROLES = [
   { id: 1, roleName: 'Crop Farmer' },
@@ -13,6 +35,8 @@ const ROLES = [
   { id: 7, roleName: 'Admin' },
   { id: 8, roleName: 'Researcher' },
   { id: 9, roleName: 'Student' },
+  { id: 10, roleName: 'CTO' },
+  { id: 11, roleName: 'Communication Officer' },
 ];
 
 const PERMISSIONS = [
@@ -34,6 +58,8 @@ const ROLE_PERMS: Record<number, string[]> = {
   7: ['manage_payments', 'verify_users', 'manage_packages', 'view_audit_logs', 'manage_users', 'view_full_farmer_data', 'approve_connection', 'view_publications'],
   8: ['create_publication', 'manage_publications', 'view_publications', 'send_messages', 'view_farmer_preview', 'view_full_farmer_data', 'request_connection', 'negotiate_as_buyer', 'represent_buyer', 'purchase_access'],
   9: ['view_publications', 'purchase_publication', 'send_messages'],
+  10: ['view_audit_logs', 'view_publications', 'view_full_farmer_data', 'manage_packages'],
+  11: ['send_messages', 'view_publications', 'approve_connection'],
 };
 
 async function main() {
@@ -323,6 +349,18 @@ async function main() {
     create: { firstName: 'Platform', lastName: 'Admin', email: 'admin@ani.gh', phone: '+233500000002', passwordHash: hash, country: 'Ghana', region: 'Greater Accra', city: 'Accra', roleId: 7, verificationStatus: 'VERIFIED' },
   });
 
+  await prisma.user.upsert({
+    where: { email: 'cto@ani.gh' },
+    update: demoUserUpdate(10),
+    create: { firstName: 'ANI', lastName: 'CTO', email: 'cto@ani.gh', phone: '+233500000003', passwordHash: hash, country: 'Ghana', region: 'Greater Accra', city: 'Accra', roleId: 10, verificationStatus: 'VERIFIED' },
+  });
+
+  await prisma.user.upsert({
+    where: { email: 'comms@ani.gh' },
+    update: demoUserUpdate(11),
+    create: { firstName: 'ANI', lastName: 'Communications', email: 'comms@ani.gh', phone: '+233500000004', passwordHash: hash, country: 'Ghana', region: 'Greater Accra', city: 'Accra', roleId: 11, verificationStatus: 'VERIFIED' },
+  });
+
   await prisma.agentAssignment.upsert({
     where: { agentId_ownerId: { agentId: yaw.id, ownerId: kwame.id } },
     update: {}, create: { agentId: yaw.id, ownerId: kwame.id, relationshipType: 'FARMER_REPRESENTATIVE' },
@@ -346,6 +384,11 @@ async function main() {
     update: {},
     create: { userId: akua.id, institution: 'University of Ghana', expertise: 'Agricultural Economics' },
   });
+
+  await Promise.all([
+    ensureSamplePublicationPdf('sample-maize-guide.pdf', 'Climate-Smart Maize Production in Ghana'),
+    ensureSamplePublicationPdf('sample-livestock-study.pdf', 'Livestock Feed Optimization Study 2025'),
+  ]);
 
   const existingPub = await prisma.researchPublication.findFirst({
     where: { researcherId: researcherProfile.id },

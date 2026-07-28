@@ -27,6 +27,18 @@ function chartStartDate(months: number): Date {
   return d;
 }
 
+function countByMonth<T extends { createdAt: Date }>(
+  rows: T[],
+  monthKeys: string[]
+): number[] {
+  const counts = new Map(monthKeys.map((k) => [k, 0]));
+  for (const row of rows) {
+    const key = monthKey(row.createdAt);
+    if (counts.has(key)) counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return monthKeys.map((k) => counts.get(k) ?? 0);
+}
+
 function sumByMonth<T extends { createdAt: Date; amount: number }>(
   rows: T[],
   monthKeys: string[]
@@ -132,11 +144,11 @@ export class AccountantService {
     };
   }
 
-  async getIncomeChart() {
+  private async chartWindowData() {
     const monthKeys = chartMonthLabels(CHART_MONTHS);
     const startDate = chartStartDate(CHART_MONTHS);
 
-    const [paidOrders, completedFarmAccess, completedResearch, completedPayments] =
+    const [paidOrders, completedFarmAccess, completedResearch, completedPayments, withdrawals] =
       await Promise.all([
         prisma.productOrder.findMany({
           where: { createdAt: { gte: startDate }, status: 'PAID' },
@@ -154,7 +166,18 @@ export class AccountantService {
           where: { createdAt: { gte: startDate }, status: 'COMPLETED' },
           select: { createdAt: true, amount: true },
         }),
+        prisma.platformWithdrawal.findMany({
+          where: { createdAt: { gte: startDate }, status: 'COMPLETED' },
+          select: { createdAt: true, amount: true },
+        }),
       ]);
+
+    return { monthKeys, paidOrders, completedFarmAccess, completedResearch, completedPayments, withdrawals };
+  }
+
+  async getIncomeChart() {
+    const { monthKeys, paidOrders, completedFarmAccess, completedResearch, completedPayments } =
+      await this.chartWindowData();
 
     const revenueRows = [
       ...paidOrders.map((o) => ({ createdAt: o.createdAt, amount: o.totalAmount })),
@@ -172,6 +195,72 @@ export class AccountantService {
     return {
       generatedAt: new Date().toISOString(),
       monthlyIncome,
+    };
+  }
+
+  async getDashboardCharts() {
+    const {
+      monthKeys,
+      paidOrders,
+      completedFarmAccess,
+      completedResearch,
+      completedPayments,
+      withdrawals,
+    } = await this.chartWindowData();
+
+    const productRows = paidOrders.map((o) => ({ createdAt: o.createdAt, amount: o.totalAmount }));
+    const farmRows = completedFarmAccess.map((a) => ({ createdAt: a.createdAt, amount: a.amount }));
+    const researchRows = completedResearch.map((r) => ({ createdAt: r.createdAt, amount: r.amount }));
+    const legacyRows = completedPayments.map((p) => ({ createdAt: p.createdAt, amount: p.amount }));
+    const revenueRows = [...productRows, ...farmRows, ...researchRows, ...legacyRows];
+    const transactionRows = [
+      ...paidOrders,
+      ...completedFarmAccess,
+      ...completedResearch,
+      ...completedPayments,
+    ];
+
+    const productByMonth = sumByMonth(productRows, monthKeys);
+    const farmByMonth = sumByMonth(farmRows, monthKeys);
+    const researchByMonth = sumByMonth(researchRows, monthKeys);
+    const legacyByMonth = sumByMonth(legacyRows, monthKeys);
+    const revenueByMonth = sumByMonth(revenueRows, monthKeys);
+    const withdrawalsByMonth = sumByMonth(withdrawals, monthKeys);
+    const volumeByMonth = countByMonth(transactionRows, monthKeys);
+
+    const revenue = await this.revenueTotals();
+
+    return {
+      generatedAt: new Date().toISOString(),
+      monthlyRevenue: monthKeys.map((key, index) => ({
+        month: key,
+        label: formatMonthLabel(key),
+        revenue: revenueByMonth[index],
+      })),
+      revenueBySource: monthKeys.map((key, index) => ({
+        month: key,
+        label: formatMonthLabel(key),
+        productOrders: productByMonth[index],
+        farmAccess: farmByMonth[index],
+        research: researchByMonth[index],
+        legacyAccess: legacyByMonth[index],
+      })),
+      revenueSourceTotals: [
+        { key: 'productOrders', label: 'Product orders', amount: revenue.productOrderRevenue },
+        { key: 'farmAccess', label: 'Farm access', amount: revenue.farmAccessRevenue },
+        { key: 'research', label: 'Research sales', amount: revenue.researchRevenue },
+      ].filter((row) => row.amount > 0),
+      transactionVolume: monthKeys.map((key, index) => ({
+        month: key,
+        label: formatMonthLabel(key),
+        count: volumeByMonth[index],
+      })),
+      cashFlow: monthKeys.map((key, index) => ({
+        month: key,
+        label: formatMonthLabel(key),
+        income: revenueByMonth[index],
+        withdrawals: withdrawalsByMonth[index],
+      })),
     };
   }
 

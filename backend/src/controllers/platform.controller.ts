@@ -6,6 +6,7 @@ import { agentService } from '../services/agent.service';
 import { chatService } from '../services/chat.service';
 import { notificationService } from '../services/notification.service';
 import { adminService, verifyUserSchema } from '../services/admin.service';
+import { staffService, createStaffSchema, updateStaffSchema } from '../services/staff.service';
 import {
   accountantService,
   createWithdrawalSchema,
@@ -310,6 +311,38 @@ export class AdminController {
       ApiResponse.error(res, e);
     }
   };
+
+  listStaff = async (_req: AuthRequest, res: Response) => {
+    try {
+      ApiResponse.success(res, await staffService.listStaff());
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  createStaff = async (req: AuthRequest, res: Response) => {
+    try {
+      const staff = await staffService.createStaff(req.body);
+      await createAuditLog(req, 'STAFF_CREATED', 'users', { staffId: staff.id, roleId: staff.roleId });
+      ApiResponse.success(res, staff, 201);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  updateStaff = async (req: AuthRequest, res: Response) => {
+    try {
+      const staff = await staffService.updateStaff(
+        req.params.id as string,
+        req.body,
+        req.user!.userId
+      );
+      await createAuditLog(req, 'STAFF_UPDATED', 'users', { staffId: staff.id });
+      ApiResponse.success(res, staff);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
 }
 
 export class AccountantController {
@@ -324,6 +357,14 @@ export class AccountantController {
   incomeChart = async (_req: AuthRequest, res: Response) => {
     try {
       ApiResponse.success(res, await accountantService.getIncomeChart());
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  dashboardCharts = async (_req: AuthRequest, res: Response) => {
+    try {
+      ApiResponse.success(res, await accountantService.getDashboardCharts());
     } catch (e) {
       ApiResponse.error(res, e);
     }

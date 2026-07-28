@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { isAccountant, type PlatformFinancialStatement } from "@/lib/types";
 import { PlatformTransactionsTable } from "@/components/accountant/PlatformTransactionsTable";
 import { formatDate, formatGhc } from "@/lib/format";
+import { PdfViewerModal } from "@/components/PdfViewerModal";
 
 export default function AccountantTransactionsPage() {
   const { user, loading } = useAuth();
@@ -15,16 +16,24 @@ export default function AccountantTransactionsPage() {
   const [statement, setStatement] = useState<PlatformFinancialStatement | null>(null);
   const [error, setError] = useState("");
   const [openingId, setOpeningId] = useState<string | null>(null);
+  const [pdfTitle, setPdfTitle] = useState("");
+  const [pdfOpen, setPdfOpen] = useState(false);
 
-  const openOrderStatement = async (orderId: string) => {
+  const loadStatementPdf = useCallback(async () => {
+    if (!openingId) throw new Error("No statement selected");
+    return api.orders.statementUrl(openingId);
+  }, [openingId]);
+
+  const openOrderStatement = (orderId: string) => {
+    setError("");
     setOpeningId(orderId);
-    try {
-      await api.orders.statement(orderId);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not open statement");
-    } finally {
-      setOpeningId(null);
-    }
+    setPdfTitle(`Order statement ${orderId.slice(0, 8)}…`);
+    setPdfOpen(true);
+  };
+
+  const closePdf = () => {
+    setPdfOpen(false);
+    setOpeningId(null);
   };
 
   useEffect(() => {
@@ -81,10 +90,17 @@ export default function AccountantTransactionsPage() {
           <PlatformTransactionsTable
             statement={statement}
             onOpenStatement={openOrderStatement}
-            openingId={openingId}
+            openingId={pdfOpen ? openingId : null}
           />
         </>
       )}
+
+      <PdfViewerModal
+        title={pdfTitle}
+        open={pdfOpen}
+        onClose={closePdf}
+        loadUrl={loadStatementPdf}
+      />
     </div>
   );
 }

@@ -134,6 +134,8 @@ class ApiClient {
     return URL.createObjectURL(pdfBlob);
   }
 
+  fetchPdfUrl = (path: string) => this.fetchPdfBlobUrl(path);
+
   private async openPdfRequest(path: string): Promise<void> {
     const url = await this.fetchPdfBlobUrl(path);
     const tab = window.open(url, "_blank", "noopener,noreferrer");
@@ -263,6 +265,7 @@ class ApiClient {
     get: (id: string) =>
       this.request<import("./types").OrderDetail>(`/orders/${id}`),
     statement: (id: string) => this.openPdfRequest(`/orders/${id}/statement`),
+    statementUrl: (id: string) => this.fetchPdfBlobUrl(`/orders/${id}/statement`),
     release: (id: string, otp: string) =>
       this.request<import("./types").OrderReleaseResult>(`/orders/${id}/release`, {
         method: "POST",
@@ -445,14 +448,44 @@ class ApiClient {
       this.request(`/admin/users/${id}/verify`, { method: "PATCH", body: JSON.stringify({ status }) }),
     auditLogs: () => this.request("/admin/audit-logs"),
     payments: () => this.request("/payments/admin"),
+    staff: {
+      list: () => this.request<import("./types").StaffMember[]>("/admin/staff"),
+      create: (body: {
+        firstName: string;
+        lastName: string;
+        email: string;
+        phone: string;
+        password: string;
+        roleId: number;
+      }) =>
+        this.request<import("./types").StaffMember>("/admin/staff", {
+          method: "POST",
+          body: JSON.stringify(body),
+        }),
+      update: (
+        id: string,
+        body: Partial<{
+          firstName: string;
+          lastName: string;
+          roleId: number;
+          isActive: boolean;
+        }>
+      ) =>
+        this.request<import("./types").StaffMember>(`/admin/staff/${id}`, {
+          method: "PATCH",
+          body: JSON.stringify(body),
+        }),
+    },
   };
 
   accountant = {
     overview: () => this.request<import("./types").AccountantOverview>("/accountant/overview"),
     incomeChart: () =>
       this.request<import("./types").AccountantIncomeChart>("/accountant/income-chart"),
+    dashboardCharts: () =>
+      this.request<import("./types").AccountantDashboardCharts>("/accountant/dashboard-charts"),
     financialStatement: () =>
-      this.request<import("./types").PlatformFinancialStatement>("/admin/financial-statement"),
+      this.request<import("./types").PlatformFinancialStatement>("/accountant/financial-statement"),
     listWithdrawals: () =>
       this.request<import("./types").PlatformWithdrawal[]>("/accountant/withdrawals"),
     createWithdrawal: (body: { amount: number; notes?: string }) =>
