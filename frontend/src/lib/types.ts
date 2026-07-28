@@ -736,6 +736,24 @@ export interface ResearchPublication {
   };
 }
 
+export interface PublisherBrowseCard {
+  id: string;
+  name: string;
+  profilePicture?: string | null;
+  institution?: string | null;
+  bio?: string | null;
+  verificationStatus?: string;
+  publicationCount: number;
+  canViewFiles: boolean;
+}
+
+export interface PublisherLibrary {
+  publisher: PublisherBrowseCard & {
+    expertise?: string | null;
+  };
+  publications: ResearchPublication[];
+}
+
 export interface ResearchComment {
   id: string;
   content: string;

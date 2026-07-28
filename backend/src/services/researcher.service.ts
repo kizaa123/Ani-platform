@@ -321,6 +321,180 @@ export class ResearcherService {
     );
   }
 
+  async browsePublishers(userId: string, query?: string) {
+    const publications = await this.browsePublications(userId, query);
+    const researcherProfile = await prisma.researcherProfile.findUnique({ where: { userId } });
+
+    const profiles = await prisma.researcherProfile.findMany({
+      where: {
+        publications: { some: { status: 'ACTIVE' } },
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            profilePicture: true,
+            verificationStatus: true,
+          },
+        },
+      },
+    });
+
+    const profileByUserId = new Map(profiles.map((p) => [p.user.id, p]));
+
+    type PublisherBucket = {
+      id: string;
+      name: string;
+      profilePicture: string | null;
+      institution: string | null;
+      bio: string | null;
+      verificationStatus: string;
+      publicationCount: number;
+      hasPaidPublications: boolean;
+      unlockedCount: number;
+      isOwner: boolean;
+      searchTerms: string;
+    };
+
+    const buckets = new Map<string, PublisherBucket>();
+
+    for (const pub of publications) {
+      const researcherUserId = pub.researcher.id;
+      const profile = profileByUserId.get(researcherUserId);
+      const isOwner = researcherProfile?.userId === researcherUserId;
+      const hasAccess = !!pub.hasAccess;
+
+      const existing = buckets.get(researcherUserId);
+      if (existing) {
+        existing.publicationCount += 1;
+        if (!pub.isFree) existing.hasPaidPublications = true;
+        if (hasAccess) existing.unlockedCount += 1;
+        existing.searchTerms += ` ${pub.title} ${pub.description ?? ''}`;
+      } else {
+        buckets.set(researcherUserId, {
+          id: researcherUserId,
+          name: pub.researcher.name,
+          profilePicture: pub.researcher.profilePicture ?? null,
+          institution: profile?.institution ?? null,
+          bio: profile?.bio ?? null,
+          verificationStatus: pub.researcher.verificationStatus ?? 'UNVERIFIED',
+          publicationCount: 1,
+          hasPaidPublications: !pub.isFree,
+          unlockedCount: hasAccess ? 1 : 0,
+          isOwner,
+          searchTerms: [
+            pub.researcher.name,
+            profile?.institution,
+            profile?.bio,
+            pub.title,
+            pub.description,
+          ]
+            .filter(Boolean)
+            .join(' ')
+            .toLowerCase(),
+        });
+      }
+    }
+
+    const term = query?.trim().toLowerCase() ?? '';
+    return Array.from(buckets.values())
+      .filter((p) => !term || p.searchTerms.includes(term))
+      .map((p) => ({
+        id: p.id,
+        name: p.name,
+        profilePicture: normalizePublicAssetUrl(p.profilePicture),
+        institution: p.institution,
+        bio: p.bio,
+        verificationStatus: p.verificationStatus,
+        publicationCount: p.publicationCount,
+        canViewFiles:
+          p.isOwner ||
+          !p.hasPaidPublications ||
+          p.unlockedCount > 0 ||
+          p.unlockedCount >= p.publicationCount,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  async getPublisherLibrary(userId: string, publisherUserId: string) {
+    const profile = assertFound(
+      await prisma.researcherProfile.findUnique({
+        where: { userId: publisherUserId },
+        include: {
+          user: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              profilePicture: true,
+              verificationStatus: true,
+            },
+          },
+        },
+      }),
+      'Publisher not found'
+    );
+
+    const publications = await prisma.researchPublication.findMany({
+      where: { researcherId: profile.id, status: 'ACTIVE' },
+      include: publicationInclude,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (publications.length === 0) {
+      throw new AppError(404, 'Publisher not found');
+    }
+
+    const [purchases, researcherProfile] = await Promise.all([
+      prisma.researchPurchase.findMany({
+        where: { studentId: userId, status: 'COMPLETED' },
+        select: { publicationId: true },
+      }),
+      prisma.researcherProfile.findUnique({ where: { userId } }),
+    ]);
+
+    const purchasedIds = new Set(purchases.map((p) => p.publicationId));
+    const isOwner = researcherProfile?.id === profile.id;
+    const pubIds = publications.map((p) => p.id);
+    const [likedIds, commentCounts] = await Promise.all([
+      this.getLikedPublicationIds(userId, pubIds),
+      this.getCommentCounts(pubIds),
+    ]);
+
+    const formattedPublications = publications.map((p) =>
+      formatPublication(p, {
+        hasAccess: purchasedIds.has(p.id),
+        isOwner,
+        likedByMe: likedIds.has(p.id),
+        commentsCount: commentCounts.get(p.id) ?? 0,
+      })
+    );
+
+    const hasPaidPublications = formattedPublications.some((p) => !p.isFree);
+    const unlockedCount = formattedPublications.filter((p) => p.hasAccess).length;
+
+    return {
+      publisher: {
+        id: profile.user.id,
+        name: `${profile.user.firstName} ${profile.user.lastName}`.trim(),
+        profilePicture: normalizePublicAssetUrl(profile.user.profilePicture),
+        institution: profile.institution,
+        bio: profile.bio,
+        expertise: profile.expertise,
+        verificationStatus: profile.user.verificationStatus,
+        publicationCount: formattedPublications.length,
+        canViewFiles:
+          isOwner ||
+          !hasPaidPublications ||
+          unlockedCount > 0 ||
+          unlockedCount >= formattedPublications.length,
+      },
+      publications: formattedPublications,
+    };
+  }
+
   async getPublication(userId: string, roleId: number, publicationId: string) {
     const pub = assertFound(
       await prisma.researchPublication.findFirst({

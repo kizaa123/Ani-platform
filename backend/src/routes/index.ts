@@ -185,6 +185,8 @@ router.get('/buyer/orders', authenticate, buyerController.orders);
 
 // Research library
 router.get('/research/browse', authenticate, researcherController.browse);
+router.get('/research/publishers', authenticate, researcherController.browsePublishers);
+router.get('/research/publisher/:publisherId', authenticate, researcherController.getPublisherLibrary);
 router.get('/research/my', authenticate, requirePermission(PERMISSIONS.MANAGE_PUBLICATIONS), researcherController.myPublications);
 router.get('/research/financial-statement', authenticate, requirePermission(PERMISSIONS.MANAGE_PUBLICATIONS), researcherController.financialStatement);
 router.put('/research/profile', authenticate, requirePermission(PERMISSIONS.MANAGE_PUBLICATIONS), researcherController.updateProfile);

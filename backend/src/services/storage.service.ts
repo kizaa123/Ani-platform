@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { v2 as cloudinary } from 'cloudinary';
 import { normalizePublicAssetUrl, publicUrl } from '../middleware/upload.middleware';
+import { AppError } from '../utils/errors';
 
 export type UploadFolder = 'profiles' | 'listings' | 'publications' | 'farm-media' | 'product-media';
 
@@ -107,7 +108,7 @@ export async function fetchUploadedFileBuffer(storedUrl: string): Promise<Buffer
     const relative = normalized.slice('/uploads/'.length);
     const filePath = path.join(UPLOADS_ROOT, relative);
     if (!fs.existsSync(filePath)) {
-      throw new Error('File not found');
+      throw new AppError(404, 'Publication file not found', 'NOT_FOUND');
     }
     return fs.readFileSync(filePath);
   }
@@ -115,10 +116,10 @@ export async function fetchUploadedFileBuffer(storedUrl: string): Promise<Buffer
   if (normalized.startsWith('http://') || normalized.startsWith('https://')) {
     const res = await fetch(normalized);
     if (!res.ok) {
-      throw new Error(`Failed to fetch file (${res.status})`);
+      throw new AppError(404, 'Publication file not found', 'NOT_FOUND');
     }
     return Buffer.from(await res.arrayBuffer());
   }
 
-  throw new Error('Unsupported file location');
+  throw new AppError(404, 'Publication file not found', 'NOT_FOUND');
 }

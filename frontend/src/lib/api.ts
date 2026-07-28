@@ -340,6 +340,12 @@ class ApiClient {
       this.request<import("./types").ResearchPublication[]>(
         `/research/browse${q ? `?q=${encodeURIComponent(q)}` : ""}`
       ),
+    browsePublishers: (q?: string) =>
+      this.request<import("./types").PublisherBrowseCard[]>(
+        `/research/publishers${q ? `?q=${encodeURIComponent(q)}` : ""}`
+      ),
+    getPublisher: (publisherId: string) =>
+      this.request<import("./types").PublisherLibrary>(`/research/publisher/${publisherId}`),
     my: () => this.request<import("./types").ResearchPublication[]>("/research/my"),
     get: (id: string) => this.request<import("./types").ResearchPublication>(`/research/${id}`),
     create: (body: Record<string, unknown>) =>

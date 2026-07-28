@@ -23,6 +23,28 @@ export class ResearcherController {
     }
   };
 
+  browsePublishers = async (req: AuthRequest, res: Response) => {
+    try {
+      const q = typeof req.query.q === 'string' ? req.query.q : undefined;
+      const data = await researcherService.browsePublishers(req.user!.userId, q);
+      ApiResponse.success(res, data);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  getPublisherLibrary = async (req: AuthRequest, res: Response) => {
+    try {
+      const data = await researcherService.getPublisherLibrary(
+        req.user!.userId,
+        req.params.publisherId as string
+      );
+      ApiResponse.success(res, data);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
   getOne = async (req: AuthRequest, res: Response) => {
     try {
       const data = await researcherService.getPublication(

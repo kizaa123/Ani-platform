@@ -16,6 +16,7 @@ interface LibraryPublicationCardProps {
   onComment: (pub: ResearchPublication) => void;
   onLike: (pubId: string, result: { liked: boolean; likesCount: number }) => void;
   onShare: (pubId: string, sharesCount: number) => void;
+  sharePath?: string;
 }
 
 function PublicationActionButton({
@@ -59,6 +60,7 @@ export function LibraryPublicationCard({
   onComment,
   onLike,
   onShare,
+  sharePath,
 }: LibraryPublicationCardProps) {
   const [liking, setLiking] = useState(false);
   const [sharing, setSharing] = useState(false);
@@ -82,7 +84,7 @@ export function LibraryPublicationCard({
     try {
       const shareUrl =
         typeof window !== "undefined"
-          ? `${window.location.origin}/library?pub=${pub.id}`
+          ? `${window.location.origin}${sharePath ?? `/library/publisher/${pub.researcher.id}?pub=${pub.id}`}`
           : "";
       if (typeof navigator !== "undefined" && navigator.share) {
         await navigator.share({ title: pub.title, url: shareUrl });
