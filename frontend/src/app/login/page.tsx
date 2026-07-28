@@ -9,6 +9,7 @@ import { Logo } from "@/components/Logo";
 import { PlatformBrandTitle } from "@/components/PlatformBrandTitle";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
+import { AUTH_PANEL_BACKGROUND } from "@/lib/authImages";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -37,7 +38,10 @@ export default function LoginPage() {
       {/* Left Column: Platform Overview & Sprout Image */}
       <div className="hidden lg:col-span-7 lg:flex relative overflow-hidden bg-brand-900 flex-col justify-between p-12 lg:p-16 text-white min-h-[500px]">
         {/* Background sprout image */}
-        <div className="absolute inset-0 z-0 bg-[url('/ani background color.jpg')] bg-cover bg-center" />
+        <div
+          className="absolute inset-0 z-0 bg-cover bg-center"
+          style={{ backgroundImage: `url('${AUTH_PANEL_BACKGROUND}')` }}
+        />
         {/* Dark gradient overlay for readability */}
         <div className="absolute inset-0 z-10 bg-gradient-to-tr from-brand-950/95 via-brand-900/80 to-brand-800/40" />
 
