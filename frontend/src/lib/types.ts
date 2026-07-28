@@ -949,6 +949,42 @@ export interface PlatformWithdrawal {
   };
 }
 
+export type VerificationTagType = "STANDARD" | "INTERNATIONAL_FARMER" | "INTERNATIONAL_BUYER";
+
+export interface UserVerificationTag {
+  id: string;
+  userId: string;
+  tagType: VerificationTagType;
+  assignedBy: string;
+  createdAt: string;
+}
+
+export interface OrderDistributionLine {
+  id: string;
+  role: string;
+  roleLabel: string;
+  percentage: number;
+  amount: number;
+  status: "PENDING" | "DISTRIBUTED";
+  paymentMethod?: string | null;
+  distributedAt?: string | null;
+  transactionId?: string | null;
+  recipientUserId?: string | null;
+  recipientName: string;
+  recipientEmail?: string | null;
+  canDistribute: boolean;
+}
+
+export interface OrderMoneyDistributionSnapshot {
+  orderId: string;
+  orderDescription: string;
+  buyerName: string;
+  farmerName: string;
+  totalAmount: number;
+  allDistributed: boolean;
+  lines: OrderDistributionLine[];
+}
+
 export interface HandlerFinancialClientSummary {
   ownerId: string;
   clientName: string;
@@ -1004,6 +1040,7 @@ export interface AdminVerificationUser {
   farmerProfile?: { farmName: string; verificationStatus: string } | null;
   buyerProfile?: { company: string | null } | null;
   agentProfile?: { agentType: string } | null;
+  verificationTags?: UserVerificationTag[];
 }
 
 export type PendingVerificationUser = AdminVerificationUser;

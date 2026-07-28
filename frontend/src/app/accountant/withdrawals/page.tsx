@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { fullName, isAccountant, type AccountantOverview, type PlatformWithdrawal } from "@/lib/types";
+import { fullName, isAccountant, type AccountantOverview, type PlatformFinancialStatement, type PlatformWithdrawal } from "@/lib/types";
 import { formatDate, formatGhc } from "@/lib/format";
+import { OrderDistributionPanel } from "@/components/accountant/OrderDistributionPanel";
 
 function statusStyle(status: PlatformWithdrawal["status"]) {
   switch (status) {
@@ -24,6 +25,7 @@ export default function AccountantWithdrawalsPage() {
   const router = useRouter();
   const [overview, setOverview] = useState<AccountantOverview | null>(null);
   const [withdrawals, setWithdrawals] = useState<PlatformWithdrawal[]>([]);
+  const [statement, setStatement] = useState<PlatformFinancialStatement | null>(null);
   const [error, setError] = useState("");
   const [amount, setAmount] = useState("");
   const [notes, setNotes] = useState("");
@@ -39,20 +41,30 @@ export default function AccountantWithdrawalsPage() {
     }
     if (!user || !isAccountant(user.roleId)) return;
 
-    Promise.all([api.accountant.overview(), api.accountant.listWithdrawals()])
-      .then(([overviewData, withdrawalRows]) => {
+    Promise.all([
+      api.accountant.overview(),
+      api.accountant.listWithdrawals(),
+      api.accountant.financialStatement(),
+    ])
+      .then(([overviewData, withdrawalRows, statementData]) => {
         setOverview(overviewData);
         setWithdrawals(withdrawalRows);
+        setStatement(statementData);
       })
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load withdrawals"))
       .finally(() => setPageLoading(false));
   }, [user, loading, router]);
 
   const reloadWithdrawals = () => {
-    Promise.all([api.accountant.overview(), api.accountant.listWithdrawals()])
-      .then(([overviewData, withdrawalRows]) => {
+    Promise.all([
+      api.accountant.overview(),
+      api.accountant.listWithdrawals(),
+      api.accountant.financialStatement(),
+    ])
+      .then(([overviewData, withdrawalRows, statementData]) => {
         setOverview(overviewData);
         setWithdrawals(withdrawalRows);
+        setStatement(statementData);
       })
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load withdrawals"));
   };
@@ -94,6 +106,13 @@ export default function AccountantWithdrawalsPage() {
     }
   };
 
+  const releasedOrders =
+    statement?.lineItems.filter(
+      (item) =>
+        item.type === "PRODUCT_ORDER" &&
+        (item.escrowStatus === "RELEASED" || Boolean(item.otpVerifiedAt))
+    ) ?? [];
+
   if (loading || !user) {
     return <div className="p-12 text-center text-xs text-gray-500">Loading...</div>;
   }
@@ -125,6 +144,27 @@ export default function AccountantWithdrawalsPage() {
           <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
             <p className="text-[10px] font-semibold uppercase text-gray-500">Withdrawal records</p>
             <p className="mt-1 text-xl font-bold text-brand-900">{withdrawals.length}</p>
+          </div>
+        </div>
+      )}
+
+      {releasedOrders.length > 0 && (
+        <div className="mb-8 overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
+          <div className="border-b border-brand-100 bg-brand-50/40 px-5 py-3">
+            <h3 className="text-sm font-semibold text-brand-900">Order money distribution</h3>
+            <p className="mt-0.5 text-xs text-gray-500">
+              Split released escrow funds: 66.66% Fellow · 10% Fellow Liaison · 10% Client Liaison · remainder ANI
+            </p>
+          </div>
+          <div className="space-y-3 p-5">
+            {releasedOrders.map((order) => (
+              <OrderDistributionPanel
+                key={order.id}
+                orderId={order.id}
+                orderLabel={order.description}
+                amount={order.amount}
+              />
+            ))}
           </div>
         </div>
       )}

@@ -13,7 +13,7 @@
   --color-brand-900: #1b4332;
   --color-brand-950: #0d2818;
   --color-gold: #d4a853;
-  --font-sans: var(--font-geist-sans);
+  --font-sans: ui-sans-serif, system-ui, sans-serif, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 html {

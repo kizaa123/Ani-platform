@@ -1,5 +1,6 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth.middleware';
+import { createAuditLog } from '../middleware/audit.middleware';
 import { ApiResponse } from '../utils/response';
 import { connectionService } from '../services/connection.service';
 import { agentService } from '../services/agent.service';

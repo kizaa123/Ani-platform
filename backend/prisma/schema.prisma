@@ -310,7 +310,7 @@ model ProductOrder {
   buyer   User             @relation("BuyerOrders", fields: [buyerId], references: [id])
   farmer  User             @relation("FarmerOrders", fields: [farmerId], references: [id])
   listing CommodityListing @relation(fields: [listingId], references: [id])
-  moneyDistribution MoneyDistribution?
+  moneyDistribution OrderMoneyDistribution?
 
   @@map("product_orders")
 }
@@ -698,6 +698,7 @@ model OrderMoneyDistribution {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
+  order ProductOrder            @relation(fields: [orderId], references: [id], onDelete: Cascade)
   lines OrderDistributionLine[]
 
   @@map("order_money_distributions")

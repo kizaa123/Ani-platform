@@ -493,7 +493,10 @@ export class AdminService {
     assignedBy: string
   ) {
     const user = assertFound(
-      await prisma.user.findUnique({ where: { id: userId } }),
+      await prisma.user.findUnique({
+        where: { id: userId },
+        include: { farmerProfile: { select: { id: true } } },
+      }),
       'User not found'
     );
 

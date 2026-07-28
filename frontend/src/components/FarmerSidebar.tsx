@@ -42,8 +42,8 @@ export function FarmerPortalLayout({ children }: { children: React.ReactNode }) 
   return (
     <PortalSidebarLayout
       navLinks={FARMER_NAV_LINKS}
-      portalTitle="Farmer Portal"
-      defaultMobileTitle="Farmer Portal"
+      portalTitle="Fellow Portal"
+      defaultMobileTitle="Fellow Portal"
     >
       {children}
     </PortalSidebarLayout>

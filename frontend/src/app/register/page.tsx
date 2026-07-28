@@ -228,7 +228,7 @@ export default function RegisterPage() {
       }
 
       router.push(
-        isFarmerRole ? "/farm" : isResearcherRole ? "/researcher/publications" : isStudentRole ? "/library" : "/dashboard"
+        isFarmerRole ? "/farm" : isResearcherRole ? "/researcher/publications" : "/dashboard"
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");

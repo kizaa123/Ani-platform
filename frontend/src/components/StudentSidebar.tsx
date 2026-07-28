@@ -22,8 +22,8 @@ export function StudentPortalLayout({ children }: { children: React.ReactNode })
   return (
     <PortalSidebarLayout
       navLinks={STUDENT_NAV_LINKS}
-      portalTitle="Student Portal"
-      defaultMobileTitle="Student Portal"
+      portalTitle="Client Portal"
+      defaultMobileTitle="Client Portal"
     >
       {children}
     </PortalSidebarLayout>

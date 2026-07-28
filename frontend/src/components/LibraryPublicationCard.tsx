@@ -115,7 +115,7 @@ export function LibraryPublicationCard({
           <AvatarWithVerification
             src={pub.researcher.profilePicture}
             name={pub.researcher.name}
-            size={44}
+            size="md"
             verificationStatus={pub.researcher.verificationStatus}
           />
           <div className="min-w-0 flex-1">

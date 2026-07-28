@@ -80,13 +80,14 @@ export default function LoginPage() {
       </div>
 
       {/* Right Column: Form Container */}
-      <div className="lg:col-span-5 flex items-center justify-center p-6 sm:p-12 lg:p-16">
+      <div className="lg:col-span-5 flex flex-col">
+        <div className="flex justify-center px-6 pt-8 lg:hidden">
+          <PlatformBrandTitle theme="dark" size="compact" showIcon />
+        </div>
+        <div className="flex flex-1 items-center justify-center p-6 sm:p-12 lg:p-16">
         <ScrollReveal trigger="mount" delay={120} duration={500} direction="fade-up" className="w-full max-w-md">
         <div className="space-y-8 bg-white p-8 rounded-2xl border border-brand-100 shadow-xl">
           <header className="text-center lg:text-left">
-            <div className="mb-6 lg:hidden">
-              <PlatformBrandTitle theme="dark" size="compact" showIcon />
-            </div>
             <div className="hidden lg:inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-100 text-brand-700 mb-4">
               <Icon name="lock" className="h-6 w-6" />
             </div>
@@ -161,6 +162,7 @@ export default function LoginPage() {
           </div>
         </div>
         </ScrollReveal>
+        </div>
       </div>
     </div>
   );

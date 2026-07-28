@@ -452,6 +452,17 @@ class ApiClient {
     },
     verify: (id: string, status: string) =>
       this.request(`/admin/users/${id}/verify`, { method: "PATCH", body: JSON.stringify({ status }) }),
+    listVerificationTags: (userId: string) =>
+      this.request<import("./types").UserVerificationTag[]>(`/admin/users/${userId}/verification-tags`),
+    assignVerificationTag: (userId: string, tagType: import("./types").VerificationTagType) =>
+      this.request<import("./types").UserVerificationTag>(`/admin/users/${userId}/verification-tags`, {
+        method: "POST",
+        body: JSON.stringify({ tagType }),
+      }),
+    removeVerificationTag: (userId: string, tagType: import("./types").VerificationTagType) =>
+      this.request<{ removed: boolean }>(`/admin/users/${userId}/verification-tags/${tagType}`, {
+        method: "DELETE",
+      }),
     auditLogs: () => this.request("/admin/audit-logs"),
     payments: () => this.request("/payments/admin"),
     staff: {
@@ -504,6 +515,24 @@ class ApiClient {
         method: "PATCH",
         body: JSON.stringify(body),
       }),
+    getOrderDistribution: (orderId: string) =>
+      this.request<import("./types").OrderMoneyDistributionSnapshot>(
+        `/accountant/orders/${orderId}/distribution`
+      ),
+    distributeOrderLine: (
+      orderId: string,
+      lineId: string,
+      body: { paymentMethod: string; transactionId?: string }
+    ) =>
+      this.request<import("./types").OrderMoneyDistributionSnapshot>(
+        `/accountant/orders/${orderId}/distribution/lines/${lineId}/distribute`,
+        { method: "POST", body: JSON.stringify(body) }
+      ),
+    distributeOrderAll: (orderId: string, body: { paymentMethod: string }) =>
+      this.request<import("./types").OrderMoneyDistributionSnapshot>(
+        `/accountant/orders/${orderId}/distribution/distribute-all`,
+        { method: "POST", body: JSON.stringify(body) }
+      ),
   };
 }
 

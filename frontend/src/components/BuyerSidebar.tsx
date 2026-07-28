@@ -21,8 +21,8 @@ export function BuyerPortalLayout({ children }: { children: React.ReactNode }) {
   return (
     <PortalSidebarLayout
       navLinks={BUYER_NAV_LINKS}
-      portalTitle="Buyer Portal"
-      defaultMobileTitle="Buyer Portal"
+      portalTitle="Client Portal"
+      defaultMobileTitle="Client Portal"
     >
       {children}
     </PortalSidebarLayout>

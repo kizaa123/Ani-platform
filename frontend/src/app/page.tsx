@@ -67,70 +67,63 @@ const TEAM = [
  * Place images in public/roles/ (e.g. public/roles/crop-farmer.jpg) and update the matching entry.
  */
 const ROLE_CARD_IMAGES = {
-  cropFarmer: "/famer on pitch.jpg",       // Change image here: Crop Farmer card
-  livestockFarmer: "/herd-of-cattle-grazing-in-green-pasture-looking-at-camera-photo.jpg",  // Change image here: Livestock Farmer card
-  fruitFarmer: "/portrait-happy-farmer-couple-holding-baskets-vegetables-fruits-vineyard-77869777.webp",      // Change image here: Fruit Farmer card
-  fishFarmer: "/live stock farm.jpg",      // Change image here: Fish Farmer card
-  buyer: "/farmer and buyer.jpg",            // Change image here: Buyer card
-  student: "/Research Library.jpg",          // Change image here: Student card
-  organization: "/marketplace-friendly-exchange-stockcake.jpg", // Change image here: Organization card
-  handler: "/farmer and her agent.webp",          // Change image here: Handler card
-  researcher: "/Agric researchers.jpg",       // Change image here: Researcher card
+  cropFarmer: "/famer on pitch.jpg",
+  livestockFarmer: "/herd-of-cattle-grazing-in-green-pasture-looking-at-camera-photo.jpg",
+  fruitFarmer: "/portrait-happy-farmer-couple-holding-baskets-vegetables-fruits-vineyard-77869777.webp",
+  fishFarmer: "/live stock farm.jpg",
+  client: "/farmer and buyer.jpg",
+  organization: "/marketplace-friendly-exchange-stockcake.jpg",
+  handler: "/farmer and her agent.webp",
+  researcher: "/Agric researchers.jpg",
 } as const;
 
 const ROLE_CARDS: { icon: IconName; label: string; desc: string; image: string }[] = [
   {
     icon: "sprout",
-    label: "Crop Farmer",
-    desc: "Register as a crop farmer to list produce, manage prices and harvest schedules, and track interested buyers — all from one dashboard.",
+    label: "Crop Fellow",
+    desc: "Register as a crop fellow to list produce, manage prices and harvest schedules, and track interested clients — all from one dashboard.",
     image: ROLE_CARD_IMAGES.cropFarmer,
   },
   {
     icon: "wheat",
-    label: "Livestock Farmer",
-    desc: "Showcase your livestock, set availability and pricing, and connect with buyers and agents who are ready to trade.",
+    label: "Livestock Fellow",
+    desc: "Showcase your livestock, set availability and pricing, and connect with clients and liaison officers who are ready to trade.",
     image: ROLE_CARD_IMAGES.livestockFarmer,
   },
   {
     icon: "leaf",
-    label: "Fruit Farmer",
-    desc: "Highlight seasonal fruits, orchard yields and delivery windows so buyers can discover and order fresh produce directly from your farm.",
+    label: "Fruit Fellow",
+    desc: "Highlight seasonal fruits, orchard yields and delivery windows so clients can discover and order fresh produce directly from your farm.",
     image: ROLE_CARD_IMAGES.fruitFarmer,
   },
   {
+    icon: "leaf",
+    label: "Fish Fellow",
+    desc: "List aquaculture produce, manage pond yields and harvest windows, and connect with clients sourcing fresh fish across Ghana.",
+    image: ROLE_CARD_IMAGES.fishFarmer,
+  },
+  {
     icon: "cart",
-    label: "Buyer",
-    desc: "Browse verified farms, preview listings for free, and unlock full farmer details to source commodities securely across Ghana.",
-    image: ROLE_CARD_IMAGES.buyer,
+    label: "Client",
+    desc: "Browse verified farms, preview listings for free, unlock full fellow details, purchase research publications, and source commodities securely.",
+    image: ROLE_CARD_IMAGES.client,
   },
   {
     icon: "handshake",
-    label: "Handler",
-    desc: "Represent farmers or buyers, manage relationships, negotiate deals, and streamline transactions on behalf of your clients.",
+    label: "Liaison Officer",
+    desc: "Represent fellows or clients, manage relationships, negotiate deals, and streamline transactions on behalf of your clients.",
     image: ROLE_CARD_IMAGES.handler,
   },
   {
     icon: "book",
     label: "Researcher",
-    desc: "Access agricultural data, publish field research, and connect with farmers and buyers to support evidence-based farming across the region.",
+    desc: "Access agricultural data, publish field research, and connect with fellows and clients to support evidence-based farming across the region.",
     image: ROLE_CARD_IMAGES.researcher,
-  },
-  {
-    icon: "book",
-    label: "Student",
-    desc: "Browse the research library, purchase publications, and stay connected to the latest agricultural insights from verified researchers.",
-    image: ROLE_CARD_IMAGES.student,
-  },
-  {
-    icon: "leaf",
-    label: "Fish Farmer",
-    desc: "List aquaculture produce, manage pond yields and harvest windows, and connect with buyers sourcing fresh fish across Ghana.",
-    image: ROLE_CARD_IMAGES.fishFarmer,
   },
   {
     icon: "users",
     label: "Organization",
-    desc: "Register as an institution or cooperative to source commodities, manage procurement, and coordinate trade through ANI handlers.",
+    desc: "Register as an institution or cooperative to source commodities, manage procurement, and coordinate trade through ANI liaison officers.",
     image: ROLE_CARD_IMAGES.organization,
   },
 ];
