@@ -5,14 +5,15 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "prisma generate && prisma db push --accept-data-loss && prisma db seed && tsc",
+    "build": "prisma generate && tsx prisma/dedupe-agent-assignments.ts && prisma db push --accept-data-loss && prisma db seed && tsc",
     "start": "node dist/index.js",
     "postinstall": "prisma generate",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma generate && prisma db push",
     "db:seed": "prisma generate && tsx prisma/seed.ts",
-    "db:setup": "prisma generate && prisma db push && tsx prisma/seed.ts",
+    "db:dedupe": "tsx prisma/dedupe-agent-assignments.ts",
+    "db:setup": "prisma generate && tsx prisma/dedupe-agent-assignments.ts && prisma db push && tsx prisma/seed.ts",
     "db:studio": "prisma studio"
   },
   "prisma": {

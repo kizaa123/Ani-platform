@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import path from 'path';
 import PDFDocument from 'pdfkit';
+import { dedupeAgentAssignments } from './dedupe-agent-assignments';
 
 const prisma = new PrismaClient();
 
@@ -64,6 +65,7 @@ const ROLE_PERMS: Record<number, string[]> = {
 
 async function main() {
   console.log('🌱 Seeding ANI Platform...');
+  await dedupeAgentAssignments();
 
   for (const role of ROLES) {
     await prisma.role.upsert({ where: { id: role.id }, update: { roleName: role.roleName }, create: role });
@@ -361,13 +363,35 @@ async function main() {
     create: { firstName: 'ANI', lastName: 'Communications', email: 'comms@ani.gh', phone: '+233500000004', passwordHash: hash, country: 'Ghana', region: 'Greater Accra', city: 'Accra', roleId: 11, verificationStatus: 'VERIFIED' },
   });
 
-  await prisma.agentAssignment.upsert({
-    where: { agentId_ownerId: { agentId: yaw.id, ownerId: kwame.id } },
-    update: {}, create: { agentId: yaw.id, ownerId: kwame.id, relationshipType: 'FARMER_REPRESENTATIVE' },
+  async function upsertAgentAssignment(data: {
+    agentId: string;
+    ownerId: string;
+    relationshipType: 'FARMER_REPRESENTATIVE' | 'BUYER_REPRESENTATIVE';
+  }) {
+    const existing = await prisma.agentAssignment.findFirst({
+      where: { ownerId: data.ownerId, relationshipType: data.relationshipType },
+    });
+    if (existing) {
+      if (existing.agentId !== data.agentId) {
+        await prisma.agentAssignment.update({
+          where: { id: existing.id },
+          data: { agentId: data.agentId },
+        });
+      }
+      return;
+    }
+    await prisma.agentAssignment.create({ data });
+  }
+
+  await upsertAgentAssignment({
+    agentId: yaw.id,
+    ownerId: kwame.id,
+    relationshipType: 'FARMER_REPRESENTATIVE',
   });
-  await prisma.agentAssignment.upsert({
-    where: { agentId_ownerId: { agentId: kofi.id, ownerId: ama.id } },
-    update: {}, create: { agentId: kofi.id, ownerId: ama.id, relationshipType: 'BUYER_REPRESENTATIVE' },
+  await upsertAgentAssignment({
+    agentId: kofi.id,
+    ownerId: ama.id,
+    relationshipType: 'BUYER_REPRESENTATIVE',
   });
 
   const akua = await prisma.user.upsert({
