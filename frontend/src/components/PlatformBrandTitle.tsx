@@ -54,7 +54,7 @@ export function PlatformBrandTitle({
         <span className={styles.dash} aria-hidden="true">
           —
         </span>
-        ANI Platform
+        ANI
       </p>
     </div>
   );

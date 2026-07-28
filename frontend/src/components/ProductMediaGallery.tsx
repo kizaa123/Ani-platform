@@ -35,7 +35,7 @@ function ShareMenu({
   onShare: () => void;
   onClose: () => void;
 }) {
-  const text = encodeURIComponent(`Check out ${productTitle} on ANI Platform`);
+  const text = encodeURIComponent(`Check out ${productTitle} on ANI`);
   const url = encodeURIComponent(shareUrl);
 
   const options = [

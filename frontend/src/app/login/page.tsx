@@ -9,7 +9,7 @@ import { Logo } from "@/components/Logo";
 import { PlatformBrandTitle } from "@/components/PlatformBrandTitle";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
-import { AUTH_PANEL_BACKGROUND } from "@/lib/authImages";
+import { authPanelBackgroundUrl, LOGIN_PANEL_BACKGROUND } from "@/lib/authImages";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -40,7 +40,7 @@ export default function LoginPage() {
         {/* Background sprout image */}
         <div
           className="absolute inset-0 z-0 bg-cover bg-center"
-          style={{ backgroundImage: `url('${AUTH_PANEL_BACKGROUND}')` }}
+          style={{ backgroundImage: authPanelBackgroundUrl(LOGIN_PANEL_BACKGROUND) }}
         />
         {/* Dark gradient overlay for readability */}
         <div className="absolute inset-0 z-10 bg-gradient-to-tr from-brand-950/95 via-brand-900/80 to-brand-800/40" />
@@ -58,7 +58,7 @@ export default function LoginPage() {
               <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
             </span>
             <span className="text-sm font-medium tracking-wide text-white/90">
-              Ghana&apos;s Agricultural Exchange Platform
+              Ghana&apos;s Agricultural Exchange
             </span>
           </div>
           <PlatformBrandTitle theme="light" size="panel" />
@@ -86,7 +86,7 @@ export default function LoginPage() {
         </ScrollReveal>
 
         <ScrollReveal trigger="mount" delay={scrollStagger(2, 80)} duration={450} direction="fade-in" className="relative z-20 text-xs text-brand-300 font-medium">
-          © {new Date().getFullYear()} Agricess Network International — ANI Platform. All rights reserved.
+          © {new Date().getFullYear()} Agricess Network International — ANI. All rights reserved.
         </ScrollReveal>
       </div>
 
@@ -102,7 +102,7 @@ export default function LoginPage() {
               <Icon name="lock" className="h-6 w-6" />
             </div>
             <h1 className="text-3xl font-extrabold text-brand-900 tracking-tight">Welcome Back</h1>
-            <p className="mt-2 text-sm text-gray-500">Sign in to your ANI Platform account</p>
+            <p className="mt-2 text-sm text-gray-500">Sign in to your ANI account</p>
           </header>
 
           {error && (

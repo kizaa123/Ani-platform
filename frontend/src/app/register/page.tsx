@@ -21,7 +21,7 @@ import { Logo } from "@/components/Logo";
 import { PlatformBrandTitle } from "@/components/PlatformBrandTitle";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
-import { AUTH_PANEL_BACKGROUND } from "@/lib/authImages";
+import { authPanelBackgroundUrl, REGISTER_PANEL_BACKGROUND } from "@/lib/authImages";
 
 /** Flat list of all roles for the <select> dropdown */
 const ALL_ROLES = [
@@ -237,7 +237,7 @@ export default function RegisterPage() {
         {/* Background sprout image */}
         <div
           className="absolute inset-0 z-0 bg-cover bg-center"
-          style={{ backgroundImage: `url('${AUTH_PANEL_BACKGROUND}')` }}
+          style={{ backgroundImage: authPanelBackgroundUrl(REGISTER_PANEL_BACKGROUND) }}
         />
         {/* Dark gradient overlay for readability */}
         <div className="absolute inset-0 z-10 bg-gradient-to-tr from-brand-950/95 via-brand-900/80 to-brand-800/40" />
@@ -255,7 +255,7 @@ export default function RegisterPage() {
               <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
             </span>
             <span className="text-sm font-medium tracking-wide text-white/90">
-              Ghana&apos;s Agricultural Exchange Platform
+              Ghana&apos;s Agricultural Exchange
             </span>
           </div>
           <PlatformBrandTitle theme="light" size="panel" />
@@ -283,7 +283,7 @@ export default function RegisterPage() {
         </ScrollReveal>
 
         <ScrollReveal trigger="mount" delay={scrollStagger(2, 80)} duration={450} direction="fade-in" className="relative z-20 text-xs text-brand-300 font-medium">
-          © {new Date().getFullYear()} Agricess Network International — ANI Platform. All rights reserved.
+          © {new Date().getFullYear()} Agricess Network International — ANI. All rights reserved.
         </ScrollReveal>
       </div>
 

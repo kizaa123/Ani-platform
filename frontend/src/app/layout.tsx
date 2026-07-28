@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "ANI Platform",
+    title: "ANI",
   },
   other: {
     "mobile-web-app-capable": "yes",

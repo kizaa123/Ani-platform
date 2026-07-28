@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Icon, type IconName } from "@/components/icons";
 import { PortalNavCard } from "@/components/PortalNavCard";
 import { PlatformBrandTitle } from "@/components/PlatformBrandTitle";
+import { AnimatedStat } from "@/components/AnimatedStat";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
 import { HOW_IT_WORKS_IMAGES } from "@/lib/homepageImages";
@@ -139,7 +140,7 @@ export default function HomePage() {
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
                 </span>
                 <span className="text-sm font-medium tracking-wide text-white/90">
-                  Ghana&apos;s #1 Agricultural Exchange Platform
+                  Ghana&apos;s #1 Agricultural Exchange
                 </span>
               </div>
             </ScrollReveal>
@@ -170,7 +171,7 @@ export default function HomePage() {
                   className="inline-flex items-center gap-2 rounded-2xl bg-yellow-400 px-8 py-4 text-base font-bold text-brand-900 shadow-lg transition-all hover:scale-105 hover:bg-yellow-300"
                 >
                   <Icon name="sprout" className="h-5 w-5" />
-                  Join the Platform
+                  Join ANI
                 </Link>
                 <Link
                   href="/login"
@@ -191,7 +192,9 @@ export default function HomePage() {
             {STATS.map((s, i) => (
               <ScrollReveal key={s.label} delay={scrollStagger(i, 90)} duration={450} direction="fade-up">
                 <div className="text-center">
-                  <p className="text-3xl font-black text-yellow-400">{s.value}</p>
+                  <p className="text-3xl font-black tabular-nums text-yellow-400">
+                    <AnimatedStat value={s.value} delay={scrollStagger(i, 90)} />
+                  </p>
                   <p className="mt-1 text-sm font-medium text-brand-200">{s.label}</p>
                 </div>
               </ScrollReveal>
@@ -209,7 +212,7 @@ export default function HomePage() {
             </span>
             <h2 className="text-4xl font-black text-brand-900">One Platform, Many Roles</h2>
             <p className="mx-auto mt-4 max-w-xl text-gray-500">
-              Whether you grow it, buy it, or broker it — ANI Platform has a tailored experience designed for your role.
+              Whether you grow it, buy it, or broker it — ANI has a tailored experience designed for your role.
             </p>
           </ScrollReveal>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -314,7 +317,7 @@ export default function HomePage() {
             Ready to Transform How You Trade?
           </h2>
           <p className="mb-10 text-xl leading-relaxed text-brand-100">
-            Join thousands of farmers, buyers and handlers already using ANI Platform to trade commodities safely and efficiently across Ghana.
+            Join thousands of farmers, buyers and handlers already using ANI to trade commodities safely and efficiently across Ghana.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link

@@ -1,6 +1,6 @@
 {
-  "name": "ANI Agricultural Exchange Platform",
-  "short_name": "ANI Platform",
+  "name": "ANI Agricultural Exchange",
+  "short_name": "ANI",
   "description": "Connect farmers, buyers, and agents across Ghana",
   "start_url": "/dashboard",
   "scope": "/",
