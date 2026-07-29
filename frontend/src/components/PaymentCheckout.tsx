@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Icon } from "@/components/icons";
 
 export const PAYMENT_METHODS = [
   { id: "mobile_money", label: "Mobile Money", shortLabel: "MTN / Telecel" },
@@ -95,57 +94,5 @@ export function PaymentCheckout({
   );
 }
 
-interface TransactionSuccessProps {
-  title?: string;
-  message: string;
-  hint?: string;
-  actionLabel?: string;
-  onAction?: () => void;
-  onDismiss?: () => void;
-  dismissLabel?: string;
-}
-
-export function TransactionSuccess({
-  title = "Payment successful",
-  message,
-  hint,
-  actionLabel,
-  onAction,
-  onDismiss,
-  dismissLabel = "Done",
-}: TransactionSuccessProps) {
-  return (
-    <div role="status" className="rounded-2xl border border-green-200 bg-green-50 p-5">
-      <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-600 text-white">
-          <Icon name="check" className="h-5 w-5" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-lg font-bold text-green-900">{title}</p>
-          <p className="mt-1 text-sm text-green-800">{message}</p>
-          {hint && <p className="mt-1 text-sm text-green-700">{hint}</p>}
-          <div className="mt-4 flex flex-wrap gap-2">
-            {actionLabel && onAction && (
-              <button type="button" onClick={onAction} className="btn-primary px-4 py-2.5 text-sm">
-                {actionLabel}
-              </button>
-            )}
-            {onDismiss && (
-              <button
-                type="button"
-                onClick={onDismiss}
-                className={
-                  actionLabel
-                    ? "rounded-xl border border-green-300 px-4 py-2.5 text-sm font-semibold text-green-800 hover:bg-green-100"
-                    : "btn-primary px-4 py-2.5 text-sm"
-                }
-              >
-                {dismissLabel}
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+export type { PaymentResultOverlayProps as TransactionSuccessProps } from "@/components/PaymentResultOverlay";
+export { PaymentResultOverlay as TransactionSuccess } from "@/components/PaymentResultOverlay";

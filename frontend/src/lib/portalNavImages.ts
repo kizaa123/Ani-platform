@@ -41,7 +41,7 @@ export const PORTAL_NAV_IMAGES_SHARED = {
 
   /** Change image here: Marketplace card (handler, staff — buyers use PORTAL_NAV_IMAGES_BUYER; farmers use crop/livestock sections) */
 
-  "/marketplace": "/farmer market place.png",
+  "/marketplace": "/generic_farmers_market for crop.jpg",
 
   /** Change image here: Research Library card (farmer, buyer, handler, staff) */
 
@@ -80,6 +80,8 @@ export const PORTAL_NAV_IMAGES_CROP_FARMER = {
   /** CROP: Profile card */
 
   "/farm/settings": "/happy-couple-agriculturists-using-touchpad-260nw-2667020919.webp",
+  /** CROP: Buyer Orders card */
+  "/farm/orders": "/order agric image.jpg",
 
 } as const;
 
@@ -111,6 +113,10 @@ export const PORTAL_NAV_IMAGES_LIVESTOCK_FARMER = {
 
   "/farm/settings": "/happy-couple-agriculturists-using-touchpad-260nw-2667020919.webp",
 
+  /** LIVESTOCK: Buyer Orders card */
+
+  "/farm/orders": "/order agric image.jpg",
+
 } as const;
 
 
@@ -121,7 +127,7 @@ export const PORTAL_NAV_IMAGES_BUYER = {
 
   /** Change image here: Buyer Marketplace card (distinct from crop/livestock farmer marketplace images) */
 
-  "/marketplace": "/farmer market place.png",
+  "/marketplace": "/generic_farmers_market for crop.jpg",
 
   /** Change image here: Buyer Financial Statement card */
 
@@ -181,9 +187,9 @@ export const PORTAL_NAV_IMAGES_STAFF = {
 
   /** Change image here: Admin Panel card */
 
-  "/admin": "/9846eee5-004a-42b1-8e4f-e5bac031dfbf-cover.png",
+  "/admin": "/big-isolated-employee-working-office-workplace-flat-illustration_1150-41780.avif",
 
-  "/admin/staff": "/9846eee5-004a-42b1-8e4f-e5bac031dfbf-cover.png",
+  "/admin/staff": "/Ani staffs.jpg",
 
   /** Change image here: Platform Financial Statement card */
 
@@ -201,7 +207,7 @@ export const PORTAL_NAV_IMAGES_STAFF = {
 
   /** Change image here: Staff Profile card */
 
-  "/profile": "/team_2.png",
+  "/profile": "/staff on admin side.jpg",
 
 } as const;
 

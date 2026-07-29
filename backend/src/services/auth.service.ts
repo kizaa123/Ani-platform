@@ -21,7 +21,7 @@ import { categoryMatchesFarmerRole } from '../constants/commodities';
 import { defaultListingUnit } from '../constants/units';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import { normalizePhone, PHONE_VALIDATION_MESSAGE } from '../utils/phone';
-import { notifyNewFarmerJoined } from './notification.service';
+import { notifyHandlerDropped, notifyNewFarmerJoined } from './notification.service';
 
 const phoneSchema = z.preprocess(
   normalizePhone,
@@ -380,6 +380,7 @@ export class AuthService {
         where: { id: userId },
         include: {
           role: true,
+          verificationTags: true,
           farmerProfile: { include: { farmerCommodities: { include: { commodity: true } } } },
           buyerProfile: true,
           agentProfile: true,
@@ -410,6 +411,13 @@ export class AuthService {
       role: user.role.roleName,
       roleId: user.roleId,
       verificationStatus: user.verificationStatus,
+      verificationTags: user.verificationTags.map((tag) => ({
+        id: tag.id,
+        userId: tag.userId,
+        tagType: tag.tagType,
+        assignedBy: tag.assignedBy,
+        createdAt: tag.createdAt.toISOString(),
+      })),
       updatedAt: user.updatedAt.toISOString(),
       permissions: permissions.map((p) => p.permission.permissionName),
       farmerProfile: user.farmerProfile,
@@ -502,7 +510,25 @@ export class AuthService {
       },
     } as const;
 
-    return prisma.$transaction(async (tx) => {
+    const owner = assertFound(
+      await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          firstName: true,
+          lastName: true,
+          farmerProfile: { select: { farmName: true } },
+          buyerProfile: { select: { company: true } },
+        },
+      }),
+      'User not found'
+    );
+
+    const previousAssignment = await prisma.agentAssignment.findFirst({
+      where: { ownerId: userId, relationshipType },
+      select: { agentId: true },
+    });
+
+    const result = await prisma.$transaction(async (tx) => {
       await tx.agentAssignment.deleteMany({
         where: { ownerId: userId, relationshipType },
       });
@@ -516,6 +542,16 @@ export class AuthService {
         include: { agent: agentSelect },
       });
     });
+
+    if (previousAssignment && previousAssignment.agentId !== handlerId) {
+      const ownerName =
+        owner.farmerProfile?.farmName ??
+        owner.buyerProfile?.company ??
+        `${owner.firstName} ${owner.lastName}`;
+      await notifyHandlerDropped(previousAssignment.agentId, ownerName, relationshipType);
+    }
+
+    return result;
   }
 
   async updateUserProfile(userId: string, data: z.infer<typeof updateUserProfileSchema>) {

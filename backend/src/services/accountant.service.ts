@@ -2,6 +2,10 @@ import { z } from 'zod';
 import { WithdrawalStatus } from '@prisma/client';
 import prisma from '../database/prisma';
 import { AppError, assertFound } from '../utils/errors';
+import {
+  aniPlatformShareAmount,
+  orderShareRecognizedAt,
+} from '../utils/distributionFinancials';
 
 const CHART_MONTHS = 6;
 
@@ -70,54 +74,85 @@ export const updateWithdrawalSchema = z.object({
 });
 
 export class AccountantService {
-  private async revenueTotals() {
-    const [productRevenue, farmAccessAgg, researchAgg, accessPaymentRevenue] =
-      await Promise.all([
-        prisma.productOrder.aggregate({
-          where: { status: 'PAID' },
-          _sum: { totalAmount: true },
-          _count: { id: true },
-        }),
-        prisma.buyerFarmerAccess.aggregate({
-          where: { status: 'COMPLETED' },
-          _sum: { amount: true },
-          _count: { id: true },
-        }),
-        prisma.researchPurchase.aggregate({
-          where: { status: 'COMPLETED' },
-          _sum: { amount: true },
-          _count: { id: true },
-        }),
-        prisma.payment.aggregate({
-          where: { status: 'COMPLETED' },
-          _sum: { amount: true },
-          _count: { id: true },
-        }),
-      ]);
+  private async accessTotals() {
+    const [farmAccessAgg, researchAgg, accessPaymentRevenue] = await Promise.all([
+      prisma.buyerFarmerAccess.aggregate({
+        where: { status: 'COMPLETED' },
+        _sum: { amount: true },
+        _count: { id: true },
+      }),
+      prisma.researchPurchase.aggregate({
+        where: { status: 'COMPLETED' },
+        _sum: { amount: true },
+        _count: { id: true },
+      }),
+      prisma.payment.aggregate({
+        where: { status: 'COMPLETED' },
+        _sum: { amount: true },
+        _count: { id: true },
+      }),
+    ]);
 
-    const productOrderRevenue = productRevenue._sum.totalAmount ?? 0;
     const farmAccessRevenue = farmAccessAgg._sum.amount ?? 0;
     const researchRevenue = researchAgg._sum.amount ?? 0;
     const legacyAccessRevenue = accessPaymentRevenue._sum.amount ?? 0;
+    const accessRevenue = farmAccessRevenue + researchRevenue + legacyAccessRevenue;
 
-    const totalRevenue =
-      productOrderRevenue + farmAccessRevenue + researchRevenue + legacyAccessRevenue;
+    return {
+      accessRevenue,
+      farmAccessRevenue,
+      researchRevenue,
+      legacyAccessRevenue,
+      farmAccessCount: farmAccessAgg._count.id,
+      researchSaleCount: researchAgg._count.id,
+      legacyAccessCount: accessPaymentRevenue._count.id,
+      accessPaymentCount:
+        farmAccessAgg._count.id + researchAgg._count.id + accessPaymentRevenue._count.id,
+    };
+  }
 
-    const transactionCount =
-      productRevenue._count.id +
-      farmAccessAgg._count.id +
-      researchAgg._count.id +
-      accessPaymentRevenue._count.id;
+  private async orderShareTotals() {
+    const releasedOrders = await prisma.productOrder.findMany({
+      where: {
+        status: 'PAID',
+        OR: [{ escrowStatus: 'RELEASED' }, { otpVerifiedAt: { not: null } }],
+      },
+      select: { totalAmount: true },
+    });
+
+    const orderShareRevenue = releasedOrders.reduce(
+      (sum, order) => sum + aniPlatformShareAmount(order.totalAmount),
+      0
+    );
+
+    return {
+      orderShareRevenue,
+      orderShareCount: releasedOrders.length,
+    };
+  }
+
+  private async revenueTotals() {
+    const [access, orderShare] = await Promise.all([
+      this.accessTotals(),
+      this.orderShareTotals(),
+    ]);
+
+    const totalRevenue = access.accessRevenue + orderShare.orderShareRevenue;
+    const transactionCount = access.accessPaymentCount + orderShare.orderShareCount;
 
     return {
       totalRevenue,
-      productOrderRevenue,
-      farmAccessRevenue,
-      researchRevenue,
+      accessRevenue: access.accessRevenue,
+      orderShareRevenue: orderShare.orderShareRevenue,
+      orderShareCount: orderShare.orderShareCount,
+      farmAccessRevenue: access.farmAccessRevenue,
+      researchRevenue: access.researchRevenue,
+      legacyAccessRevenue: access.legacyAccessRevenue,
       transactionCount,
-      productOrderCount: productRevenue._count.id,
-      farmAccessCount: farmAccessAgg._count.id,
-      researchSaleCount: researchAgg._count.id,
+      farmAccessCount: access.farmAccessCount,
+      researchSaleCount: access.researchSaleCount,
+      legacyAccessCount: access.legacyAccessCount,
+      accessPaymentCount: access.accessPaymentCount,
     };
   }
 
@@ -148,48 +183,75 @@ export class AccountantService {
     const monthKeys = chartMonthLabels(CHART_MONTHS);
     const startDate = chartStartDate(CHART_MONTHS);
 
-    const [paidOrders, completedFarmAccess, completedResearch, completedPayments, withdrawals] =
-      await Promise.all([
-        prisma.productOrder.findMany({
-          where: { createdAt: { gte: startDate }, status: 'PAID' },
-          select: { createdAt: true, totalAmount: true },
-        }),
-        prisma.buyerFarmerAccess.findMany({
-          where: { createdAt: { gte: startDate }, status: 'COMPLETED' },
-          select: { createdAt: true, amount: true },
-        }),
-        prisma.researchPurchase.findMany({
-          where: { createdAt: { gte: startDate }, status: 'COMPLETED' },
-          select: { createdAt: true, amount: true },
-        }),
-        prisma.payment.findMany({
-          where: { createdAt: { gte: startDate }, status: 'COMPLETED' },
-          select: { createdAt: true, amount: true },
-        }),
-        prisma.platformWithdrawal.findMany({
-          where: { createdAt: { gte: startDate }, status: 'COMPLETED' },
-          select: { createdAt: true, amount: true },
-        }),
-      ]);
+    const [
+      releasedOrders,
+      completedFarmAccess,
+      completedResearch,
+      completedPayments,
+      withdrawals,
+    ] = await Promise.all([
+      prisma.productOrder.findMany({
+        where: {
+          status: 'PAID',
+          OR: [{ escrowStatus: 'RELEASED' }, { otpVerifiedAt: { not: null } }],
+        },
+        select: {
+          totalAmount: true,
+          paymentReleasedAt: true,
+          otpVerifiedAt: true,
+          createdAt: true,
+        },
+      }),
+      prisma.buyerFarmerAccess.findMany({
+        where: { createdAt: { gte: startDate }, status: 'COMPLETED' },
+        select: { createdAt: true, amount: true },
+      }),
+      prisma.researchPurchase.findMany({
+        where: { createdAt: { gte: startDate }, status: 'COMPLETED' },
+        select: { createdAt: true, amount: true },
+      }),
+      prisma.payment.findMany({
+        where: { createdAt: { gte: startDate }, status: 'COMPLETED' },
+        select: { createdAt: true, amount: true },
+      }),
+      prisma.platformWithdrawal.findMany({
+        where: { createdAt: { gte: startDate }, status: 'COMPLETED' },
+        select: { createdAt: true, amount: true },
+      }),
+    ]);
 
-    return { monthKeys, paidOrders, completedFarmAccess, completedResearch, completedPayments, withdrawals };
+    const orderShareRows = releasedOrders
+      .map((order) => ({
+        createdAt: orderShareRecognizedAt(order),
+        amount: aniPlatformShareAmount(order.totalAmount),
+      }))
+      .filter((row) => row.createdAt >= startDate);
+
+    return {
+      monthKeys,
+      orderShareRows,
+      completedFarmAccess,
+      completedResearch,
+      completedPayments,
+      withdrawals,
+    };
   }
 
   async getIncomeChart() {
-    const { monthKeys, paidOrders, completedFarmAccess, completedResearch, completedPayments } =
+    const { monthKeys, orderShareRows, completedFarmAccess, completedResearch, completedPayments } =
       await this.chartWindowData();
 
-    const revenueRows = [
-      ...paidOrders.map((o) => ({ createdAt: o.createdAt, amount: o.totalAmount })),
+    const accessRows = [
       ...completedFarmAccess.map((a) => ({ createdAt: a.createdAt, amount: a.amount })),
       ...completedResearch.map((r) => ({ createdAt: r.createdAt, amount: r.amount })),
       ...completedPayments.map((p) => ({ createdAt: p.createdAt, amount: p.amount })),
     ];
+    const totalRows = [...accessRows, ...orderShareRows];
 
     const monthlyIncome = monthKeys.map((key, index) => ({
       month: key,
       label: formatMonthLabel(key),
-      revenue: sumByMonth(revenueRows, monthKeys)[index],
+      revenue: sumByMonth(totalRows, monthKeys)[index],
     }));
 
     return {
@@ -201,32 +263,30 @@ export class AccountantService {
   async getDashboardCharts() {
     const {
       monthKeys,
-      paidOrders,
+      orderShareRows,
       completedFarmAccess,
       completedResearch,
       completedPayments,
       withdrawals,
     } = await this.chartWindowData();
 
-    const productRows = paidOrders.map((o) => ({ createdAt: o.createdAt, amount: o.totalAmount }));
     const farmRows = completedFarmAccess.map((a) => ({ createdAt: a.createdAt, amount: a.amount }));
     const researchRows = completedResearch.map((r) => ({ createdAt: r.createdAt, amount: r.amount }));
     const legacyRows = completedPayments.map((p) => ({ createdAt: p.createdAt, amount: p.amount }));
-    const revenueRows = [...productRows, ...farmRows, ...researchRows, ...legacyRows];
-    const transactionRows = [
-      ...paidOrders,
-      ...completedFarmAccess,
-      ...completedResearch,
-      ...completedPayments,
-    ];
+    const accessRows = [...farmRows, ...researchRows, ...legacyRows];
+    const totalRows = [...accessRows, ...orderShareRows];
 
-    const productByMonth = sumByMonth(productRows, monthKeys);
     const farmByMonth = sumByMonth(farmRows, monthKeys);
     const researchByMonth = sumByMonth(researchRows, monthKeys);
     const legacyByMonth = sumByMonth(legacyRows, monthKeys);
-    const revenueByMonth = sumByMonth(revenueRows, monthKeys);
+    const accessByMonth = sumByMonth(accessRows, monthKeys);
+    const orderShareByMonth = sumByMonth(orderShareRows, monthKeys);
+    const revenueByMonth = sumByMonth(totalRows, monthKeys);
     const withdrawalsByMonth = sumByMonth(withdrawals, monthKeys);
-    const volumeByMonth = countByMonth(transactionRows, monthKeys);
+    const volumeByMonth = countByMonth(
+      [...accessRows, ...orderShareRows.map((r) => ({ createdAt: r.createdAt }))],
+      monthKeys
+    );
 
     const revenue = await this.revenueTotals();
 
@@ -237,18 +297,37 @@ export class AccountantService {
         label: formatMonthLabel(key),
         revenue: revenueByMonth[index],
       })),
+      monthlyAccessRevenue: monthKeys.map((key, index) => ({
+        month: key,
+        label: formatMonthLabel(key),
+        revenue: accessByMonth[index],
+      })),
+      monthlyOrderShareRevenue: monthKeys.map((key, index) => ({
+        month: key,
+        label: formatMonthLabel(key),
+        revenue: orderShareByMonth[index],
+      })),
       revenueBySource: monthKeys.map((key, index) => ({
         month: key,
         label: formatMonthLabel(key),
-        productOrders: productByMonth[index],
+        access: accessByMonth[index],
+        orderShare: orderShareByMonth[index],
+      })),
+      accessBreakdownByMonth: monthKeys.map((key, index) => ({
+        month: key,
+        label: formatMonthLabel(key),
         farmAccess: farmByMonth[index],
         research: researchByMonth[index],
         legacyAccess: legacyByMonth[index],
       })),
-      revenueSourceTotals: [
-        { key: 'productOrders', label: 'Product orders', amount: revenue.productOrderRevenue },
+      revenueStreamTotals: [
+        { key: 'access', label: 'Access income', amount: revenue.accessRevenue },
+        { key: 'orderShare', label: 'Order share', amount: revenue.orderShareRevenue },
+      ].filter((row) => row.amount > 0),
+      accessBreakdownTotals: [
         { key: 'farmAccess', label: 'Farm access', amount: revenue.farmAccessRevenue },
-        { key: 'research', label: 'Research sales', amount: revenue.researchRevenue },
+        { key: 'research', label: 'Publication access', amount: revenue.researchRevenue },
+        { key: 'legacyAccess', label: 'Other access', amount: revenue.legacyAccessRevenue },
       ].filter((row) => row.amount > 0),
       transactionVolume: monthKeys.map((key, index) => ({
         month: key,

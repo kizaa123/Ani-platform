@@ -65,6 +65,7 @@ export function MarketplaceFarmerCard({
           name={farmer.farmerName}
           size="lg"
           verificationStatus={farmer.verificationStatus}
+          verificationTags={farmer.verificationTags}
         />
         <div className="min-w-0 flex-1">
           <h3 className="truncate font-bold text-brand-900">{farmer.farmerName}</h3>

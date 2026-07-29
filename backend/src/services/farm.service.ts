@@ -9,6 +9,10 @@ import {
   defaultListingUnit,
 } from '../constants/units';
 import {
+  fetchFarmerDistributedLines,
+  mapDistributionToFarmerSaleLineItem,
+} from '../utils/distributionFinancials';
+import {
   groupFarmerIncomingOrders,
   orderInclude,
   type FarmerIncomingOrderRow,
@@ -214,18 +218,14 @@ export class FarmService {
       'Farmer profile not found'
     );
 
-    const [acceptedConnections, pendingConnections, paidOrders] = await Promise.all([
+    const [acceptedConnections, pendingConnections, distributedLines] = await Promise.all([
       prisma.connectionRequest.count({
         where: { farmerId: farmerUserId, status: 'ACCEPTED' },
       }),
       prisma.connectionRequest.count({
         where: { farmerId: farmerUserId, status: 'PENDING' },
       }),
-      prisma.productOrder.findMany({
-        where: { farmerId: farmerUserId, status: 'PAID' },
-        include: orderInclude,
-        orderBy: { createdAt: 'desc' },
-      }),
+      fetchFarmerDistributedLines(farmerUserId),
     ]);
 
     const lineItems = profile.listings.map((listing) => {
@@ -245,32 +245,7 @@ export class FarmService {
       };
     });
 
-    const groupedPaidOrders = groupFarmerIncomingOrders(paidOrders);
-
-    const salesLineItems = groupedPaidOrders.map((formatted) => ({
-      id: formatted.id,
-      date: formatted.date,
-      title: formatted.productName,
-      productName: formatted.productName,
-      productImage: formatted.productImage,
-      commodity: formatted.commodity,
-      category: formatted.category,
-      quantity: formatted.quantity,
-      unit: formatted.unit,
-      unitPrice: formatted.unitPrice,
-      totalValue: formatted.totalAmount,
-      status: formatted.status,
-      type: 'SALE' as const,
-      buyerName: formatted.buyerName,
-      buyerEmail: formatted.buyerEmail,
-      buyerPhone: formatted.buyerPhone,
-      buyerLocation: formatted.buyerLocation,
-      buyerCountry: formatted.buyerCountry,
-      buyerProfilePicture: formatted.buyerProfilePicture,
-      paymentMethod: formatted.paymentMethod,
-      transactionId: formatted.transactionId,
-      purchaseCount: formatted.purchaseCount,
-    }));
+    const salesLineItems = distributedLines.map(mapDistributionToFarmerSaleLineItem);
 
     const activeItems = lineItems.filter((l) => l.status === 'ACTIVE');
     const soldItems = lineItems.filter((l) => l.status === 'SOLD');

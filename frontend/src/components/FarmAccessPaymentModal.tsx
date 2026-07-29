@@ -4,7 +4,8 @@ import { useState } from "react";
 import { FarmerBrowseCard } from "@/lib/types";
 import { FarmerAvatar } from "@/components/FarmerAvatar";
 import { CountryBadge } from "@/components/CountrySelect";
-import { PaymentCheckout, TransactionSuccess } from "@/components/PaymentCheckout";
+import { PaymentCheckout } from "@/components/PaymentCheckout";
+import { PaymentResultOverlay } from "@/components/PaymentResultOverlay";
 import { Icon } from "@/components/icons";
 import { api } from "@/lib/api";
 
@@ -14,27 +15,33 @@ interface FarmAccessPaymentModalProps {
   onSuccess: () => void;
 }
 
+type PaymentResult =
+  | { variant: "success" }
+  | { variant: "error"; message: string };
+
 export function FarmAccessPaymentModal({
   farmer,
   onClose,
   onSuccess,
 }: FarmAccessPaymentModalProps) {
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
-  const [paid, setPaid] = useState(false);
+  const [result, setResult] = useState<PaymentResult | null>(null);
 
   const fee = farmer.farmAccessFee ?? 0;
   const feeLabel = farmer.farmAccessPriceLabel ?? `GHC ${fee}`;
 
   const handlePay = async (paymentMethod: string) => {
     setSubmitting(true);
-    setError("");
+    setResult(null);
     try {
       await api.payments.purchaseFarmAccess(farmer.farmerId, paymentMethod);
-      setPaid(true);
+      setResult({ variant: "success" });
       onSuccess();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Payment failed");
+      setResult({
+        variant: "error",
+        message: e instanceof Error ? e.message : "Payment failed. Please try again.",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -46,7 +53,7 @@ export function FarmAccessPaymentModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl"
+        className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3 border-b border-brand-100 bg-brand-50/60 p-5">
@@ -69,30 +76,38 @@ export function FarmAccessPaymentModal({
         </div>
 
         <div className="p-5">
-          {paid ? (
-            <TransactionSuccess
-              title="Payment received"
-              message={`${feeLabel} paid for access to ${farmer.farmName}.`}
-              hint="Admin will review your request. You can view products once approved."
-              onDismiss={onClose}
-            />
-          ) : (
-            <>
-              <p className="text-sm text-gray-600">
-                One-time fee to view products, prices, and purchase from this farm.
-              </p>
+          <p className="text-sm text-gray-600">
+            One-time fee to view products, prices, and purchase from this farm.
+          </p>
 
-              <PaymentCheckout
-                totalLabel="Farm access"
-                totalAmount={feeLabel}
-                payLabel={`Pay ${feeLabel}`}
-                onPay={handlePay}
-                submitting={submitting}
-                error={error}
-              />
-            </>
-          )}
+          <PaymentCheckout
+            totalLabel="Farm access"
+            totalAmount={feeLabel}
+            payLabel={`Pay ${feeLabel}`}
+            onPay={handlePay}
+            submitting={submitting}
+          />
         </div>
+
+        {result?.variant === "success" && (
+          <PaymentResultOverlay
+            variant="success"
+            title="Payment received"
+            message={`${feeLabel} paid for access to ${farmer.farmName}.`}
+            hint="Admin will review your request. You can view products once approved."
+            onDismiss={onClose}
+          />
+        )}
+
+        {result?.variant === "error" && (
+          <PaymentResultOverlay
+            variant="error"
+            message={result.message}
+            onAction={() => setResult(null)}
+            onDismiss={onClose}
+            dismissLabel="Close"
+          />
+        )}
       </div>
     </div>
   );

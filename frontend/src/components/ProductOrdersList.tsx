@@ -557,7 +557,17 @@ export function SalesOrdersTable({ items }: { items: ProductOrderLineItem[] }) {
                       <Icon name="wheat" className="h-6 w-6 text-brand-300" />
                     </div>
                   )}
-                  <span className="font-medium text-brand-900">{item.productName}</span>
+                  <div>
+                    <span className="font-medium text-brand-900">
+                      {item.orderName ?? item.productName}
+                    </span>
+                    {(item.orderDescription ?? item.orderName) &&
+                      item.orderDescription !== (item.orderName ?? item.productName) && (
+                        <span className="mt-0.5 block text-xs text-gray-500 line-clamp-2">
+                          {item.orderDescription}
+                        </span>
+                      )}
+                  </div>
                 </div>
               </td>
               <td className="px-4 py-3 font-medium text-gray-900">{item.buyerName}</td>

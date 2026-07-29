@@ -30,7 +30,7 @@ export function HandlerClientNav({
   return (
     <div className="mb-6">
       <Link href="/agents" className="text-sm font-medium text-brand-600 hover:underline">
-        Back to My Clients
+        Back to Assigned Farmers
       </Link>
       {farmName && (
         <p className="mt-2 text-sm text-gray-500">

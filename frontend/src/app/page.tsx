@@ -43,22 +43,22 @@ const HOW_IT_WORKS: { step: number; title: string; desc: string; image: string }
 
 const TEAM = [
   {
-    name: "Kwame Asante",
-    role: "CEO & Co-Founder",
-    bio: "Agricultural economist with 12 years connecting Ghanaian farmers to global markets.",
-    img: "/team_1.png",
+    name: "Obeng Stephen Boakye",
+    role: "Founder and Chief Executive Officer ",
+    bio: "Entrepreneur | Supply Chain Strategist | Business Consultant | Diplomatic & Global Partnerships Strategist | Global Food Systems Advocate | Sustainable Development Enthusiast.",
+    img: "/ANI Founder and Chief Executive Officer.png",
   },
   {
-    name: "Abena Mensah",
-    role: "Head of Operations",
-    bio: "Supply chain expert driving seamless commodity trading experiences across West Africa.",
-    img: "/team_2.png",
+    name: "Gloria Bless Dzogbenyuie ",
+    role: "Chief Communications Officer ",
+    bio: "Procurement & Supply Chain Professional | Strategic Communications | Sustainable Agriculture Advocate | Youth & Climate Development Enthusiast.",
+    img: "/ANI Chief Communications Officer.png",
   },
   {
-    name: "Kofi Boateng",
-    role: "Chief Technology Officer",
-    bio: "Full-stack engineer building secure, scalable infrastructure for agricultural exchanges.",
-    img: "/team_3.png",
+    name: "Lawrence Kennedy Kwarteng ",
+    role: "Director of Research and Quality Assurance",
+    bio: "Head of Extension/Plant Doctor | Agricultural Extension Specialist | 15+ Years Farmer Advisory Experience | Crop Health & Sustainable Agriculture Advocate.",
+    img: "/ANI Director of Research and Quality Assurance .png",
   },
 ];
 
@@ -70,9 +70,10 @@ const ROLE_CARD_IMAGES = {
   cropFarmer: "/famer on pitch.jpg",
   livestockFarmer: "/herd-of-cattle-grazing-in-green-pasture-looking-at-camera-photo.jpg",
   fruitFarmer: "/portrait-happy-farmer-couple-holding-baskets-vegetables-fruits-vineyard-77869777.webp",
-  fishFarmer: "/live stock farm.jpg",
+  fishFarmer: "/fish-farmer-holding-freshly-caught-fish-aquaculture-farm-fish-farmer-holding-freshly-caught-fish-fish-farm-demonstrating-372101156.webp",
   client: "/farmer and buyer.jpg",
-  organization: "/marketplace-friendly-exchange-stockcake.jpg",
+  student: "/agricultural-students-woman-evaluating-crop-growth-notes-focused-documenting-plant-health-check-vegetable-growth-problems-465673929.webp",
+  organization: "/organizations.png",
   handler: "/farmer and her agent.webp",
   researcher: "/Agric researchers.jpg",
 } as const;
@@ -107,6 +108,12 @@ const ROLE_CARDS: { icon: IconName; label: string; desc: string; image: string }
     label: "Client",
     desc: "Browse verified farms, preview listings for free, unlock full fellow details, purchase research publications, and source commodities securely.",
     image: ROLE_CARD_IMAGES.client,
+  },
+  {
+    icon: "book",
+    label: "Student",
+    desc: "Access the Research Library, purchase and read agricultural publications, and learn from verified field research published by ANI researchers.",
+    image: ROLE_CARD_IMAGES.student,
   },
   {
     icon: "handshake",
@@ -149,7 +156,7 @@ export default function HomePage() {
         <div className="relative z-10 mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
           <div className="max-w-2xl">
             <ScrollReveal trigger="mount" delay={0} duration={500} direction="fade-up">
-              <PlatformBrandTitle theme="light" size="hero" showIcon className="mb-4 sm:mb-6" />
+              <PlatformBrandTitle theme="light" size="hero" className="mb-6 sm:mb-8" />
             </ScrollReveal>
 
             <ScrollReveal trigger="mount" delay={scrollStagger(2, 100)} duration={550} direction="fade-up">

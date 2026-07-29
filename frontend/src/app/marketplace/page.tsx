@@ -10,6 +10,8 @@ import {
   Listing,
   MarketplaceBrowse,
   isFarmer,
+  isFarmerHandler,
+  isBuyerHandler,
 } from "@/lib/types";
 import { FarmerProductCard } from "@/components/FarmerProductCard";
 import { MarketplaceFarmerCard } from "@/components/MarketplaceFarmerCard";
@@ -86,8 +88,12 @@ export default function MarketplacePage() {
       router.push("/login");
       return;
     }
+    if (user && (isFarmerHandler(user.roleId) || isBuyerHandler(user.roleId))) {
+      router.replace("/dashboard");
+      return;
+    }
     if (user) loadBrowse();
-  }, [user?.id, loading, router, loadBrowse]);
+  }, [user?.id, user?.roleId, loading, router, loadBrowse]);
 
   const filteredFarmers = useMemo(
     () => filterFarmers(browse?.farmers ?? [], search),

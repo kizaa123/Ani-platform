@@ -20,6 +20,7 @@ export interface User {
   role: string;
   roleId: number;
   verificationStatus: string;
+  verificationTags?: UserVerificationTag[];
 }
 
 export interface UserProfile extends User {
@@ -143,6 +144,7 @@ export interface FarmerBrowseCard {
   hasFarmAccess: boolean;
   canViewProducts: boolean;
   verificationStatus?: string;
+  verificationTags?: UserVerificationTag[];
   farmAccessFee?: number | null;
   farmAccessPriceLabel?: string | null;
   products: Listing[];
@@ -297,6 +299,8 @@ export interface ProductOrderLineItem extends OrderEscrowFields {
   buyerCountry?: string;
   buyerProfilePicture?: string | null;
   purchaseCount?: number;
+  orderName?: string;
+  orderDescription?: string;
 }
 
 export interface FinancialStatementLineItem {
@@ -304,6 +308,9 @@ export interface FinancialStatementLineItem {
   date: string;
   title: string;
   productName?: string;
+  orderName?: string;
+  orderDescription?: string;
+  orderId?: string;
   productImage?: string | null;
   commodity: string;
   category: string;
@@ -539,6 +546,7 @@ export interface ConnectionUser {
   profilePicture?: string | null;
   farmName?: string | null;
   verificationStatus?: string;
+  verificationTags?: UserVerificationTag[];
 }
 
 export interface NotificationMetadata {
@@ -551,6 +559,8 @@ export interface NotificationMetadata {
   publicationId?: string | null;
   actionUrl?: string | null;
   actionLabel?: string | null;
+  orderName?: string | null;
+  orderDescription?: string | null;
   farmSize?: string | null;
   location?: string | null;
   commodities?: string[] | null;
@@ -733,6 +743,7 @@ export interface ResearchPublication {
     name: string;
     profilePicture?: string | null;
     verificationStatus?: string;
+    verificationTags?: UserVerificationTag[];
   };
 }
 
@@ -743,6 +754,7 @@ export interface PublisherBrowseCard {
   institution?: string | null;
   bio?: string | null;
   verificationStatus?: string;
+  verificationTags?: UserVerificationTag[];
   publicationCount: number;
   canViewFiles: boolean;
 }
@@ -879,13 +891,17 @@ export interface PlatformFinancialStatement {
 export interface AccountantOverview {
   generatedAt: string;
   totalRevenue: number;
-  productOrderRevenue: number;
+  accessRevenue: number;
+  orderShareRevenue: number;
+  orderShareCount: number;
   farmAccessRevenue: number;
   researchRevenue: number;
+  legacyAccessRevenue: number;
   transactionCount: number;
-  productOrderCount: number;
   farmAccessCount: number;
   researchSaleCount: number;
+  legacyAccessCount: number;
+  accessPaymentCount: number;
   totalWithdrawn: number;
   withdrawalCount: number;
   availableBalance: number;
@@ -908,15 +924,35 @@ export interface AccountantDashboardCharts {
     label: string;
     revenue: number;
   }[];
+  monthlyAccessRevenue: {
+    month: string;
+    label: string;
+    revenue: number;
+  }[];
+  monthlyOrderShareRevenue: {
+    month: string;
+    label: string;
+    revenue: number;
+  }[];
   revenueBySource: {
     month: string;
     label: string;
-    productOrders: number;
+    access: number;
+    orderShare: number;
+  }[];
+  accessBreakdownByMonth: {
+    month: string;
+    label: string;
     farmAccess: number;
     research: number;
     legacyAccess: number;
   }[];
-  revenueSourceTotals: {
+  revenueStreamTotals: {
+    key: string;
+    label: string;
+    amount: number;
+  }[];
+  accessBreakdownTotals: {
     key: string;
     label: string;
     amount: number;
@@ -977,6 +1013,7 @@ export interface OrderDistributionLine {
 
 export interface OrderMoneyDistributionSnapshot {
   orderId: string;
+  orderName?: string;
   orderDescription: string;
   buyerName: string;
   farmerName: string;
@@ -1003,9 +1040,12 @@ export interface HandlerFinancialTransaction {
   ownerId: string;
   clientName: string;
   description: string;
+  orderName?: string;
+  orderDescription?: string;
+  orderId?: string;
   counterpartyName: string;
   amount: number;
-  type: 'SALE' | 'PRODUCT_ORDER' | 'FARM_ACCESS';
+  type: 'SALE' | 'PRODUCT_ORDER' | 'FARM_ACCESS' | 'DISTRIBUTION';
   paymentMethod: string;
   status: string;
   transactionId?: string | null;
@@ -1026,6 +1066,8 @@ export interface HandlerFinancialStatement {
   };
   clients: HandlerFinancialClientSummary[];
   transactions: HandlerFinancialTransaction[];
+  handlerPayments?: HandlerFinancialTransaction[];
+  clientTransactions?: HandlerFinancialTransaction[];
 }
 
 export interface AdminVerificationUser {

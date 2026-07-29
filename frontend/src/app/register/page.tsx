@@ -254,7 +254,7 @@ export default function RegisterPage() {
 
         {/* Brand */}
         <ScrollReveal trigger="mount" delay={scrollStagger(0, 80)} duration={500} direction="fade-up" className="relative z-20">
-          <PlatformBrandTitle theme="light" size="panel" showIcon />
+          <PlatformBrandTitle theme="light" size="panel" />
         </ScrollReveal>
 
         {/* Marketing text & stats */}
@@ -282,9 +282,7 @@ export default function RegisterPage() {
           </div>
         </ScrollReveal>
 
-        <ScrollReveal trigger="mount" delay={scrollStagger(2, 80)} duration={450} direction="fade-in" className="relative z-20 text-xs text-brand-300 font-medium">
-          © {new Date().getFullYear()} Agricess Network International — ANI. All rights reserved.
-        </ScrollReveal>
+
       </div>
 
       {/* Right Column: Form Container */}
@@ -292,8 +290,8 @@ export default function RegisterPage() {
         <ScrollReveal trigger="mount" delay={120} duration={500} direction="fade-up" className="w-full max-w-xl">
         <div className="space-y-8 bg-white p-8 rounded-2xl border border-brand-100 shadow-xl">
           <header className="text-center lg:text-left">
-            <div className="mb-6 lg:hidden">
-              <PlatformBrandTitle theme="dark" size="compact" showIcon />
+            <div className="mb-6 text-center lg:hidden">
+              <PlatformBrandTitle theme="dark" size="compact" />
             </div>
             <div className="hidden lg:inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-100 text-brand-700 mb-4">
               <Icon name="user" className="h-6 w-6" />

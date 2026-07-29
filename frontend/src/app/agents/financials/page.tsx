@@ -46,6 +46,7 @@ export default function HandlerFinancialsPage() {
 
   const { summary } = statement;
   const isFarmerHandlerView = statement.handlerType === "farmer";
+  const paymentRows = statement.handlerPayments ?? statement.transactions;
 
   function clientFinancialsHref(ownerId: string) {
     return isFarmerHandlerView
@@ -61,9 +62,7 @@ export default function HandlerFinancialsPage() {
         </Link>
         <h1 className="mt-2 text-xl font-bold text-brand-900">Money Summary</h1>
         <p className="text-xs text-gray-500">
-          {isFarmerHandlerView
-            ? "What your farmer clients have earned from sales"
-            : "What your buyer clients have spent"}
+          Your liaison commission (10%) from distributed order payments only
         </p>
       </div>
 
@@ -75,7 +74,9 @@ export default function HandlerFinancialsPage() {
             </p>
             <h2 className="text-base font-bold text-brand-900">{statement.agentName}</h2>
             <p className="text-xs text-gray-500">
-              {isBuyerHandler(user.roleId) ? "Buyer Handler" : "Farmer Handler"}
+              {isBuyerHandler(user.roleId)
+                ? "Client Liaison Officer"
+                : "Fellow Liaison Officer"}
             </p>
           </div>
           <div className="text-left text-xs text-gray-500 sm:text-right">
@@ -85,52 +86,29 @@ export default function HandlerFinancialsPage() {
         </div>
       </div>
 
-      <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <SummaryCard
           label="Assigned clients"
           value={String(summary.clientCount)}
           sub="Clients you manage"
         />
-        {isFarmerHandlerView ? (
-          <>
-            <SummaryCard
-              label="Total earned"
-              value={formatGhc(summary.totalRevenue ?? 0)}
-              sub={`${summary.totalSalesCount ?? 0} completed sale(s)`}
-              accent="green"
-            />
-            <SummaryCard
-              label="Orders"
-              value={String(summary.transactionCount)}
-              sub="Paid product orders"
-            />
-          </>
-        ) : (
-          <>
-            <SummaryCard
-              label="Total spent"
-              value={formatGhc(summary.totalSpent ?? 0)}
-              sub="Products + farm access"
-            />
-            <SummaryCard
-              label="Product purchases"
-              value={formatGhc(summary.totalProductSpend ?? 0)}
-              sub="Paid marketplace orders"
-              accent="green"
-            />
-            <SummaryCard
-              label="Farm access fees"
-              value={formatGhc(summary.totalFarmAccessSpend ?? 0)}
-              sub="Completed access payments"
-            />
-          </>
-        )}
+        <SummaryCard
+          label="Total earned"
+          value={formatGhc(summary.totalRevenue ?? 0)}
+          sub={`${summary.totalSalesCount ?? 0} distributed payment(s)`}
+          accent="green"
+        />
+        <SummaryCard
+          label="Commission payments"
+          value={String(summary.transactionCount)}
+          sub="Your 10% liaison share"
+        />
       </div>
 
       <div className="mb-6 overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
         <div className="border-b border-brand-100 bg-brand-50/40 px-5 py-3">
-          <h3 className="text-sm font-semibold text-brand-900">By client</h3>
-          <p className="text-xs text-gray-500">Totals for each client you manage</p>
+          <h3 className="text-sm font-semibold text-brand-900">Commission by client</h3>
+          <p className="text-xs text-gray-500">Your liaison share from each client&apos;s orders</p>
         </div>
 
         {statement.clients.length === 0 ? (
@@ -146,10 +124,8 @@ export default function HandlerFinancialsPage() {
               <thead>
                 <tr className="border-b border-brand-50 bg-brand-50/50 text-left text-[10px] font-semibold uppercase text-gray-500">
                   <th className="px-5 py-2.5">Client</th>
-                  <th className="px-4 py-2.5 text-right">
-                    {isFarmerHandlerView ? "Total earned" : "Total spent"}
-                  </th>
-                  <th className="px-4 py-2.5 text-right">Activity</th>
+                  <th className="px-4 py-2.5 text-right">Your commission</th>
+                  <th className="px-4 py-2.5 text-right">Payments</th>
                   <th className="px-5 py-2.5">Details</th>
                 </tr>
               </thead>
@@ -161,21 +137,17 @@ export default function HandlerFinancialsPage() {
                       <p className="text-[11px] text-gray-500">{client.clientName}</p>
                     </td>
                     <td className="px-4 py-2.5 text-right font-semibold text-brand-900">
-                      {formatGhc(
-                        isFarmerHandlerView ? (client.totalRevenue ?? 0) : (client.totalSpent ?? 0)
-                      )}
+                      {formatGhc(client.totalRevenue ?? 0)}
                     </td>
                     <td className="px-4 py-2.5 text-right text-gray-600">
-                      {isFarmerHandlerView
-                        ? `${client.salesCount ?? 0} sale(s)`
-                        : `${client.orderCount ?? 0} order(s)`}
+                      {client.salesCount ?? 0} payment(s)
                     </td>
                     <td className="px-5 py-2.5">
                       <Link
                         href={clientFinancialsHref(client.ownerId)}
                         className="font-semibold text-brand-700 hover:underline"
                       >
-                        View summary
+                        View client
                       </Link>
                     </td>
                   </tr>
@@ -188,13 +160,16 @@ export default function HandlerFinancialsPage() {
 
       <div className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
         <div className="border-b border-brand-100 bg-brand-50/40 px-5 py-3">
-          <h3 className="text-sm font-semibold text-brand-900">Recent orders</h3>
-          <p className="text-xs text-gray-500">Paid activity across your clients</p>
+          <h3 className="text-sm font-semibold text-brand-900">Payments received</h3>
+          <p className="text-xs text-gray-500">
+            Your liaison commission after ANI Accountant distributes order funds
+          </p>
         </div>
 
-        {statement.transactions.length === 0 ? (
+        {paymentRows.length === 0 ? (
           <div className="px-5 py-10 text-center text-xs text-gray-500">
-            No orders yet for your assigned clients.
+            No commission payments yet. Payments appear here after successful delivery and accountant
+            distribution.
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -203,27 +178,33 @@ export default function HandlerFinancialsPage() {
                 <tr className="border-b border-brand-50 bg-brand-50/50 text-left text-[10px] font-semibold uppercase text-gray-500">
                   <th className="px-5 py-2.5">Date</th>
                   <th className="px-4 py-2.5">Client</th>
-                  <th className="px-4 py-2.5">Description</th>
-                  <th className="px-4 py-2.5">Type</th>
-                  <th className="px-4 py-2.5 text-right">Amount</th>
+                  <th className="px-4 py-2.5">Order</th>
+                  <th className="px-4 py-2.5 text-right">Commission</th>
                   <th className="px-5 py-2.5">Status</th>
                 </tr>
               </thead>
               <tbody>
-                {statement.transactions.map((item) => (
+                {paymentRows.map((item) => (
                   <tr key={item.id} className="border-b border-brand-50 hover:bg-brand-50/30">
                     <td className="px-5 py-2.5 whitespace-nowrap text-gray-600">
                       {formatDate(item.date)}
                     </td>
                     <td className="px-4 py-2.5 font-medium text-brand-900">{item.clientName}</td>
                     <td className="px-4 py-2.5 text-gray-600">
-                      {item.description}
-                      <span className="block text-[11px] text-gray-400">{item.counterpartyName}</span>
+                      <span className="font-medium text-brand-900">
+                        {item.orderName ?? item.description}
+                      </span>
+                      {item.orderDescription &&
+                        item.orderDescription !== (item.orderName ?? item.description) && (
+                          <span className="mt-0.5 block text-[11px] text-gray-400 line-clamp-2">
+                            {item.orderDescription}
+                          </span>
+                        )}
+                      <span className="mt-0.5 block text-[11px] text-gray-400">
+                        {item.counterpartyName}
+                      </span>
                     </td>
-                    <td className="px-4 py-2.5 capitalize text-gray-500">
-                      {item.type.replace("_", " ").toLowerCase()}
-                    </td>
-                    <td className="px-4 py-2.5 text-right font-semibold text-brand-900">
+                    <td className="px-4 py-2.5 text-right font-semibold text-green-700">
                       {formatGhc(item.amount)}
                     </td>
                     <td className="px-5 py-2.5">

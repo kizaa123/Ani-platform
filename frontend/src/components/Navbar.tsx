@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
-import { isFarmer, isBuyer, isHandler, isStaff } from "@/lib/types";
+import { isFarmer, isBuyer, isHandler, isStaff, isFarmerHandler, isBuyerHandler } from "@/lib/types";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { RolePrefixedName, getRoleNamePrefix } from "@/components/RolePrefixedName";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -134,6 +134,7 @@ export function Navbar() {
   if (!user) return null;
 
   const links = NAV.filter((n) => {
+    if (n.href === "/marketplace" && (isFarmerHandler(user.roleId) || isBuyerHandler(user.roleId))) return false;
     if (n.farmer && !isFarmer(user.roleId)) return false;
     if (n.buyer && !isBuyer(user.roleId)) return false;
     if (n.handler && !isHandler(user.roleId)) return false;
@@ -187,6 +188,7 @@ export function Navbar() {
                 size="sm"
                 cacheBust={photoCacheBust}
                 verificationStatus={user.verificationStatus}
+                verificationTags={user.verificationTags}
               />
               <div className="min-w-0 text-left leading-tight">
                 <RolePrefixedName
@@ -261,6 +263,7 @@ export function Navbar() {
             size="sm"
             cacheBust={photoCacheBust}
             verificationStatus={user.verificationStatus}
+            verificationTags={user.verificationTags}
           />
           <div className="min-w-0">
             <RolePrefixedName

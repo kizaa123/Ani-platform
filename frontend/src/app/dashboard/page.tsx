@@ -3,11 +3,13 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
-import { isFarmer, isBuyer, isHandler, isAdmin, isAccountant, isBuyerHandler, isResearcher, isStudent, isMarketplaceBuyer } from "@/lib/types";
+import { isFarmer, isBuyer, isHandler, isAdmin, isAccountant, isBuyerHandler, isResearcher, isStudent, isMarketplaceBuyer, isFarmerHandler } from "@/lib/types";
 import { PortalNavCard, PortalNavCardSkeleton } from "@/components/PortalNavCard";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
 import { getPortalNavImage } from "@/lib/portalNavImages";
+import { FarmerHandlerDashboardCards, FarmerHandlerDashboardHint } from "@/components/FarmerHandlerDashboardCards";
+import { BuyerHandlerDashboardCards, BuyerHandlerDashboardHint } from "@/components/BuyerHandlerDashboardCards";
 import type { IconName } from "@/components/icons";
 
 type DashboardCard = {
@@ -41,40 +43,51 @@ export default function DashboardPage() {
     );
   }
 
+  const isFlo = isFarmerHandler(user.roleId);
+  const isClo = isBuyerHandler(user.roleId);
+  const isLiaison = isFlo || isClo;
+
   const cards = ([
-    { href: "/marketplace", title: "Marketplace", desc: "Browse commodity listings", icon: "store", all: true },
+    { href: "/marketplace", title: "Marketplace", desc: "Browse commodity listings", icon: "store", all: true, hideForLiaison: true },
     { href: "/library", title: "Research Library", desc: "Browse books & research publications", icon: "book", all: true },
     { href: "/researcher/publications", title: "My Publications", desc: "Upload & manage research files", icon: "book", show: isResearcher(user.roleId) },
     { href: "/researcher/settings", title: "Profile", desc: "Institution & researcher profile", icon: "user", show: isResearcher(user.roleId) },
     { href: "/farm", title: "My Farm", desc: "Manage products & profile", icon: "sprout", show: isFarmer(user.roleId) },
     { href: "/farm/financials", title: "Financial Statement", desc: "View farm product finances", icon: "chart", show: isFarmer(user.roleId) },
+    { href: "/farm/orders", title: "Buyer Orders", desc: "Track & manage orders placed by buyers", icon: "package", show: isFarmer(user.roleId) },
     { href: "/financials", title: "Financial Statement", desc: "Spending & farm access fees", icon: "chart", show: isMarketplaceBuyer(user.roleId) },
     { href: "/orders", title: "My Orders", desc: "Track marketplace purchases", icon: "package", show: isMarketplaceBuyer(user.roleId) },
     { href: "/student/settings", title: "Profile", desc: "Account & contact details", icon: "user", show: isStudent(user.roleId) },
     { href: "/connections", title: "Connections", desc: "Manage buyer-farmer requests", icon: "handshake", show: !isResearcher(user.roleId) },
-    { href: "/agents", title: isBuyerHandler(user.roleId) ? "My Buyers" : "My Clients", desc: isBuyerHandler(user.roleId) ? "View orders, spending & connections" : "View assigned farmers/buyers", icon: "users", show: isHandler(user.roleId) },
-    { href: "/agents/financials", title: "Financial Statement", desc: isBuyerHandler(user.roleId) ? "Client spending across your buyers" : "Client sales revenue across your farmers", icon: "chart", show: isHandler(user.roleId) },
+    { href: "/agents", title: isClo ? "My Buyers" : "My Clients", desc: isClo ? "View orders, spending & connections" : "View assigned farmers/buyers", icon: "users", show: isHandler(user.roleId) && !isLiaison },
+    { href: "/agents/financials", title: "Financial Statement", desc: isClo ? "Your liaison commission from client orders" : "Your 10% liaison commission from farmer orders", icon: "chart", show: isHandler(user.roleId) && !isLiaison },
     { href: "/admin", title: "Admin Panel", desc: "Analytics, verification & moderation", icon: "shield", show: isAdmin(user.roleId) },
     { href: "/admin/staff", title: "ANI Team", desc: "Manage staff accounts & roles", icon: "users", show: isAdmin(user.roleId) },
     { href: "/admin/financials", title: "Financial Statement", desc: "Platform-wide revenue (read-only)", icon: "chart", show: isAdmin(user.roleId) },
-    { href: "/accountant", title: "Financial Overview", desc: "Income, transactions & withdrawals", icon: "chart", show: isAccountant(user.roleId) },
-    { href: "/accountant/transactions", title: "Transactions", desc: "All platform payments received", icon: "credit-card", show: isAccountant(user.roleId) },
-    { href: "/accountant/receipts", title: "Order Receipts", desc: "Print locked & unlocked PDF statements", icon: "package", show: isAccountant(user.roleId) },
-    { href: "/accountant/withdrawals", title: "Withdrawals", desc: "Record platform fund withdrawals", icon: "coins", show: isAccountant(user.roleId) },
+    { href: "/accountant", title: "Financial Overview", desc: "Access income, order share & balances", icon: "chart", show: isAccountant(user.roleId) },
+    { href: "/accountant/transactions", title: "Access Ledger", desc: "Farm & publication access payments", icon: "credit-card", show: isAccountant(user.roleId) },
+    { href: "/accountant/withdrawals", title: "Order Share & Withdrawals", desc: "Distribute orders & record withdrawals", icon: "coins", show: isAccountant(user.roleId) },
+    { href: "/accountant/receipts", title: "Order Receipts", desc: "Released order statement PDFs", icon: "package", show: isAccountant(user.roleId) },
     { href: "/accountant/farm-access", title: "Farm Access", desc: "Approve paid buyer farm access", icon: "handshake", show: isAccountant(user.roleId) },
     { href: "/farm/settings", title: "Profile", desc: "Profile, handler, farm & commodities", icon: "user", show: isFarmer(user.roleId) },
     { href: "/settings", title: "Profile", desc: "Profile, location & handler", icon: "user", show: isBuyer(user.roleId) },
     { href: "/agents/settings", title: "Profile", desc: "Profile photo & contact details", icon: "user", show: isHandler(user.roleId) },
     { href: "/profile", title: "Profile", desc: "Your account settings", icon: "user", show: isAdmin(user.roleId) || isAccountant(user.roleId) },
-  ] satisfies DashboardCard[]).filter((c) => c.all || c.show);
+  ] satisfies (DashboardCard & { hideForLiaison?: boolean })[]).filter(
+    (c) => (c.all || c.show) && !(isLiaison && c.hideForLiaison)
+  );
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
       <ScrollReveal trigger="mount" delay={0} duration={450} direction="fade-up" className="mb-8">
         <h1 className="text-3xl font-bold text-brand-900">Welcome, {user.firstName}</h1>
+        {isFlo && <FarmerHandlerDashboardHint />}
+        {isClo && <BuyerHandlerDashboardHint />}
       </ScrollReveal>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {isFlo && <FarmerHandlerDashboardCards roleId={user.roleId} />}
+        {isClo && <BuyerHandlerDashboardCards roleId={user.roleId} />}
         {cards.map((c, i) => (
           <ScrollReveal key={c.href} delay={scrollStagger(i, 90)} duration={500} direction="fade-up">
             <PortalNavCard

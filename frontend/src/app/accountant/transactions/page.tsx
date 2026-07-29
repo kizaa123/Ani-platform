@@ -60,8 +60,10 @@ export default function AccountantTransactionsPage() {
         <Link href="/accountant" className="text-xs text-brand-600 hover:underline">
           ← Financial Overview
         </Link>
-        <h1 className="mt-2 text-xl font-bold text-brand-900">Transactions</h1>
-        <p className="text-xs text-gray-500">All money received on the platform</p>
+        <h1 className="mt-2 text-xl font-bold text-brand-900">Access Ledger</h1>
+        <p className="text-xs text-gray-500">
+          Farm access fees, publication access payments, and other access income
+        </p>
       </div>
 
       {error && (

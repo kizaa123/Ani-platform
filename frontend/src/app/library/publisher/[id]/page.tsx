@@ -163,6 +163,7 @@ export default function PublisherLibraryPage() {
               name={publisher.name}
               size="lg"
               verificationStatus={publisher.verificationStatus}
+              verificationTags={publisher.verificationTags}
             />
             <div className="min-w-0 flex-1">
               <h1 className="text-2xl font-extrabold text-brand-900">{publisher.name}</h1>

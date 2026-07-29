@@ -8,6 +8,9 @@ import {
   MARKETPLACE_BUYER_ROLES,
   ROLES,
   STAFF_ROLES,
+  isBuyerHandler,
+  isFarmerHandler,
+  isFarmerRole,
 } from '../constants/roles';
 
 export type NotificationMetadata = {
@@ -20,6 +23,8 @@ export type NotificationMetadata = {
   publicationId?: string | null;
   actionUrl?: string | null;
   actionLabel?: string | null;
+  orderName?: string | null;
+  orderDescription?: string | null;
   farmSize?: string | null;
   location?: string | null;
   commodities?: string[] | null;
@@ -40,7 +45,8 @@ export type NotificationTypeValue =
   | 'RESEARCH_PURCHASE'
   | 'NEW_PRODUCT'
   | 'NEW_FARMER'
-  | 'NEW_PUBLICATION';
+  | 'NEW_PUBLICATION'
+  | 'HANDLER_DROPPED';
 
 export type CreateNotificationInput = {
   userId: string;
@@ -357,13 +363,56 @@ export async function notifyNewOrder(
   totalAmount: number
 ) {
   const body = `${buyerName} ordered ${productName} — GHC ${totalAmount.toFixed(2)} held in escrow until buyer confirms delivery. Download the order statement from Buyer Orders.`;
-  await notifyFarmerTeam(farmerId, {
+  await createNotification({
+    userId: farmerId,
     actorId: buyerId,
     type: 'NEW_ORDER',
     title: 'New buyer order',
     body,
     link: '/farm/orders',
+    metadata: {
+      actionLabel: productName,
+      actionUrl: '/farm/orders',
+    },
+  }).catch(() => undefined);
+
+  const farmerHandler = await prisma.agentAssignment.findFirst({
+    where: { ownerId: farmerId, relationshipType: 'FARMER_REPRESENTATIVE' },
+    select: { agentId: true },
   });
+  if (farmerHandler) {
+    await createNotification({
+      userId: farmerHandler.agentId,
+      actorId: buyerId,
+      type: 'NEW_ORDER',
+      title: 'New order for your farmer',
+      body,
+      link: `/agents/farm/${farmerId}/orders`,
+      metadata: {
+        actionLabel: productName,
+        actionUrl: `/agents/farm/${farmerId}/orders`,
+      },
+    }).catch(() => undefined);
+  }
+
+  const buyerHandler = await prisma.agentAssignment.findFirst({
+    where: { ownerId: buyerId, relationshipType: 'BUYER_REPRESENTATIVE' },
+    select: { agentId: true },
+  });
+  if (buyerHandler) {
+    await createNotification({
+      userId: buyerHandler.agentId,
+      actorId: buyerId,
+      type: 'NEW_ORDER',
+      title: 'New order from your client',
+      body: `Your client ${buyerName} ordered ${productName} — GHC ${totalAmount.toFixed(2)} held in escrow until buyer confirms delivery.`,
+      link: `/agents/buyer/${buyerId}/orders`,
+      metadata: {
+        actionLabel: productName,
+        actionUrl: `/agents/buyer/${buyerId}/orders`,
+      },
+    }).catch(() => undefined);
+  }
 }
 
 export async function notifyProductPurchase(
@@ -389,13 +438,18 @@ export async function notifyOrderPaymentReleased(order: {
   buyerId: string;
   farmerId: string;
   totalAmount: number;
-  listing: { title: string };
+  listing: { title: string; description?: string | null };
   buyer: { firstName: string; lastName: string };
   farmer: { firstName: string; lastName: string };
 }) {
   const buyerName = `${order.buyer.firstName} ${order.buyer.lastName}`;
   const farmerName = `${order.farmer.firstName} ${order.farmer.lastName}`;
-  const body = `${buyerName} confirmed delivery for ${order.listing.title} — GHC ${order.totalAmount.toFixed(2)} released to ANI Accountant.`;
+  const orderName = order.listing.title;
+  const orderDescription =
+    'description' in order.listing && order.listing.description?.trim()
+      ? order.listing.description.trim()
+      : orderName;
+  const body = `${buyerName} confirmed delivery for "${orderName}" — ${orderDescription} — GHC ${order.totalAmount.toFixed(2)} released to ANI Accountant.`;
 
   const buyerHandlers = await prisma.agentAssignment.findMany({
     where: { ownerId: order.buyerId, relationshipType: 'BUYER_REPRESENTATIVE' },
@@ -410,21 +464,37 @@ export async function notifyOrderPaymentReleased(order: {
     select: { id: true },
   });
 
-  const userIds = [
-    order.buyerId,
-    order.farmerId,
-    ...buyerHandlers.map((h) => h.agentId),
-    ...farmerHandlers.map((h) => h.agentId),
-    ...staff.map((s) => s.id),
-  ];
-
-  await notifyUsers(userIds, {
+  const baseInput = {
     actorId: order.buyerId,
-    type: 'ORDER_PAYMENT_RELEASED',
+    type: 'ORDER_PAYMENT_RELEASED' as const,
     title: 'Order payment released',
     body,
-    link: '/orders',
-  });
+    metadata: {
+      actionLabel: orderName,
+      orderName,
+      orderDescription,
+    },
+  };
+
+  const notifyReleased = (userId: string, link: string) =>
+    createNotification({
+      ...baseInput,
+      userId,
+      link,
+      metadata: { ...baseInput.metadata, actionUrl: link },
+    }).catch(() => undefined);
+
+  await notifyReleased(order.buyerId, '/orders');
+  await notifyReleased(order.farmerId, '/farm/orders');
+  for (const handler of farmerHandlers) {
+    await notifyReleased(handler.agentId, `/agents/farm/${order.farmerId}/orders`);
+  }
+  for (const handler of buyerHandlers) {
+    await notifyReleased(handler.agentId, `/agents/buyer/${order.buyerId}/orders`);
+  }
+  for (const member of staff) {
+    await notifyReleased(member.id, '/accountant/receipts');
+  }
 }
 
 export async function notifyOrderTracked(
@@ -434,14 +504,56 @@ export async function notifyOrderTracked(
   productName: string,
   stageLabel: string
 ) {
-  await createNotification({
-    userId: buyerId,
+  const body = `${farmerName} updated your order for ${productName} — now at "${stageLabel}".`;
+  const baseInput = {
     actorId: farmerId,
-    type: 'ORDER_TRACKED',
+    type: 'ORDER_TRACKED' as const,
     title: 'Order update',
-    body: `${farmerName} updated your order for ${productName} — now at "${stageLabel}".`,
+    body,
+    metadata: {
+      actionLabel: productName,
+    },
+  };
+
+  await createNotification({
+    ...baseInput,
+    userId: buyerId,
     link: '/orders',
+    metadata: { ...baseInput.metadata, actionUrl: '/orders' },
   }).catch(() => undefined);
+
+  const [farmerHandler, buyerHandler] = await Promise.all([
+    prisma.agentAssignment.findFirst({
+      where: { ownerId: farmerId, relationshipType: 'FARMER_REPRESENTATIVE' },
+      select: { agentId: true },
+    }),
+    prisma.agentAssignment.findFirst({
+      where: { ownerId: buyerId, relationshipType: 'BUYER_REPRESENTATIVE' },
+      select: { agentId: true },
+    }),
+  ]);
+
+  if (farmerHandler) {
+    const link = `/agents/farm/${farmerId}/orders`;
+    await createNotification({
+      ...baseInput,
+      userId: farmerHandler.agentId,
+      title: 'Order update for your farmer',
+      link,
+      metadata: { ...baseInput.metadata, actionUrl: link },
+    }).catch(() => undefined);
+  }
+
+  if (buyerHandler) {
+    const link = `/agents/buyer/${buyerId}/orders`;
+    await createNotification({
+      ...baseInput,
+      userId: buyerHandler.agentId,
+      title: 'Order update for your client',
+      link,
+      metadata: { ...baseInput.metadata, actionUrl: link },
+    }).catch(() => undefined);
+  }
 }
 
 export async function notifyConnectionRequest(
@@ -561,16 +673,55 @@ export async function notifyMoneyDistributed(
   recipientFirstName: string,
   amount: number,
   buyerName: string,
+  orderName: string,
   orderDescription: string
 ) {
   const formatted = amount.toFixed(2);
+  const recipient = await prisma.user.findUnique({
+    where: { id: recipientId },
+    select: { roleId: true },
+  });
+  const link = recipient
+    ? isFarmerRole(recipient.roleId)
+      ? '/farm/financials'
+      : isFarmerHandler(recipient.roleId) || isBuyerHandler(recipient.roleId)
+        ? '/agents/financials'
+        : '/financials'
+    : '/financials';
+
   await createNotification({
     userId: recipientId,
     type: 'MONEY_DISTRIBUTED',
     title: 'Payment received from ANI',
-    body: `Dear ${recipientFirstName}, you have received GHC ${formatted} from ANI for the successful ${buyerName} order delivery.`,
-    link: '/financials',
-    metadata: { price: amount, priceLabel: `GHC ${formatted}`, actionLabel: orderDescription },
+    body: `Dear ${recipientFirstName}, you have received GHC ${formatted} from ANI for the successful delivery of "${orderName}" — ${orderDescription} (${buyerName} order).`,
+    link,
+    metadata: {
+      price: amount,
+      priceLabel: `GHC ${formatted}`,
+      actionLabel: orderName,
+      actionUrl: link,
+      orderName,
+      orderDescription,
+    },
+  }).catch(() => undefined);
+}
+
+export async function notifyHandlerDropped(
+  handlerId: string,
+  ownerName: string,
+  relationshipType: 'FARMER_REPRESENTATIVE' | 'BUYER_REPRESENTATIVE'
+) {
+  const isFarmerClient = relationshipType === 'FARMER_REPRESENTATIVE';
+  await createNotification({
+    userId: handlerId,
+    type: 'HANDLER_DROPPED',
+    title: isFarmerClient ? 'Farmer changed liaison officer' : 'Client changed liaison officer',
+    body: `${ownerName} has assigned a different liaison officer and is no longer your assigned ${isFarmerClient ? 'farmer' : 'client'}.`,
+    link: '/agents',
+    metadata: {
+      actionLabel: 'View clients',
+      actionUrl: '/agents',
+    },
   }).catch(() => undefined);
 }
 

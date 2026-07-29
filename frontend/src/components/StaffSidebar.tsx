@@ -26,32 +26,37 @@ export const ACCOUNTANT_NAV_LINKS: PortalNavLink[] = [
     label: "Financial Overview",
     icon: "chart",
     match: (p) => p === "/accountant",
+    section: "Summary",
   },
   {
     href: "/accountant/transactions",
-    label: "Transactions",
+    label: "Access Ledger",
     icon: "credit-card",
     match: (p) => p.startsWith("/accountant/transactions"),
+    section: "Access income",
+  },
+  {
+    href: "/accountant/farm-access",
+    label: "Farm Access Approvals",
+    icon: "handshake",
+    match: (p) => p.startsWith("/accountant/farm-access"),
+    section: "Access income",
+  },
+  {
+    href: "/accountant/withdrawals",
+    label: "Order Share & Withdrawals",
+    icon: "coins",
+    match: (p) => p.startsWith("/accountant/withdrawals"),
+    section: "Order share",
   },
   {
     href: "/accountant/receipts",
     label: "Order Receipts",
     icon: "package",
     match: (p) => p.startsWith("/accountant/receipts"),
+    section: "Order share",
   },
-  {
-    href: "/accountant/withdrawals",
-    label: "Withdrawals",
-    icon: "coins",
-    match: (p) => p.startsWith("/accountant/withdrawals"),
-  },
-  {
-    href: "/accountant/farm-access",
-    label: "Farm Access",
-    icon: "handshake",
-    match: (p) => p.startsWith("/accountant/farm-access"),
-  },
-  { href: "/profile", label: "Profile", icon: "user", match: (p) => p.startsWith("/profile") },
+  { href: "/profile", label: "Profile", icon: "user", match: (p) => p.startsWith("/profile"), section: "Account" },
 ];
 
 /** @deprecated Use ADMIN_NAV_LINKS or ACCOUNTANT_NAV_LINKS */

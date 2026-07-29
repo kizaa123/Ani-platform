@@ -126,7 +126,7 @@ export class MarketplaceService {
     farmerUserId: string,
     farmAccessSet?: Set<string>
   ): Promise<{ hasAccess: boolean; connectionStatus: string; hasFarmAccess: boolean }> {
-    if (isFarmerRole(roleId) || isStaffRole(roleId) || roleId === ROLES.FARMER_HANDLER) {
+    if (isFarmerRole(roleId) || isStaffRole(roleId)) {
       return { hasAccess: true, connectionStatus: 'ACCEPTED', hasFarmAccess: true };
     }
     if (isMarketplaceBuyerRole(roleId)) {
@@ -276,6 +276,15 @@ export class MarketplaceService {
   }
 
   async browseMarketplace(userId: string, roleId: number, search?: string) {
+    if (roleId === ROLES.FARMER_HANDLER || roleId === ROLES.BUYER_HANDLER) {
+      throw new AppError(
+        403,
+        roleId === ROLES.FARMER_HANDLER
+          ? 'Marketplace access is not available for fellow liaison officers'
+          : 'Marketplace access is not available for client liaison officers'
+      );
+    }
+
     const isBuyerRole = isMarketplaceBuyerRole(roleId);
     const farmAccessSet = isBuyerRole ? await buyerFarmAccessSet(userId) : new Set<string>();
     const connectionMap = isBuyerRole ? await this.buyerConnectionMap(userId) : new Map<string, string>();
@@ -300,6 +309,7 @@ export class MarketplaceService {
             region: true,
             city: true,
             verificationStatus: true,
+            verificationTags: { select: { id: true, tagType: true, createdAt: true } },
           },
         },
         farmerCommodities: {
@@ -322,7 +332,7 @@ export class MarketplaceService {
     const farmers = farmerProfiles.map((profile) => {
       const farmerUserId = profile.user.id;
       const hasFarmAccess =
-        isFarmerRole(roleId) || isStaffRole(roleId) || roleId === ROLES.FARMER_HANDLER
+        isFarmerRole(roleId) || isStaffRole(roleId)
           ? true
           : isBuyerRole
             ? farmAccessSet.has(farmerUserId)
@@ -335,7 +345,7 @@ export class MarketplaceService {
           : 'NONE';
 
       const hasAccess =
-        isFarmerRole(roleId) || isStaffRole(roleId) || roleId === ROLES.FARMER_HANDLER
+        isFarmerRole(roleId) || isStaffRole(roleId)
           ? true
           : hasFarmAccess && connectionStatus === 'ACCEPTED';
 
@@ -376,6 +386,11 @@ export class MarketplaceService {
         region: profile.user.region,
         city: profile.user.city,
         verificationStatus: profile.user.verificationStatus,
+        verificationTags: profile.user.verificationTags.map((tag) => ({
+          id: tag.id,
+          tagType: tag.tagType,
+          createdAt: tag.createdAt.toISOString(),
+        })),
         registeredCommodities,
         connectionStatus: access.connectionStatus,
         hasFarmAccess,

@@ -9,6 +9,7 @@ import {
   isBuyer,
   isHandler,
   isBuyerHandler,
+  ROLES,
   type UserProfile,
 } from "@/lib/types";
 
@@ -36,6 +37,7 @@ export function ProfileIdentityHeader({ user, photoCacheBust, onEditClick }: Pro
           size={128}
           cacheBust={cacheBust}
           verificationStatus={user.verificationStatus}
+          verificationTags={user.verificationTags}
         />
         <div className="min-w-0 flex-1 text-center sm:text-left">
           <h2 className="text-2xl font-bold">
@@ -56,8 +58,8 @@ export function ProfileIdentityHeader({ user, photoCacheBust, onEditClick }: Pro
           {isHandler(user.roleId) && (
             <p className="mt-2 text-sm text-brand-700">
               {isBuyerHandler(user.roleId)
-                ? "Buyer representative — full visibility into your clients"
-                : "Farmer representative"}
+                ? "Client liaison — full visibility into your buyers"
+                : "Fellow liaison — manage your assigned farmers"}
             </p>
           )}
           {(isFarmer(user.roleId) || isBuyer(user.roleId)) && user.assignedHandler && (
@@ -73,7 +75,16 @@ export function ProfileIdentityHeader({ user, photoCacheBust, onEditClick }: Pro
                 }
               />
               <p className="text-sm text-brand-700">
-                Handler: {user.assignedHandler.firstName} {user.assignedHandler.lastName}
+                Handler:{" "}
+                <RolePrefixedName
+                  user={{
+                    roleId: isBuyer(user.roleId) ? ROLES.BUYER_HANDLER : ROLES.FARMER_HANDLER,
+                    firstName: user.assignedHandler.firstName,
+                    lastName: user.assignedHandler.lastName,
+                  }}
+                  nameClassName="text-brand-700"
+                  prefixClassName="text-brand-600"
+                />
               </p>
             </div>
           )}

@@ -78,6 +78,8 @@ export default function FinancialStatementPage() {
     id: item.id,
     date: typeof item.date === "string" ? item.date : String(item.date),
     productName: item.productName ?? item.title,
+    orderName: item.orderName ?? item.productName ?? item.title,
+    orderDescription: item.orderDescription ?? item.orderName ?? item.productName ?? item.title,
     productImage: item.productImage,
     commodity: item.commodity,
     category: item.category,
@@ -117,7 +119,7 @@ export default function FinancialStatementPage() {
         <div className="min-h-28 rounded-xl border border-brand-100 bg-white p-6 shadow-sm">
           <p className="text-xs font-semibold uppercase text-gray-500">Total earned</p>
           <p className="mt-2 text-xl font-bold text-green-700">{formatGhc(summary.totalSalesRevenue ?? 0)}</p>
-          <p className="mt-1 text-xs text-gray-500">{summary.totalSalesCount ?? 0} completed sale(s)</p>
+          <p className="mt-1 text-xs text-gray-500">{summary.totalSalesCount ?? 0} distributed payment(s)</p>
         </div>
         <div className="min-h-28 rounded-xl border border-brand-100 bg-white p-6 shadow-sm">
           <p className="text-xs font-semibold uppercase text-gray-500">All products</p>
@@ -132,7 +134,7 @@ export default function FinancialStatementPage() {
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-green-100 bg-green-50/50 px-6 py-4">
             <div>
               <h3 className="text-base font-semibold text-brand-900">Payments received</h3>
-              <p className="text-sm text-gray-500">Orders buyers have paid for</p>
+              <p className="text-sm text-gray-500">Funds distributed by ANI Accountant after successful delivery</p>
             </div>
             <Link href="/farm/orders" className="text-sm font-semibold text-brand-700 hover:underline">
               View all orders
@@ -215,7 +217,7 @@ export default function FinancialStatementPage() {
       </div>
 
       <p className="mt-4 text-xs text-gray-400 text-center">
-        Totals show confirmed buyer payments. Listed values reflect products currently for sale.
+        Totals show payments distributed by ANI Accountant. Listed values reflect products currently for sale.
       </p>
     </div>
   );

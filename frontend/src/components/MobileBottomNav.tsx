@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { Icon, type IconName } from "@/components/icons";
-import { isFarmer, isBuyer, isHandler, isResearcher, isAdmin, isAccountant, isStudent, isStaff } from "@/lib/types";
+import { isFarmer, isBuyer, isHandler, isResearcher, isAdmin, isAccountant, isStudent, isStaff, isFarmerHandler, isBuyerHandler } from "@/lib/types";
 
 export type BottomNavItem = {
   href: string;
@@ -85,6 +85,60 @@ function studentNav(): BottomNavItem[] {
   ];
 }
 
+function farmerHandlerNav(): BottomNavItem[] {
+  return [
+    { href: "/dashboard", label: "Home", icon: "home", match: (p) => p === "/dashboard" },
+    { href: "/library", label: "Library", icon: "book", match: (p) => p.startsWith("/library") },
+    {
+      href: "/agents",
+      label: "Clients",
+      icon: "users",
+      match: (p) =>
+        (p === "/agents" || p.startsWith("/agents/farm/") || p.startsWith("/agents/buyer/")) &&
+        !p.startsWith("/agents/settings"),
+    },
+    {
+      href: "/agents/financials",
+      label: "Financials",
+      icon: "chart",
+      match: (p) => p.startsWith("/agents/financials"),
+    },
+    {
+      href: "/agents/settings",
+      label: "Profile",
+      icon: "user",
+      match: (p) => p.startsWith("/agents/settings"),
+    },
+  ];
+}
+
+function buyerHandlerNav(): BottomNavItem[] {
+  return [
+    { href: "/dashboard", label: "Home", icon: "home", match: (p) => p === "/dashboard" },
+    { href: "/library", label: "Library", icon: "book", match: (p) => p.startsWith("/library") },
+    {
+      href: "/agents",
+      label: "Buyers",
+      icon: "users",
+      match: (p) =>
+        (p === "/agents" || p.startsWith("/agents/farm/") || p.startsWith("/agents/buyer/")) &&
+        !p.startsWith("/agents/settings"),
+    },
+    {
+      href: "/agents/financials",
+      label: "Financials",
+      icon: "chart",
+      match: (p) => p.startsWith("/agents/financials"),
+    },
+    {
+      href: "/agents/settings",
+      label: "Profile",
+      icon: "user",
+      match: (p) => p.startsWith("/agents/settings"),
+    },
+  ];
+}
+
 function handlerNav(): BottomNavItem[] {
   return [
     { href: "/dashboard", label: "Home", icon: "home", match: (p) => p === "/dashboard" },
@@ -126,21 +180,16 @@ function accountantNav(): BottomNavItem[] {
     { href: "/accountant", label: "Overview", icon: "chart", match: (p) => p === "/accountant" },
     {
       href: "/accountant/transactions",
-      label: "Transactions",
-      icon: "credit-card",
-      match: (p) => p.startsWith("/accountant/transactions"),
-    },
-    {
-      href: "/accountant/receipts",
-      label: "Receipts",
-      icon: "package",
-      match: (p) => p.startsWith("/accountant/receipts"),
-    },
-    {
-      href: "/accountant/farm-access",
       label: "Access",
-      icon: "handshake",
-      match: (p) => p.startsWith("/accountant/farm-access"),
+      icon: "credit-card",
+      match: (p) => p.startsWith("/accountant/transactions") || p.startsWith("/accountant/farm-access"),
+    },
+    {
+      href: "/accountant/withdrawals",
+      label: "Order share",
+      icon: "coins",
+      match: (p) =>
+        p.startsWith("/accountant/withdrawals") || p.startsWith("/accountant/receipts"),
     },
     { href: "/profile", label: "Profile", icon: "user", match: (p) => p.startsWith("/profile") },
   ];
@@ -160,7 +209,11 @@ function navForRole(roleId: number): BottomNavItem[] | null {
   if (isBuyer(roleId)) return buyerNav();
   if (isResearcher(roleId)) return researcherNav();
   if (isStudent(roleId)) return studentNav();
-  if (isHandler(roleId)) return handlerNav();
+  if (isHandler(roleId)) {
+    if (isFarmerHandler(roleId)) return farmerHandlerNav();
+    if (isBuyerHandler(roleId)) return buyerHandlerNav();
+    return handlerNav();
+  }
   if (isAdmin(roleId)) return adminNav();
   if (isAccountant(roleId)) return accountantNav();
   if (isStaff(roleId)) return staffGeneralNav();

@@ -117,6 +117,7 @@ export function LibraryPublicationCard({
             name={pub.researcher.name}
             size="md"
             verificationStatus={pub.researcher.verificationStatus}
+            verificationTags={pub.researcher.verificationTags}
           />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-gray-700">{pub.researcher.name}</p>

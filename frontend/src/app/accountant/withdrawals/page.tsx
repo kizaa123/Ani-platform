@@ -8,6 +8,8 @@ import { api } from "@/lib/api";
 import { fullName, isAccountant, type AccountantOverview, type PlatformFinancialStatement, type PlatformWithdrawal } from "@/lib/types";
 import { formatDate, formatGhc } from "@/lib/format";
 import { OrderDistributionPanel } from "@/components/accountant/OrderDistributionPanel";
+import { DistributionSplitBreakdown } from "@/components/accountant/DistributionSplitBreakdown";
+import { AniPlatformShareCard } from "@/components/accountant/AniPlatformShareCard";
 
 function statusStyle(status: PlatformWithdrawal["status"]) {
   switch (status) {
@@ -123,8 +125,10 @@ export default function AccountantWithdrawalsPage() {
         <Link href="/accountant" className="text-xs text-brand-600 hover:underline">
           ← Financial Overview
         </Link>
-        <h1 className="mt-2 text-xl font-bold text-brand-900">Withdrawals</h1>
-        <p className="text-xs text-gray-500">Track and record money withdrawn from the platform</p>
+        <h1 className="mt-2 text-xl font-bold text-brand-900">Order Share & Withdrawals</h1>
+        <p className="text-xs text-gray-500">
+          Distribute released order escrow, track ANI order-share income, and record withdrawals
+        </p>
       </div>
 
       {error && (
@@ -150,11 +154,15 @@ export default function AccountantWithdrawalsPage() {
 
       {releasedOrders.length > 0 && (
         <div className="mb-8 overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
-          <div className="border-b border-brand-100 bg-brand-50/40 px-5 py-3">
-            <h3 className="text-sm font-semibold text-brand-900">Order money distribution</h3>
-            <p className="mt-0.5 text-xs text-gray-500">
-              Split released escrow funds: 66.66% Fellow · 10% Fellow Liaison · 10% Client Liaison · remainder ANI
+          <div className="border-b border-brand-100 bg-brand-50/40 px-5 py-4">
+            <h3 className="text-sm font-semibold text-brand-900">Order share distribution</h3>
+            <p className="mt-1 text-xs text-gray-500">
+              Split released escrow to Fellow, liaison officers, and ANI order share
             </p>
+            <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,16rem)] lg:items-start">
+              <DistributionSplitBreakdown hidePlatformShare className="max-w-md" />
+              <AniPlatformShareCard orderAmounts={releasedOrders.map((order) => order.amount)} />
+            </div>
           </div>
           <div className="space-y-3 p-5">
             {releasedOrders.map((order) => (

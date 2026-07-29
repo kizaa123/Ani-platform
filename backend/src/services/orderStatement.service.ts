@@ -96,7 +96,7 @@ function drawPageWatermark(doc: PDFKit.PDFDocument, logoPath: string | null): vo
 
 function drawHeaderLogo(doc: PDFKit.PDFDocument, logoPath: string | null, y: number): number {
   if (logoPath) {
-    const logoSize = 44;
+    const logoSize = 68;
     doc.image(logoPath, PAGE_MARGIN, y, {
       width: logoSize,
       height: logoSize,
@@ -343,7 +343,10 @@ export function buildOrderStatementPdf(
       width: CONTENT_WIDTH,
       align: 'center',
     });
-    y += 32;
+    y += 20;
+
+    y = drawPaymentStatus(doc, perspective, y);
+    y += 12;
 
     y = drawKeyValue(doc, 'Order ID', order.id, y);
     y = drawKeyValue(doc, 'Date', formatDateTime(order.createdAt), y);
@@ -372,8 +375,7 @@ export function buildOrderStatementPdf(
     y = drawSectionTitle(doc, 'Payment & Escrow', y);
     y = drawKeyValue(doc, 'Order status', order.status, y);
     y = drawKeyValue(doc, 'Escrow status', formatEscrowStatus(order.escrowStatus), y);
-    y = drawPaymentStatus(doc, perspective, y);
-    y += 6;
+    y += 10;
 
     y = drawSectionTitle(doc, 'Delivery & Release', y);
     doc.font('Helvetica').fontSize(9).fillColor(COLORS.text);
@@ -478,7 +480,7 @@ export async function releaseOrderPayment(
       releaseOtp: null,
     },
     include: {
-      listing: { select: { title: true } },
+      listing: { select: { title: true, description: true } },
       buyer: { select: { firstName: true, lastName: true } },
       farmer: { select: { firstName: true, lastName: true } },
     },

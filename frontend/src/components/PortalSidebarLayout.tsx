@@ -17,6 +17,7 @@ export type PortalNavLink = {
   label: string;
   icon: IconName;
   match: (pathname: string) => boolean;
+  section?: string;
 };
 
 type PortalSidebarLayoutProps = {
@@ -65,6 +66,7 @@ function SidebarContent({
           size={52}
           cacheBust={photoCacheBust}
           verificationStatus={user.verificationStatus}
+          verificationTags={user.verificationTags}
         />
         <div className="min-w-0">
           <RolePrefixedName
@@ -79,22 +81,31 @@ function SidebarContent({
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-        {navLinks.map((link) => {
+        {navLinks.map((link, index) => {
           const active = link.match(pathname);
+          const showSection =
+            link.section &&
+            (index === 0 || navLinks[index - 1]?.section !== link.section);
           return (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={onNavigate}
-              className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
-                active
-                  ? "bg-brand-100 text-brand-900"
-                  : "text-gray-600 hover:bg-brand-50 hover:text-brand-800"
-              }`}
-            >
-              <Icon name={link.icon} className="h-5 w-5 shrink-0" />
-              {link.label}
-            </Link>
+            <div key={link.href}>
+              {showSection && (
+                <p className="mb-1 mt-3 px-4 text-[10px] font-bold uppercase tracking-wide text-gray-400 first:mt-0">
+                  {link.section}
+                </p>
+              )}
+              <Link
+                href={link.href}
+                onClick={onNavigate}
+                className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
+                  active
+                    ? "bg-brand-100 text-brand-900"
+                    : "text-gray-600 hover:bg-brand-50 hover:text-brand-800"
+                }`}
+              >
+                <Icon name={link.icon} className="h-5 w-5 shrink-0" />
+                {link.label}
+              </Link>
+            </div>
           );
         })}
       </nav>
@@ -169,6 +180,7 @@ function PortalMobileBar({
             size={44}
             cacheBust={photoCacheBust}
             verificationStatus={user.verificationStatus}
+            verificationTags={user.verificationTags}
           />
         </>
       )}

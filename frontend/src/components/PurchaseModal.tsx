@@ -7,7 +7,8 @@ import { FarmerAvatar } from "@/components/FarmerAvatar";
 import { CountryBadge } from "@/components/CountrySelect";
 import { FarmerProductCard } from "@/components/FarmerProductCard";
 import { ProductMediaGallery } from "@/components/ProductMediaGallery";
-import { PaymentCheckout, TransactionSuccess } from "@/components/PaymentCheckout";
+import { PaymentCheckout } from "@/components/PaymentCheckout";
+import { PaymentResultOverlay } from "@/components/PaymentResultOverlay";
 import { HarvestCalendarTrigger } from "@/components/HarvestCalendarTrigger";
 
 const EMPTY_MEDIA: never[] = [];
@@ -44,14 +45,16 @@ export function PurchaseModal({
 
   const [quantity, setQuantity] = useState(1);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
-  const [releaseOtp, setReleaseOtp] = useState<string | null>(null);
+  const [result, setResult] = useState<
+    | { variant: "success"; message: string; releaseOtp: string | null }
+    | { variant: "error"; message: string }
+    | null
+  >(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const total = Math.round(quantity * unitPrice * 100) / 100;
   const canPurchase = listing.available !== false && maxQty > 0;
-  const orderPlaced = Boolean(successMsg);
+  const orderPlaced = result?.variant === "success";
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -62,9 +65,7 @@ export function PurchaseModal({
 
   useEffect(() => {
     setQuantity(Math.min(1, maxQty) || 1);
-    setError("");
-    setSuccessMsg("");
-    setReleaseOtp(null);
+    setResult(null);
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, [listing.id]);
 
@@ -78,21 +79,25 @@ export function PurchaseModal({
   const handlePurchase = async (paymentMethod: string) => {
     if (!canPurchase) return;
     if (quantity <= 0 || quantity > maxQty) {
-      setError(`Enter a quantity between 1 and ${maxQty}`);
+      setResult({
+        variant: "error",
+        message: `Enter a quantity between 1 and ${maxQty}`,
+      });
       return;
     }
     setSubmitting(true);
-    setError("");
+    setResult(null);
     try {
-      const result = await api.marketplace.purchase(listing.id, { quantity, paymentMethod });
-      setReleaseOtp(result.releaseOtp);
-      setSuccessMsg(
-        `${quantity} ${unitLabel} — GHC ${total.toFixed(2)} held in escrow until you confirm delivery.`
-      );
+      const purchaseResult = await api.marketplace.purchase(listing.id, { quantity, paymentMethod });
+      const message = `${quantity} ${unitLabel} — GHC ${total.toFixed(2)} held in escrow until you confirm delivery.`;
+      setResult({ variant: "success", message, releaseOtp: purchaseResult.releaseOtp });
       scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
       onSuccess();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Purchase failed");
+      setResult({
+        variant: "error",
+        message: e instanceof Error ? e.message : "Purchase failed. Please try again.",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -121,24 +126,6 @@ export function PurchaseModal({
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-lg px-4 py-6 sm:max-w-6xl sm:py-8">
-          {orderPlaced && (
-            <div className="mb-6">
-              <TransactionSuccess
-                title="Order placed successfully"
-                message={successMsg}
-                hint={
-                  releaseOtp
-                    ? `Your 4-digit release code is ${releaseOtp}. Save it — you'll enter it in My Orders when you receive your delivery.`
-                    : "Check My Orders for your release code and financial statement PDF."
-                }
-                actionLabel="View my orders"
-                onAction={() => {
-                  window.location.href = "/orders";
-                }}
-              />
-            </div>
-          )}
-
           <div className="grid gap-6 lg:grid-cols-2 lg:gap-10 lg:items-start">
             <div className="flex flex-col gap-3">
               <ProductMediaGallery
@@ -252,7 +239,6 @@ export function PurchaseModal({
                     payLabel={`Pay GHC ${total.toFixed(2)}`}
                     onPay={handlePurchase}
                     submitting={submitting}
-                    error={error}
                   />
                 </div>
               ) : null}
@@ -276,6 +262,35 @@ export function PurchaseModal({
           )}
         </div>
       </div>
+
+      {result?.variant === "success" && (
+        <PaymentResultOverlay
+          variant="success"
+          title="Order placed successfully"
+          message={result.message}
+          hint={
+            result.releaseOtp
+              ? `Your 4-digit release code is ${result.releaseOtp}. Save it — you'll enter it in My Orders when you receive your delivery.`
+              : "Check My Orders for your release code and financial statement PDF."
+          }
+          actionLabel="View my orders"
+          onAction={() => {
+            window.location.href = "/orders";
+          }}
+          onDismiss={onClose}
+          dismissLabel="Continue shopping"
+        />
+      )}
+
+      {result?.variant === "error" && (
+        <PaymentResultOverlay
+          variant="error"
+          message={result.message}
+          onAction={() => setResult(null)}
+          onDismiss={onClose}
+          dismissLabel="Close"
+        />
+      )}
     </div>
   );
 }

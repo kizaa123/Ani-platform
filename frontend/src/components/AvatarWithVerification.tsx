@@ -1,5 +1,11 @@
 import { ProfilePhoto } from "@/components/FarmerAvatar";
-import { VerifiedBadgeIcon } from "@/components/VerificationBadge";
+import {
+  AVATAR_BADGE_POSITIONS,
+  TAG_STYLES,
+  VerificationTagIcon,
+  getAvatarVerificationBadges,
+} from "@/components/VerificationTagBadge";
+import type { UserVerificationTag } from "@/lib/types";
 
 type AvatarWithVerificationProps = {
   src?: string | null;
@@ -7,6 +13,7 @@ type AvatarWithVerificationProps = {
   size?: number | "sm" | "md" | "lg" | "xl";
   cacheBust?: number;
   verificationStatus?: string | null;
+  verificationTags?: UserVerificationTag[];
   className?: string;
   onClick?: () => void;
 };
@@ -31,11 +38,13 @@ export function AvatarWithVerification({
   size = "sm",
   cacheBust,
   verificationStatus,
+  verificationTags,
   className = "",
   onClick,
 }: AvatarWithVerificationProps) {
   const px = resolveSize(size);
-  const isVerified = verificationStatus === "VERIFIED";
+  const badges = getAvatarVerificationBadges(verificationTags, verificationStatus);
+  const iconClass = badgeSize(px);
 
   return (
     <div
@@ -50,14 +59,15 @@ export function AvatarWithVerification({
         onClick={onClick}
         className="!shadow-none"
       />
-      {isVerified && (
+      {badges.map((tagType, index) => (
         <span
-          className="absolute -bottom-0.5 -right-0.5 z-10"
-          title="Verified User"
+          key={tagType}
+          className={AVATAR_BADGE_POSITIONS[index] ?? AVATAR_BADGE_POSITIONS[0]}
+          title={TAG_STYLES[tagType].label}
         >
-          <VerifiedBadgeIcon className={`${badgeSize(px)} drop-shadow-sm`} />
+          <VerificationTagIcon tagType={tagType} className={`${iconClass} drop-shadow-sm`} />
         </span>
-      )}
+      ))}
     </div>
   );
 }

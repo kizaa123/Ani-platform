@@ -9,6 +9,10 @@ import { farmService } from './farm.service';
 import { buyerService } from './buyer.service';
 import { connectionService } from './connection.service';
 import { buyerHasActiveAccess } from '../middleware/access.middleware';
+import {
+  fetchDistributedLines,
+  mapDistributionToHandlerPayment,
+} from '../utils/distributionFinancials';
 
 export const assignmentSchema = z.object({
   ownerId: z.string().uuid(),
@@ -496,38 +500,22 @@ export class AgentService {
     const ownerIds = assignments.map((a) => a.ownerId);
 
     if (relationshipType === 'FARMER_REPRESENTATIVE') {
-      const paidOrders =
-        ownerIds.length === 0
-          ? []
-          : await prisma.productOrder.findMany({
-              where: { farmerId: { in: ownerIds }, status: 'PAID' },
-              include: {
-                listing: { select: { title: true } },
-                buyer: { select: { firstName: true, lastName: true } },
-                farmer: {
-                  select: {
-                    id: true,
-                    firstName: true,
-                    lastName: true,
-                    farmerProfile: { select: { farmName: true } },
-                  },
-                },
-              },
-              orderBy: { createdAt: 'desc' },
-            });
+      const distributedLines = await fetchDistributedLines(agentId, ['FARMER_HANDLER']);
+      const handlerPayments = distributedLines.map(mapDistributionToHandlerPayment);
 
-      const revenueByOwner = new Map<string, { revenue: number; salesCount: number }>();
+      const commissionByOwner = new Map<string, { revenue: number; salesCount: number }>();
       for (const id of ownerIds) {
-        revenueByOwner.set(id, { revenue: 0, salesCount: 0 });
+        commissionByOwner.set(id, { revenue: 0, salesCount: 0 });
       }
-      for (const order of paidOrders) {
-        const entry = revenueByOwner.get(order.farmerId)!;
-        entry.revenue += order.totalAmount;
+      for (const payment of handlerPayments) {
+        const entry = commissionByOwner.get(payment.ownerId);
+        if (!entry) continue;
+        entry.revenue += payment.amount;
         entry.salesCount += 1;
       }
 
       const clients = assignments.map((assignment) => {
-        const stats = revenueByOwner.get(assignment.ownerId)!;
+        const stats = commissionByOwner.get(assignment.ownerId) ?? { revenue: 0, salesCount: 0 };
         const farmName = assignment.owner.farmerProfile?.farmName;
         return {
           ownerId: assignment.ownerId,
@@ -538,24 +526,7 @@ export class AgentService {
         };
       });
 
-      const transactions = paidOrders.map((order) => ({
-        id: order.id,
-        date: order.createdAt.toISOString(),
-        ownerId: order.farmerId,
-        clientName:
-          order.farmer.farmerProfile?.farmName ??
-          `${order.farmer.firstName} ${order.farmer.lastName}`,
-        description: order.listing.title,
-        counterpartyName: `${order.buyer.firstName} ${order.buyer.lastName}`,
-        amount: order.totalAmount,
-        type: 'SALE' as const,
-        paymentMethod: order.paymentMethod,
-        status: order.status,
-        transactionId: order.transactionId,
-      }));
-
-      const totalRevenue = clients.reduce((sum, client) => sum + client.totalRevenue, 0);
-      const totalSalesCount = clients.reduce((sum, client) => sum + client.salesCount, 0);
+      const totalRevenue = handlerPayments.reduce((sum, payment) => sum + payment.amount, 0);
 
       return {
         agentName: `${agent.firstName} ${agent.lastName}`,
@@ -564,131 +535,42 @@ export class AgentService {
         summary: {
           clientCount: clients.length,
           totalRevenue,
-          totalSalesCount,
-          transactionCount: transactions.length,
+          totalSalesCount: handlerPayments.length,
+          transactionCount: handlerPayments.length,
         },
         clients,
-        transactions,
+        transactions: handlerPayments,
+        handlerPayments,
       };
     }
 
-    const [productOrders, farmAccess] = await Promise.all([
-      ownerIds.length === 0
-        ? Promise.resolve([])
-        : prisma.productOrder.findMany({
-            where: { buyerId: { in: ownerIds }, status: 'PAID' },
-            include: {
-              listing: { select: { title: true } },
-              buyer: {
-                select: {
-                  id: true,
-                  firstName: true,
-                  lastName: true,
-                  buyerProfile: { select: { company: true } },
-                },
-              },
-            },
-            orderBy: { createdAt: 'desc' },
-          }),
-      ownerIds.length === 0
-        ? Promise.resolve([])
-        : prisma.buyerFarmerAccess.findMany({
-            where: { buyerId: { in: ownerIds }, status: 'COMPLETED' },
-            include: {
-              buyer: {
-                select: {
-                  id: true,
-                  firstName: true,
-                  lastName: true,
-                  buyerProfile: { select: { company: true } },
-                },
-              },
-              farmer: {
-                select: {
-                  firstName: true,
-                  lastName: true,
-                  farmerProfile: { select: { farmName: true } },
-                },
-              },
-            },
-            orderBy: { createdAt: 'desc' },
-          }),
-    ]);
+    const distributedLines = await fetchDistributedLines(agentId, ['BUYER_HANDLER']);
+    const handlerPayments = distributedLines.map(mapDistributionToHandlerPayment);
 
-    const spendByOwner = new Map<
-      string,
-      { productSpend: number; farmAccessSpend: number; orderCount: number }
-    >();
+    const commissionByOwner = new Map<string, { revenue: number; salesCount: number }>();
     for (const id of ownerIds) {
-      spendByOwner.set(id, { productSpend: 0, farmAccessSpend: 0, orderCount: 0 });
+      commissionByOwner.set(id, { revenue: 0, salesCount: 0 });
     }
-    for (const order of productOrders) {
-      const entry = spendByOwner.get(order.buyerId)!;
-      entry.productSpend += order.totalAmount;
-      entry.orderCount += 1;
-    }
-    for (const access of farmAccess) {
-      const entry = spendByOwner.get(access.buyerId)!;
-      entry.farmAccessSpend += access.amount;
+    for (const payment of handlerPayments) {
+      const entry = commissionByOwner.get(payment.ownerId);
+      if (!entry) continue;
+      entry.revenue += payment.amount;
+      entry.salesCount += 1;
     }
 
     const clients = assignments.map((assignment) => {
-      const stats = spendByOwner.get(assignment.ownerId)!;
+      const stats = commissionByOwner.get(assignment.ownerId) ?? { revenue: 0, salesCount: 0 };
       const company = assignment.owner.buyerProfile?.company;
       return {
         ownerId: assignment.ownerId,
         clientName: `${assignment.owner.firstName} ${assignment.owner.lastName}`,
         clientLabel: company ?? `${assignment.owner.firstName} ${assignment.owner.lastName}`,
-        totalSpent: stats.productSpend + stats.farmAccessSpend,
-        totalProductSpend: stats.productSpend,
-        totalFarmAccessSpend: stats.farmAccessSpend,
-        orderCount: stats.orderCount,
+        totalRevenue: stats.revenue,
+        salesCount: stats.salesCount,
       };
     });
 
-    const productTransactions = productOrders.map((order) => ({
-      id: order.id,
-      date: order.createdAt.toISOString(),
-      ownerId: order.buyerId,
-      clientName:
-        order.buyer.buyerProfile?.company ??
-        `${order.buyer.firstName} ${order.buyer.lastName}`,
-      description: order.listing.title,
-      counterpartyName: order.listing.title,
-      amount: order.totalAmount,
-      type: 'PRODUCT_ORDER' as const,
-      paymentMethod: order.paymentMethod,
-      status: order.status,
-      transactionId: order.transactionId,
-    }));
-
-    const accessTransactions = farmAccess.map((access) => ({
-      id: access.id,
-      date: access.createdAt.toISOString(),
-      ownerId: access.buyerId,
-      clientName:
-        access.buyer.buyerProfile?.company ??
-        `${access.buyer.firstName} ${access.buyer.lastName}`,
-      description: `Farm access: ${access.farmer.farmerProfile?.farmName ?? `${access.farmer.firstName} ${access.farmer.lastName}`}`,
-      counterpartyName:
-        access.farmer.farmerProfile?.farmName ??
-        `${access.farmer.firstName} ${access.farmer.lastName}`,
-      amount: access.amount,
-      type: 'FARM_ACCESS' as const,
-      paymentMethod: access.paymentMethod,
-      status: access.status,
-      transactionId: access.transactionId,
-    }));
-
-    const transactions = [...productTransactions, ...accessTransactions].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-
-    const totalProductSpend = clients.reduce((sum, client) => sum + client.totalProductSpend, 0);
-    const totalFarmAccessSpend = clients.reduce(
-      (sum, client) => sum + client.totalFarmAccessSpend,
-      0
-    );
+    const totalRevenue = handlerPayments.reduce((sum, payment) => sum + payment.amount, 0);
 
     return {
       agentName: `${agent.firstName} ${agent.lastName}`,
@@ -696,13 +578,13 @@ export class AgentService {
       generatedAt: new Date().toISOString(),
       summary: {
         clientCount: clients.length,
-        totalSpent: totalProductSpend + totalFarmAccessSpend,
-        totalProductSpend,
-        totalFarmAccessSpend,
-        transactionCount: transactions.length,
+        totalRevenue,
+        totalSalesCount: handlerPayments.length,
+        transactionCount: handlerPayments.length,
       },
       clients,
-      transactions,
+      transactions: handlerPayments,
+      handlerPayments,
     };
   }
 }

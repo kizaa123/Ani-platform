@@ -3,6 +3,7 @@ import { DistributionLineStatus, DistributionRecipientRole } from '@prisma/clien
 import prisma from '../database/prisma';
 import { AppError, assertFound } from '../utils/errors';
 import { notifyMoneyDistributed } from './notification.service';
+import { orderListingLabels } from '../utils/distributionFinancials';
 
 const FARMER_SHARE = 66.66;
 const FARMER_HANDLER_SHARE = 10;
@@ -13,6 +14,22 @@ export const distributeLineSchema = z.object({
   paymentMethod: z.string().min(1).max(100),
   transactionId: z.string().max(200).optional(),
 });
+
+function floDisplayName(firstName: string): string {
+  return `FLO_${firstName}`;
+}
+
+function cloDisplayName(firstName: string): string {
+  return `CLO_${firstName}`;
+}
+
+function handlerRecipientName(
+  role: 'FARMER_HANDLER' | 'BUYER_HANDLER',
+  agent: { firstName: string; lastName: string } | null | undefined
+): string {
+  if (!agent) return 'Unassigned';
+  return role === 'FARMER_HANDLER' ? floDisplayName(agent.firstName) : cloDisplayName(agent.firstName);
+}
 
 function roundAmount(total: number, percentage: number): number {
   return Math.round((total * percentage) / 100 * 100) / 100;
@@ -32,7 +49,7 @@ async function loadReleasedOrder(orderId: string) {
             farmerProfile: { select: { farmName: true } },
           },
         },
-        listing: { select: { title: true } },
+        listing: { select: { title: true, description: true } },
       },
     }),
     'Order not found'
@@ -83,13 +100,9 @@ function buildLineSeeds(
   order: Awaited<ReturnType<typeof loadReleasedOrder>>,
   handlers: Awaited<ReturnType<typeof resolveHandlers>>
 ): DistributionLineSeed[] {
-  const farmerName = `${order.farmer.firstName} ${order.farmer.lastName}`;
-  const farmerHandlerName = handlers.farmerHandler
-    ? `${handlers.farmerHandler.agent.firstName} ${handlers.farmerHandler.agent.lastName}`
-    : 'Unassigned';
-  const buyerHandlerName = handlers.buyerHandler
-    ? `${handlers.buyerHandler.agent.firstName} ${handlers.buyerHandler.agent.lastName}`
-    : 'Unassigned';
+  const farmerName = order.farmer.firstName;
+  const farmerHandlerName = handlerRecipientName('FARMER_HANDLER', handlers.farmerHandler?.agent);
+  const buyerHandlerName = handlerRecipientName('BUYER_HANDLER', handlers.buyerHandler?.agent);
 
   return [
     {
@@ -118,21 +131,24 @@ function buildLineSeeds(
       percentage: ANI_SHARE,
       amount: roundAmount(totalAmount, ANI_SHARE),
       recipientUserId: null,
-      recipientName: 'ANI Platform',
+      recipientName: 'ANI',
     },
   ];
 }
 
-function roleLabel(role: DistributionRecipientRole): string {
+function roleLabel(
+  role: DistributionRecipientRole,
+  order?: Awaited<ReturnType<typeof loadReleasedOrder>>
+): string {
   switch (role) {
     case 'FARMER':
-      return 'Fellow';
+      return order?.farmer.firstName ?? 'Fellow';
     case 'FARMER_HANDLER':
       return 'Fellow Liaison Officer';
     case 'BUYER_HANDLER':
       return 'Client Liaison Officer';
     case 'ANI_PLATFORM':
-      return 'ANI Platform';
+      return 'ANI';
     default:
       return role;
   }
@@ -193,7 +209,7 @@ export class OrderDistributionService {
       return {
         id: line.id,
         role: line.role,
-        roleLabel: roleLabel(line.role),
+        roleLabel: roleLabel(line.role, order),
         percentage: line.percentage,
         amount: line.amount,
         status: line.status,
@@ -201,18 +217,26 @@ export class OrderDistributionService {
         distributedAt: line.distributedAt?.toISOString() ?? null,
         transactionId: line.transactionId,
         recipientUserId: line.recipientUserId,
-        recipientName:
-          line.recipient
-            ? `${line.recipient.firstName} ${line.recipient.lastName}`
-            : seed?.recipientName ?? 'Unassigned',
+        recipientName: line.recipient
+          ? line.role === 'FARMER_HANDLER'
+            ? floDisplayName(line.recipient.firstName)
+            : line.role === 'BUYER_HANDLER'
+              ? cloDisplayName(line.recipient.firstName)
+              : line.role === 'FARMER'
+                ? line.recipient.firstName
+                : `${line.recipient.firstName} ${line.recipient.lastName}`
+          : seed?.recipientName ?? 'Unassigned',
         recipientEmail: line.recipient?.email ?? null,
         canDistribute: line.role !== 'ANI_PLATFORM' && Boolean(line.recipientUserId),
       };
     });
 
+    const { orderName, orderDescription } = orderListingLabels(order.listing);
+
     return {
       orderId: order.id,
-      orderDescription: order.listing.title,
+      orderName,
+      orderDescription,
       buyerName,
       farmerName: `${order.farmer.firstName} ${order.farmer.lastName}`,
       totalAmount: distribution.totalAmount,
@@ -266,12 +290,15 @@ export class OrderDistributionService {
       },
     });
 
+    const { orderName, orderDescription } = orderListingLabels(order.listing);
+
     await notifyMoneyDistributed(
       line.recipientUserId,
       line.recipient.firstName,
       line.amount,
       buyerName,
-      order.listing.title
+      orderName,
+      orderDescription
     );
 
     return this.getOrCreateDistribution(orderId);

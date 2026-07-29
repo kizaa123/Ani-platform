@@ -15,8 +15,8 @@ import { PageContentSkeleton, Skeleton } from "@/components/LoadingPrimitives";
 function OverviewSkeleton() {
   return (
     <>
-      <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
+      <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="rounded-2xl border border-brand-100 bg-white p-5 shadow-sm">
             <Skeleton className="h-3 w-24" />
             <Skeleton className="mt-3 h-8 w-28" />
@@ -73,29 +73,16 @@ export default function AccountantOverviewPage() {
 
   if (loading || !user) return <PageContentSkeleton maxWidth="max-w-6xl" />;
 
+  const formatMoney = (value: number) =>
+    value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
-      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-brand-900">Financial Overview</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Platform income, balances, and financial growth
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Link
-            href="/accountant/transactions"
-            className="rounded-lg border border-brand-200 bg-white px-4 py-2 text-sm font-semibold text-brand-800 hover:bg-brand-50"
-          >
-            All transactions
-          </Link>
-          <Link
-            href="/accountant/withdrawals"
-            className="rounded-lg border border-brand-200 bg-white px-4 py-2 text-sm font-semibold text-brand-800 hover:bg-brand-50"
-          >
-            Withdrawals
-          </Link>
-        </div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-brand-900">Financial Overview</h1>
+        <p className="mt-1 text-sm text-gray-500">
+          ANI earns through access fees and order-share remainder from released buyer orders
+        </p>
       </div>
 
       {error && (
@@ -114,126 +101,82 @@ export default function AccountantOverviewPage() {
       {pageLoading && !overview && <OverviewSkeleton />}
 
       {overview && (
-        <>
-          <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {(
-              [
-                {
-                  label: "Total platform income",
-                  value: overview.totalRevenue.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }),
-                  prefix: "GHC ",
-                  sub: `${overview.transactionCount} transaction(s)`,
-                  valueClass: "text-lg font-bold text-green-700",
-                },
-                {
-                  label: "Available balance",
-                  value: overview.availableBalance.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }),
-                  prefix: "GHC ",
-                  sub: "After completed withdrawals",
-                  valueClass: "text-lg font-bold text-brand-800",
-                },
-                {
-                  label: "Total withdrawn",
-                  value: overview.totalWithdrawn.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }),
-                  prefix: "GHC ",
-                  sub: `${overview.withdrawalCount} withdrawal(s)`,
-                  valueClass: "text-lg font-bold text-brand-800",
-                },
-                {
-                  label: "Pending farm access",
-                  value: String(overview.pendingPaidConnections),
-                  sub: "Paid — awaiting approval",
-                  valueClass: "text-lg font-bold text-amber-700",
-                  href: "/accountant/farm-access",
-                },
-              ] as const
-            ).map((kpi, i) => {
-              const delay = scrollStagger(i, 90);
-              const card = (
-                <div className="rounded-2xl border border-brand-100 bg-white p-4 shadow-sm sm:p-5">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">{kpi.label}</p>
-                  <AnimatedStat
-                    value={kpi.value}
-                    prefix={"prefix" in kpi ? kpi.prefix : undefined}
-                    delay={delay}
-                    className={`mt-1 block ${kpi.valueClass}`}
-                  />
-                  <p className="mt-0.5 text-xs text-gray-500">{kpi.sub}</p>
-                </div>
-              );
-              return (
-                <ScrollReveal key={kpi.label} delay={delay} duration={450} direction="fade-up">
-                  {"href" in kpi && kpi.href ? (
-                    <Link href={kpi.href} className="block transition hover:opacity-90">
-                      {card}
-                    </Link>
-                  ) : (
-                    card
-                  )}
-                </ScrollReveal>
-              );
-            })}
-          </div>
-
-          <div className="mb-8 grid gap-4 sm:grid-cols-3">
-            {(
-              [
-                {
-                  label: "Product orders",
-                  value: overview.productOrderRevenue.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }),
-                  prefix: "GHC ",
-                  sub: `${overview.productOrderCount} sale(s)`,
-                },
-                {
-                  label: "Farm access",
-                  value: overview.farmAccessRevenue.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }),
-                  prefix: "GHC ",
-                  sub: `${overview.farmAccessCount} payment(s)`,
-                },
-                {
-                  label: "Research sales",
-                  value: overview.researchRevenue.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }),
-                  prefix: "GHC ",
-                  sub: `${overview.researchSaleCount} sale(s)`,
-                },
-              ] as const
-            ).map((item, i) => {
-              const delay = scrollStagger(i + 4, 90);
-              return (
-                <ScrollReveal key={item.label} delay={delay} duration={450} direction="fade-up">
-                  <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
-                    <p className="text-[10px] font-semibold uppercase text-gray-500">{item.label}</p>
-                    <AnimatedStat
-                      value={item.value}
-                      prefix={item.prefix}
-                      delay={delay}
-                      className="mt-1 block text-base font-bold text-brand-900"
-                    />
-                    <p className="text-xs text-gray-500">{item.sub}</p>
-                  </div>
-                </ScrollReveal>
-              );
-            })}
-          </div>
-        </>
+        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {(
+            [
+              {
+                label: "Total platform income",
+                value: formatMoney(overview.totalRevenue),
+                prefix: "GHC ",
+                sub: "Access + order share",
+                valueClass: "text-lg font-bold text-green-700",
+              },
+              {
+                label: "Access income",
+                value: formatMoney(overview.accessRevenue),
+                prefix: "GHC ",
+                sub: `${overview.accessPaymentCount} access payment(s)`,
+                valueClass: "text-lg font-bold text-brand-800",
+                href: "/accountant/transactions",
+              },
+              {
+                label: "Order share income",
+                value: formatMoney(overview.orderShareRevenue),
+                prefix: "GHC ",
+                sub: `${overview.orderShareCount} released order(s) · ~13.34% each`,
+                valueClass: "text-lg font-bold text-brand-800",
+                href: "/accountant/withdrawals",
+              },
+              {
+                label: "Available balance",
+                value: formatMoney(overview.availableBalance),
+                prefix: "GHC ",
+                sub: "After completed withdrawals",
+                valueClass: "text-lg font-bold text-brand-800",
+              },
+              {
+                label: "Total withdrawn",
+                value: formatMoney(overview.totalWithdrawn),
+                prefix: "GHC ",
+                sub: `${overview.withdrawalCount} withdrawal(s)`,
+                valueClass: "text-lg font-bold text-brand-800",
+                href: "/accountant/withdrawals",
+              },
+              {
+                label: "Pending farm access",
+                value: String(overview.pendingPaidConnections),
+                sub: "Paid — awaiting approval",
+                valueClass: "text-lg font-bold text-amber-700",
+                href: "/accountant/farm-access",
+              },
+            ] as const
+          ).map((kpi, i) => {
+            const delay = scrollStagger(i, 90);
+            const card = (
+              <div className="rounded-2xl border border-brand-100 bg-white p-4 shadow-sm sm:p-5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">{kpi.label}</p>
+                <AnimatedStat
+                  value={kpi.value}
+                  prefix={"prefix" in kpi ? kpi.prefix : undefined}
+                  delay={delay}
+                  className={`mt-1 block ${kpi.valueClass}`}
+                />
+                <p className="mt-0.5 text-xs text-gray-500">{kpi.sub}</p>
+              </div>
+            );
+            return (
+              <ScrollReveal key={kpi.label} delay={delay} duration={450} direction="fade-up">
+                {"href" in kpi && kpi.href ? (
+                  <Link href={kpi.href} className="block transition hover:opacity-90">
+                    {card}
+                  </Link>
+                ) : (
+                  card
+                )}
+              </ScrollReveal>
+            );
+          })}
+        </div>
       )}
 
       {charts && (

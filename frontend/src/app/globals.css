@@ -227,3 +227,185 @@ body {
     transition: none !important;
   }
 }
+
+/* Payment result overlay — animated success/error feedback */
+@layer components {
+  .payment-result-overlay {
+    @apply absolute inset-0 z-10 flex items-center justify-center bg-white/95 p-6 backdrop-blur-sm;
+    animation: payment-overlay-in 0.25s ease-out both;
+  }
+
+  .payment-result-card {
+    @apply flex w-full max-w-sm flex-col items-center text-center;
+    animation: payment-content-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+  }
+
+  .payment-result-copy {
+    @apply mt-6 space-y-2;
+    animation: payment-content-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both;
+  }
+
+  .payment-result-title {
+    @apply text-2xl font-bold text-brand-900;
+  }
+
+  .payment-result-message {
+    @apply text-sm leading-relaxed text-gray-600;
+  }
+
+  .payment-result-hint {
+    @apply text-sm leading-relaxed text-gray-500;
+  }
+
+  .payment-result-actions {
+    @apply mt-6 flex w-full flex-col gap-2 sm:flex-row sm:justify-center;
+    animation: payment-content-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.5s both;
+  }
+
+  .payment-result-btn {
+    @apply w-full px-6 py-3 text-base sm:w-auto;
+  }
+
+  .payment-result-btn-error {
+    @apply rounded-xl bg-red-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-red-700;
+  }
+
+  .payment-result-btn-secondary {
+    @apply w-full rounded-xl border border-brand-200 px-6 py-3 text-base font-semibold text-brand-800 transition hover:bg-brand-50 sm:w-auto;
+  }
+
+  .payment-success-ring {
+    transform-origin: center;
+    animation: payment-success-ring-in 0.35s ease-out 1.1s both;
+  }
+
+  .payment-success-circle-stroke {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    transform-origin: center;
+    transform: rotate(-90deg);
+    animation: payment-stroke-draw 0.55s cubic-bezier(0.65, 0, 0.35, 1) 0.05s forwards;
+  }
+
+  .payment-success-circle-fill {
+    transform-origin: center;
+    transform: scale(0);
+    opacity: 0;
+    animation: payment-circle-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.55s forwards;
+  }
+
+  .payment-success-check {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: payment-stroke-draw 0.35s cubic-bezier(0.65, 0, 0.35, 1) 0.85s forwards;
+  }
+
+  .payment-error-circle {
+    transform-origin: center;
+    animation: payment-circle-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) 0s forwards,
+      payment-shake 0.45s ease-in-out 0.75s;
+  }
+
+  .payment-error-x {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+
+  .payment-error-x-1 {
+    animation: payment-stroke-draw 0.22s ease-out 0.28s forwards;
+  }
+
+  .payment-error-x-2 {
+    animation: payment-stroke-draw 0.22s ease-out 0.42s forwards;
+  }
+}
+
+@keyframes payment-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes payment-content-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes payment-stroke-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes payment-circle-pop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes payment-success-ring-in {
+  from {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes payment-shake {
+  0%,
+  100% {
+    transform: translateX(0) scale(1);
+  }
+  20%,
+  60% {
+    transform: translateX(-5px) scale(1);
+  }
+  40%,
+  80% {
+    transform: translateX(5px) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .payment-result-overlay,
+  .payment-result-card,
+  .payment-result-copy,
+  .payment-result-actions,
+  .payment-success-ring,
+  .payment-success-circle-stroke,
+  .payment-success-circle-fill,
+  .payment-success-check,
+  .payment-error-circle,
+  .payment-error-x {
+    animation: none !important;
+  }
+
+  .payment-success-circle-stroke,
+  .payment-success-check,
+  .payment-error-x {
+    stroke-dashoffset: 0;
+  }
+
+  .payment-success-circle-fill,
+  .payment-error-circle {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

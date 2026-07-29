@@ -46,7 +46,7 @@ export default function LoginPage() {
 
         {/* Brand */}
         <ScrollReveal trigger="mount" delay={scrollStagger(0, 80)} duration={500} direction="fade-up" className="relative z-20">
-          <PlatformBrandTitle theme="light" size="panel" showIcon />
+          <PlatformBrandTitle theme="light" size="panel" />
         </ScrollReveal>
 
         {/* Marketing text & stats */}
@@ -74,15 +74,13 @@ export default function LoginPage() {
           </div>
         </ScrollReveal>
 
-        <ScrollReveal trigger="mount" delay={scrollStagger(2, 80)} duration={450} direction="fade-in" className="relative z-20 text-xs text-brand-300 font-medium">
-          © {new Date().getFullYear()} Agricess Network International — ANI. All rights reserved.
-        </ScrollReveal>
+
       </div>
 
       {/* Right Column: Form Container */}
       <div className="lg:col-span-5 flex flex-col">
-        <div className="flex justify-center px-6 pt-8 lg:hidden">
-          <PlatformBrandTitle theme="dark" size="compact" showIcon />
+        <div className="flex justify-center px-6 pt-8 text-center lg:hidden">
+          <PlatformBrandTitle theme="dark" size="compact" />
         </div>
         <div className="flex flex-1 items-center justify-center p-6 sm:p-12 lg:p-16">
         <ScrollReveal trigger="mount" delay={120} duration={500} direction="fade-up" className="w-full max-w-md">

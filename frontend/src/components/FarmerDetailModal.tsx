@@ -59,6 +59,7 @@ export function FarmerDetailModal({
                 name={farmer.farmerName}
                 size="lg"
                 verificationStatus={farmer.verificationStatus}
+                verificationTags={farmer.verificationTags}
               />
               <div className="min-w-0">
                 <h2 className="text-xl font-bold text-brand-900">{farmer.farmerName}</h2>

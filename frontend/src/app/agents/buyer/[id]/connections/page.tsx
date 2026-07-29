@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import { Connection, ConnectionUser, fullName, isHandler } from "@/lib/types";
-import { ProfilePhoto } from "@/components/FarmerAvatar";
+import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
 import { ConnectionChatModal } from "@/components/ConnectionChatModal";
 import { HandlerBuyerClientNav } from "@/components/HandlerBuyerClientNav";
@@ -151,7 +151,13 @@ function ConnectionRow({
     <div className="rounded-2xl border border-brand-100 bg-white p-5 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex min-w-0 items-start gap-4">
-          <ProfilePhoto src={farmer?.profilePicture} name={farmer?.firstName} size={72} />
+          <AvatarWithVerification
+            src={farmer?.profilePicture}
+            name={farmer?.firstName}
+            size={72}
+            verificationStatus={farmer?.verificationStatus}
+            verificationTags={farmer?.verificationTags}
+          />
           <div className="min-w-0">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Farmer</p>
             <p className="font-bold text-brand-900">{farmer ? fullName(farmer) : "Unknown"}</p>

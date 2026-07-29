@@ -440,6 +440,7 @@ enum NotificationType {
   NEW_PRODUCT
   NEW_FARMER
   NEW_PUBLICATION
+  HANDLER_DROPPED
 }
 
 enum VerificationTagType {

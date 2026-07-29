@@ -3,6 +3,7 @@ import prisma from '../database/prisma';
 import { AppError, assertFound, assertAuthorized } from '../utils/errors';
 import { ROLES, isFarmerRole, isStaffRole, isMarketplaceBuyerRole } from '../constants/roles';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
+import { formatVerificationTags } from '../utils/verificationTags';
 import {
   notifyConnectionApproved,
   notifyConnectionDeclined,
@@ -27,6 +28,7 @@ const buyerSelect = {
   country: true,
   profilePicture: true,
   verificationStatus: true,
+  verificationTags: { select: { id: true, tagType: true, createdAt: true } },
 } as const;
 
 const farmerSelect = {
@@ -40,6 +42,7 @@ const farmerSelect = {
   country: true,
   profilePicture: true,
   verificationStatus: true,
+  verificationTags: { select: { id: true, tagType: true, createdAt: true } },
   farmerProfile: { select: { farmName: true } },
 } as const;
 
@@ -54,6 +57,7 @@ type BuyerRow = {
   city: string | null;
   country: string;
   verificationStatus: string;
+  verificationTags?: { id: string; tagType: string; createdAt: Date }[];
 };
 
 type FarmerRow = BuyerRow & {
@@ -72,6 +76,7 @@ function mapBuyerProfile(user: BuyerRow) {
     country: user.country,
     profilePicture: normalizePublicAssetUrl(user.profilePicture ?? null),
     verificationStatus: user.verificationStatus,
+    verificationTags: formatVerificationTags(user.verificationTags ?? []),
   };
 }
 

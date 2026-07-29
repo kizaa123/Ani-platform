@@ -70,7 +70,7 @@ export default function AccountantFarmAccessPage() {
         </Link>
         <h1 className="mt-2 text-xl font-bold text-brand-900">Farm Access Approvals</h1>
         <p className="text-xs text-gray-500">
-          Approve buyer → farmer farm access after payment is confirmed
+          Part of access income — approve buyer farm access after payment is confirmed
         </p>
       </div>
 

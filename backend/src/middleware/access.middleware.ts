@@ -54,7 +54,7 @@ export async function requireBuyerAccess(req: AuthRequest, res: Response, next: 
 
   const { roleId, userId } = req.user;
 
-  if (isFarmerRole(roleId) || isStaffRole(roleId) || roleId === ROLES.FARMER_HANDLER) {
+  if (isFarmerRole(roleId) || isStaffRole(roleId)) {
     return next();
   }
 

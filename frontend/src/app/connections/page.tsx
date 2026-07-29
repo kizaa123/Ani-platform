@@ -5,16 +5,11 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import { Connection, ConnectionUser, fullName, isBuyer, isFarmer, isStaff, isMarketplaceBuyer, isResearcher, ROLES } from "@/lib/types";
-import { ProfilePhoto } from "@/components/FarmerAvatar";
+import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
-import { VerificationBadge } from "@/components/VerificationBadge";
 
 function canModerateConnection(roleId: number) {
   return isStaff(roleId);
-}
-
-function showVerificationBadge(status?: string | null) {
-  return status === "VERIFIED";
 }
 
 function showConnectionStatusBadge(status: string, partner?: ConnectionUser) {
@@ -178,10 +173,12 @@ function ConnectionCard({
       )}
 
       <div className="flex items-start gap-3">
-        <ProfilePhoto
+        <AvatarWithVerification
           src={partner?.profilePicture}
           name={partner?.firstName}
           size={48}
+          verificationStatus={partner?.verificationStatus}
+          verificationTags={partner?.verificationTags}
         />
         <div className="min-w-0 flex-1">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
@@ -191,9 +188,6 @@ function ConnectionCard({
             {partner ? fullName(partner) : "Unknown"}
           </p>
 
-          {showVerificationBadge(partner?.verificationStatus) && (
-            <VerificationBadge status={partner!.verificationStatus} className="mt-0.5" />
-          )}
           {farmName && (
             <p className="mt-0.5 truncate text-xs font-medium text-brand-700">{farmName}</p>
           )}

@@ -45,18 +45,22 @@ export default function AgentsPage() {
   const visibleFarmerClients = isBuyerHandlerUser ? [] : farmerClients;
   const visibleBuyerClients = isFarmerHandlerUser ? [] : buyerClients;
   const visibleTotal = visibleFarmerClients.length + visibleBuyerClients.length;
+  const pageTitle = isBuyerHandlerUser
+    ? "Assigned Clients"
+    : isFarmerHandlerUser
+      ? "Assigned Farmers"
+      : "My Clients";
+  const pageSubtitle = isBuyerHandlerUser
+    ? "Buyers who assigned you as their liaison officer — view their full activity"
+    : isFarmerHandlerUser
+      ? "Farmers who assigned you as their liaison officer"
+      : "Farmers and buyers who assigned you as their handler";
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-brand-900">My Clients</h1>
-        <p className="mt-1 text-gray-500">
-          {isBuyerHandlerUser
-            ? "Buyers who assigned you as their handler — view their full activity"
-            : isFarmerHandlerUser
-              ? "Farmers who assigned you as their handler"
-              : "Farmers and buyers who assigned you as their handler"}
-        </p>
+        <h1 className="text-3xl font-bold text-brand-900">{pageTitle}</h1>
+        <p className="mt-1 text-gray-500">{pageSubtitle}</p>
       </div>
 
       {error && (
@@ -67,12 +71,15 @@ export default function AgentsPage() {
 
       {assignments.length > 0 && visibleTotal > 0 && (
         <div className="mb-8 grid gap-4 sm:grid-cols-3">
-          <StatCard label="Total clients" value={visibleTotal} />
+          <StatCard
+            label={isBuyerHandlerUser ? "Assigned clients" : isFarmerHandlerUser ? "Assigned farmers" : "Total clients"}
+            value={visibleTotal}
+          />
           {!isBuyerHandlerUser && (
             <StatCard label="Farmers" value={visibleFarmerClients.length} accent="brand" />
           )}
           {!isFarmerHandlerUser && (
-            <StatCard label="Buyers" value={visibleBuyerClients.length} accent="muted" />
+            <StatCard label="Clients" value={visibleBuyerClients.length} accent="muted" />
           )}
         </div>
       )}
@@ -80,9 +87,15 @@ export default function AgentsPage() {
       {visibleTotal === 0 ? (
         <div className="rounded-2xl border border-dashed border-brand-200 bg-brand-50/30 p-12 text-center">
           <p className="text-4xl">👥</p>
-          <p className="mt-3 font-semibold text-brand-900">No clients yet</p>
+          <p className="mt-3 font-semibold text-brand-900">
+            {isBuyerHandlerUser ? "No clients yet" : isFarmerHandlerUser ? "No farmers yet" : "No clients yet"}
+          </p>
           <p className="mt-1 text-sm text-gray-500">
-            Clients choose you as their handler when they register on the platform.
+            {isBuyerHandlerUser
+              ? "Buyers choose you as their liaison officer when they register on the platform."
+              : isFarmerHandlerUser
+                ? "Farmers choose you as their liaison officer when they register on the platform."
+                : "Clients choose you as their handler when they register on the platform."}
           </p>
         </div>
       ) : (
@@ -105,7 +118,7 @@ export default function AgentsPage() {
           {visibleBuyerClients.length > 0 && (
             <section>
               <SectionHeader
-                title="Buyer clients"
+                title="Assigned clients"
                 subtitle="Full transparency into orders, spending, and farmer connections"
                 count={visibleBuyerClients.length}
               />

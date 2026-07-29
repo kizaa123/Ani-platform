@@ -4,6 +4,7 @@ import { AppError, assertFound, assertAuthorized } from '../utils/errors';
 import { ROLES, isResearcherRole } from '../constants/roles';
 import { getPaymentProvider } from './payment.provider';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
+import { formatVerificationTags } from '../utils/verificationTags';
 import { notifyResearchPurchase, notifyNewPublication } from './notification.service';
 import { fetchUploadedFileBuffer } from './storage.service';
 
@@ -37,6 +38,7 @@ const publicationInclude = {
           lastName: true,
           profilePicture: true,
           verificationStatus: true,
+          verificationTags: { select: { id: true, tagType: true, createdAt: true } },
         },
       },
     },
@@ -65,6 +67,7 @@ function formatPublication(
         lastName: string;
         profilePicture: string | null;
         verificationStatus: string;
+        verificationTags: { id: string; tagType: string; createdAt: Date }[];
       };
     };
   },
@@ -98,6 +101,7 @@ function formatPublication(
       name: `${pub.researcher.user.firstName} ${pub.researcher.user.lastName}`,
       profilePicture: normalizePublicAssetUrl(pub.researcher.user.profilePicture),
       verificationStatus: pub.researcher.user.verificationStatus,
+      verificationTags: formatVerificationTags(pub.researcher.user.verificationTags ?? []),
     },
   };
 }
@@ -337,6 +341,7 @@ export class ResearcherService {
             lastName: true,
             profilePicture: true,
             verificationStatus: true,
+            verificationTags: { select: { id: true, tagType: true, createdAt: true } },
           },
         },
       },
@@ -351,6 +356,7 @@ export class ResearcherService {
       institution: string | null;
       bio: string | null;
       verificationStatus: string;
+      verificationTags: ReturnType<typeof formatVerificationTags>;
       publicationCount: number;
       hasPaidPublications: boolean;
       unlockedCount: number;
@@ -380,6 +386,7 @@ export class ResearcherService {
           institution: profile?.institution ?? null,
           bio: profile?.bio ?? null,
           verificationStatus: pub.researcher.verificationStatus ?? 'UNVERIFIED',
+          verificationTags: pub.researcher.verificationTags ?? [],
           publicationCount: 1,
           hasPaidPublications: !pub.isFree,
           unlockedCount: hasAccess ? 1 : 0,
@@ -408,6 +415,7 @@ export class ResearcherService {
         institution: p.institution,
         bio: p.bio,
         verificationStatus: p.verificationStatus,
+        verificationTags: p.verificationTags,
         publicationCount: p.publicationCount,
         canViewFiles:
           p.isOwner ||
@@ -430,6 +438,7 @@ export class ResearcherService {
               lastName: true,
               profilePicture: true,
               verificationStatus: true,
+              verificationTags: { select: { id: true, tagType: true, createdAt: true } },
             },
           },
         },
@@ -484,6 +493,7 @@ export class ResearcherService {
         bio: profile.bio,
         expertise: profile.expertise,
         verificationStatus: profile.user.verificationStatus,
+        verificationTags: formatVerificationTags(profile.user.verificationTags ?? []),
         publicationCount: formattedPublications.length,
         canViewFiles:
           isOwner ||

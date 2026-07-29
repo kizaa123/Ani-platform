@@ -46,6 +46,7 @@ export function LibraryPublisherCard({ publisher, onViewFiles }: LibraryPublishe
           name={publisher.name}
           size="lg"
           verificationStatus={publisher.verificationStatus}
+          verificationTags={publisher.verificationTags}
         />
         <div className="min-w-0 flex-1">
           <h3 className="truncate font-bold text-brand-900">{publisher.name}</h3>
