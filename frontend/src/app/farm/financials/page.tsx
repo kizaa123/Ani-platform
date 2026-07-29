@@ -79,7 +79,6 @@ export default function FinancialStatementPage() {
     date: typeof item.date === "string" ? item.date : String(item.date),
     productName: item.productName ?? item.title,
     orderName: item.orderName ?? item.productName ?? item.title,
-    orderDescription: item.orderDescription ?? item.orderName ?? item.productName ?? item.title,
     productImage: item.productImage,
     commodity: item.commodity,
     category: item.category,

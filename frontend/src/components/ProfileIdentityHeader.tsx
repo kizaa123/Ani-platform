@@ -34,7 +34,7 @@ export function ProfileIdentityHeader({ user, photoCacheBust, onEditClick }: Pro
         <AvatarWithVerification
           src={user.profilePicture}
           name={user.firstName}
-          size={128}
+          size={144}
           cacheBust={cacheBust}
           verificationStatus={user.verificationStatus}
           verificationTags={user.verificationTags}
@@ -67,7 +67,7 @@ export function ProfileIdentityHeader({ user, photoCacheBust, onEditClick }: Pro
               <ProfilePhoto
                 src={user.assignedHandler.profilePicture}
                 name={user.assignedHandler.firstName}
-                size={44}
+                size={52}
                 cacheBust={
                   user.assignedHandler.updatedAt
                     ? new Date(user.assignedHandler.updatedAt).getTime()

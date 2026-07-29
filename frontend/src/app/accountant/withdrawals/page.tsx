@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
@@ -34,6 +34,16 @@ export default function AccountantWithdrawalsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [pageLoading, setPageLoading] = useState(true);
+  const [distributingKeys, setDistributingKeys] = useState<Set<string>>(() => new Set());
+
+  const setDistributing = useCallback((key: string, active: boolean) => {
+    setDistributingKeys((prev) => {
+      const next = new Set(prev);
+      if (active) next.add(key);
+      else next.delete(key);
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
@@ -125,7 +135,7 @@ export default function AccountantWithdrawalsPage() {
         <Link href="/accountant" className="text-xs text-brand-600 hover:underline">
           ← Financial Overview
         </Link>
-        <h1 className="mt-2 text-xl font-bold text-brand-900">Order Share & Withdrawals</h1>
+        <h1 className="mt-2 text-xl font-bold text-brand-900">Order Shared & Withdrawals</h1>
         <p className="text-xs text-gray-500">
           Distribute released order escrow, track ANI order-share income, and record withdrawals
         </p>
@@ -155,7 +165,7 @@ export default function AccountantWithdrawalsPage() {
       {releasedOrders.length > 0 && (
         <div className="mb-8 overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
           <div className="border-b border-brand-100 bg-brand-50/40 px-5 py-4">
-            <h3 className="text-sm font-semibold text-brand-900">Order share distribution</h3>
+            <h3 className="text-sm font-semibold text-brand-900">Order shared distribution</h3>
             <p className="mt-1 text-xs text-gray-500">
               Split released escrow to Fellow, liaison officers, and ANI order share
             </p>
@@ -171,6 +181,8 @@ export default function AccountantWithdrawalsPage() {
                 orderId={order.id}
                 orderLabel={order.description}
                 amount={order.amount}
+                distributingKeys={distributingKeys}
+                onDistributingChange={setDistributing}
               />
             ))}
           </div>

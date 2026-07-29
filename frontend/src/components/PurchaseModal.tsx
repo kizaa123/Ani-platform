@@ -159,34 +159,25 @@ export function PurchaseModal({
               )}
 
               <div className="mt-4 rounded-xl border border-brand-100 bg-brand-50/60 px-4 py-3">
-                <p className="text-xl font-bold text-brand-900">
-                  {listing.priceLabel || `GHC ${unitPrice}/${unitLabel}`}
-                </p>
+                <div className="flex items-center justify-between gap-4">
+                  <p className="text-xl font-bold text-brand-900">
+                    {listing.priceLabel || `GHC ${unitPrice}/${unitLabel}`}
+                  </p>
+                  <HarvestCalendarTrigger
+                    harvestStartDate={listing.harvestStartDate}
+                    harvestEndDate={listing.harvestEndDate}
+                    harvestLabel={listing.harvestLabel}
+                    commodityName={listing.commodity?.name}
+                    productTitle={listing.title}
+                    showLabel={false}
+                    alwaysShow
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-brand-200 bg-white text-brand-800 hover:bg-brand-50"
+                    iconClassName="h-4 w-4"
+                  />
+                </div>
                 <p className="mt-0.5 text-sm text-gray-600">
                   {listing.quantityLabel || `${maxQty} ${unitLabel} in stock`}
                 </p>
-              </div>
-
-              <div className="mt-3 flex items-center justify-between gap-2 rounded-xl border border-brand-100 px-3 py-2">
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Harvest period
-                  </p>
-                  <p className="mt-0.5 truncate text-sm text-brand-800">
-                    {listing.harvestLabel || "Tap calendar to view availability"}
-                  </p>
-                </div>
-                <HarvestCalendarTrigger
-                  harvestStartDate={listing.harvestStartDate}
-                  harvestEndDate={listing.harvestEndDate}
-                  harvestLabel={listing.harvestLabel}
-                  commodityName={listing.commodity?.name}
-                  productTitle={listing.title}
-                  showLabel={false}
-                  alwaysShow
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-brand-200 bg-white text-brand-800 hover:bg-brand-50"
-                  iconClassName="h-5 w-5"
-                />
               </div>
 
               {!orderPlaced && !canPurchase ? (
@@ -246,14 +237,15 @@ export function PurchaseModal({
           </div>
 
           {relatedProducts.length > 0 && (
-            <section className="mt-10 border-t border-brand-100 pt-8">
-              <h2 className="text-lg font-bold text-brand-900">More from this farm</h2>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <section className="mt-8 border-t border-brand-100 pt-6">
+              <h2 className="text-base font-bold text-brand-900">More from this farm</h2>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {relatedProducts.map((product) => (
                   <FarmerProductCard
                     key={product.id}
                     product={product}
                     active={product.id === listing.id}
+                    compact
                     onClick={() => onSelectProduct(product)}
                   />
                 ))}

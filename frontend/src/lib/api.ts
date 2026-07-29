@@ -533,6 +533,10 @@ class ApiClient {
         `/accountant/orders/${orderId}/distribution/distribute-all`,
         { method: "POST", body: JSON.stringify(body) }
       ),
+    distributionMessagePdfUrl: (orderId: string, lineId: string) =>
+      this.fetchPdfBlobUrl(
+        `/accountant/orders/${orderId}/distribution/lines/${lineId}/message-pdf`
+      ),
   };
 }
 

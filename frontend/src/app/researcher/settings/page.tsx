@@ -139,7 +139,7 @@ export default function ResearcherSettingsPage() {
               <ProfilePhoto
                 src={user.profilePicture}
                 name={user.firstName}
-                size={112}
+                size={128}
                 cacheBust={photoCacheBust}
                 uploading={uploading}
               />

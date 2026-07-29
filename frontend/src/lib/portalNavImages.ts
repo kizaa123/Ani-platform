@@ -127,7 +127,7 @@ export const PORTAL_NAV_IMAGES_BUYER = {
 
   /** Change image here: Buyer Marketplace card (distinct from crop/livestock farmer marketplace images) */
 
-  "/marketplace": "/generic_farmers_market for crop.jpg",
+  "/marketplace": "/a-seller-arranging-fresh-produce-at-a-farmers-market.avif",
 
   /** Change image here: Buyer Financial Statement card */
 

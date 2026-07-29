@@ -66,16 +66,10 @@ export default function BuyerOrdersPage() {
         <p className="text-gray-500">Products you ordered from farmers on the marketplace</p>
       </div>
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+      <div className="mb-6 grid gap-4 sm:grid-cols-2">
         <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase text-gray-500">Total orders</p>
           <p className="mt-1 text-2xl font-bold text-brand-900">{orders.length}</p>
-        </div>
-        <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
-          <p className="text-xs font-semibold uppercase text-gray-500">Paid orders</p>
-          <p className="mt-1 text-2xl font-bold text-green-700">
-            {orders.filter((o) => o.status === "PAID").length}
-          </p>
         </div>
         <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase text-gray-500">Total product spend</p>

@@ -330,6 +330,7 @@ router.patch('/accountant/withdrawals/:id', authenticate, requirePermission(PERM
 router.get('/accountant/orders/:orderId/distribution', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), accountantController.getOrderDistribution);
 router.post('/accountant/orders/:orderId/distribution/lines/:lineId/distribute', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), validateBody(distributeLineSchema), accountantController.distributeOrderLine);
 router.post('/accountant/orders/:orderId/distribution/distribute-all', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), validateBody(distributeLineSchema.pick({ paymentMethod: true })), accountantController.distributeOrderAll);
+router.get('/accountant/orders/:orderId/distribution/lines/:lineId/message-pdf', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), accountantController.getDistributionMessagePdf);
 
 // AI (future-ready)
 router.get('/ai/matches', authenticate, aiController.matches);

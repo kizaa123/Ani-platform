@@ -1,3 +1,4 @@
+
 import Link from "next/link";
 import Image from "next/image";
 import { Icon, type IconName } from "@/components/icons";
@@ -143,12 +144,16 @@ export default function HomePage() {
       <section className="relative flex min-h-[min(100dvh,720px)] items-end overflow-hidden bg-brand-900 sm:min-h-[85vh] sm:items-center lg:min-h-[92vh]">
         <div className="absolute inset-0 z-0">
           <Image
-            src="/ani background color.jpg"
+            src="/comprehensive-world-flags-collection-stunning-national-flag-images-every-project-showcase-beauty-diversity-global-360726791.webp"
             alt="Agricultural field background"
             fill
             className="object-cover object-[center_25%] sm:object-center"
             sizes="100vw"
             priority
+          />
+          <div
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_85%_60%_at_50%_35%,rgba(116,198,157,0.28),transparent_68%),linear-gradient(135deg,rgba(82,183,136,0.18)_0%,transparent_50%,rgba(64,145,108,0.1)_100%)]"
+            aria-hidden="true"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-brand-900/90 via-brand-900/75 to-brand-900/60 sm:bg-gradient-to-r sm:from-brand-950/95 sm:via-brand-900/80 sm:to-brand-800/30" />
         </div>
@@ -283,34 +288,79 @@ export default function HomePage() {
       </section>
 
       {/* ── TEAM ── */}
-      <section className="bg-brand-900 py-24">
-        <div className="mx-auto max-w-6xl px-6">
-          <ScrollReveal className="mb-14 text-center" duration={500} direction="fade-up">
-            <span className="mb-3 inline-block rounded-full bg-brand-700 px-4 py-1 text-xs font-bold uppercase tracking-widest text-brand-200">
+      <section className="relative overflow-hidden bg-brand-950 py-28">
+        {/* Decorative background grid */}
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:48px_48px]" />
+        {/* Radial glow */}
+        <div className="pointer-events-none absolute left-1/2 top-0 h-[500px] w-[900px] -translate-x-1/2 rounded-full bg-brand-700/20 blur-[120px]" />
+
+        <div className="relative z-10 mx-auto max-w-6xl px-6">
+          {/* Section header */}
+          <ScrollReveal className="mb-16 text-center" duration={500} direction="fade-up">
+            <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-brand-600/50 bg-brand-800/60 px-5 py-1.5 text-xs font-bold uppercase tracking-widest text-yellow-400 backdrop-blur-sm">
+              <span className="h-1.5 w-1.5 rounded-full bg-yellow-400" />
               The People Behind It
             </span>
-            <h2 className="text-4xl font-black text-white">Meet Our Team</h2>
-            <p className="mx-auto mt-4 max-w-xl text-brand-300">
+            <h2 className="mt-4 text-4xl font-black text-white sm:text-5xl">
+              Meet Our{" "}
+              <span className="bg-gradient-to-r from-yellow-300 to-yellow-500 bg-clip-text text-transparent">
+                Team
+              </span>
+            </h2>
+            <div className="mx-auto mt-4 h-1 w-16 rounded-full bg-gradient-to-r from-yellow-400/0 via-yellow-400 to-yellow-400/0" />
+            <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-brand-300">
               A passionate team of agricultural and technology experts dedicated to transforming African commodity trading.
             </p>
           </ScrollReveal>
-          <div className="grid gap-8 md:grid-cols-3">
+
+          {/* Team cards grid */}
+          <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-3">
             {TEAM.map((member, i) => (
-              <ScrollReveal key={member.name} delay={scrollStagger(i, 110)} duration={550} direction="fade-up">
-                <div className="group flex h-full flex-col overflow-hidden rounded-2xl border border-brand-700 bg-brand-800 shadow-md transition-all hover:border-brand-500 hover:shadow-xl">
-                  <div className="relative h-64 w-full overflow-hidden">
+              <ScrollReveal key={member.name} delay={scrollStagger(i, 120)} duration={600} direction="fade-up">
+                <div className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-brand-700/60 bg-brand-900 shadow-xl transition-all duration-500 hover:-translate-y-2 hover:border-yellow-500/40 hover:shadow-[0_20px_60px_rgba(0,0,0,0.5),0_0_0_1px_rgba(234,179,8,0.15)]">
+
+                  {/* Portrait image — tall */}
+                  <div className="relative h-80 w-full overflow-hidden">
                     <Image
                       src={member.img}
                       alt={member.name}
                       fill
-                      className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                      className="object-cover object-top transition-transform duration-700 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-brand-900/80 to-transparent" />
+                    {/* Bottom-to-top gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-brand-950 via-brand-950/60 to-transparent" />
+
+                    {/* Role badge — top right */}
+                    <div className="absolute right-4 top-4 rounded-xl bg-yellow-400/90 px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-brand-900 shadow-lg backdrop-blur-sm">
+                      ANI
+                    </div>
                   </div>
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold text-white">{member.name}</h3>
-                    <p className="mt-1 text-sm font-semibold text-yellow-400">{member.role}</p>
-                    <p className="mt-3 text-sm leading-relaxed text-brand-300">{member.bio}</p>
+
+                  {/* Info block */}
+                  <div className="relative flex flex-1 flex-col gap-3 px-6 pb-7 pt-5">
+                    {/* Decorative top accent line */}
+                    <div className="absolute left-6 right-6 top-0 h-px bg-gradient-to-r from-transparent via-yellow-400/40 to-transparent" />
+
+                    <div>
+                      <h3 className="text-lg font-extrabold leading-tight text-white group-hover:text-yellow-300 transition-colors duration-300">
+                        {member.name.trim()}
+                      </h3>
+                      <p className="mt-1.5 inline-block rounded-lg bg-brand-800 px-3 py-1 text-[11px] font-semibold text-yellow-400">
+                        {member.role.trim()}
+                      </p>
+                    </div>
+
+                    {/* Bio — pipe-separated tags rendered as chips */}
+                    <div className="mt-1 flex flex-wrap gap-1.5">
+                      {member.bio.split("|").map((tag) => (
+                        <span
+                          key={tag}
+                          className="rounded-full border border-brand-600/50 bg-brand-800/70 px-2.5 py-0.5 text-[10px] font-medium text-brand-300 leading-snug"
+                        >
+                          {tag.trim()}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </ScrollReveal>
@@ -318,6 +368,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
 
       {/* ── FINAL CTA ── */}
       <section className="relative overflow-hidden bg-gradient-to-br from-brand-700 via-brand-600 to-brand-500 py-24 text-white">

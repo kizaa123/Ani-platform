@@ -238,7 +238,7 @@ export default function FarmSettingsPage() {
       <section className="mb-6 rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-lg font-bold text-brand-900">Profile Photo</h2>
         <div className="flex items-center gap-4">
-          <ProfilePhoto src={user.profilePicture} name={user.firstName} size={96} />
+          <ProfilePhoto src={user.profilePicture} name={user.firstName} size={112} />
           <div>
             <input
               ref={profilePicRef}

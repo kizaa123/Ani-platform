@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { AppNotification } from "@/lib/types";
-import { PortalNavCard } from "@/components/PortalNavCard";
+import { AgentAssignment, AppNotification } from "@/lib/types";
+import {
+  HandlerAssignmentsPreviewCard,
+  HandlerOrderAlertsCard,
+} from "@/components/HandlerAssignmentCards";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
-import { getPortalNavImage } from "@/lib/portalNavImages";
 
 const ORDER_NOTIFICATION_TYPES = new Set([
   "NEW_ORDER",
@@ -16,8 +18,12 @@ const ORDER_NOTIFICATION_TYPES = new Set([
   "MONEY_DISTRIBUTED",
 ]);
 
-export function FarmerHandlerDashboardCards({ roleId }: { roleId: number }) {
-  const [farmerCount, setFarmerCount] = useState<number | null>(null);
+function isFarmerAssignment(a: AgentAssignment) {
+  return a.owner.isFarmer || a.owner.roleId === 1 || a.owner.roleId === 2;
+}
+
+export function FarmerHandlerDashboardCards() {
+  const [farmers, setFarmers] = useState<AgentAssignment[] | null>(null);
   const [orderAlertCount, setOrderAlertCount] = useState<number | null>(null);
 
   useEffect(() => {
@@ -26,8 +32,7 @@ export function FarmerHandlerDashboardCards({ roleId }: { roleId: number }) {
     Promise.all([api.agents.assignments(), api.notifications.list()])
       .then(([assignments, notifications]) => {
         if (cancelled) return;
-        const farmers = assignments.filter((a) => a.owner.isFarmer || a.owner.roleId === 1 || a.owner.roleId === 2);
-        setFarmerCount(farmers.length);
+        setFarmers(assignments.filter(isFarmerAssignment));
         const unreadOrderAlerts = (notifications as AppNotification[]).filter(
           (n) => !n.read && ORDER_NOTIFICATION_TYPES.has(n.type)
         ).length;
@@ -35,7 +40,7 @@ export function FarmerHandlerDashboardCards({ roleId }: { roleId: number }) {
       })
       .catch(() => {
         if (!cancelled) {
-          setFarmerCount(0);
+          setFarmers([]);
           setOrderAlertCount(0);
         }
       });
@@ -45,44 +50,35 @@ export function FarmerHandlerDashboardCards({ roleId }: { roleId: number }) {
     };
   }, []);
 
-  const cards = [
-    {
-      href: "/agents",
-      title: "Assigned Farmers",
-      desc:
-        farmerCount === null
-          ? "Loading assigned farmers..."
-          : farmerCount === 0
-            ? "No farmers assigned yet"
-            : `${farmerCount} farmer${farmerCount === 1 ? "" : "s"} under your liaison care`,
-      icon: "users" as const,
-    },
-    {
-      href: "/agents",
-      title: "Order Notifications",
-      desc:
-        orderAlertCount === null
-          ? "Loading order alerts..."
-          : orderAlertCount === 0
-            ? "No unread order notifications"
-            : `${orderAlertCount} unread order notification${orderAlertCount === 1 ? "" : "s"} for your farmers`,
-      icon: "package" as const,
-    },
-  ];
+  const loading = farmers === null;
 
   return (
     <>
-      {cards.map((card, i) => (
-        <ScrollReveal key={card.title} delay={scrollStagger(i, 90)} duration={500} direction="fade-up">
-          <PortalNavCard
-            href={card.href}
-            title={card.title}
-            desc={card.desc}
-            icon={card.icon}
-            image={getPortalNavImage(card.href, roleId)}
-          />
-        </ScrollReveal>
-      ))}
+      <ScrollReveal delay={scrollStagger(0, 90)} duration={500} direction="fade-up">
+        <HandlerAssignmentsPreviewCard
+          href="/agents"
+          title="Assigned Farmers"
+          icon="users"
+          assignments={farmers ?? []}
+          loading={loading}
+          emptyMessage="No farmers assigned yet"
+          clientType="farmer"
+          getSubtitle={(owner) => {
+            const farm = owner.farmerProfile?.farmName;
+            const location = [owner.city, owner.region].filter(Boolean).join(", ");
+            return [farm, location].filter(Boolean).join(" · ");
+          }}
+          getStat={(owner) => owner.farmerProfile?.farmSize ?? undefined}
+        />
+      </ScrollReveal>
+      <ScrollReveal delay={scrollStagger(1, 90)} duration={500} direction="fade-up">
+        <HandlerOrderAlertsCard
+          href="/agents"
+          count={orderAlertCount}
+          loading={orderAlertCount === null}
+          entityLabel="farmers"
+        />
+      </ScrollReveal>
     </>
   );
 }

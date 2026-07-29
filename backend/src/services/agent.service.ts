@@ -458,6 +458,9 @@ export class AgentService {
     const assignment = await this.assertClientAssignment(agentId, ownerId);
 
     if (assignment.relationshipType === 'FARMER_REPRESENTATIVE') {
+      if (isFarmerHandler(roleId)) {
+        throw new AppError(403, 'Farmer handlers cannot view farmer financials');
+      }
       await this.assertFarmerClientAssignment(agentId, ownerId);
       return farmService.buildFinancialStatement(ownerId);
     }
@@ -481,108 +484,25 @@ export class AgentService {
       ? 'FARMER_REPRESENTATIVE'
       : 'BUYER_REPRESENTATIVE';
 
-    const assignments = await prisma.agentAssignment.findMany({
+    const clientCount = await prisma.agentAssignment.count({
       where: { agentId, relationshipType },
-      include: {
-        owner: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            farmerProfile: { select: { farmName: true } },
-            buyerProfile: { select: { company: true } },
-          },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
     });
 
-    const ownerIds = assignments.map((a) => a.ownerId);
-
-    if (relationshipType === 'FARMER_REPRESENTATIVE') {
-      const distributedLines = await fetchDistributedLines(agentId, ['FARMER_HANDLER']);
-      const handlerPayments = distributedLines.map(mapDistributionToHandlerPayment);
-
-      const commissionByOwner = new Map<string, { revenue: number; salesCount: number }>();
-      for (const id of ownerIds) {
-        commissionByOwner.set(id, { revenue: 0, salesCount: 0 });
-      }
-      for (const payment of handlerPayments) {
-        const entry = commissionByOwner.get(payment.ownerId);
-        if (!entry) continue;
-        entry.revenue += payment.amount;
-        entry.salesCount += 1;
-      }
-
-      const clients = assignments.map((assignment) => {
-        const stats = commissionByOwner.get(assignment.ownerId) ?? { revenue: 0, salesCount: 0 };
-        const farmName = assignment.owner.farmerProfile?.farmName;
-        return {
-          ownerId: assignment.ownerId,
-          clientName: `${assignment.owner.firstName} ${assignment.owner.lastName}`,
-          clientLabel: farmName ?? `${assignment.owner.firstName} ${assignment.owner.lastName}`,
-          totalRevenue: stats.revenue,
-          salesCount: stats.salesCount,
-        };
-      });
-
-      const totalRevenue = handlerPayments.reduce((sum, payment) => sum + payment.amount, 0);
-
-      return {
-        agentName: `${agent.firstName} ${agent.lastName}`,
-        handlerType: 'farmer' as const,
-        generatedAt: new Date().toISOString(),
-        summary: {
-          clientCount: clients.length,
-          totalRevenue,
-          totalSalesCount: handlerPayments.length,
-          transactionCount: handlerPayments.length,
-        },
-        clients,
-        transactions: handlerPayments,
-        handlerPayments,
-      };
-    }
-
-    const distributedLines = await fetchDistributedLines(agentId, ['BUYER_HANDLER']);
+    const handlerRole = relationshipType === 'FARMER_REPRESENTATIVE' ? 'FARMER_HANDLER' : 'BUYER_HANDLER';
+    const distributedLines = await fetchDistributedLines(agentId, [handlerRole]);
     const handlerPayments = distributedLines.map(mapDistributionToHandlerPayment);
-
-    const commissionByOwner = new Map<string, { revenue: number; salesCount: number }>();
-    for (const id of ownerIds) {
-      commissionByOwner.set(id, { revenue: 0, salesCount: 0 });
-    }
-    for (const payment of handlerPayments) {
-      const entry = commissionByOwner.get(payment.ownerId);
-      if (!entry) continue;
-      entry.revenue += payment.amount;
-      entry.salesCount += 1;
-    }
-
-    const clients = assignments.map((assignment) => {
-      const stats = commissionByOwner.get(assignment.ownerId) ?? { revenue: 0, salesCount: 0 };
-      const company = assignment.owner.buyerProfile?.company;
-      return {
-        ownerId: assignment.ownerId,
-        clientName: `${assignment.owner.firstName} ${assignment.owner.lastName}`,
-        clientLabel: company ?? `${assignment.owner.firstName} ${assignment.owner.lastName}`,
-        totalRevenue: stats.revenue,
-        salesCount: stats.salesCount,
-      };
-    });
-
     const totalRevenue = handlerPayments.reduce((sum, payment) => sum + payment.amount, 0);
 
     return {
       agentName: `${agent.firstName} ${agent.lastName}`,
-      handlerType: 'buyer' as const,
+      handlerType: relationshipType === 'FARMER_REPRESENTATIVE' ? ('farmer' as const) : ('buyer' as const),
       generatedAt: new Date().toISOString(),
       summary: {
-        clientCount: clients.length,
+        clientCount,
         totalRevenue,
         totalSalesCount: handlerPayments.length,
         transactionCount: handlerPayments.length,
       },
-      clients,
       transactions: handlerPayments,
       handlerPayments,
     };

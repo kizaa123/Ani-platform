@@ -24,7 +24,6 @@ export type NotificationMetadata = {
   actionUrl?: string | null;
   actionLabel?: string | null;
   orderName?: string | null;
-  orderDescription?: string | null;
   farmSize?: string | null;
   location?: string | null;
   commodities?: string[] | null;
@@ -438,18 +437,14 @@ export async function notifyOrderPaymentReleased(order: {
   buyerId: string;
   farmerId: string;
   totalAmount: number;
-  listing: { title: string; description?: string | null };
+  listing: { title: string };
   buyer: { firstName: string; lastName: string };
   farmer: { firstName: string; lastName: string };
 }) {
   const buyerName = `${order.buyer.firstName} ${order.buyer.lastName}`;
   const farmerName = `${order.farmer.firstName} ${order.farmer.lastName}`;
   const orderName = order.listing.title;
-  const orderDescription =
-    'description' in order.listing && order.listing.description?.trim()
-      ? order.listing.description.trim()
-      : orderName;
-  const body = `${buyerName} confirmed delivery for "${orderName}" — ${orderDescription} — GHC ${order.totalAmount.toFixed(2)} released to ANI Accountant.`;
+  const body = `${buyerName} confirmed delivery for "${orderName}" — GHC ${order.totalAmount.toFixed(2)} released to ANI Accountant.`;
 
   const buyerHandlers = await prisma.agentAssignment.findMany({
     where: { ownerId: order.buyerId, relationshipType: 'BUYER_REPRESENTATIVE' },
@@ -472,7 +467,6 @@ export async function notifyOrderPaymentReleased(order: {
     metadata: {
       actionLabel: orderName,
       orderName,
-      orderDescription,
     },
   };
 
@@ -673,8 +667,7 @@ export async function notifyMoneyDistributed(
   recipientFirstName: string,
   amount: number,
   buyerName: string,
-  orderName: string,
-  orderDescription: string
+  orderName: string
 ) {
   const formatted = amount.toFixed(2);
   const recipient = await prisma.user.findUnique({
@@ -693,7 +686,7 @@ export async function notifyMoneyDistributed(
     userId: recipientId,
     type: 'MONEY_DISTRIBUTED',
     title: 'Payment received from ANI',
-    body: `Dear ${recipientFirstName}, you have received GHC ${formatted} from ANI for the successful delivery of "${orderName}" — ${orderDescription} (${buyerName} order).`,
+    body: `Dear ${recipientFirstName}, you have received GHC ${formatted} from ANI for the successful delivery of "${orderName}" (${buyerName} order).`,
     link,
     metadata: {
       price: amount,
@@ -701,7 +694,6 @@ export async function notifyMoneyDistributed(
       actionLabel: orderName,
       actionUrl: link,
       orderName,
-      orderDescription,
     },
   }).catch(() => undefined);
 }

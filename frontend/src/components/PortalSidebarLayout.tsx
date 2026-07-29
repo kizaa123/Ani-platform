@@ -63,7 +63,7 @@ function SidebarContent({
         <AvatarWithVerification
           src={user.profilePicture}
           name={user.firstName}
-          size={52}
+          size={64}
           cacheBust={photoCacheBust}
           verificationStatus={user.verificationStatus}
           verificationTags={user.verificationTags}
@@ -177,7 +177,7 @@ function PortalMobileBar({
           <AvatarWithVerification
             src={user.profilePicture}
             name={user.firstName}
-            size={44}
+            size={52}
             cacheBust={photoCacheBust}
             verificationStatus={user.verificationStatus}
             verificationTags={user.verificationTags}

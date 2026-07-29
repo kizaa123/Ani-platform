@@ -491,6 +491,20 @@ export class AccountantController {
       ApiResponse.error(res, e);
     }
   };
+
+  getDistributionMessagePdf = async (req: AuthRequest, res: Response) => {
+    try {
+      const { buffer, filename } = await orderDistributionService.generateMessagePdf(
+        req.params.orderId as string,
+        req.params.lineId as string
+      );
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+      res.send(buffer);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
 }
 
 export class AiController {

@@ -154,7 +154,7 @@ function ConnectionRow({
           <AvatarWithVerification
             src={farmer?.profilePicture}
             name={farmer?.firstName}
-            size={72}
+            size={80}
             verificationStatus={farmer?.verificationStatus}
             verificationTags={farmer?.verificationTags}
           />

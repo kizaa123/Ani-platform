@@ -17,7 +17,7 @@ export function PaymentStatusIcon({ variant, className = "" }: PaymentStatusIcon
             cy="60"
             r="54"
             fill="none"
-            stroke="#bbf7d0"
+            stroke="#a7f3d0"
             strokeWidth="4"
             className="payment-success-ring"
           />
@@ -26,13 +26,13 @@ export function PaymentStatusIcon({ variant, className = "" }: PaymentStatusIcon
             cy="60"
             r="46"
             fill="none"
-            stroke="#22c55e"
+            stroke="#059669"
             strokeWidth="8"
             strokeLinecap="round"
             pathLength={1}
             className="payment-success-circle-stroke"
           />
-          <circle cx="60" cy="60" r="46" fill="#22c55e" className="payment-success-circle-fill" />
+          <circle cx="60" cy="60" r="46" fill="#059669" className="payment-success-circle-fill" />
           <path
             d="M38 62 L54 78 L84 44"
             fill="none"

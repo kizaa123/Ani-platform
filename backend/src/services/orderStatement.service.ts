@@ -480,7 +480,7 @@ export async function releaseOrderPayment(
       releaseOtp: null,
     },
     include: {
-      listing: { select: { title: true, description: true } },
+      listing: { select: { title: true } },
       buyer: { select: { firstName: true, lastName: true } },
       farmer: { select: { firstName: true, lastName: true } },
     },

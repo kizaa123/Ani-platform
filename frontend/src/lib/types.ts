@@ -1014,7 +1014,6 @@ export interface OrderDistributionLine {
 export interface OrderMoneyDistributionSnapshot {
   orderId: string;
   orderName?: string;
-  orderDescription: string;
   buyerName: string;
   farmerName: string;
   totalAmount: number;
@@ -1064,7 +1063,6 @@ export interface HandlerFinancialStatement {
     totalFarmAccessSpend?: number;
     transactionCount: number;
   };
-  clients: HandlerFinancialClientSummary[];
   transactions: HandlerFinancialTransaction[];
   handlerPayments?: HandlerFinancialTransaction[];
   clientTransactions?: HandlerFinancialTransaction[];

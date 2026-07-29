@@ -1,6 +1,5 @@
 import { ProfilePhoto } from "@/components/FarmerAvatar";
 import {
-  AVATAR_BADGE_POSITIONS,
   TAG_STYLES,
   VerificationTagIcon,
   getAvatarVerificationBadges,
@@ -18,7 +17,7 @@ type AvatarWithVerificationProps = {
   onClick?: () => void;
 };
 
-const sizeMap = { sm: 48, md: 80, lg: 120, xl: 160 };
+const sizeMap = { sm: 56, md: 96, lg: 140, xl: 180 };
 
 function resolveSize(size: AvatarWithVerificationProps["size"]): number {
   if (typeof size === "number") return size;
@@ -26,10 +25,16 @@ function resolveSize(size: AvatarWithVerificationProps["size"]): number {
 }
 
 function badgeSize(avatarPx: number): string {
-  if (avatarPx >= 120) return "h-7 w-7";
-  if (avatarPx >= 80) return "h-6 w-6";
-  if (avatarPx >= 52) return "h-5 w-5";
+  if (avatarPx >= 140) return "h-7 w-7";
+  if (avatarPx >= 96) return "h-6 w-6";
+  if (avatarPx >= 56) return "h-5 w-5";
   return "h-4 w-4";
+}
+
+function badgeOverlap(avatarPx: number): string {
+  if (avatarPx >= 140) return "-ml-2";
+  if (avatarPx >= 96) return "-ml-1.5";
+  return "-ml-1";
 }
 
 export function AvatarWithVerification({
@@ -45,6 +50,7 @@ export function AvatarWithVerification({
   const px = resolveSize(size);
   const badges = getAvatarVerificationBadges(verificationTags, verificationStatus);
   const iconClass = badgeSize(px);
+  const overlapClass = badgeOverlap(px);
 
   return (
     <div
@@ -59,15 +65,20 @@ export function AvatarWithVerification({
         onClick={onClick}
         className="!shadow-none"
       />
-      {badges.map((tagType, index) => (
-        <span
-          key={tagType}
-          className={AVATAR_BADGE_POSITIONS[index] ?? AVATAR_BADGE_POSITIONS[0]}
-          title={TAG_STYLES[tagType].label}
-        >
-          <VerificationTagIcon tagType={tagType} className={`${iconClass} drop-shadow-sm`} />
-        </span>
-      ))}
+      {badges.length > 0 && (
+        <div className="absolute -bottom-0.5 -right-0.5 z-10 flex items-end justify-end">
+          {badges.map((tagType, index) => (
+            <span
+              key={tagType}
+              className={`${index > 0 ? overlapClass : ""} drop-shadow-sm`}
+              style={{ zIndex: index + 1 }}
+              title={TAG_STYLES[tagType].label}
+            >
+              <VerificationTagIcon tagType={tagType} className={iconClass} />
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

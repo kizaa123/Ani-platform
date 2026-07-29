@@ -176,7 +176,7 @@ function ConnectionCard({
         <AvatarWithVerification
           src={partner?.profilePicture}
           name={partner?.firstName}
-          size={48}
+          size={56}
           verificationStatus={partner?.verificationStatus}
           verificationTags={partner?.verificationTags}
         />

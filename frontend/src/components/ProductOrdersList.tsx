@@ -561,12 +561,6 @@ export function SalesOrdersTable({ items }: { items: ProductOrderLineItem[] }) {
                     <span className="font-medium text-brand-900">
                       {item.orderName ?? item.productName}
                     </span>
-                    {(item.orderDescription ?? item.orderName) &&
-                      item.orderDescription !== (item.orderName ?? item.productName) && (
-                        <span className="mt-0.5 block text-xs text-gray-500 line-clamp-2">
-                          {item.orderDescription}
-                        </span>
-                      )}
                   </div>
                 </div>
               </td>

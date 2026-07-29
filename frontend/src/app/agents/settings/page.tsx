@@ -136,7 +136,7 @@ export default function HandlerSettingsPage() {
             <ProfilePhoto
               src={user.profilePicture}
               name={user.firstName}
-              size={112}
+              size={128}
               cacheBust={photoCacheBust}
             />
             <div>

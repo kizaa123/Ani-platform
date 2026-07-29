@@ -66,7 +66,7 @@ export default function DashboardPage() {
     { href: "/admin/financials", title: "Financial Statement", desc: "Platform-wide revenue (read-only)", icon: "chart", show: isAdmin(user.roleId) },
     { href: "/accountant", title: "Financial Overview", desc: "Access income, order share & balances", icon: "chart", show: isAccountant(user.roleId) },
     { href: "/accountant/transactions", title: "Access Ledger", desc: "Farm & publication access payments", icon: "credit-card", show: isAccountant(user.roleId) },
-    { href: "/accountant/withdrawals", title: "Order Share & Withdrawals", desc: "Distribute orders & record withdrawals", icon: "coins", show: isAccountant(user.roleId) },
+    { href: "/accountant/withdrawals", title: "Order Shared & Withdrawals", desc: "Distribute orders & record withdrawals", icon: "coins", show: isAccountant(user.roleId) },
     { href: "/accountant/receipts", title: "Order Receipts", desc: "Released order statement PDFs", icon: "package", show: isAccountant(user.roleId) },
     { href: "/accountant/farm-access", title: "Farm Access", desc: "Approve paid buyer farm access", icon: "handshake", show: isAccountant(user.roleId) },
     { href: "/farm/settings", title: "Profile", desc: "Profile, handler, farm & commodities", icon: "user", show: isFarmer(user.roleId) },
@@ -86,8 +86,8 @@ export default function DashboardPage() {
       </ScrollReveal>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {isFlo && <FarmerHandlerDashboardCards roleId={user.roleId} />}
-        {isClo && <BuyerHandlerDashboardCards roleId={user.roleId} />}
+        {isFlo && <FarmerHandlerDashboardCards />}
+        {isClo && <BuyerHandlerDashboardCards />}
         {cards.map((c, i) => (
           <ScrollReveal key={c.href} delay={scrollStagger(i, 90)} duration={500} direction="fade-up">
             <PortalNavCard

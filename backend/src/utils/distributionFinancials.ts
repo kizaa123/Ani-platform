@@ -3,11 +3,46 @@ import prisma from '../database/prisma';
 import { formatFarmerIncomingOrder, formatUserLocation } from './orders';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
 
-/** Remainder after Fellow / FLO / CLO splits on released buyer orders. */
-export const ANI_PLATFORM_SHARE_PERCENT = 13.34;
+/** Fellow share of order total. */
+export const FARMER_SHARE_PERCENT = 66.66;
+/** FLO share — 10 percentage points of order, taken from post-Fellow remainder. */
+export const FARMER_HANDLER_SHARE_PERCENT = 10;
+/** CLO share — 10 percentage points of order, taken from post-FLO remainder. */
+export const BUYER_HANDLER_SHARE_PERCENT = 10;
+/** ANI share — remainder after Fellow, FLO, and CLO (13.34% of order total). */
+export const ANI_PLATFORM_SHARE_PERCENT =
+  100 - FARMER_SHARE_PERCENT - FARMER_HANDLER_SHARE_PERCENT - BUYER_HANDLER_SHARE_PERCENT;
+
+export type DistributionAmounts = {
+  farmer: number;
+  farmerHandler: number;
+  buyerHandler: number;
+  aniPlatform: number;
+};
+
+function roundGhc(amount: number): number {
+  return Math.round(amount * 100) / 100;
+}
+
+export function distributionShareAmount(totalAmount: number, percentage: number): number {
+  return roundGhc((totalAmount * percentage) / 100);
+}
+
+/**
+ * Cascading remainder split on released orders:
+ * Fellow 66.66%, then FLO 10pp and CLO 10pp of order total (sequential from remainder pool),
+ * ANI receives the rounded GHC remainder so shares always sum to the order total.
+ */
+export function calculateDistributionAmounts(totalAmount: number): DistributionAmounts {
+  const farmer = distributionShareAmount(totalAmount, FARMER_SHARE_PERCENT);
+  const farmerHandler = distributionShareAmount(totalAmount, FARMER_HANDLER_SHARE_PERCENT);
+  const buyerHandler = distributionShareAmount(totalAmount, BUYER_HANDLER_SHARE_PERCENT);
+  const aniPlatform = roundGhc(totalAmount - farmer - farmerHandler - buyerHandler);
+  return { farmer, farmerHandler, buyerHandler, aniPlatform };
+}
 
 export function aniPlatformShareAmount(totalAmount: number): number {
-  return Math.round(((totalAmount * ANI_PLATFORM_SHARE_PERCENT) / 100) * 100) / 100;
+  return calculateDistributionAmounts(totalAmount).aniPlatform;
 }
 
 export function isReleasedProductOrder(order: {
@@ -108,16 +143,14 @@ export async function fetchFarmerDistributedLines(farmerUserId: string) {
 
 type DistributedLine = Awaited<ReturnType<typeof fetchDistributedLines>>[number];
 
-export function orderListingLabels(listing: { title: string; description?: string | null }) {
-  const orderName = listing.title;
-  const orderDescription = listing.description?.trim() || listing.title;
-  return { orderName, orderDescription };
+export function orderListingLabels(listing: { title: string }) {
+  return { orderName: listing.title };
 }
 
 export function mapDistributionToFarmerSaleLineItem(line: DistributedLine) {
   const order = line.distribution.order;
   const formatted = formatFarmerIncomingOrder(order);
-  const { orderName, orderDescription } = orderListingLabels(order.listing);
+  const { orderName } = orderListingLabels(order.listing);
 
   return {
     id: line.id,
@@ -125,7 +158,6 @@ export function mapDistributionToFarmerSaleLineItem(line: DistributedLine) {
     title: orderName,
     productName: orderName,
     orderName,
-    orderDescription,
     productImage: formatted.productImage,
     commodity: formatted.commodity,
     category: formatted.category,
@@ -150,7 +182,7 @@ export function mapDistributionToFarmerSaleLineItem(line: DistributedLine) {
 
 export function mapDistributionToHandlerPayment(line: DistributedLine) {
   const order = line.distribution.order;
-  const { orderName, orderDescription } = orderListingLabels(order.listing);
+  const { orderName } = orderListingLabels(order.listing);
   const isFarmerHandlerLine = line.role === 'FARMER_HANDLER';
 
   return {
@@ -163,7 +195,6 @@ export function mapDistributionToHandlerPayment(line: DistributedLine) {
       : `${order.buyer.firstName} ${order.buyer.lastName}`,
     description: orderName,
     orderName,
-    orderDescription,
     counterpartyName: isFarmerHandlerLine
       ? `${order.buyer.firstName} ${order.buyer.lastName}`
       : order.farmer.farmerProfile?.farmName ??
@@ -179,7 +210,7 @@ export function mapDistributionToHandlerPayment(line: DistributedLine) {
 
 export function mapDistributionToFarmerClientPayment(line: DistributedLine) {
   const order = line.distribution.order;
-  const { orderName, orderDescription } = orderListingLabels(order.listing);
+  const { orderName } = orderListingLabels(order.listing);
 
   return {
     id: line.id,
@@ -190,7 +221,6 @@ export function mapDistributionToFarmerClientPayment(line: DistributedLine) {
       `${order.farmer.firstName} ${order.farmer.lastName}`,
     description: orderName,
     orderName,
-    orderDescription,
     counterpartyName: `${order.buyer.firstName} ${order.buyer.lastName}`,
     amount: line.amount,
     type: 'SALE' as const,

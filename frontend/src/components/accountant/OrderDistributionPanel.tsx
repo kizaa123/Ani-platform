@@ -1,15 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api";
 import { formatGhc } from "@/lib/format";
 import type { OrderDistributionLine, OrderMoneyDistributionSnapshot } from "@/lib/types";
 import { DistributionSplitBreakdown } from "@/components/accountant/DistributionSplitBreakdown";
+import { PdfViewerModal } from "@/components/PdfViewerModal";
 
 interface OrderDistributionPanelProps {
   orderId: string;
   orderLabel: string;
   amount: number;
+  distributingKeys: Set<string>;
+  onDistributingChange: (key: string, active: boolean) => void;
+}
+
+function distributionKey(orderId: string, suffix: string) {
+  return `${orderId}:${suffix}`;
 }
 
 function lineStatusStyle(status: string) {
@@ -40,13 +47,24 @@ export function OrderDistributionPanel({
   orderId,
   orderLabel,
   amount,
+  distributingKeys,
+  onDistributingChange,
 }: OrderDistributionPanelProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [acting, setActing] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("Bank transfer");
   const [snapshot, setSnapshot] = useState<OrderMoneyDistributionSnapshot | null>(null);
+  const [pdfLine, setPdfLine] = useState<OrderDistributionLine | null>(null);
+
+  const orderPrefix = `${orderId}:`;
+  const isOrderBusy = useMemo(
+    () => [...distributingKeys].some((key) => key.startsWith(orderPrefix)),
+    [distributingKeys, orderPrefix]
+  );
+
+  const isDistributing = (suffix: string) =>
+    distributingKeys.has(distributionKey(orderId, suffix));
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -68,7 +86,8 @@ export function OrderDistributionPanel({
   }, [open, snapshot, loading, load]);
 
   const distributeLine = async (lineId: string) => {
-    setActing(lineId);
+    const key = distributionKey(orderId, lineId);
+    onDistributingChange(key, true);
     setError("");
     try {
       const data = await api.accountant.distributeOrderLine(orderId, lineId, {
@@ -78,12 +97,13 @@ export function OrderDistributionPanel({
     } catch (err) {
       setError(err instanceof Error ? err.message : "Distribution failed");
     } finally {
-      setActing(null);
+      onDistributingChange(key, false);
     }
   };
 
   const distributeAll = async () => {
-    setActing("all");
+    const key = distributionKey(orderId, "all");
+    onDistributingChange(key, true);
     setError("");
     try {
       const data = await api.accountant.distributeOrderAll(orderId, {
@@ -93,8 +113,21 @@ export function OrderDistributionPanel({
     } catch (err) {
       setError(err instanceof Error ? err.message : "Distribution failed");
     } finally {
-      setActing(null);
+      onDistributingChange(key, false);
     }
+  };
+
+  const loadMessagePdf = useCallback(async () => {
+    if (!pdfLine) throw new Error("No message selected");
+    return api.accountant.distributionMessagePdfUrl(orderId, pdfLine.id);
+  }, [orderId, pdfLine]);
+
+  const openMessagePdf = (line: OrderDistributionLine) => {
+    setPdfLine(line);
+  };
+
+  const closeMessagePdf = () => {
+    setPdfLine(null);
   };
 
   const fellowFirstName = snapshot?.farmerName.split(" ")[0] ?? "Fellow";
@@ -148,23 +181,23 @@ export function OrderDistributionPanel({
                 </div>
                 <button
                   type="button"
-                  disabled={acting !== null || snapshot.allDistributed}
+                  disabled={isOrderBusy || snapshot.allDistributed}
                   onClick={() => void distributeAll()}
                   className="rounded-lg bg-brand-700 px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
                 >
-                  {acting === "all" ? "Distributing…" : "Distribute all"}
+                  {isDistributing("all") ? "Distributing…" : "Distribute all"}
                 </button>
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[520px] text-xs">
+                <table className="w-full min-w-[580px] text-xs">
                   <thead>
                     <tr className="border-b border-brand-50 text-left text-[10px] font-semibold uppercase text-gray-500">
                       <th className="py-2 pr-3">Recipient</th>
                       <th className="px-3 py-2 text-right">Share</th>
                       <th className="px-3 py-2 text-right">Amount</th>
                       <th className="px-3 py-2">Status</th>
-                      <th className="py-2 pl-3">Action</th>
+                      <th className="py-2 pl-3">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -194,18 +227,25 @@ export function OrderDistributionPanel({
                             </span>
                           </td>
                           <td className="py-2.5 pl-3">
-                            {line.canDistribute && line.status !== "DISTRIBUTED" ? (
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              {line.canDistribute && line.status !== "DISTRIBUTED" ? (
+                                <button
+                                  type="button"
+                                  disabled={isOrderBusy}
+                                  onClick={() => void distributeLine(line.id)}
+                                  className="rounded bg-brand-700 px-2.5 py-1 text-[10px] font-semibold text-white disabled:opacity-50"
+                                >
+                                  {isDistributing(line.id) ? "Sending…" : "Distribute"}
+                                </button>
+                              ) : null}
                               <button
                                 type="button"
-                                disabled={acting !== null}
-                                onClick={() => void distributeLine(line.id)}
-                                className="rounded bg-brand-700 px-2.5 py-1 text-[10px] font-semibold text-white disabled:opacity-50"
+                                onClick={() => openMessagePdf(line)}
+                                className="rounded border border-brand-200 px-2.5 py-1 text-[10px] font-semibold text-brand-700 hover:bg-brand-50"
                               >
-                                {acting === line.id ? "Sending…" : "Distribute"}
+                                View message
                               </button>
-                            ) : (
-                              <span className="text-gray-400">—</span>
-                            )}
+                            </div>
                           </td>
                         </tr>
                       );
@@ -217,6 +257,17 @@ export function OrderDistributionPanel({
           ) : null}
         </div>
       )}
+
+      <PdfViewerModal
+        title={
+          pdfLine
+            ? `Distribution message — ${recipientDisplayLabel(pdfLine, fellowFirstName)}`
+            : "Distribution message"
+        }
+        open={pdfLine !== null}
+        onClose={closeMessagePdf}
+        loadUrl={loadMessagePdf}
+      />
     </div>
   );
 }

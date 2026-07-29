@@ -1,16 +1,26 @@
 import { Icon, type IconName } from "@/components/icons";
 
-export function VerifiedBadgeIcon({ className = "h-4 w-4" }: { className?: string }) {
+const VERIFIED_BADGE_FILL = "#10B981";
+
+export function VerifiedBadgeIcon({
+  className = "h-4 w-4",
+  fill = VERIFIED_BADGE_FILL,
+  "aria-label": ariaLabel = "Verified",
+}: {
+  className?: string;
+  fill?: string;
+  "aria-label"?: string;
+}) {
   return (
     <svg
       viewBox="0 0 24 24"
       fill="none"
       className={`inline-block shrink-0 ${className}`}
-      aria-label="Verified"
+      aria-label={ariaLabel}
     >
-      {/* Green filled scalloped badge shape (ri-verified-badge-fill) */}
+      {/* Filled scalloped badge shape (ri-verified-badge-fill) */}
       <path
-        fill="#10B981"
+        fill={fill}
         d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.79-4-4-4-.495 0-.965.084-1.4.238C14.55 2.475 13.18 1.6 11.6 1.6c-1.58 0-2.95.875-3.6 2.148-.435-.154-.905-.238-1.4-.238-2.21 0-4 1.79-4 4 0 .495.084.965.238 1.4C1.575 9.55.7 10.92.7 12.5c0 1.58.875 2.95 2.148 3.6-.154.435-.238.905-.238 1.4 0 2.21 1.79 4 4 4 .495 0 .965-.084 1.4-.238 1.25 1.273 2.62 2.148 4.2 2.148 1.58 0 2.95-.875 3.6-2.148.435.154.905.238 1.4.238 2.21 0 4-1.79 4-4 0-.495-.084-.965-.238-1.4 1.273-1.25 2.148-2.62 2.148-4.2z"
       />
       {/* White checkmark inside */}

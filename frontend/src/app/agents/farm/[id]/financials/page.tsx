@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { FinancialStatement, isHandler } from "@/lib/types";
+import { FinancialStatement, isHandler, isFarmerHandler } from "@/lib/types";
 import { CountryBadge } from "@/components/CountrySelect";
 import { HandlerClientNav } from "@/components/HandlerClientNav";
 import { SalesOrdersTable } from "@/components/ProductOrdersList";
@@ -44,7 +44,6 @@ function toOrderLineItems(
     date: typeof item.date === "string" ? item.date : String(item.date),
     productName: item.productName ?? item.title,
     orderName: item.orderName ?? item.productName ?? item.title,
-    orderDescription: item.orderDescription ?? item.orderName ?? item.productName ?? item.title,
     productImage: item.productImage,
     commodity: item.commodity,
     category: item.category,
@@ -77,6 +76,10 @@ export default function HandlerClientFinancialsPage() {
     if (!loading && !user) router.push("/login");
     if (user && !isHandler(user.roleId)) {
       router.push("/dashboard");
+      return;
+    }
+    if (user && isFarmerHandler(user.roleId)) {
+      router.replace("/agents");
       return;
     }
     if (user && ownerId) {

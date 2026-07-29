@@ -186,7 +186,7 @@ function accountantNav(): BottomNavItem[] {
     },
     {
       href: "/accountant/withdrawals",
-      label: "Order share",
+      label: "Order shared",
       icon: "coins",
       match: (p) =>
         p.startsWith("/accountant/withdrawals") || p.startsWith("/accountant/receipts"),

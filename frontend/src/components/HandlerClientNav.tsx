@@ -20,11 +20,6 @@ export function HandlerClientNav({
       label: "Buyer orders",
       match: (p: string) => p.startsWith(`${base}/orders`),
     },
-    {
-      href: `${base}/financials`,
-      label: "Financial statement",
-      match: (p: string) => p.startsWith(`${base}/financials`),
-    },
   ];
 
   return (

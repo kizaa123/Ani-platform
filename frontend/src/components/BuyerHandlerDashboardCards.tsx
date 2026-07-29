@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { AppNotification } from "@/lib/types";
-import { PortalNavCard } from "@/components/PortalNavCard";
+import { AgentAssignment, AppNotification } from "@/lib/types";
+import {
+  HandlerAssignmentsPreviewCard,
+  HandlerOrderAlertsCard,
+} from "@/components/HandlerAssignmentCards";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
-import { getPortalNavImage } from "@/lib/portalNavImages";
 
 const ORDER_NOTIFICATION_TYPES = new Set([
   "NEW_ORDER",
@@ -16,8 +18,12 @@ const ORDER_NOTIFICATION_TYPES = new Set([
   "MONEY_DISTRIBUTED",
 ]);
 
-export function BuyerHandlerDashboardCards({ roleId }: { roleId: number }) {
-  const [clientCount, setClientCount] = useState<number | null>(null);
+function isBuyerAssignment(a: AgentAssignment) {
+  return !(a.owner.isFarmer || a.owner.roleId === 1 || a.owner.roleId === 2);
+}
+
+export function BuyerHandlerDashboardCards() {
+  const [clients, setClients] = useState<AgentAssignment[] | null>(null);
   const [orderAlertCount, setOrderAlertCount] = useState<number | null>(null);
 
   useEffect(() => {
@@ -26,10 +32,7 @@ export function BuyerHandlerDashboardCards({ roleId }: { roleId: number }) {
     Promise.all([api.agents.assignments(), api.notifications.list()])
       .then(([assignments, notifications]) => {
         if (cancelled) return;
-        const buyers = assignments.filter(
-          (a) => !(a.owner.isFarmer || a.owner.roleId === 1 || a.owner.roleId === 2)
-        );
-        setClientCount(buyers.length);
+        setClients(assignments.filter(isBuyerAssignment));
         const unreadOrderAlerts = (notifications as AppNotification[]).filter(
           (n) => !n.read && ORDER_NOTIFICATION_TYPES.has(n.type)
         ).length;
@@ -37,7 +40,7 @@ export function BuyerHandlerDashboardCards({ roleId }: { roleId: number }) {
       })
       .catch(() => {
         if (!cancelled) {
-          setClientCount(0);
+          setClients([]);
           setOrderAlertCount(0);
         }
       });
@@ -47,44 +50,34 @@ export function BuyerHandlerDashboardCards({ roleId }: { roleId: number }) {
     };
   }, []);
 
-  const cards = [
-    {
-      href: "/agents",
-      title: "Assigned Clients",
-      desc:
-        clientCount === null
-          ? "Loading assigned clients..."
-          : clientCount === 0
-            ? "No clients assigned yet"
-            : `${clientCount} client${clientCount === 1 ? "" : "s"} under your liaison care`,
-      icon: "users" as const,
-    },
-    {
-      href: "/agents",
-      title: "Order Notifications",
-      desc:
-        orderAlertCount === null
-          ? "Loading order alerts..."
-          : orderAlertCount === 0
-            ? "No unread order notifications"
-            : `${orderAlertCount} unread order notification${orderAlertCount === 1 ? "" : "s"} from your clients`,
-      icon: "package" as const,
-    },
-  ];
+  const loading = clients === null;
 
   return (
     <>
-      {cards.map((card, i) => (
-        <ScrollReveal key={card.title} delay={scrollStagger(i, 90)} duration={500} direction="fade-up">
-          <PortalNavCard
-            href={card.href}
-            title={card.title}
-            desc={card.desc}
-            icon={card.icon}
-            image={getPortalNavImage(card.href, roleId)}
-          />
-        </ScrollReveal>
-      ))}
+      <ScrollReveal delay={scrollStagger(0, 90)} duration={500} direction="fade-up">
+        <HandlerAssignmentsPreviewCard
+          href="/agents"
+          title="Assigned Clients"
+          icon="users"
+          assignments={clients ?? []}
+          loading={loading}
+          emptyMessage="No clients assigned yet"
+          clientType="buyer"
+          getSubtitle={(owner) => {
+            const company = owner.buyerProfile?.company;
+            const location = [owner.city, owner.region].filter(Boolean).join(", ");
+            return [company, location].filter(Boolean).join(" · ");
+          }}
+        />
+      </ScrollReveal>
+      <ScrollReveal delay={scrollStagger(1, 90)} duration={500} direction="fade-up">
+        <HandlerOrderAlertsCard
+          href="/agents"
+          count={orderAlertCount}
+          loading={orderAlertCount === null}
+          entityLabel="clients"
+        />
+      </ScrollReveal>
     </>
   );
 }
