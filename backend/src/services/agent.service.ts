@@ -70,7 +70,9 @@ export class AgentService {
     );
   }
 
-  async getAssignments(agentId: string) {
+  async getAssignments(agentId: string, roleId: number) {
+    assertAuthorized(isFarmerHandler(roleId) || isBuyerHandler(roleId), 'Handlers only');
+
     const rows = await prisma.agentAssignment.findMany({
       where: { agentId },
       include: {

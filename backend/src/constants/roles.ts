@@ -103,6 +103,11 @@ export function isMarketplaceBuyerRole(roleId: number): boolean {
   return (MARKETPLACE_BUYER_ROLES as readonly number[]).includes(roleId) || isStudentRole(roleId);
 }
 
+/** Roles that browse other farmers' farms, pay access fees, and place product orders. */
+export function canPurchaseFromMarketplace(roleId: number): boolean {
+  return isMarketplaceBuyerRole(roleId) || isFarmerRole(roleId);
+}
+
 /** Legacy student accounts are treated as clients (buyers). */
 export function isClientRole(roleId: number): boolean {
   return roleId === ROLES.BUYER || isStudentRole(roleId);

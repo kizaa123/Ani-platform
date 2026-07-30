@@ -41,7 +41,7 @@ export const PORTAL_NAV_IMAGES_SHARED = {
 
   /** Change image here: Marketplace card (buyer, handler, staff, researcher — farmers use crop/livestock sections) */
 
-  "/marketplace": "/generic_farmers_market for crop.jpg",
+  "/marketplace": "/a-seller-arranging-fresh-produce-at-a-farmers-market.avif",
 
   /** Change image here: Research Library card (farmer, buyer, handler, staff) */
 
@@ -67,7 +67,7 @@ export const PORTAL_NAV_IMAGES_CROP_FARMER = {
 
   /** CROP: Marketplace */
 
-  "/marketplace": "/marketplace-friendly-exchange-stockcake.jpg",
+  "/marketplace": "/a-seller-arranging-fresh-produce-at-a-farmers-market.avif",
 
   /** CROP: My Farm */
 

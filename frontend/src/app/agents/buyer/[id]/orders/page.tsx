@@ -15,6 +15,7 @@ export default function HandlerClientBuyerOrdersPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<BuyerOrderLineItem[]>([]);
   const [buyerName, setBuyerName] = useState("");
+  const [clientPhone, setClientPhone] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -29,6 +30,7 @@ export default function HandlerClientBuyerOrdersPage() {
           setOrders(orderData as unknown as BuyerOrderLineItem[]);
           if (client.clientType === "buyer" && client.buyer) {
             setBuyerName(client.buyer.name);
+            setClientPhone(client.buyer.phone ?? null);
           }
         })
         .catch((e) => setError(e instanceof Error ? e.message : "Failed to load orders"));
@@ -51,7 +53,7 @@ export default function HandlerClientBuyerOrdersPage() {
   if (error) {
     return (
       <div className="mx-auto max-w-5xl px-4 py-10">
-        <HandlerBuyerClientNav ownerId={ownerId} buyerName={buyerName} />
+        <HandlerBuyerClientNav ownerId={ownerId} buyerName={buyerName} phone={clientPhone} />
         <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">{error}</p>
       </div>
     );
@@ -59,7 +61,7 @@ export default function HandlerClientBuyerOrdersPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
-      <HandlerBuyerClientNav ownerId={ownerId} buyerName={buyerName} />
+      <HandlerBuyerClientNav ownerId={ownerId} buyerName={buyerName} phone={clientPhone} />
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase text-gray-500">Total orders</p>

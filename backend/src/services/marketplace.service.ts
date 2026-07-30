@@ -1,7 +1,13 @@
 import { z } from 'zod';
 import prisma from '../database/prisma';
 import { assertFound, AppError } from '../utils/errors';
-import { ROLES, FARMER_ROLES, isFarmerRole, isStaffRole, isMarketplaceBuyerRole } from '../constants/roles';
+import {
+  ROLES,
+  FARMER_ROLES,
+  isFarmerRole,
+  isStaffRole,
+  canPurchaseFromMarketplace,
+} from '../constants/roles';
 import {
   buyerHasFarmerFarmAccess,
   buyerFarmAccessSet,
@@ -126,10 +132,13 @@ export class MarketplaceService {
     farmerUserId: string,
     farmAccessSet?: Set<string>
   ): Promise<{ hasAccess: boolean; connectionStatus: string; hasFarmAccess: boolean }> {
-    if (isFarmerRole(roleId) || isStaffRole(roleId)) {
+    if (isStaffRole(roleId)) {
       return { hasAccess: true, connectionStatus: 'ACCEPTED', hasFarmAccess: true };
     }
-    if (isMarketplaceBuyerRole(roleId)) {
+    if (isFarmerRole(roleId) && farmerUserId === userId) {
+      return { hasAccess: true, connectionStatus: 'ACCEPTED', hasFarmAccess: true };
+    }
+    if (canPurchaseFromMarketplace(roleId)) {
       const hasFarmAccess = farmAccessSet?.has(farmerUserId) ?? false;
       const connectionMap = await this.buyerConnectionMap(userId);
       const connectionStatus = connectionMap.get(farmerUserId) ?? 'NONE';
@@ -285,9 +294,9 @@ export class MarketplaceService {
       );
     }
 
-    const isBuyerRole = isMarketplaceBuyerRole(roleId);
-    const farmAccessSet = isBuyerRole ? await buyerFarmAccessSet(userId) : new Set<string>();
-    const connectionMap = isBuyerRole ? await this.buyerConnectionMap(userId) : new Map<string, string>();
+    const isPurchaserRole = canPurchaseFromMarketplace(roleId);
+    const farmAccessSet = isPurchaserRole ? await buyerFarmAccessSet(userId) : new Set<string>();
+    const connectionMap = isPurchaserRole ? await this.buyerConnectionMap(userId) : new Map<string, string>();
 
     const accessPackage = await prisma.accessPackage.findFirst({ orderBy: { price: 'asc' } });
 
@@ -295,7 +304,7 @@ export class MarketplaceService {
       where: {
         user: {
           roleId: { in: [...FARMER_ROLES] },
-          ...(isFarmerRole(roleId) ? { id: userId } : {}),
+          ...(isFarmerRole(roleId) ? { id: { not: userId } } : {}),
         },
       },
       include: {
@@ -331,23 +340,21 @@ export class MarketplaceService {
 
     const farmers = farmerProfiles.map((profile) => {
       const farmerUserId = profile.user.id;
-      const hasFarmAccess =
-        isFarmerRole(roleId) || isStaffRole(roleId)
-          ? true
-          : isBuyerRole
-            ? farmAccessSet.has(farmerUserId)
-            : false;
+      const hasFarmAccess = isStaffRole(roleId)
+        ? true
+        : isPurchaserRole
+          ? farmAccessSet.has(farmerUserId)
+          : false;
 
-      const connectionStatus = isBuyerRole
+      const connectionStatus = isPurchaserRole
         ? connectionMap.get(farmerUserId) ?? 'NONE'
         : hasFarmAccess
           ? 'ACCEPTED'
           : 'NONE';
 
-      const hasAccess =
-        isFarmerRole(roleId) || isStaffRole(roleId)
-          ? true
-          : hasFarmAccess && connectionStatus === 'ACCEPTED';
+      const hasAccess = isStaffRole(roleId)
+        ? true
+        : hasFarmAccess && connectionStatus === 'ACCEPTED';
 
       const access = {
         hasAccess,
@@ -437,8 +444,9 @@ export class MarketplaceService {
       orderBy: { createdAt: 'desc' },
     });
 
-    const isBuyerRole = isMarketplaceBuyerRole(roleId);
-    const farmAccessSet = isBuyerRole ? await buyerFarmAccessSet(userId) : undefined;
+    const farmAccessSet = canPurchaseFromMarketplace(roleId)
+      ? await buyerFarmAccessSet(userId)
+      : undefined;
 
     const listingIds = listings.map((l) => l.id);
     const mediaMap = await productMediaService.listForListings(listingIds, userId);
@@ -464,8 +472,9 @@ export class MarketplaceService {
       'Listing not found'
     );
 
-    const farmAccessSet =
-      isMarketplaceBuyerRole(roleId) ? await buyerFarmAccessSet(userId) : undefined;
+    const farmAccessSet = canPurchaseFromMarketplace(roleId)
+      ? await buyerFarmAccessSet(userId)
+      : undefined;
     const access = await this.listingAccess(
       userId,
       roleId,

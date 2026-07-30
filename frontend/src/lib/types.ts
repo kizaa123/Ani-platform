@@ -716,6 +716,11 @@ export function isMarketplaceBuyer(roleId: number) {
   return roleId === ROLES.BUYER || roleId === ROLES.RESEARCHER;
 }
 
+/** Roles that browse other farmers' farms, pay access fees, and place product orders. */
+export function canPurchaseFromMarketplace(roleId: number) {
+  return isMarketplaceBuyer(roleId) || isFarmer(roleId);
+}
+
 export function isStudent(roleId: number) {
   return roleId === ROLES.STUDENT;
 }

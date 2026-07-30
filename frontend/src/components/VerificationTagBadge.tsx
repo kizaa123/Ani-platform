@@ -3,18 +3,21 @@ import type { UserVerificationTag, VerificationTagType } from "@/lib/types";
 
 const TAG_STYLES: Record<
   VerificationTagType,
-  { label: string; className: string }
+  { label: string; shortLabel: string; className: string }
 > = {
   STANDARD: {
     label: "Verified",
+    shortLabel: "Verified",
     className: "border-emerald-200 bg-emerald-100 text-emerald-800",
   },
   INTERNATIONAL_FARMER: {
     label: "International Fellow",
+    shortLabel: "Intl. Fellow",
     className: "border-red-200 bg-red-100 text-red-800",
   },
   INTERNATIONAL_BUYER: {
     label: "International Client",
+    shortLabel: "Intl. Client",
     className: "border-red-200 bg-red-100 text-red-800",
   },
 };
@@ -59,24 +62,57 @@ export function VerificationTagIcon({
   );
 }
 
+type TagBadgeSize = "xs" | "sm" | "md";
+
+const BADGE_ICON_SIZE: Record<TagBadgeSize, string> = {
+  xs: "h-3 w-3",
+  sm: "h-3 w-3",
+  md: "h-3.5 w-3.5",
+};
+
 export function VerificationTagBadge({
   tagType,
+  size = "md",
+  showLabel,
   className = "",
   onRemove,
   removing = false,
 }: {
   tagType: VerificationTagType;
+  size?: TagBadgeSize;
+  showLabel?: boolean;
   className?: string;
   onRemove?: () => void;
   removing?: boolean;
 }) {
   const style = TAG_STYLES[tagType];
+  const labelVisible = showLabel ?? size !== "xs";
+  const label = size === "sm" ? style.shortLabel : style.label;
+
+  if (!labelVisible) {
+    return (
+      <span
+        className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${style.className} ${className}`}
+        title={style.label}
+      >
+        <VerificationTagIcon tagType={tagType} className={BADGE_ICON_SIZE[size]} />
+      </span>
+    );
+  }
+
+  const sizeClasses: Record<TagBadgeSize, string> = {
+    xs: "gap-0.5 px-1.5 py-0.5 text-[9px]",
+    sm: "gap-1 px-2 py-0.5 text-[10px]",
+    md: "gap-1 px-2.5 py-0.5 text-xs",
+  };
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${style.className} ${className}`}
+      className={`inline-flex shrink-0 items-center rounded-full border font-semibold uppercase tracking-wide ${style.className} ${sizeClasses[size]} ${className}`}
+      title={style.label}
     >
-      {style.label}
+      <VerificationTagIcon tagType={tagType} className={BADGE_ICON_SIZE[size]} />
+      <span>{label}</span>
       {onRemove && (
         <button
           type="button"
@@ -89,6 +125,44 @@ export function VerificationTagBadge({
         </button>
       )}
     </span>
+  );
+}
+
+export function VerificationTags({
+  verificationTags,
+  verificationStatus,
+  size = "sm",
+  showLabels,
+  layout = "row",
+  className = "",
+}: {
+  verificationTags?: UserVerificationTag[];
+  verificationStatus?: string | null;
+  size?: TagBadgeSize;
+  showLabels?: boolean;
+  layout?: "row" | "stack";
+  className?: string;
+}) {
+  const badges = getAvatarVerificationBadges(verificationTags, verificationStatus);
+  if (badges.length === 0) return null;
+
+  const labelVisible = showLabels ?? size !== "xs";
+
+  return (
+    <div
+      className={`flex max-w-full ${
+        layout === "row" ? "flex-row flex-wrap" : "flex-col"
+      } items-center justify-center gap-1 ${className}`}
+    >
+      {badges.map((tagType) => (
+        <VerificationTagBadge
+          key={tagType}
+          tagType={tagType}
+          size={size}
+          showLabel={labelVisible}
+        />
+      ))}
+    </div>
   );
 }
 

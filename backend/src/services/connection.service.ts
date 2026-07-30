@@ -220,7 +220,9 @@ export class ConnectionService {
 
     if (isFarmerRole(roleId)) {
       const rows = await prisma.connectionRequest.findMany({
-        where: { farmerId: userId },
+        where: {
+          OR: [{ farmerId: userId }, { buyerId: userId }],
+        },
         include: {
           buyer: { select: buyerSelect },
           farmer: { select: farmerSelect },

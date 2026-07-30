@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import prisma from '../database/prisma';
 import { AppError, assertFound, assertAuthorized } from '../utils/errors';
-import { ROLES, isFarmerRole, isMarketplaceBuyerRole } from '../constants/roles';
+import { ROLES, isFarmerRole, isMarketplaceBuyerRole, canPurchaseFromMarketplace } from '../constants/roles';
 import { getPaymentProvider } from './payment.provider';
 import { notifyFarmAccessPaid } from './notification.service';
 
@@ -110,7 +110,11 @@ export class PaymentService {
   }
 
   async purchaseFarmAccess(buyerId: string, roleId: number, data: z.infer<typeof purchaseFarmAccessSchema>) {
-    assertAuthorized(isMarketplaceBuyerRole(roleId), 'Only buyers and researchers can purchase farm access');
+    assertAuthorized(canPurchaseFromMarketplace(roleId), 'Only marketplace purchasers can purchase farm access');
+
+    if (data.farmerId === buyerId) {
+      throw new AppError(400, 'You cannot purchase access to your own farm');
+    }
 
     const farmer = assertFound(
       await prisma.user.findUnique({

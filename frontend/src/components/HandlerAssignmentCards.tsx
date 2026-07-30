@@ -10,17 +10,40 @@ function formatLocation(owner: AgentClientOwner): string {
   return [owner.city, owner.region, owner.country].filter(Boolean).join(", ");
 }
 
+/** Clickable phone link for handler client contact — logistics backchannel */
+export function HandlerPhoneLink({
+  phone,
+  className,
+}: {
+  phone?: string | null;
+  className?: string;
+}) {
+  if (!phone) {
+    return <span className="text-gray-400">Not provided</span>;
+  }
+  return (
+    <a
+      href={`tel:${phone}`}
+      className={className ?? "font-semibold text-brand-800 hover:underline"}
+    >
+      {phone}
+    </a>
+  );
+}
+
 /** Compact identity row — dashboard preview & card headers */
 export function HandlerAssignmentIdentity({
   owner,
   subtitle,
   stat,
   avatarSize = "sm",
+  showPhone = false,
 }: {
   owner: AgentClientOwner;
   subtitle?: string;
   stat?: string;
   avatarSize?: "sm" | "md";
+  showPhone?: boolean;
 }) {
   return (
     <div className="flex min-w-0 items-center gap-2.5">
@@ -38,6 +61,11 @@ export function HandlerAssignmentIdentity({
         </p>
         {subtitle && (
           <p className="mt-0.5 truncate text-xs text-gray-500">{subtitle}</p>
+        )}
+        {showPhone && (
+          <p className="mt-0.5 text-xs">
+            <HandlerPhoneLink phone={owner.phone} />
+          </p>
         )}
       </div>
       {stat && (
@@ -136,6 +164,7 @@ export function HandlerAssignmentsPreviewCard({
               owner={a.owner}
               subtitle={getSubtitle(a.owner)}
               stat={getStat?.(a.owner)}
+              showPhone
             />
           ))
         )}
@@ -223,9 +252,7 @@ export function HandlerFarmerClientCard({ assignment }: { assignment: AgentAssig
       <div className="flex flex-1 flex-col p-3">
         <div className="grid grid-cols-2 gap-2">
           <DetailChip label="Phone" highlight>
-            <a href={`tel:${owner.phone}`} className="font-semibold text-brand-800 hover:underline">
-              {owner.phone}
-            </a>
+            <HandlerPhoneLink phone={owner.phone} />
           </DetailChip>
           <DetailChip label="Email">
             <span className="break-all text-gray-800">{owner.email}</span>
@@ -299,9 +326,7 @@ export function HandlerBuyerClientCard({ assignment }: { assignment: AgentAssign
       <div className="flex flex-1 flex-col p-3">
         <div className="grid grid-cols-2 gap-2">
           <DetailChip label="Phone" highlight>
-            <a href={`tel:${owner.phone}`} className="font-semibold text-brand-800 hover:underline">
-              {owner.phone}
-            </a>
+            <HandlerPhoneLink phone={owner.phone} />
           </DetailChip>
           <DetailChip label="Email">
             <span className="break-all text-gray-800">{owner.email}</span>

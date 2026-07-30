@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { BuyerFinancialStatement, isMarketplaceBuyer } from "@/lib/types";
+import { BuyerFinancialStatement, canPurchaseFromMarketplace } from "@/lib/types";
 import { BuyerOrdersTable } from "@/components/ProductOrdersList";
 import { formatDate, formatGhc, orderStatusStyle } from "@/lib/format";
 
@@ -17,7 +17,7 @@ export default function BuyerFinancialsPage() {
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
-    if (user && !isMarketplaceBuyer(user.roleId)) {
+    if (user && !canPurchaseFromMarketplace(user.roleId)) {
       router.push("/dashboard");
       return;
     }

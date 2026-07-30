@@ -1,11 +1,14 @@
 import prisma from '../database/prisma';
 import { assertAuthorized, assertFound } from '../utils/errors';
-import { ROLES, isMarketplaceBuyerRole } from '../constants/roles';
+import { ROLES, canPurchaseFromMarketplace } from '../constants/roles';
 import { buyerOrderInclude, groupBuyerPlacedOrders, type BuyerPlacedOrderRow } from '../utils/orders';
 
 export class BuyerService {
-  private assertBuyer(roleId: number) {
-    assertAuthorized(isMarketplaceBuyerRole(roleId), 'This feature is only available to buyers and researchers');
+  private assertMarketplacePurchaser(roleId: number) {
+    assertAuthorized(
+      canPurchaseFromMarketplace(roleId),
+      'This feature is only available to marketplace purchasers'
+    );
   }
 
   async fetchOrdersForBuyer(buyerId: string) {
@@ -96,12 +99,12 @@ export class BuyerService {
   }
 
   async getOrders(userId: string, roleId: number) {
-    this.assertBuyer(roleId);
+    this.assertMarketplacePurchaser(roleId);
     return this.fetchOrdersForBuyer(userId);
   }
 
   async getFinancialStatement(userId: string, roleId: number) {
-    this.assertBuyer(roleId);
+    this.assertMarketplacePurchaser(roleId);
     return this.buildFinancialStatementForBuyer(userId);
   }
 }

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { Connection, ConnectionUser, fullName, isBuyer, isFarmer, isStaff, isMarketplaceBuyer, isResearcher, isHandler, ROLES } from "@/lib/types";
+import { Connection, ConnectionUser, fullName, isFarmer, isStaff, isMarketplaceBuyer, isResearcher, isHandler, ROLES } from "@/lib/types";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
 
@@ -71,7 +71,7 @@ export default function ConnectionsPage() {
       <h1 className="mb-2 text-2xl font-bold text-brand-900">Connections</h1>
       <p className="mb-6 text-sm text-gray-500">
         {isFarmer(user.roleId)
-          ? "Buyers who requested farm access — ANI admin approves access; you'll be notified when someone requests"
+          ? "Buyers requesting access to your farm, and farmers you requested access from — ANI admin approves access"
           : isMarketplaceBuyer(user.roleId)
             ? "Farmers you requested access from — approved once ANI admin reviews"
             : user.roleId === ROLES.FARMER_HANDLER
@@ -88,7 +88,9 @@ export default function ConnectionsPage() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {connections.map((c) => {
-            const isBuyerView = isMarketplaceBuyer(user.roleId);
+            const isBuyerView =
+              isMarketplaceBuyer(user.roleId) ||
+              (isFarmer(user.roleId) && c.buyer?.id === user.id);
             const isFarmerHandlerView = user.roleId === ROLES.FARMER_HANDLER;
             const isBuyerHandlerView = user.roleId === ROLES.BUYER_HANDLER;
             const partner: ConnectionUser | undefined = isBuyerView

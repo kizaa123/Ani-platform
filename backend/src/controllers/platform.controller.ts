@@ -71,7 +71,10 @@ export class AgentController {
 
   assignments = async (req: AuthRequest, res: Response) => {
     try {
-      ApiResponse.success(res, await agentService.getAssignments(req.user!.userId));
+      ApiResponse.success(
+        res,
+        await agentService.getAssignments(req.user!.userId, req.user!.roleId)
+      );
     } catch (e) {
       ApiResponse.error(res, e);
     }

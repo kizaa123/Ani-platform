@@ -9,6 +9,7 @@ import {
   isBuyerHandler,
   isStaffRole,
   isMarketplaceBuyerRole,
+  canPurchaseFromMarketplace,
 } from '../constants/roles';
 import { notifyOrderPaymentReleased } from './notification.service';
 
@@ -412,7 +413,7 @@ export async function generateOrderStatementPdf(
 export async function getOrderDetail(orderId: string, userId: string, roleId: number) {
   const order = await assertOrderStatementAccess(userId, roleId, orderId);
   const canRelease =
-    isMarketplaceBuyerRole(roleId) &&
+    canPurchaseFromMarketplace(roleId) &&
     order.buyerId === userId &&
     order.status === 'PAID' &&
     order.escrowStatus === 'HELD';
@@ -449,7 +450,7 @@ export async function releaseOrderPayment(
   roleId: number,
   otp: string
 ) {
-  assertAuthorized(isMarketplaceBuyerRole(roleId), 'Only buyers and researchers can release order payments');
+  assertAuthorized(canPurchaseFromMarketplace(roleId), 'Only marketplace purchasers can release order payments');
 
   const order = assertFound(
     await prisma.productOrder.findUnique({ where: { id: orderId } }),

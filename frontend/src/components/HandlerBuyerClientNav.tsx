@@ -2,13 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { HandlerPhoneLink } from "@/components/HandlerAssignmentCards";
 
 export function HandlerBuyerClientNav({
   ownerId,
   buyerName,
+  phone,
 }: {
   ownerId: string;
   buyerName?: string;
+  phone?: string | null;
 }) {
   const pathname = usePathname();
   const ordersHref = `/agents/buyer/${ownerId}/orders`;
@@ -22,6 +25,11 @@ export function HandlerBuyerClientNav({
       {buyerName && (
         <p className="mt-2 text-xl font-medium text-gray-700">
           Managing <span className="font-semibold text-brand-800">{buyerName}</span>
+        </p>
+      )}
+      {phone !== undefined && (
+        <p className="mt-1.5 text-sm text-gray-600">
+          Client phone: <HandlerPhoneLink phone={phone} />
         </p>
       )}
       {!onOrders && (
