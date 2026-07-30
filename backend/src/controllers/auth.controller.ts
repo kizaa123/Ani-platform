@@ -7,6 +7,14 @@ import { googleAuthService } from '../services/googleAuth.service';
 import { emailVerificationService } from '../services/emailVerification.service';
 import { getFrontendBaseUrl, getGoogleOAuthConfig } from '../config/google.config';
 import { createAuditLog } from '../middleware/audit.middleware';
+import { AppError } from '../utils/errors';
+import { toAppError } from '../utils/prisma-errors';
+
+function redirectGoogleOAuthError(res: Response, error: unknown) {
+  const base = getFrontendBaseUrl();
+  const message = toAppError(error).message;
+  return res.redirect(`${base}/register?error=${encodeURIComponent(message)}`);
+}
 
 export class AuthController {
   listHandlers = async (req: AuthRequest, res: Response) => {
@@ -99,25 +107,38 @@ export class AuthController {
           'Google sign-in is not configured. Register with email or use the dev sign-in button.';
         return res.redirect(`${base}/register?error=${encodeURIComponent(message)}`);
       }
-      res.redirect(googleAuthService.getAuthorizationUrl());
+      return res.redirect(googleAuthService.getAuthorizationUrl());
     } catch (e) {
-      ApiResponse.error(res, e);
+      if (!(e instanceof AppError)) {
+        console.error('Google OAuth start failed:', e);
+      }
+      return redirectGoogleOAuthError(res, e);
     }
   };
 
   googleCallback = async (req: AuthRequest, res: Response) => {
     try {
+      const oauthError = typeof req.query.error === 'string' ? req.query.error : '';
+      if (oauthError) {
+        throw new Error(
+          oauthError === 'access_denied'
+            ? 'Google sign-in was cancelled'
+            : `Google sign-in failed (${oauthError})`
+        );
+      }
+
       const code = typeof req.query.code === 'string' ? req.query.code : '';
       if (!code) {
         throw new Error('Missing Google authorization code');
       }
       const result = await googleAuthService.handleCallback(code);
       await createAuditLog(req, 'USER_GOOGLE_LOGIN', 'users', { userId: result.user.id });
-      res.redirect(result.redirectUrl);
+      return res.redirect(result.redirectUrl);
     } catch (e) {
-      const base = getFrontendBaseUrl();
-      const message = e instanceof Error ? e.message : 'Google sign-in failed';
-      res.redirect(`${base}/register?error=${encodeURIComponent(message)}`);
+      if (!(e instanceof AppError)) {
+        console.error('Google OAuth callback failed:', e);
+      }
+      return redirectGoogleOAuthError(res, e);
     }
   };
 

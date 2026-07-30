@@ -21,7 +21,11 @@ export interface GoogleProfile {
 function buildOAuthClient() {
   const config = getGoogleOAuthConfig();
   if (!config.enabled) {
-    throw new AppError(503, 'Google sign-in is not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.');
+    throw new AppError(
+      503,
+      'Google sign-in is not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.',
+      'GOOGLE_NOT_CONFIGURED'
+    );
   }
   return new OAuth2Client(config.clientId, config.clientSecret, config.redirectUri);
 }
@@ -183,13 +187,23 @@ export class GoogleAuthService {
   async devSignIn(input: { email: string; firstName: string; lastName?: string }) {
     const config = getGoogleOAuthConfig();
     if (!config.devMode) {
-      throw new AppError(403, 'Google dev sign-in is disabled');
+      throw new AppError(
+        403,
+        'Google dev sign-in is disabled. Set GOOGLE_DEV_MODE=true in backend .env.',
+        'GOOGLE_DEV_DISABLED'
+      );
+    }
+
+    const email = input.email?.trim().toLowerCase();
+    const firstName = input.firstName?.trim();
+    if (!email || !firstName) {
+      throw new AppError(400, 'Email and first name are required for dev sign-in', 'VALIDATION_ERROR');
     }
 
     const profile: GoogleProfile = {
-      googleId: `dev-${input.email.trim().toLowerCase()}`,
-      email: input.email.trim().toLowerCase(),
-      firstName: input.firstName.trim(),
+      googleId: `dev-${email}`,
+      email,
+      firstName,
       lastName: input.lastName?.trim() || 'DevUser',
       profilePicture: null,
       emailVerifiedByGoogle: false,

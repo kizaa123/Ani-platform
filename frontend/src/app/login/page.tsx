@@ -96,7 +96,7 @@ function LoginForm() {
               </div>
               <h1 className="text-3xl font-extrabold text-brand-900 tracking-tight">Login Here</h1>
             </div>
-            <p className="text-sm text-gray-500">Sign in to your ANI account</p>
+            <p className="text-sm text-gray-500 text-center">Sign in to your ANI account</p>
           </header>
 
           {(error || queryError) && (
