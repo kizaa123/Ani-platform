@@ -217,6 +217,7 @@ export class AdminService {
       activeConnections,
       pendingVerifications,
       pendingConnections,
+      pendingAccountantApprovals,
       productRevenue,
       farmAccessRevenue,
       researchRevenue,
@@ -237,6 +238,12 @@ export class AdminService {
         },
       }),
       prisma.connectionRequest.count({ where: { status: 'PENDING' } }),
+      prisma.user.count({
+        where: {
+          roleId: ROLES.ANI_ACCOUNTANT,
+          verificationStatus: 'PENDING',
+        },
+      }),
       prisma.productOrder.aggregate({
         where: { status: 'PAID' },
         _sum: { totalAmount: true },
@@ -273,6 +280,7 @@ export class AdminService {
       activeConnections,
       pendingVerifications,
       pendingConnections,
+      pendingAccountantApprovals,
       accessIncome: platformIncome.accessRevenue,
       orderShareIncome: platformIncome.orderShareRevenue,
       totalPlatformIncome: platformIncome.totalRevenue,

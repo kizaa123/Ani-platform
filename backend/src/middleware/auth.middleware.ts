@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyAccessToken, TokenPayload } from '../utils/jwt';
 import prisma from '../database/prisma';
-import { canPurchaseFromMarketplace } from '../constants/roles';
+import { canPurchaseFromMarketplace, isAccountantRole, isAccountantApproved } from '../constants/roles';
 
 export interface AuthRequest extends Request {
   user?: TokenPayload & { permissions: string[] };
@@ -50,6 +50,32 @@ export function requireRole(...roleIds: number[]) {
     }
     next();
   };
+}
+
+/** Blocks self-registered accountants until an admin sets verificationStatus to VERIFIED. */
+export async function requireApprovedAccountant(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) {
+  if (!req.user) {
+    return res.status(401).json({ success: false, error: 'Authentication required' });
+  }
+  if (!isAccountantRole(req.user.roleId)) {
+    return next();
+  }
+  const user = await prisma.user.findUnique({
+    where: { id: req.user.userId },
+    select: { verificationStatus: true },
+  });
+  if (!user || !isAccountantApproved(user.verificationStatus)) {
+    return res.status(403).json({
+      success: false,
+      error: 'Awaiting admin approval',
+      code: 'ACCOUNTANT_PENDING_APPROVAL',
+    });
+  }
+  next();
 }
 
 /** Buyers, researchers, and farmers who browse/purchase from other farms on the marketplace. */

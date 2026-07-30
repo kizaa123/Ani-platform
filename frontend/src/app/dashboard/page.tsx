@@ -3,7 +3,8 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
-import { isFarmer, isBuyer, isHandler, isAdmin, isAccountant, isBuyerHandler, isResearcher, isStudent, isFarmerHandler, canPurchaseFromMarketplace } from "@/lib/types";
+import { isFarmer, isBuyer, isHandler, isAdmin, isAccountant, isAccountantApproved, isAccountantAwaitingAccess, isBuyerHandler, isResearcher, isStudent, isFarmerHandler, canPurchaseFromMarketplace } from "@/lib/types";
+import { AccountantPendingApproval } from "@/components/AccountantPendingApproval";
 import { PortalNavCard, PortalNavCardSkeleton } from "@/components/PortalNavCard";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
@@ -27,8 +28,10 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
-    if (user && isAccountant(user.roleId)) router.replace("/accountant");
-  }, [user?.id, loading, router]);
+    if (user && isAccountant(user.roleId) && isAccountantApproved(user)) {
+      router.replace("/accountant");
+    }
+  }, [user?.id, user?.verificationStatus, loading, router]);
 
   if (loading || !user) {
     return (
@@ -66,11 +69,11 @@ export default function DashboardPage() {
     { href: "/admin", title: "Admin Panel", desc: "Analytics, verification & moderation", icon: "shield", show: isAdmin(user.roleId) },
     { href: "/admin/staff", title: "ANI Team", desc: "Manage staff accounts & roles", icon: "users", show: isAdmin(user.roleId) },
     { href: "/admin/financials", title: "Financial Statement", desc: "Platform-wide revenue (read-only)", icon: "chart", show: isAdmin(user.roleId) },
-    { href: "/accountant", title: "Financial Overview", desc: "Access income, order share & balances", icon: "chart", show: isAccountant(user.roleId) },
-    { href: "/accountant/transactions", title: "Access Ledger", desc: "Farm & publication access payments", icon: "credit-card", show: isAccountant(user.roleId) },
-    { href: "/accountant/withdrawals", title: "Order Shared & Withdrawals", desc: "Distribute orders & record withdrawals", icon: "coins", show: isAccountant(user.roleId) },
-    { href: "/accountant/receipts", title: "Order Receipts", desc: "Released order statement PDFs", icon: "package", show: isAccountant(user.roleId) },
-    { href: "/accountant/farm-access", title: "Farm Access", desc: "Review legacy paid connection requests", icon: "handshake", show: isAccountant(user.roleId) },
+    { href: "/accountant", title: "Financial Overview", desc: "Access income, order share & balances", icon: "chart", show: isAccountant(user.roleId) && isAccountantApproved(user) },
+    { href: "/accountant/transactions", title: "Access Ledger", desc: "Farm & publication access payments", icon: "credit-card", show: isAccountant(user.roleId) && isAccountantApproved(user) },
+    { href: "/accountant/withdrawals", title: "Order Shared & Withdrawals", desc: "Distribute orders & record withdrawals", icon: "coins", show: isAccountant(user.roleId) && isAccountantApproved(user) },
+    { href: "/accountant/receipts", title: "Order Receipts", desc: "Released order statement PDFs", icon: "package", show: isAccountant(user.roleId) && isAccountantApproved(user) },
+    { href: "/accountant/farm-access", title: "Farm Access", desc: "Review legacy paid connection requests", icon: "handshake", show: isAccountant(user.roleId) && isAccountantApproved(user) },
     { href: "/farm/settings", title: "Profile", desc: "Profile, liaison officer, farm & commodities", icon: "user", show: isFarmer(user.roleId) },
     { href: "/settings", title: "Profile", desc: "Profile, location & liaison officer", icon: "user", show: isBuyer(user.roleId) },
     { href: "/agents/settings", title: "Profile", desc: "Profile photo & contact details", icon: "user", show: isHandler(user.roleId) },
@@ -87,6 +90,13 @@ export default function DashboardPage() {
         {isClo && <BuyerHandlerDashboardHint />}
       </ScrollReveal>
 
+      {isAccountantAwaitingAccess(user) && (
+        <div className="mb-8">
+          <AccountantPendingApproval status={user.verificationStatus ?? "PENDING"} />
+        </div>
+      )}
+
+      {!isAccountantAwaitingAccess(user) && (
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {isFlo && <FarmerHandlerDashboardCards />}
         {isClo && <BuyerHandlerDashboardCards />}
@@ -102,6 +112,7 @@ export default function DashboardPage() {
           </ScrollReveal>
         ))}
       </div>
+      )}
     </div>
   );
 }

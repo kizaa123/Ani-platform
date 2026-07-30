@@ -14,7 +14,7 @@ import {
   accountantController,
   aiController,
 } from '../controllers/platform.controller';
-import { authenticate, requirePermission, requireCanPurchaseFromMarketplace } from '../middleware/auth.middleware';
+import { authenticate, requirePermission, requireCanPurchaseFromMarketplace, requireApprovedAccountant } from '../middleware/auth.middleware';
 import { validateBody } from '../middleware/validate.middleware';
 import { registerSchema, loginSchema, updateUserProfileSchema, updateHandlerSchema, completeProfileSchema, emailVerificationSendSchema, emailVerificationVerifySchema } from '../services/auth.service';
 import { updateFarmSchema, addCommoditySchema, updateOrderTrackSchema, notifyClientSchema } from '../services/farm.service';
@@ -354,17 +354,17 @@ router.post('/admin/staff', authenticate, requirePermission(PERMISSIONS.MANAGE_U
 router.patch('/admin/staff/:id', authenticate, requirePermission(PERMISSIONS.MANAGE_USERS), validateBody(updateStaffSchema), adminController.updateStaff);
 
 // Accountant (financial portal)
-router.get('/accountant/overview', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), accountantController.overview);
-router.get('/accountant/income-chart', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), accountantController.incomeChart);
-router.get('/accountant/dashboard-charts', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), accountantController.dashboardCharts);
-router.get('/accountant/financial-statement', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), adminController.financialStatement);
-router.get('/accountant/withdrawals', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), accountantController.listWithdrawals);
-router.post('/accountant/withdrawals', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), validateBody(createWithdrawalSchema), accountantController.createWithdrawal);
-router.patch('/accountant/withdrawals/:id', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), validateBody(updateWithdrawalSchema), accountantController.updateWithdrawal);
-router.get('/accountant/orders/:orderId/distribution', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), accountantController.getOrderDistribution);
-router.post('/accountant/orders/:orderId/distribution/lines/:lineId/distribute', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), validateBody(distributeLineSchema), accountantController.distributeOrderLine);
-router.post('/accountant/orders/:orderId/distribution/distribute-all', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), validateBody(distributeLineSchema.pick({ paymentMethod: true })), accountantController.distributeOrderAll);
-router.get('/accountant/orders/:orderId/distribution/lines/:lineId/message-pdf', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), accountantController.getDistributionMessagePdf);
+router.get('/accountant/overview', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), requireApprovedAccountant, accountantController.overview);
+router.get('/accountant/income-chart', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), requireApprovedAccountant, accountantController.incomeChart);
+router.get('/accountant/dashboard-charts', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), requireApprovedAccountant, accountantController.dashboardCharts);
+router.get('/accountant/financial-statement', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), requireApprovedAccountant, adminController.financialStatement);
+router.get('/accountant/withdrawals', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), requireApprovedAccountant, accountantController.listWithdrawals);
+router.post('/accountant/withdrawals', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), requireApprovedAccountant, validateBody(createWithdrawalSchema), accountantController.createWithdrawal);
+router.patch('/accountant/withdrawals/:id', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), requireApprovedAccountant, validateBody(updateWithdrawalSchema), accountantController.updateWithdrawal);
+router.get('/accountant/orders/:orderId/distribution', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), requireApprovedAccountant, accountantController.getOrderDistribution);
+router.post('/accountant/orders/:orderId/distribution/lines/:lineId/distribute', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), requireApprovedAccountant, validateBody(distributeLineSchema), accountantController.distributeOrderLine);
+router.post('/accountant/orders/:orderId/distribution/distribute-all', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), requireApprovedAccountant, validateBody(distributeLineSchema.pick({ paymentMethod: true })), accountantController.distributeOrderAll);
+router.get('/accountant/orders/:orderId/distribution/lines/:lineId/message-pdf', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), requireApprovedAccountant, accountantController.getDistributionMessagePdf);
 
 // AI (future-ready)
 router.get('/ai/matches', authenticate, aiController.matches);

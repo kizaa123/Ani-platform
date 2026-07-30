@@ -53,6 +53,7 @@ export const updateStaffSchema = z
     ),
     roleId: manageableRoleSchema.optional(),
     isActive: z.boolean().optional(),
+    verificationStatus: z.enum(['VERIFIED', 'REJECTED', 'PENDING']).optional(),
   })
   .refine((data) => Object.values(data).some((v) => v !== undefined), {
     message: 'At least one field is required',
@@ -179,6 +180,13 @@ export class StaffService {
       }
     }
 
+    if (
+      input.verificationStatus !== undefined &&
+      existing.roleId !== ROLES.ANI_ACCOUNTANT
+    ) {
+      throw new AppError(400, 'Approval status can only be updated for ANI Accountant accounts');
+    }
+
     const user = await prisma.user.update({
       where: { id: staffId },
       data: {
@@ -186,6 +194,9 @@ export class StaffService {
         ...(input.lastName !== undefined ? { lastName: input.lastName } : {}),
         ...(input.roleId !== undefined ? { roleId: input.roleId } : {}),
         ...(input.isActive !== undefined ? { isActive: input.isActive } : {}),
+        ...(input.verificationStatus !== undefined
+          ? { verificationStatus: input.verificationStatus }
+          : {}),
       },
       select: staffSelect,
     });

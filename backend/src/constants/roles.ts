@@ -124,6 +124,15 @@ export function isStaffRole(roleId: number): boolean {
   return STAFF_ROLES.includes(roleId as typeof ROLES.ANI_ACCOUNTANT);
 }
 
+export function isAccountantRole(roleId: number): boolean {
+  return roleId === ROLES.ANI_ACCOUNTANT;
+}
+
+/** Self-registered accountants need admin approval before portal access. */
+export function isAccountantApproved(verificationStatus: string): boolean {
+  return verificationStatus === 'VERIFIED';
+}
+
 export function isFarmerHandler(roleId: number): boolean {
   return roleId === ROLES.FARMER_HANDLER;
 }

@@ -48,7 +48,8 @@ export type NotificationTypeValue =
   | 'NEW_FARMER'
   | 'NEW_PUBLICATION'
   | 'HANDLER_DROPPED'
-  | 'FARM_PRODUCTS_AVAILABLE';
+  | 'FARM_PRODUCTS_AVAILABLE'
+  | 'NEW_ACCOUNTANT_REGISTRATION';
 
 export type CreateNotificationInput = {
   userId: string;
@@ -913,4 +914,32 @@ export async function getUserDisplayName(userId: string) {
     select: { firstName: true, lastName: true },
   });
   return user ? formatName(user.firstName, user.lastName) : 'Someone';
+}
+
+export async function notifyAdminsPendingAccountant(params: {
+  accountantUserId: string;
+  accountantName: string;
+  email: string;
+}) {
+  const admins = await prisma.user.findMany({
+    where: { roleId: ROLES.ADMIN, isActive: true },
+    select: { id: true },
+  });
+
+  await Promise.all(
+    admins.map((admin) =>
+      createNotification({
+        userId: admin.id,
+        actorId: params.accountantUserId,
+        type: 'NEW_ACCOUNTANT_REGISTRATION',
+        title: 'Accountant registration pending',
+        body: `${params.accountantName} (${params.email}) registered as ANI Accountant and awaits your approval.`,
+        link: '/admin/staff',
+        metadata: {
+          actionUrl: '/admin/staff',
+          actionLabel: 'Review registration',
+        },
+      }).catch(() => undefined)
+    )
+  );
 }

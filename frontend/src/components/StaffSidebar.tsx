@@ -1,8 +1,10 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { PortalSidebarLayout, type PortalNavLink } from "@/components/PortalSidebarLayout";
-import { ROLES, isAdmin, type UserProfile } from "@/lib/types";
+import { AccountantPendingApproval } from "@/components/AccountantPendingApproval";
+import { ROLES, isAdmin, isAccountantApproved, type UserProfile } from "@/lib/types";
 
 export const ADMIN_NAV_LINKS: PortalNavLink[] = [
   { href: "/dashboard", label: "Dashboard", icon: "home", match: (p) => p === "/dashboard" },
@@ -20,6 +22,10 @@ export const ADMIN_NAV_LINKS: PortalNavLink[] = [
   { href: "/profile", label: "Profile", icon: "user", match: (p) => p.startsWith("/profile") },
 ];
 
+export const ACCOUNTANT_PENDING_NAV_LINKS: PortalNavLink[] = [
+  { href: "/dashboard", label: "Dashboard", icon: "home", match: (p) => p === "/dashboard" },
+  { href: "/profile", label: "Profile", icon: "user", match: (p) => p.startsWith("/profile") },
+];
 export const ACCOUNTANT_NAV_LINKS: PortalNavLink[] = [
   {
     href: "/accountant",
@@ -77,16 +83,23 @@ function staffPortalTitle(roleId: number) {
   return "Staff Portal";
 }
 
-function navLinksForRole(roleId: number): PortalNavLink[] {
+function navLinksForRole(roleId: number, approved: boolean): PortalNavLink[] {
   if (isAdmin(roleId)) return ADMIN_NAV_LINKS;
-  if (roleId === ROLES.ANI_ACCOUNTANT) return ACCOUNTANT_NAV_LINKS;
+  if (roleId === ROLES.ANI_ACCOUNTANT) {
+    return approved ? ACCOUNTANT_NAV_LINKS : ACCOUNTANT_PENDING_NAV_LINKS;
+  }
   return STAFF_GENERAL_NAV_LINKS;
 }
 
 export function StaffPortalLayout({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
+  const pathname = usePathname();
+  const approved = user ? isAccountantApproved(user) : true;
+  const isAccountantRoute = pathname.startsWith("/accountant");
+  const showPendingGate =
+    user?.roleId === ROLES.ANI_ACCOUNTANT && !approved && isAccountantRoute;
   const portalTitle = user ? staffPortalTitle(user.roleId) : "Staff Portal";
-  const navLinks = user ? navLinksForRole(user.roleId) : ADMIN_NAV_LINKS;
+  const navLinks = user ? navLinksForRole(user.roleId, approved) : ADMIN_NAV_LINKS;
 
   return (
     <PortalSidebarLayout
@@ -95,7 +108,11 @@ export function StaffPortalLayout({ children }: { children: React.ReactNode }) {
       getSubtitle={(u: UserProfile) => u.role}
       defaultMobileTitle="Staff Portal"
     >
-      {children}
+      {showPendingGate ? (
+        <AccountantPendingApproval status={user.verificationStatus ?? "PENDING"} />
+      ) : (
+        children
+      )}
     </PortalSidebarLayout>
   );
 }

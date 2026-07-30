@@ -22,7 +22,11 @@ import { formatVerificationTags, verificationTagSelect } from '../utils/verifica
 import { defaultListingUnit } from '../constants/units';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import { normalizePhone, PHONE_VALIDATION_MESSAGE } from '../utils/phone';
-import { notifyHandlerDropped, notifyNewFarmerJoined } from './notification.service';
+import {
+  notifyHandlerDropped,
+  notifyNewFarmerJoined,
+  notifyAdminsPendingAccountant,
+} from './notification.service';
 
 const phoneSchema = z.preprocess(
   normalizePhone,
@@ -323,6 +327,9 @@ export class AuthService {
           roleId: input.roleId,
           emailVerified: false,
           profileComplete: true,
+          ...(input.roleId === ROLES.ANI_ACCOUNTANT
+            ? { verificationStatus: 'PENDING' as const }
+            : {}),
         },
         include: { role: true },
       });
@@ -430,6 +437,14 @@ export class AuthService {
         region: user.region,
         country: user.country,
         commodities,
+      }).catch(() => undefined);
+    }
+
+    if (input.roleId === ROLES.ANI_ACCOUNTANT) {
+      notifyAdminsPendingAccountant({
+        accountantUserId: user.id,
+        accountantName: `${user.firstName} ${user.lastName}`.trim(),
+        email: user.email,
       }).catch(() => undefined);
     }
 
@@ -805,6 +820,9 @@ export class AuthService {
           gpsLongitude: input.gpsLongitude,
           roleId: input.roleId,
           profileComplete: true,
+          ...(input.roleId === ROLES.ANI_ACCOUNTANT
+            ? { verificationStatus: 'PENDING' as const }
+            : {}),
         },
         include: { role: true },
       });
@@ -907,6 +925,14 @@ export class AuthService {
         region: updated.region,
         country: updated.country,
         commodities,
+      }).catch(() => undefined);
+    }
+
+    if (input.roleId === ROLES.ANI_ACCOUNTANT) {
+      notifyAdminsPendingAccountant({
+        accountantUserId: updated.id,
+        accountantName: `${updated.firstName} ${updated.lastName}`.trim(),
+        email: updated.email,
       }).catch(() => undefined);
     }
 

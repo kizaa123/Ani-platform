@@ -8,9 +8,11 @@ import { api } from "@/lib/api";
 import {
   fullName,
   isAdmin,
+  ROLES,
   STAFF_ROLE_OPTIONS,
   type StaffMember,
 } from "@/lib/types";
+import { VerificationBadge } from "@/components/VerificationBadge";
 import { formatDate } from "@/lib/format";
 import { PageContentSkeleton } from "@/components/LoadingPrimitives";
 import { EmailText } from "@/components/EmailText";
@@ -151,6 +153,23 @@ export default function AdminStaffPage() {
     }
   };
 
+  const pendingAccountants = staff.filter(
+    (member) => member.roleId === ROLES.ANI_ACCOUNTANT && member.verificationStatus === "PENDING"
+  );
+
+  const reviewAccountant = async (member: StaffMember, status: "VERIFIED" | "REJECTED") => {
+    setActionId(member.id);
+    setError("");
+    try {
+      await api.admin.staff.update(member.id, { verificationStatus: status });
+      await refreshStaff();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not update approval status");
+    } finally {
+      setActionId(null);
+    }
+  };
+
   if (loading || !user) return <PageContentSkeleton maxWidth="max-w-7xl" />;
 
   const activeCount = staff.filter((s) => s.isActive).length;
@@ -192,10 +211,71 @@ export default function AdminStaffPage() {
           <p className="mt-1 text-2xl font-bold text-green-700">{activeCount}</p>
         </div>
         <div className="card-elevated rounded-2xl p-4 sm:p-5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Inactive</p>
-          <p className="mt-1 text-2xl font-bold text-gray-500">{staff.length - activeCount}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+            Pending accountants
+          </p>
+          <p className="mt-1 text-2xl font-bold text-amber-700">{pendingAccountants.length}</p>
         </div>
       </div>
+
+      {pendingAccountants.length > 0 && (
+        <div className="card-elevated mb-8 overflow-hidden rounded-2xl">
+          <div className="border-b border-brand-100 bg-amber-50/80 px-4 py-3 sm:px-6">
+            <h2 className="text-lg font-bold text-brand-900">Pending accountant registrations</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Self-registered ANI Accountants cannot access the financial portal until approved.
+            </p>
+          </div>
+          <div className="overflow-x-auto p-4 sm:p-6">
+            <table className="w-full min-w-[640px] text-left text-sm">
+              <thead>
+                <tr className="border-b border-brand-100 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                  <th className="pb-3 pr-4">Name</th>
+                  <th className="pb-3 pr-4">Email</th>
+                  <th className="pb-3 pr-4">Status</th>
+                  <th className="pb-3 pr-4">Registered</th>
+                  <th className="pb-3">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-brand-50">
+                {pendingAccountants.map((member) => {
+                  const busy = actionId === member.id;
+                  return (
+                    <tr key={member.id}>
+                      <td className="py-3 pr-4 font-semibold text-brand-900">{fullName(member)}</td>
+                      <td className="py-3 pr-4"><EmailText email={member.email} /></td>
+                      <td className="py-3 pr-4">
+                        <VerificationBadge adminView status={member.verificationStatus} />
+                      </td>
+                      <td className="py-3 pr-4 text-gray-500">{formatDate(member.createdAt)}</td>
+                      <td className="py-3">
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => reviewAccountant(member, "VERIFIED")}
+                            className="rounded-lg bg-green-700 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => reviewAccountant(member, "REJECTED")}
+                            className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 disabled:opacity-50"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {showForm && (
         <div className="card-elevated mb-8 rounded-2xl p-5 sm:p-6">
@@ -334,15 +414,20 @@ export default function AdminStaffPage() {
                       <td className="py-3 pr-4"><EmailText email={member.email} /></td>
                       <td className="py-3 pr-4 text-gray-700">{member.roleName}</td>
                       <td className="py-3 pr-4">
-                        <span
-                          className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                            member.isActive
-                              ? "bg-green-100 text-green-800"
-                              : "bg-gray-100 text-gray-600"
-                          }`}
-                        >
-                          {member.isActive ? "Active" : "Inactive"}
-                        </span>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                              member.isActive
+                                ? "bg-green-100 text-green-800"
+                                : "bg-gray-100 text-gray-600"
+                            }`}
+                          >
+                            {member.isActive ? "Active" : "Inactive"}
+                          </span>
+                          {member.roleId === ROLES.ANI_ACCOUNTANT && (
+                            <VerificationBadge adminView status={member.verificationStatus} />
+                          )}
+                        </div>
                       </td>
                       <td className="py-3 pr-4 text-gray-500">{formatDate(member.createdAt)}</td>
                       <td className="py-3">

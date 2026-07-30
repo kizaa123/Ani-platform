@@ -842,6 +842,27 @@ export function isAccountant(roleId: number) {
   return roleId === ROLES.ANI_ACCOUNTANT;
 }
 
+export function isAccountantApproved(user: {
+  roleId: number;
+  verificationStatus?: string;
+}) {
+  return !isAccountant(user.roleId) || user.verificationStatus === "VERIFIED";
+}
+
+export function isAccountantPendingApproval(user: {
+  roleId: number;
+  verificationStatus?: string;
+}) {
+  return isAccountant(user.roleId) && user.verificationStatus === "PENDING";
+}
+
+export function isAccountantAwaitingAccess(user: {
+  roleId: number;
+  verificationStatus?: string;
+}) {
+  return isAccountant(user.roleId) && !isAccountantApproved(user);
+}
+
 export function isResearcher(roleId: number) {
   return roleId === ROLES.RESEARCHER;
 }
@@ -961,6 +982,7 @@ export interface AdminStats {
   activeConnections: number;
   pendingVerifications: number;
   pendingConnections: number;
+  pendingAccountantApprovals?: number;
   /** Farm access, publication access, and legacy access fees. */
   accessIncome: number;
   /** 13.34% ANI remainder from released order distributions. */

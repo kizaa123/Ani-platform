@@ -539,6 +539,7 @@ class ApiClient {
           lastName: string;
           roleId: number;
           isActive: boolean;
+          verificationStatus: "VERIFIED" | "REJECTED" | "PENDING";
         }>
       ) =>
         this.request<import("./types").StaffMember>(`/admin/staff/${id}`, {
