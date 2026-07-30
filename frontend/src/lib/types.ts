@@ -335,6 +335,17 @@ export interface FinancialStatementLineItem {
   purchaseCount?: number;
 }
 
+export interface FarmerPendingDistribution {
+  id: string;
+  date: string;
+  orderId: string;
+  orderName: string;
+  buyerName: string;
+  shareAmount: number;
+  orderAmount?: number;
+  status: 'PENDING' | 'DISTRIBUTED';
+}
+
 export interface FinancialStatement {
   farmName: string;
   farmerName: string;
@@ -353,9 +364,12 @@ export interface FinancialStatement {
     acceptedConnections: number;
     pendingConnections: number;
     totalProducts: number;
+    pendingDistributionCount?: number;
+    pendingDistributionTotal?: number;
   };
   lineItems: FinancialStatementLineItem[];
   salesLineItems: FinancialStatementLineItem[];
+  pendingDistributions?: FarmerPendingDistribution[];
 }
 
 export interface BuyerOrderLineItem extends OrderEscrowFields {
@@ -852,6 +866,14 @@ export interface AdminStats {
   activeConnections: number;
   pendingVerifications: number;
   pendingConnections: number;
+  /** Farm access, publication access, and legacy access fees. */
+  accessIncome: number;
+  /** 13.34% ANI remainder from released order distributions. */
+  orderShareIncome: number;
+  /** accessIncome + orderShareIncome. */
+  totalPlatformIncome: number;
+  accessPaymentCount: number;
+  orderShareCount: number;
 }
 
 export interface AdminDashboardCharts {

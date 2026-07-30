@@ -10,6 +10,8 @@ import {
 } from '../constants/units';
 import {
   fetchFarmerDistributedLines,
+  fetchHandlerDistributionLines,
+  mapDistributionToFarmerPendingLine,
   mapDistributionToFarmerSaleLineItem,
 } from '../utils/distributionFinancials';
 import {
@@ -226,15 +228,17 @@ export class FarmService {
       'Farmer profile not found'
     );
 
-    const [acceptedConnections, pendingConnections, distributedLines] = await Promise.all([
-      prisma.connectionRequest.count({
-        where: { farmerId: farmerUserId, status: 'ACCEPTED' },
-      }),
-      prisma.connectionRequest.count({
-        where: { farmerId: farmerUserId, status: 'PENDING' },
-      }),
-      fetchFarmerDistributedLines(farmerUserId),
-    ]);
+    const [acceptedConnections, pendingConnections, distributedLines, pendingLines] =
+      await Promise.all([
+        prisma.connectionRequest.count({
+          where: { farmerId: farmerUserId, status: 'ACCEPTED' },
+        }),
+        prisma.connectionRequest.count({
+          where: { farmerId: farmerUserId, status: 'PENDING' },
+        }),
+        fetchFarmerDistributedLines(farmerUserId),
+        fetchHandlerDistributionLines(farmerUserId, ['FARMER'], ['PENDING']),
+      ]);
 
     const lineItems = profile.listings.map((listing) => {
       const totalValue = listing.quantity * listing.price;
@@ -254,6 +258,11 @@ export class FarmService {
     });
 
     const salesLineItems = distributedLines.map(mapDistributionToFarmerSaleLineItem);
+    const pendingDistributions = pendingLines.map(mapDistributionToFarmerPendingLine);
+    const pendingDistributionTotal = pendingDistributions.reduce(
+      (sum, line) => sum + line.shareAmount,
+      0
+    );
 
     const activeItems = lineItems.filter((l) => l.status === 'ACTIVE');
     const soldItems = lineItems.filter((l) => l.status === 'SOLD');
@@ -261,9 +270,6 @@ export class FarmService {
 
     const sumTotalValue = (items: typeof lineItems) =>
       items.reduce((acc, l) => acc + l.totalValue, 0);
-
-    const sumUnitPrice = (items: typeof lineItems) =>
-      items.reduce((acc, l) => acc + l.unitPrice, 0);
 
     const totalSalesRevenue = salesLineItems.reduce((acc, s) => acc + s.totalValue, 0);
 
@@ -276,7 +282,7 @@ export class FarmService {
       generatedAt: new Date().toISOString(),
       summary: {
         activeListings: activeItems.length,
-        totalListedValue: sumUnitPrice(activeItems),
+        totalListedValue: sumTotalValue(activeItems),
         soldListings: soldItems.length,
         totalSoldValue: sumTotalValue(soldItems),
         totalSalesRevenue,
@@ -285,9 +291,12 @@ export class FarmService {
         acceptedConnections,
         pendingConnections,
         totalProducts: lineItems.length,
+        pendingDistributionCount: pendingDistributions.length,
+        pendingDistributionTotal,
       },
       lineItems,
       salesLineItems,
+      pendingDistributions,
     };
   }
 

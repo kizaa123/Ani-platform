@@ -167,14 +167,15 @@ export function PurchaseModal({
                 </div>
               </div>
 
-              <div className="rounded-xl border border-brand-100 bg-brand-50/60 px-4 py-4">
-                <p className="text-2xl font-bold text-brand-900">
-                  {listing.priceLabel || `GHC ${unitPrice}/${unitLabel}`}
+              <div className="space-y-2.5 rounded-xl border border-brand-100 bg-brand-50/60 px-4 py-4">
+                <p className="text-sm text-brand-900">
+                  <span className="font-semibold">Price:</span> GHC {unitPrice}
                 </p>
-                <div className="mt-3 flex items-center justify-between gap-3 border-t border-brand-100 pt-3">
-                  <p className="text-sm text-gray-600">
-                    {listing.quantityLabel || `${maxQty} ${unitLabel} in stock`}
-                  </p>
+                <p className="text-sm text-brand-900">
+                  <span className="font-semibold">Quantity:</span> {maxQty}
+                </p>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-brand-900">Harvest:</span>
                   <HarvestCalendarTrigger
                     harvestStartDate={listing.harvestStartDate}
                     harvestEndDate={listing.harvestEndDate}
@@ -259,7 +260,7 @@ export function PurchaseModal({
           {relatedProducts.length > 0 && (
             <section className="mt-8 border-t border-brand-100 pt-6">
               <h2 className="text-base font-bold text-brand-900">More from this farm</h2>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-4 grid auto-rows-fr gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {relatedProducts.map((product) => (
                   <FarmerProductCard
                     key={product.id}

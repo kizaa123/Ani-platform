@@ -318,13 +318,17 @@ export default function HomePage() {
             {TEAM.map((member, i) => (
               <ScrollReveal key={member.name} delay={scrollStagger(i, 120)} duration={600} direction="fade-up">
                 <article className="group flex h-full flex-col overflow-hidden rounded-3xl border border-brand-700/50 bg-brand-900 shadow-xl transition-all duration-500 hover:-translate-y-1 hover:border-yellow-500/30 hover:shadow-[0_24px_48px_rgba(0,0,0,0.45)]">
-                  <div className="relative aspect-[4/5] w-full shrink-0 overflow-hidden bg-brand-800">
+                  <div className="relative aspect-[4/3] max-h-56 w-full shrink-0 overflow-hidden bg-brand-800 sm:max-h-60">
                     <Image
                       src={member.img}
                       alt={member.name}
                       fill
                       className="object-cover object-[center_18%] transition-transform duration-700 group-hover:scale-[1.03]"
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 384px"
+                    />
+                    <div
+                      className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_100%_55%_at_50%_100%,rgba(116,198,157,0.18),transparent_70%),linear-gradient(to_top,rgba(64,145,108,0.22)_0%,rgba(82,183,136,0.08)_40%,transparent_70%)]"
+                      aria-hidden="true"
                     />
                   </div>
 

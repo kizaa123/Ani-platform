@@ -159,7 +159,7 @@ export default function AdminStaffPage() {
       <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
         <div>
           <Link href="/admin" className="text-xs font-semibold text-brand-600 hover:underline">
-            ← Admin Dashboard
+            Admin Dashboard
           </Link>
           <h1 className="mt-2 text-3xl font-bold text-brand-900">ANI Team</h1>
           <p className="mt-1 text-sm text-gray-500">

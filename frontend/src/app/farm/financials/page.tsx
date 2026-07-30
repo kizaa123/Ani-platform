@@ -5,20 +5,25 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { FinancialStatement, ROLES } from "@/lib/types";
-import { SalesOrdersTable } from "@/components/ProductOrdersList";
-import { ProductOrderLineItem } from "@/lib/types";
+import {
+  FarmerPendingDistribution,
+  FinancialStatement,
+  ProductOrderLineItem,
+  ROLES,
+} from "@/lib/types";
+import { formatDate, formatGhc, orderStatusStyle } from "@/lib/format";
+import { OrderDetailModal, SalesOrdersTable } from "@/components/ProductOrdersList";
 
-function formatGhc(amount: number) {
-  return `GHC ${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
+type FarmerOrderLineItem = ProductOrderLineItem & { orderId?: string };
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+function findFarmerOrder(
+  orders: FarmerOrderLineItem[],
+  orderId: string | undefined
+): FarmerOrderLineItem | null {
+  if (!orderId) return null;
+  return (
+    orders.find((o) => o.orderId === orderId || o.id === orderId) ?? null
+  );
 }
 
 function statusStyle(status: string) {
@@ -39,6 +44,9 @@ export default function FinancialStatementPage() {
   const router = useRouter();
   const [statement, setStatement] = useState<FinancialStatement | null>(null);
   const [error, setError] = useState("");
+  const [selectedOrder, setSelectedOrder] = useState<FarmerOrderLineItem | null>(null);
+  const [loadingOrderId, setLoadingOrderId] = useState<string | null>(null);
+  const [orderLoadError, setOrderLoadError] = useState("");
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
@@ -57,6 +65,32 @@ export default function FinancialStatementPage() {
     }
   }, [user?.id, loading, router]);
 
+  async function openOrderModal(item: FarmerPendingDistribution) {
+    if (!item.orderId) {
+      setOrderLoadError("Order details are not available for this payment.");
+      return;
+    }
+    setLoadingOrderId(item.id);
+    setOrderLoadError("");
+    try {
+      const orders = (await api.farm.orders()) as FarmerOrderLineItem[];
+      const match = findFarmerOrder(orders, item.orderId);
+      if (!match) {
+        setOrderLoadError("Could not load order details. Try again from the orders page.");
+        return;
+      }
+      setSelectedOrder(match);
+    } catch (e) {
+      setOrderLoadError(e instanceof Error ? e.message : "Failed to load order");
+    } finally {
+      setLoadingOrderId(null);
+    }
+  }
+
+  function closeOrderModal() {
+    setSelectedOrder(null);
+  }
+
   if (loading || !user) {
     return <div className="p-12 text-center text-gray-500">Loading...</div>;
   }
@@ -74,6 +108,7 @@ export default function FinancialStatementPage() {
   }
 
   const { summary } = statement;
+  const pendingRows = statement.pendingDistributions ?? [];
   const salesOrders: ProductOrderLineItem[] = (statement.salesLineItems ?? []).map((item) => ({
     id: item.id,
     date: typeof item.date === "string" ? item.date : String(item.date),
@@ -108,32 +143,101 @@ export default function FinancialStatementPage() {
         <p className="text-sm text-gray-500">What you have listed, sold, and earned</p>
       </div>
 
-      {/* Summary cards */}
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="min-h-28 rounded-xl border border-brand-100 bg-white p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase text-gray-500">Products for sale</p>
-          <p className="mt-2 text-xl font-bold text-brand-900">{formatGhc(summary.totalListedValue)}</p>
-          <p className="mt-1 text-xs text-gray-500">{summary.activeListings} active product(s)</p>
-        </div>
-        <div className="min-h-28 rounded-xl border border-brand-100 bg-white p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase text-gray-500">Total earned</p>
-          <p className="mt-2 text-xl font-bold text-green-700">{formatGhc(summary.totalSalesRevenue ?? 0)}</p>
-          <p className="mt-1 text-xs text-gray-500">{summary.totalSalesCount ?? 0} distributed payment(s)</p>
-        </div>
-        <div className="min-h-28 rounded-xl border border-brand-100 bg-white p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase text-gray-500">All products</p>
-          <p className="mt-2 text-xl font-bold text-brand-900">{summary.totalProducts}</p>
-          <p className="mt-1 text-xs text-gray-500">Listed on your farm</p>
-        </div>
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <SummaryCard
+          label="Products for sale"
+          value={formatGhc(summary.totalListedValue)}
+          sub={`${summary.activeListings} active product(s)`}
+        />
+        <SummaryCard
+          label="Total earned"
+          value={formatGhc(summary.totalSalesRevenue ?? 0)}
+          sub={`${summary.totalSalesCount ?? 0} distributed payment(s)`}
+          accent="green"
+        />
+        <SummaryCard
+          label="Pending distribution"
+          value={formatGhc(summary.pendingDistributionTotal ?? 0)}
+          sub={`${summary.pendingDistributionCount ?? 0} awaiting accountant payout`}
+          accent="amber"
+        />
+        <SummaryCard
+          label="All products"
+          value={String(summary.totalProducts)}
+          sub="Listed on your farm"
+        />
       </div>
 
-      {/* Sales table */}
+      <div className="mb-6 overflow-hidden rounded-2xl border border-amber-100 bg-white shadow-sm">
+        <div className="border-b border-amber-100 bg-amber-50/40 px-6 py-4">
+          <h3 className="text-base font-semibold text-brand-900">Undistributed payments</h3>
+          <p className="text-sm text-gray-500">
+            Your 66.66% Fellow share awaiting ANI Accountant distribution after order release
+          </p>
+        </div>
+
+        {pendingRows.length === 0 ? (
+          <div className="px-6 py-12 text-center text-sm text-gray-500">
+            No pending payments. Amounts appear here after an order is released and before the
+            accountant distributes your share.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] text-sm">
+              <thead>
+                <tr className="border-b border-amber-50 bg-amber-50/50 text-left text-xs font-semibold uppercase text-gray-500">
+                  <th className="px-6 py-3">Order</th>
+                  <th className="px-4 py-3">Buyer</th>
+                  <th className="px-4 py-3 text-right">Share amount</th>
+                  <th className="px-4 py-3">Order date</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-6 py-3">Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingRows.map((item) => (
+                  <tr key={item.id} className="border-b border-amber-50 hover:bg-amber-50/30">
+                    <td className="px-6 py-3 font-medium text-brand-900">{item.orderName}</td>
+                    <td className="px-4 py-3 text-gray-700">{item.buyerName}</td>
+                    <td className="px-4 py-3 text-right font-semibold text-amber-700">
+                      {formatGhc(item.shareAmount)}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-gray-600">
+                      {formatDate(item.date)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs font-semibold capitalize ${orderStatusStyle(item.status)}`}
+                      >
+                        {item.status.toLowerCase()}
+                      </span>
+                    </td>
+                    <td className="px-6 py-3">
+                      <button
+                        type="button"
+                        onClick={() => openOrderModal(item)}
+                        disabled={loadingOrderId === item.id}
+                        className="font-semibold text-brand-700 hover:underline disabled:opacity-50"
+                      >
+                        {loadingOrderId === item.id ? "Loading…" : "View order"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
       {(statement.salesLineItems?.length ?? 0) > 0 && (
         <div className="mb-6 overflow-hidden rounded-2xl border border-green-100 bg-white shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-green-100 bg-green-50/50 px-6 py-4">
             <div>
               <h3 className="text-base font-semibold text-brand-900">Payments received</h3>
-              <p className="text-sm text-gray-500">Funds distributed by ANI Accountant after successful delivery</p>
+              <p className="text-sm text-gray-500">
+                Funds distributed by ANI Accountant after successful delivery
+              </p>
             </div>
             <Link href="/farm/orders" className="text-sm font-semibold text-brand-700 hover:underline">
               View all orders
@@ -146,7 +250,6 @@ export default function FinancialStatementPage() {
         </div>
       )}
 
-      {/* Line items table */}
       <div className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
         <div className="border-b border-brand-100 px-6 py-4">
           <h3 className="text-base font-semibold text-brand-900">Your products</h3>
@@ -215,9 +318,55 @@ export default function FinancialStatementPage() {
         )}
       </div>
 
+      {orderLoadError && (
+        <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{orderLoadError}</p>
+      )}
+
+      {selectedOrder && (
+        <OrderDetailModal
+          order={selectedOrder}
+          perspective="farmer"
+          trackEditable
+          onClose={closeOrderModal}
+          onTrackUpdated={(updated) => {
+            setSelectedOrder((prev) => (prev ? { ...prev, ...updated } : prev));
+          }}
+        />
+      )}
+
       <p className="mt-4 text-xs text-gray-400 text-center">
         Totals show payments distributed by ANI Accountant. Listed values reflect products currently for sale.
       </p>
+    </div>
+  );
+}
+
+function SummaryCard({
+  label,
+  value,
+  sub,
+  accent,
+}: {
+  label: string;
+  value: string;
+  sub: string;
+  accent?: "green" | "amber";
+}) {
+  return (
+    <div className="min-h-28 rounded-xl border border-brand-100 bg-white p-6 shadow-sm">
+      <p className="text-xs font-semibold uppercase text-gray-500">{label}</p>
+      <p
+        className={`mt-2 text-xl font-bold ${
+          accent === "green"
+            ? "text-green-700"
+            : accent === "amber"
+              ? "text-amber-700"
+              : "text-brand-900"
+        }`}
+      >
+        {value}
+      </p>
+      <p className="mt-1 text-xs text-gray-500">{sub}</p>
     </div>
   );
 }

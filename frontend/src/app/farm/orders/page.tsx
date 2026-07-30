@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { ProductOrderLineItem, ROLES } from "@/lib/types";
 import { ProductOrdersList } from "@/components/ProductOrdersList";
 import { formatGhc } from "@/lib/format";
+import { basePriceFromListed } from "@/lib/listingPrice";
 import { Icon } from "@/components/icons";
 
 export default function FarmerOrdersPage() {
@@ -34,11 +35,12 @@ export default function FarmerOrdersPage() {
     }
   }, [user?.id, loading, router]);
 
-  const paidTotal = useMemo(
+  // Orders store buyer-facing listed totals (base farmer price × 1.5); revenue is farmer base price (X).
+  const revenueReceived = useMemo(
     () =>
       orders
         .filter((o) => o.status === "PAID")
-        .reduce((sum, o) => sum + o.totalAmount, 0),
+        .reduce((sum, o) => sum + basePriceFromListed(o.totalAmount), 0),
     [orders]
   );
 
@@ -74,7 +76,7 @@ export default function FarmerOrdersPage() {
     <div className="mx-auto max-w-5xl px-4 py-8">
       <div className="mb-8">
         <Link href="/farm" className="text-sm font-medium text-brand-600 hover:underline">
-          &larr; Back to My Farm
+          Back to My Farm
         </Link>
         <h1 className="mt-2 text-3xl font-bold text-brand-900">Buyer Orders</h1>
         <p className="text-gray-500">
@@ -109,12 +111,12 @@ export default function FarmerOrdersPage() {
 
         <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-xs">
           <p className="text-xs font-semibold uppercase text-gray-500">Revenue Received</p>
-          <p className="mt-1 text-2xl font-bold text-brand-900">{formatGhc(paidTotal)}</p>
+          <p className="mt-1 text-2xl font-bold text-brand-900">{formatGhc(revenueReceived)}</p>
           <Link
             href="/farm/financials"
             className="mt-1 inline-block text-xs font-semibold text-brand-700 hover:underline"
           >
-            Financial statement &rarr;
+            Financial statement
           </Link>
         </div>
       </div>

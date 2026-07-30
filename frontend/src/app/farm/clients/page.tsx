@@ -15,14 +15,15 @@ function formatLocation(client: FarmClient): string {
 
 function ClientCard({ client, onNotify }: { client: FarmClient; onNotify: () => void }) {
   const location = formatLocation(client);
+  const subtitle = location || client.roleLabel;
 
   return (
     <button
       type="button"
       onClick={onNotify}
-      className="flex w-full flex-col rounded-xl border border-brand-100 bg-white p-3 text-left shadow-sm transition hover:border-brand-300 hover:shadow-md"
+      className="flex w-full rounded-xl border border-brand-100 bg-white p-3 text-left shadow-sm transition hover:border-brand-300 hover:shadow-md"
     >
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex min-w-0 items-center gap-2">
         <AvatarWithVerification
           src={client.profilePicture}
           name={client.firstName}
@@ -30,16 +31,19 @@ function ClientCard({ client, onNotify }: { client: FarmClient; onNotify: () => 
           verificationStatus={client.verificationStatus}
           verificationTags={client.verificationTags}
         />
-        <p className="min-w-0 flex-1 truncate text-right text-sm font-semibold text-brand-900">
-          {fullName(client)}
-        </p>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold leading-tight text-brand-900">
+            {fullName(client)}
+          </p>
+          {subtitle && (
+            <p
+              className={`mt-0.5 truncate text-xs ${location ? "text-gray-500" : "text-gray-400"}`}
+            >
+              {subtitle}
+            </p>
+          )}
+        </div>
       </div>
-      {location && (
-        <p className="mt-2 truncate text-xs text-gray-500">{location}</p>
-      )}
-      {!location && (
-        <p className="mt-2 text-xs text-gray-400">{client.roleLabel}</p>
-      )}
     </button>
   );
 }

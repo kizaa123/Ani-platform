@@ -19,6 +19,7 @@ import {
 import { VerificationBadge } from "@/components/VerificationBadge";
 import { VerificationTagBadge } from "@/components/VerificationTagBadge";
 import { AdminStatCard } from "@/components/admin/AdminStatCard";
+import { AdminPlatformIncomeCard } from "@/components/admin/AdminPlatformIncomeCard";
 import { AdminDashboardChartsPanel } from "@/components/admin/AdminDashboardCharts";
 import { AnimatedStat } from "@/components/AnimatedStat";
 import { ScrollReveal } from "@/components/ScrollReveal";
@@ -40,6 +41,16 @@ function AdminDashboardSkeleton() {
             <Skeleton className="mt-2 h-4 w-28" />
           </div>
         ))}
+      </div>
+      <div className="mb-8">
+        <div className="card-elevated rounded-2xl p-5 sm:p-6">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="mt-3 h-10 w-48" />
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <Skeleton className="h-24 rounded-xl" />
+            <Skeleton className="h-24 rounded-xl" />
+          </div>
+        </div>
       </div>
       <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
@@ -153,10 +164,12 @@ export default function AdminPage() {
     }
   };
 
+  const internationalTagsForUser = (user: AdminVerificationUser) =>
+    (user.verificationTags ?? []).filter((tag) => tag.tagType !== "STANDARD");
+
   const assignableTagsForUser = (user: AdminVerificationUser): VerificationTagType[] => {
     const existing = new Set((user.verificationTags ?? []).map((t) => t.tagType));
     const options: VerificationTagType[] = [];
-    if (!existing.has("STANDARD")) options.push("STANDARD");
     if (isFarmer(user.roleId) && !existing.has("INTERNATIONAL_FARMER")) {
       options.push("INTERNATIONAL_FARMER");
     }
@@ -165,6 +178,9 @@ export default function AdminPage() {
     }
     return options;
   };
+
+  const assignTagLabel = (tagType: VerificationTagType) =>
+    tagType === "INTERNATIONAL_FARMER" ? "International Fellow" : "International Client";
 
   const assignTag = async (userId: string, tagType: VerificationTagType) => {
     setTagBusy(`${userId}:${tagType}`);
@@ -277,6 +293,21 @@ export default function AdminPage() {
             );
           })}
         </div>
+      )}
+
+      {stats && (
+        <ScrollReveal delay={scrollStagger(0, 90)} duration={450} direction="fade-up">
+          <div className="mb-8">
+            <AdminPlatformIncomeCard
+              totalPlatformIncome={stats.totalPlatformIncome}
+              accessIncome={stats.accessIncome}
+              orderShareIncome={stats.orderShareIncome}
+              accessPaymentCount={stats.accessPaymentCount}
+              orderShareCount={stats.orderShareCount}
+              animationDelay={scrollStagger(0, 90)}
+            />
+          </div>
+        </ScrollReveal>
       )}
 
       {stats && (
@@ -426,7 +457,7 @@ export default function AdminPage() {
                           <div className="flex flex-wrap items-center gap-2">
                             <p className="font-bold text-brand-900">{fullName(u)}</p>
                             <VerificationBadge adminView status={u.verificationStatus} />
-                            {(u.verificationTags ?? []).map((tag) => (
+                            {internationalTagsForUser(u).map((tag) => (
                               <VerificationTagBadge
                                 key={tag.id}
                                 tagType={tag.tagType}
@@ -449,11 +480,7 @@ export default function AdminPage() {
                                   onClick={() => void assignTag(u.id, tagType)}
                                   className="rounded-lg border border-brand-200 px-2.5 py-1 text-[10px] font-semibold text-brand-700 hover:bg-brand-50 disabled:opacity-50"
                                 >
-                                  + {tagType === "STANDARD"
-                                    ? "Verified tag"
-                                    : tagType === "INTERNATIONAL_FARMER"
-                                      ? "International Fellow"
-                                      : "International Client"}
+                                  + {assignTagLabel(tagType)}
                                 </button>
                               ))}
                             </div>

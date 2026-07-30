@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import { BuyerOrderLineItem, isHandler } from "@/lib/types";
 import { ProductOrdersList } from "@/components/ProductOrdersList";
 import { HandlerBuyerClientNav } from "@/components/HandlerBuyerClientNav";
-import { formatGhc } from "@/lib/format";
 
 export default function HandlerClientBuyerOrdersPage() {
   const params = useParams();
@@ -36,9 +35,14 @@ export default function HandlerClientBuyerOrdersPage() {
     }
   }, [user?.id, loading, router, ownerId]);
 
-  const paidTotal = orders
-    .filter((o) => o.status === "PAID")
-    .reduce((sum, o) => sum + o.totalAmount, 0);
+  const servedCount = useMemo(
+    () => orders.filter((o) => o.trackStage === "DELIVERED" || o.escrowStatus === "RELEASED").length,
+    [orders]
+  );
+  const unservedCount = useMemo(
+    () => orders.filter((o) => o.trackStage !== "DELIVERED" && o.escrowStatus !== "RELEASED").length,
+    [orders]
+  );
 
   if (loading || !user) {
     return <div className="p-12 text-center text-gray-500">Loading...</div>;
@@ -56,21 +60,18 @@ export default function HandlerClientBuyerOrdersPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
       <HandlerBuyerClientNav ownerId={ownerId} buyerName={buyerName} />
-
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase text-gray-500">Total orders</p>
           <p className="mt-1 text-2xl font-bold text-brand-900">{orders.length}</p>
         </div>
         <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
-          <p className="text-xs font-semibold uppercase text-gray-500">Paid</p>
-          <p className="mt-1 text-2xl font-bold text-green-700">
-            {orders.filter((o) => o.status === "PAID").length}
-          </p>
+          <p className="text-xs font-semibold uppercase text-gray-500">Total served</p>
+          <p className="mt-1 text-2xl font-bold text-brand-900">{servedCount}</p>
         </div>
         <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
-          <p className="text-xs font-semibold uppercase text-gray-500">Product spend</p>
-          <p className="mt-1 text-2xl font-bold text-brand-900">{formatGhc(paidTotal)}</p>
+          <p className="text-xs font-semibold uppercase text-gray-500">Total unserved</p>
+          <p className="mt-1 text-2xl font-bold text-brand-900">{unservedCount}</p>
         </div>
       </div>
 

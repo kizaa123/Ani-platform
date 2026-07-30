@@ -33,8 +33,8 @@ export function FarmerProductCard({
 
   const resolvedImageClass =
     imageClassName ??
-    (compact ? "h-20 w-20 shrink-0 object-cover" : "h-44 w-full object-cover");
-  const resolvedContentClass = contentClassName ?? (compact ? "min-w-0 flex-1 p-2.5" : "p-3");
+    (compact ? "h-32 w-full object-cover" : "h-44 w-full object-cover");
+  const resolvedContentClass = contentClassName ?? (compact ? "flex flex-1 flex-col gap-1.5 p-3" : "p-3");
 
   const cardShellClass = `group w-full overflow-hidden transition-all hover:border-brand-300 hover:shadow-md ${
     compact ? "rounded-lg border" : "rounded-xl border"
@@ -54,9 +54,7 @@ export function FarmerProductCard({
     </span>
   );
 
-  const priceLabel =
-    product.priceLabel ||
-    `GHC ${product.price}/${formatListingUnit(product.unit ?? "bags")}`;
+  const priceDisplay = `GHC ${product.price ?? 0}`;
 
   const renderMedia = () => {
     if (thumb) {
@@ -97,8 +95,8 @@ export function FarmerProductCard({
 
   if (compact) {
     return (
-      <div className={cardShellClass}>
-        <button type="button" onClick={onClick} className="flex w-full items-stretch text-left">
+      <div className={`${cardShellClass} flex min-h-[15.5rem] flex-col`}>
+        <button type="button" onClick={onClick} className="flex h-full w-full flex-col text-left">
           {renderMedia()}
           <div className={resolvedContentClass}>
             <div className="flex items-start justify-between gap-2">
@@ -107,9 +105,15 @@ export function FarmerProductCard({
               </h4>
               {availabilityBadge}
             </div>
-            <div className="mt-1 flex items-center justify-between gap-2">
-              <p className="text-sm font-bold text-brand-800">{priceLabel}</p>
-              {hasHarvestInfo && (
+            <p className="text-sm font-bold text-brand-800">{priceDisplay}</p>
+            {product.available && product.quantity != null && (
+              <p className="text-xs text-gray-600">
+                <span className="font-semibold text-brand-800">Quantity:</span> {product.quantity}
+              </p>
+            )}
+            {hasHarvestInfo && (
+              <div className="mt-auto flex items-center gap-1.5 pt-1">
+                <span className="text-xs font-semibold text-brand-800">Harvest:</span>
                 <HarvestCalendarTrigger
                   harvestStartDate={product.harvestStartDate}
                   harvestEndDate={product.harvestEndDate}
@@ -120,12 +124,7 @@ export function FarmerProductCard({
                   className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-brand-200 bg-white text-brand-700 hover:bg-brand-50"
                   iconClassName="h-4 w-4"
                 />
-              )}
-            </div>
-            {product.available && product.quantity != null && (
-              <p className="mt-0.5 text-xs text-gray-500">
-                {product.quantity} {formatListingUnit(product.unit ?? "bags")} left
-              </p>
+              </div>
             )}
           </div>
         </button>
@@ -149,7 +148,7 @@ export function FarmerProductCard({
           {availabilityBadge}
         </div>
         <p className="mt-1 text-sm font-bold text-brand-800">
-          {priceLabel}
+          {priceDisplay}
         </p>
         {product.available && product.quantity != null && (
           <p className="text-xs text-gray-500">

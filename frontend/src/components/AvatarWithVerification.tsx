@@ -66,7 +66,9 @@ export function AvatarWithVerification({
         className="!shadow-none"
       />
       {badges.length > 0 && (
-        <div className={`absolute -bottom-0.5 -right-0.5 z-10 flex items-end justify-end ${gapClass}`}>
+        <div
+          className={`absolute bottom-0 right-0 z-10 flex translate-x-1/4 translate-y-1/2 items-center justify-end ${gapClass}`}
+        >
           {badges.map((tagType) => (
             <span
               key={tagType}

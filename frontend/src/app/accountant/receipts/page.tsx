@@ -72,7 +72,7 @@ export default function AccountantReceiptsPage() {
     <div className="mx-auto max-w-6xl px-4 py-8">
       <div className="mb-6">
         <Link href="/accountant" className="text-xs text-brand-600 hover:underline">
-          ← Financial Overview
+          Financial Overview
         </Link>
         <h1 className="mt-2 text-xl font-bold text-brand-900">Order Receipts</h1>
         <p className="text-xs text-gray-500">

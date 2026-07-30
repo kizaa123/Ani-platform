@@ -212,6 +212,23 @@ function handlerLinePartyNames(line: HandlerDistributionLine) {
   };
 }
 
+export function mapDistributionToFarmerPendingLine(line: HandlerDistributionLine) {
+  const order = line.distribution.order;
+  const formatted = formatFarmerIncomingOrder(order);
+  const { orderName } = orderListingLabels(order.listing);
+
+  return {
+    id: line.id,
+    date: order.createdAt.toISOString(),
+    orderId: order.id,
+    orderName,
+    buyerName: formatted.buyerName,
+    shareAmount: line.amount,
+    orderAmount: order.totalAmount,
+    status: line.status,
+  };
+}
+
 export function mapDistributionToHandlerPendingLine(line: HandlerDistributionLine) {
   const order = line.distribution.order;
   const { orderName } = orderListingLabels(order.listing);

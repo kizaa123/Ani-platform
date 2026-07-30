@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { BuyerOrderLineItem, isMarketplaceBuyer } from "@/lib/types";
 import { ProductOrdersList } from "@/components/ProductOrdersList";
 import { formatGhc } from "@/lib/format";
+import { Icon } from "@/components/icons";
 
 export default function BuyerOrdersPage() {
   const { user, loading } = useAuth();
@@ -33,9 +34,23 @@ export default function BuyerOrdersPage() {
     }
   }, [user?.id, loading, router]);
 
-  const paidTotal = orders
-    .filter((o) => o.status === "PAID")
-    .reduce((sum, o) => sum + o.totalAmount, 0);
+  const paidTotal = useMemo(
+    () =>
+      orders
+        .filter((o) => o.status === "PAID")
+        .reduce((sum, o) => sum + o.totalAmount, 0),
+    [orders]
+  );
+
+  const servedOrders = useMemo(
+    () => orders.filter((o) => o.trackStage === "DELIVERED" || o.escrowStatus === "RELEASED"),
+    [orders]
+  );
+
+  const unservedOrders = useMemo(
+    () => orders.filter((o) => o.trackStage !== "DELIVERED" && o.escrowStatus !== "RELEASED"),
+    [orders]
+  );
 
   if (loading || !user) {
     return <div className="p-12 text-center text-gray-500">Loading...</div>;
@@ -66,11 +81,30 @@ export default function BuyerOrdersPage() {
         <p className="text-gray-500">Products you ordered from farmers on the marketplace</p>
       </div>
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-2">
+      <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase text-gray-500">Total orders</p>
           <p className="mt-1 text-2xl font-bold text-brand-900">{orders.length}</p>
         </div>
+
+        <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase text-amber-800">Unserved</p>
+            <Icon name="clock" className="h-4 w-4 text-amber-600" />
+          </div>
+          <p className="mt-1 text-2xl font-bold text-amber-900">{unservedOrders.length}</p>
+          <p className="mt-1 text-[11px] text-amber-700">Awaiting delivery</p>
+        </div>
+
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase text-emerald-800">Served</p>
+            <Icon name="check-circle" className="h-4 w-4 text-emerald-600" />
+          </div>
+          <p className="mt-1 text-2xl font-bold text-emerald-900">{servedOrders.length}</p>
+          <p className="mt-1 text-[11px] text-emerald-700">Delivered &amp; completed</p>
+        </div>
+
         <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase text-gray-500">Total product spend</p>
           <p className="mt-1 text-2xl font-bold text-brand-900">{formatGhc(paidTotal)}</p>

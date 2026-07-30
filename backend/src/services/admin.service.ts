@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { VerificationStatus } from '@prisma/client';
 import prisma from '../database/prisma';
 import { AppError, assertFound } from '../utils/errors';
+import { accountantService } from './accountant.service';
 import {
   ROLES,
   FARMER_ROLES,
@@ -212,6 +213,7 @@ export class AdminService {
       farmAccessRevenue,
       researchRevenue,
       accessPaymentRevenue,
+      platformIncome,
     ] = await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { roleId: { in: [...FARMER_ROLES] } } }),
@@ -243,6 +245,7 @@ export class AdminService {
         where: { status: 'COMPLETED' },
         _sum: { amount: true },
       }),
+      accountantService.getPlatformIncome(),
     ]);
 
     const totalRevenue =
@@ -262,6 +265,11 @@ export class AdminService {
       activeConnections,
       pendingVerifications,
       pendingConnections,
+      accessIncome: platformIncome.accessRevenue,
+      orderShareIncome: platformIncome.orderShareRevenue,
+      totalPlatformIncome: platformIncome.totalRevenue,
+      accessPaymentCount: platformIncome.accessPaymentCount,
+      orderShareCount: platformIncome.orderShareCount,
     };
   }
 

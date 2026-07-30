@@ -156,6 +156,11 @@ export class AccountantService {
     };
   }
 
+  /** ANI platform income: access fees + order-share remainder from released orders. */
+  async getPlatformIncome() {
+    return this.revenueTotals();
+  }
+
   async getOverview() {
     const [revenue, withdrawals, pendingPaidConnections] = await Promise.all([
       this.revenueTotals(),
