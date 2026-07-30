@@ -16,6 +16,27 @@ import { FarmAccessPaymentModal } from "@/components/FarmAccessPaymentModal";
 import { PurchaseModal } from "@/components/PurchaseModal";
 import { Icon } from "@/components/icons";
 import { CardGridSkeleton, PageContentSkeleton } from "@/components/LoadingPrimitives";
+import { ScrollReveal } from "@/components/ScrollReveal";
+import { scrollStagger } from "@/lib/scrollStagger";
+
+function isVerifiedFarmer(farmer: FarmerBrowseCard): boolean {
+  if (farmer.verificationStatus === "VERIFIED") return true;
+  return farmer.verificationTags?.some((tag) => tag.tagType === "STANDARD") ?? false;
+}
+
+function sortMarketplaceFarmers(farmers: FarmerBrowseCard[]): FarmerBrowseCard[] {
+  return [...farmers].sort((a, b) => {
+    const verifiedDiff = Number(isVerifiedFarmer(b)) - Number(isVerifiedFarmer(a));
+    if (verifiedDiff !== 0) return verifiedDiff;
+
+    const aName = (a.farmName || a.farmerName).trim().toLowerCase();
+    const bName = (b.farmName || b.farmerName).trim().toLowerCase();
+    const byFarm = aName.localeCompare(bName);
+    if (byFarm !== 0) return byFarm;
+
+    return a.farmerName.localeCompare(b.farmerName);
+  });
+}
 
 function filterFarmers(farmers: FarmerBrowseCard[], query: string): FarmerBrowseCard[] {
   const term = query.trim().toLowerCase();
@@ -64,7 +85,7 @@ export default function MarketplacePage() {
   }, [user?.id, user?.roleId, loading, router, loadBrowse]);
 
   const filteredFarmers = useMemo(
-    () => filterFarmers(browse?.farmers ?? [], search),
+    () => sortMarketplaceFarmers(filterFarmers(browse?.farmers ?? [], search)),
     [browse?.farmers, search]
   );
 
@@ -124,17 +145,20 @@ export default function MarketplacePage() {
   if (loading) return <PageContentSkeleton />;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-brand-900">Marketplace</h1>
-          <p className="text-gray-500">
-            Discover farmers, pay for farm access, and place orders
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
+      <ScrollReveal trigger="mount" delay={0} duration={450} direction="fade-up" className="mb-8">
+        <h1 className="text-3xl font-bold text-brand-900">Marketplace</h1>
+        <p className="mt-1 text-sm text-gray-500">
+          Discover farmers, pay for farm access, and place orders
+        </p>
+        {!browseLoading && !search.trim() && filteredFarmers.length > 0 && (
+          <p className="mt-2 text-sm text-gray-500">
+            {filteredFarmers.length} fellow{filteredFarmers.length !== 1 ? "s" : ""} available
           </p>
-        </div>
-      </div>
+        )}
+      </ScrollReveal>
 
-      <div className="mb-8">
+      <ScrollReveal trigger="mount" delay={80} duration={450} direction="fade-up" className="mb-8">
         <label htmlFor="marketplace-search" className="sr-only">
           Search farmers, commodities, or products
         </label>
@@ -149,7 +173,7 @@ export default function MarketplacePage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by farmer name, commodity, or product..."
-            className="w-full rounded-2xl border border-brand-200 bg-white py-3.5 pl-12 pr-4 text-brand-900 shadow-sm placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+            className="w-full rounded-2xl border border-brand-200 bg-white py-3.5 pl-12 pr-4 text-sm text-brand-900 shadow-sm placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
           />
         </div>
         {search.trim() && (
@@ -157,7 +181,7 @@ export default function MarketplacePage() {
             {filteredFarmers.length} farmer{filteredFarmers.length !== 1 ? "s" : ""} found
           </p>
         )}
-      </div>
+      </ScrollReveal>
 
       {orderPlacedMessage && (
         <div
@@ -179,21 +203,28 @@ export default function MarketplacePage() {
       )}
 
       {browseLoading ? (
-        <CardGridSkeleton />
+        <CardGridSkeleton count={6} columns="sm:grid-cols-2 lg:grid-cols-3" />
       ) : filteredFarmers.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-brand-200 p-12 text-center text-gray-500">
+        <div className="rounded-2xl border border-dashed border-brand-200 bg-white p-12 text-center text-gray-500">
           {search.trim() ? "No farmers match your search." : "No farmers registered yet."}
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredFarmers.map((farmer) => (
-            <MarketplaceFarmerCard
+          {filteredFarmers.map((farmer, index) => (
+            <ScrollReveal
               key={farmer.farmerId}
-              farmer={farmer}
-              accessPriceLabel={browse?.farmAccessPriceLabel}
-              onPayToAccess={setPayFarmer}
-              onViewFarm={handleViewFarm}
-            />
+              delay={scrollStagger(index, 70)}
+              duration={450}
+              direction="fade-up"
+              className="h-full"
+            >
+              <MarketplaceFarmerCard
+                farmer={farmer}
+                accessPriceLabel={browse?.farmAccessPriceLabel}
+                onPayToAccess={setPayFarmer}
+                onViewFarm={handleViewFarm}
+              />
+            </ScrollReveal>
           ))}
         </div>
       )}

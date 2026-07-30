@@ -56,7 +56,7 @@ export default function DashboardPage() {
     { href: "/farm/financials", title: "Financial Statement", desc: "View farm product finances", icon: "chart", show: isFarmer(user.roleId) },
     { href: "/farm/orders", title: "Buyer Orders", desc: "Track & manage orders placed by buyers", icon: "package", show: isFarmer(user.roleId) },
     { href: "/financials", title: "Purchase Financials", desc: "Spending & farm access fees", icon: "chart", show: canPurchaseFromMarketplace(user.roleId) },
-    { href: "/orders", title: "My Purchases", desc: "Track marketplace purchases", icon: "package", show: canPurchaseFromMarketplace(user.roleId) },
+    { href: "/orders", title: "My Order", desc: "Track marketplace purchases", icon: "package", show: canPurchaseFromMarketplace(user.roleId) },
     { href: "/student/settings", title: "Profile", desc: "Account & contact details", icon: "user", show: isStudent(user.roleId) },
     { href: "/connections", title: "Connections", desc: "Manage buyer-farmer requests", icon: "handshake", show: !isResearcher(user.roleId) && !isLiaison },
     { href: "/agents", title: isClo ? "My Buyers" : "My Clients", desc: isClo ? "View orders, spending & connections" : "View assigned farmers/buyers", icon: "users", show: isHandler(user.roleId) && !isLiaison },

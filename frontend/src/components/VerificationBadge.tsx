@@ -6,17 +6,20 @@ export function VerifiedBadgeIcon({
   className = "h-4 w-4",
   fill = VERIFIED_BADGE_FILL,
   "aria-label": ariaLabel = "Verified",
+  "aria-hidden": ariaHidden,
 }: {
   className?: string;
   fill?: string;
   "aria-label"?: string;
+  "aria-hidden"?: boolean;
 }) {
   return (
     <svg
       viewBox="0 0 24 24"
       fill="none"
       className={`inline-block shrink-0 ${className}`}
-      aria-label={ariaLabel}
+      aria-label={ariaHidden ? undefined : ariaLabel}
+      aria-hidden={ariaHidden}
     >
       {/* Filled scalloped badge shape (ri-verified-badge-fill) */}
       <path

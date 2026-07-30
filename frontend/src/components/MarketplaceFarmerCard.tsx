@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { FarmerBrowseCard } from "@/lib/types";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
@@ -51,38 +52,76 @@ function FarmActionButton({
   );
 }
 
+function useMinWidth(query: string): boolean {
+  const [matches, setMatches] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    const update = () => setMatches(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, [query]);
+
+  return matches;
+}
+
+function DetailTile({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl bg-brand-50 px-3 py-2">
+      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</p>
+      <p className="mt-0.5 text-sm font-semibold text-brand-900">{value}</p>
+    </div>
+  );
+}
+
 export function MarketplaceFarmerCard({
   farmer,
   accessPriceLabel,
   onPayToAccess,
   onViewFarm,
 }: MarketplaceFarmerCardProps) {
+  const isDesktop = useMinWidth("(min-width: 640px)");
+  const avatarSize = isDesktop ? "lg" : 112;
+  const productCount = farmer.products.length;
+  const productCountLabel = farmer.canViewProducts
+    ? productCount === 0
+      ? "No products listed"
+      : `${productCount} product${productCount === 1 ? "" : "s"} listed`
+    : farmer.hasFarmAccess && farmer.connectionStatus === "PENDING"
+      ? "Pending approval"
+      : "Hidden until access";
+
   return (
-    <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-brand-100 bg-white p-5 shadow-sm transition hover:border-brand-200 hover:shadow-md">
-      <div className="flex items-start gap-3">
+    <article className="card-elevated card-elevated-hover flex h-full flex-col overflow-hidden rounded-2xl p-5">
+      <div className="flex items-start gap-3 sm:gap-4">
         <AvatarWithVerification
           src={farmer.profilePicture}
           name={farmer.farmerName}
-          size="lg"
+          size={avatarSize}
           verificationStatus={farmer.verificationStatus}
           verificationTags={farmer.verificationTags}
         />
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate font-bold text-brand-900">{farmer.farmerName}</h3>
-          {farmer.farmName && (
-            <p className="truncate text-sm text-brand-700">{farmer.farmName}</p>
-          )}
-          <div className="mt-1.5">
-            <CountryBadge country={farmer.country} region={farmer.region} />
-          </div>
+        <div className="min-w-0 flex-1 pt-0.5">
+          <h3 className="truncate text-base font-bold text-brand-900 sm:text-lg">
+            {farmer.farmerName}
+          </h3>
+          <p className="truncate text-sm font-medium text-brand-700">
+            {farmer.farmName || "Farm name not set"}
+          </p>
         </div>
       </div>
 
-      {farmer.registeredCommodities.length > 0 && (
-        <div className="mt-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-            Commodities
-          </p>
+      <div className="mt-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Location</p>
+        <div className="mt-1.5">
+          <CountryBadge country={farmer.country} region={farmer.region} />
+        </div>
+      </div>
+
+      <div className="mt-4 min-h-[4.5rem]">
+        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Commodities</p>
+        {farmer.registeredCommodities.length > 0 ? (
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {farmer.registeredCommodities.map((c) => (
               <span
@@ -93,15 +132,15 @@ export function MarketplaceFarmerCard({
               </span>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <p className="mt-1.5 text-sm text-gray-500">No commodities registered</p>
+        )}
+      </div>
 
-      {farmer.farmSize && (
-        <div className="mt-3 rounded-xl bg-brand-50 px-3 py-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Farm size</p>
-          <p className="mt-0.5 text-sm font-semibold text-brand-900">{farmer.farmSize}</p>
-        </div>
-      )}
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <DetailTile label="Farm size" value={farmer.farmSize || "Not specified"} />
+        <DetailTile label="Products" value={productCountLabel} />
+      </div>
 
       <div className="mt-auto pt-4">
         <FarmActionButton

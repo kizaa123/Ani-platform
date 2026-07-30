@@ -15,7 +15,7 @@ type AvatarWithVerificationProps = {
   className?: string;
   onClick?: () => void;
   /** Where to place verification pills relative to the avatar */
-  tagPlacement?: "below" | "none";
+  tagPlacement?: "below" | "overlay" | "none";
 };
 
 const sizeMap = { sm: 56, md: 96, lg: 140, xl: 180 };
@@ -47,6 +47,36 @@ export function AvatarWithVerification({
   const hasTags = badges.length > 0 && tagPlacement !== "none";
   const tagSize = tagSizeForAvatar(px);
 
+  const tags = hasTags ? (
+    <VerificationTags
+      verificationTags={verificationTags}
+      verificationStatus={verificationStatus}
+      size={tagSize}
+      showLabels={false}
+      layout="row"
+    />
+  ) : null;
+
+  if (tagPlacement === "overlay") {
+    return (
+      <div className={`relative inline-flex shrink-0 ${className}`}>
+        <ProfilePhoto
+          src={src}
+          name={name}
+          size={px}
+          cacheBust={cacheBust}
+          onClick={onClick}
+          className="!shadow-none"
+        />
+        {tags && (
+          <div className="absolute -bottom-1 -right-1 flex max-w-[calc(100%+0.75rem)] flex-row flex-wrap items-end justify-end gap-0.5">
+            {tags}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className={`inline-flex shrink-0 flex-col items-center gap-1.5 ${className}`}>
       <ProfilePhoto
@@ -57,15 +87,7 @@ export function AvatarWithVerification({
         onClick={onClick}
         className="!shadow-none"
       />
-      {hasTags && (
-        <VerificationTags
-          verificationTags={verificationTags}
-          verificationStatus={verificationStatus}
-          size={tagSize}
-          layout="row"
-          className="px-0.5"
-        />
-      )}
+      {tags}
     </div>
   );
 }

@@ -47,9 +47,12 @@ export function getAvatarVerificationBadges(
 export function VerificationTagIcon({
   tagType,
   className = "h-4 w-4",
+  decorative = false,
 }: {
   tagType: VerificationTagType;
   className?: string;
+  /** When true, hide from screen readers (parent provides aria-label). */
+  decorative?: boolean;
 }) {
   const label = TAG_STYLES[tagType].label;
 
@@ -57,7 +60,8 @@ export function VerificationTagIcon({
     <VerifiedBadgeIcon
       className={className}
       fill={TAG_ICON_FILLS[tagType]}
-      aria-label={label}
+      aria-label={decorative ? undefined : label}
+      aria-hidden={decorative ? true : undefined}
     />
   );
 }
@@ -66,8 +70,14 @@ type TagBadgeSize = "xs" | "sm" | "md";
 
 const BADGE_ICON_SIZE: Record<TagBadgeSize, string> = {
   xs: "h-3 w-3",
-  sm: "h-3 w-3",
-  md: "h-3.5 w-3.5",
+  sm: "h-3.5 w-3.5",
+  md: "h-4 w-4",
+};
+
+const BADGE_CIRCLE_SIZE: Record<TagBadgeSize, string> = {
+  xs: "h-5 w-5",
+  sm: "h-6 w-6",
+  md: "h-7 w-7",
 };
 
 export function VerificationTagBadge({
@@ -80,22 +90,29 @@ export function VerificationTagBadge({
 }: {
   tagType: VerificationTagType;
   size?: TagBadgeSize;
+  /** When true, show pill with text (admin/management). Default: icon-only circle. */
   showLabel?: boolean;
   className?: string;
   onRemove?: () => void;
   removing?: boolean;
 }) {
   const style = TAG_STYLES[tagType];
-  const labelVisible = showLabel ?? size !== "xs";
+  const labelVisible = showLabel ?? false;
   const label = size === "sm" ? style.shortLabel : style.label;
 
   if (!labelVisible) {
     return (
       <span
-        className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${style.className} ${className}`}
+        role="img"
+        aria-label={style.label}
         title={style.label}
+        className={`inline-flex shrink-0 items-center justify-center rounded-full border ${BADGE_CIRCLE_SIZE[size]} ${style.className} ${className}`}
       >
-        <VerificationTagIcon tagType={tagType} className={BADGE_ICON_SIZE[size]} />
+        <VerificationTagIcon
+          tagType={tagType}
+          className={BADGE_ICON_SIZE[size]}
+          decorative
+        />
       </span>
     );
   }
@@ -139,6 +156,7 @@ export function VerificationTags({
   verificationTags?: UserVerificationTag[];
   verificationStatus?: string | null;
   size?: TagBadgeSize;
+  /** When true, show pill labels. Default: icon-only circles for profile display. */
   showLabels?: boolean;
   layout?: "row" | "stack";
   className?: string;
@@ -146,13 +164,13 @@ export function VerificationTags({
   const badges = getAvatarVerificationBadges(verificationTags, verificationStatus);
   if (badges.length === 0) return null;
 
-  const labelVisible = showLabels ?? size !== "xs";
+  const labelVisible = showLabels ?? false;
 
   return (
     <div
       className={`flex max-w-full ${
         layout === "row" ? "flex-row flex-wrap" : "flex-col"
-      } items-center justify-center gap-1 ${className}`}
+      } items-center justify-center ${labelVisible ? "gap-1.5" : "gap-2.5"} ${className}`}
     >
       {badges.map((tagType) => (
         <VerificationTagBadge

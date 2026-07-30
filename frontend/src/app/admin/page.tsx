@@ -461,6 +461,7 @@ export default function AdminPage() {
                               <VerificationTagBadge
                                 key={tag.id}
                                 tagType={tag.tagType}
+                                showLabel
                                 removing={tagBusy === `${u.id}:${tag.tagType}`}
                                 onRemove={() => void removeTag(u.id, tag.tagType)}
                               />
