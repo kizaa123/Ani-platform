@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import prisma from '../database/prisma';
 import { assertFound, assertAuthorized, AppError } from '../utils/errors';
-import { isFarmerRole, ROLES } from '../constants/roles';
+import { isFarmerRole, CLIENT_ROLES, ROLES } from '../constants/roles';
 import { categoryMatchesFarmerRole } from '../constants/commodities';
 import {
   LISTING_UNITS,
@@ -21,7 +21,10 @@ import { ORDER_TRACK_STAGES, type OrderTrackStage, ORDER_TRACK_LABELS } from '..
 import {
   notifyOrderTracked,
   getUserDisplayName,
+  notifyFarmProductsAvailable,
 } from './notification.service';
+import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
+import { formatVerificationTags, verificationTagSelect } from '../utils/verificationTags';
 
 export const updateOrderTrackSchema = z.object({
   buyerId: z.string().uuid(),
@@ -40,6 +43,11 @@ export const addCommoditySchema = z.object({
   quantity: z.number().min(0),
   unit: z.enum(LISTING_UNITS).optional(),
   description: z.string().optional(),
+});
+
+export const notifyClientSchema = z.object({
+  clientId: z.string().uuid(),
+  message: z.string().min(1).max(500).optional(),
 });
 
 export class FarmService {
@@ -251,8 +259,11 @@ export class FarmService {
     const soldItems = lineItems.filter((l) => l.status === 'SOLD');
     const archivedItems = lineItems.filter((l) => l.status === 'ARCHIVED');
 
-    const sum = (items: typeof lineItems) =>
+    const sumTotalValue = (items: typeof lineItems) =>
       items.reduce((acc, l) => acc + l.totalValue, 0);
+
+    const sumUnitPrice = (items: typeof lineItems) =>
+      items.reduce((acc, l) => acc + l.unitPrice, 0);
 
     const totalSalesRevenue = salesLineItems.reduce((acc, s) => acc + s.totalValue, 0);
 
@@ -265,9 +276,9 @@ export class FarmService {
       generatedAt: new Date().toISOString(),
       summary: {
         activeListings: activeItems.length,
-        totalListedValue: sum(activeItems),
+        totalListedValue: sumUnitPrice(activeItems),
         soldListings: soldItems.length,
-        totalSoldValue: sum(soldItems),
+        totalSoldValue: sumTotalValue(soldItems),
         totalSalesRevenue,
         totalSalesCount: salesLineItems.length,
         archivedListings: archivedItems.length,
@@ -278,6 +289,69 @@ export class FarmService {
       lineItems,
       salesLineItems,
     };
+  }
+
+  async listClients(userId: string, roleId: number) {
+    assertAuthorized(isFarmerRole(roleId), 'Only farmers can list clients');
+    const clients = await prisma.user.findMany({
+      where: {
+        roleId: { in: [...CLIENT_ROLES] },
+        id: { not: userId },
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        profilePicture: true,
+        city: true,
+        region: true,
+        country: true,
+        roleId: true,
+        verificationStatus: true,
+        verificationTags: { select: verificationTagSelect },
+      },
+      orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
+    });
+
+    return clients.map((c) => ({
+      id: c.id,
+      firstName: c.firstName,
+      lastName: c.lastName,
+      profilePicture: normalizePublicAssetUrl(c.profilePicture),
+      city: c.city,
+      region: c.region,
+      country: c.country,
+      roleId: c.roleId,
+      roleLabel:
+        c.roleId === ROLES.RESEARCHER
+          ? 'Researcher'
+          : c.roleId === ROLES.STUDENT
+            ? 'Student'
+            : 'Buyer',
+      verificationStatus: c.verificationStatus,
+      verificationTags: formatVerificationTags(c.verificationTags),
+    }));
+  }
+
+  async notifyClient(
+    farmerUserId: string,
+    roleId: number,
+    data: z.infer<typeof notifyClientSchema>
+  ) {
+    assertAuthorized(isFarmerRole(roleId), 'Only farmers can notify clients');
+    const client = assertFound(
+      await prisma.user.findFirst({
+        where: { id: data.clientId, roleId: { in: [...CLIENT_ROLES] } },
+        select: { id: true },
+      }),
+      'Client not found'
+    );
+    await notifyFarmProductsAvailable({
+      farmerUserId,
+      clientId: client.id,
+      customMessage: data.message,
+    });
+    return { success: true };
   }
 }
 

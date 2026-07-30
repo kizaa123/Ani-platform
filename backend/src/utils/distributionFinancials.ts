@@ -1,4 +1,4 @@
-import { DistributionRecipientRole } from '@prisma/client';
+import { DistributionLineStatus, DistributionRecipientRole } from '@prisma/client';
 import prisma from '../database/prisma';
 import { formatFarmerIncomingOrder, formatUserLocation } from './orders';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
@@ -96,6 +96,8 @@ const distributionOrderSelect = {
       city: true,
       address: true,
       profilePicture: true,
+      verificationStatus: true,
+      verificationTags: { select: { id: true, tagType: true, createdAt: true } },
     },
   },
   farmer: {
@@ -110,21 +112,23 @@ const distributionOrderSelect = {
       city: true,
       address: true,
       profilePicture: true,
+      verificationStatus: true,
+      verificationTags: { select: { id: true, tagType: true, createdAt: true } },
       farmerProfile: { select: { farmName: true } },
     },
   },
 } as const;
 
-export async function fetchDistributedLines(
+export async function fetchHandlerDistributionLines(
   recipientUserId: string,
-  roles: DistributionRecipientRole[]
+  roles: DistributionRecipientRole[],
+  statuses: DistributionLineStatus[]
 ) {
   return prisma.orderDistributionLine.findMany({
     where: {
       recipientUserId,
       role: { in: roles },
-      status: 'DISTRIBUTED',
-      distributedAt: { not: null },
+      status: { in: statuses },
     },
     include: {
       distribution: {
@@ -133,15 +137,26 @@ export async function fetchDistributedLines(
         },
       },
     },
-    orderBy: { distributedAt: 'desc' },
+    orderBy: { distribution: { order: { createdAt: 'desc' } } },
   });
+}
+
+export async function fetchDistributedLines(
+  recipientUserId: string,
+  roles: DistributionRecipientRole[]
+) {
+  const lines = await fetchHandlerDistributionLines(recipientUserId, roles, ['DISTRIBUTED']);
+  return lines
+    .filter((line) => line.distributedAt != null)
+    .sort((a, b) => b.distributedAt!.getTime() - a.distributedAt!.getTime());
 }
 
 export async function fetchFarmerDistributedLines(farmerUserId: string) {
   return fetchDistributedLines(farmerUserId, ['FARMER']);
 }
 
-type DistributedLine = Awaited<ReturnType<typeof fetchDistributedLines>>[number];
+type HandlerDistributionLine = Awaited<ReturnType<typeof fetchHandlerDistributionLines>>[number];
+type DistributedLine = HandlerDistributionLine;
 
 export function orderListingLabels(listing: { title: string }) {
   return { orderName: listing.title };
@@ -180,25 +195,56 @@ export function mapDistributionToFarmerSaleLineItem(line: DistributedLine) {
   };
 }
 
-export function mapDistributionToHandlerPayment(line: DistributedLine) {
+function handlerLinePartyNames(line: HandlerDistributionLine) {
   const order = line.distribution.order;
-  const { orderName } = orderListingLabels(order.listing);
   const isFarmerHandlerLine = line.role === 'FARMER_HANDLER';
 
   return {
-    id: line.id,
-    date: line.distributedAt!.toISOString(),
     ownerId: isFarmerHandlerLine ? order.farmerId : order.buyerId,
-    clientName: isFarmerHandlerLine
+    relatedPartyName: isFarmerHandlerLine
       ? order.farmer.farmerProfile?.farmName ??
         `${order.farmer.firstName} ${order.farmer.lastName}`
       : `${order.buyer.firstName} ${order.buyer.lastName}`,
-    description: orderName,
-    orderName,
     counterpartyName: isFarmerHandlerLine
       ? `${order.buyer.firstName} ${order.buyer.lastName}`
       : order.farmer.farmerProfile?.farmName ??
         `${order.farmer.firstName} ${order.farmer.lastName}`,
+  };
+}
+
+export function mapDistributionToHandlerPendingLine(line: HandlerDistributionLine) {
+  const order = line.distribution.order;
+  const { orderName } = orderListingLabels(order.listing);
+  const parties = handlerLinePartyNames(line);
+
+  return {
+    id: line.id,
+    date: order.createdAt.toISOString(),
+    orderId: order.id,
+    orderName,
+    orderAmount: order.totalAmount,
+    shareAmount: line.amount,
+    status: line.status,
+    ownerId: parties.ownerId,
+    relatedPartyName: parties.relatedPartyName,
+    clientName: parties.relatedPartyName,
+    counterpartyName: parties.counterpartyName,
+  };
+}
+
+export function mapDistributionToHandlerPayment(line: DistributedLine) {
+  const order = line.distribution.order;
+  const { orderName } = orderListingLabels(order.listing);
+  const parties = handlerLinePartyNames(line);
+
+  return {
+    id: line.id,
+    date: line.distributedAt!.toISOString(),
+    ownerId: parties.ownerId,
+    clientName: parties.relatedPartyName,
+    description: orderName,
+    orderName,
+    counterpartyName: parties.counterpartyName,
     amount: line.amount,
     type: 'DISTRIBUTION' as const,
     paymentMethod: line.paymentMethod ?? '',

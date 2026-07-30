@@ -1,7 +1,7 @@
 "use client";
 
 import { HandlerProfile } from "@/lib/types";
-import { FarmerAvatar } from "@/components/FarmerAvatar";
+import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
 import { RolePrefixedName } from "@/components/RolePrefixedName";
 import { Icon } from "@/components/icons";
@@ -62,13 +62,15 @@ export function HandlerSelect({
                   : "border-gray-200 bg-white hover:border-brand-300 hover:bg-brand-50/40"
               }`}
             >
-              <FarmerAvatar
+              <AvatarWithVerification
                 src={handler.profilePicture}
                 name={name}
                 size={compact ? "sm" : "md"}
                 cacheBust={
                   handler.updatedAt ? new Date(handler.updatedAt).getTime() : undefined
                 }
+                verificationStatus={handler.verificationStatus}
+                verificationTags={handler.verificationTags}
               />
               <div className="min-w-0 flex-1 overflow-hidden">
                 {compact && handlerRoleId ? (

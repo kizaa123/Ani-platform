@@ -41,7 +41,8 @@ export type IconName =
   | "x-circle"
   | "logo"
   | "file"
-  | "image";
+  | "image"
+  | "send";
 
 type IconProps = SVGProps<SVGSVGElement> & { name: IconName };
 
@@ -256,6 +257,11 @@ const paths: Record<IconName, ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
     </>
   ),
+  send: (
+    <>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+    </>
+  ),
 };
 
 export function Icon({ name, className = "h-5 w-5", ...props }: IconProps) {
@@ -287,4 +293,8 @@ export const NOTIFICATION_ICONS: Record<string, IconName> = {
   NEW_PRODUCT: "store",
   NEW_FARMER: "users",
   NEW_PUBLICATION: "book",
+  FARM_PRODUCTS_AVAILABLE: "store",
+  ORDER_PAYMENT_RELEASED: "coins",
+  MONEY_DISTRIBUTED: "coins",
+  HANDLER_DROPPED: "users",
 };

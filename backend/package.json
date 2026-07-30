@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "prisma generate && tsx prisma/dedupe-agent-assignments.ts && tsc && prisma db push --accept-data-loss && prisma db seed",
+    "build": "prisma generate && tsc && tsx prisma/dedupe-agent-assignments.ts && prisma db push --accept-data-loss && prisma db seed",
     "start": "node dist/index.js",
     "postinstall": "prisma generate",
     "db:generate": "prisma generate",

@@ -1,5 +1,6 @@
 import { normalizeImages, normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import { maxTrackStage, type OrderTrackStage } from '../constants/orderTrack';
+import { formatVerificationTags, verificationTagSelect } from './verificationTags';
 
 type BuyerFields = {
   firstName: string;
@@ -11,6 +12,8 @@ type BuyerFields = {
   city: string | null;
   address: string | null;
   profilePicture: string | null;
+  verificationStatus: string;
+  verificationTags?: { id: string; tagType: string; createdAt: Date }[];
 };
 
 type FarmerFields = {
@@ -23,6 +26,8 @@ type FarmerFields = {
   city: string | null;
   address: string | null;
   profilePicture?: string | null;
+  verificationStatus: string;
+  verificationTags?: { id: string; tagType: string; createdAt: Date }[];
   farmerProfile: { farmName: string } | null;
 };
 
@@ -130,6 +135,8 @@ export function formatFarmerIncomingOrder(
     buyerLocation: formatUserLocation(order.buyer),
     buyerCountry: order.buyer.country,
     buyerProfilePicture: normalizePublicAssetUrl(order.buyer.profilePicture),
+    buyerVerificationStatus: order.buyer.verificationStatus,
+    buyerVerificationTags: formatVerificationTags(order.buyer.verificationTags ?? []),
     purchaseCount: 1,
     ...escrowFields(order, 'farmer'),
   };
@@ -229,6 +236,8 @@ export function formatBuyerPlacedOrder(
     farmerLocation: formatUserLocation(order.farmer),
     farmerCountry: order.farmer.country,
     farmerProfilePicture: normalizePublicAssetUrl(order.farmer.profilePicture ?? null),
+    farmerVerificationStatus: order.farmer.verificationStatus,
+    farmerVerificationTags: formatVerificationTags(order.farmer.verificationTags ?? []),
     farmName: order.farmer.farmerProfile?.farmName ?? null,
     purchaseCount: 1,
     ...escrowFields(order, 'buyer'),
@@ -324,6 +333,8 @@ export const orderInclude = {
       city: true,
       address: true,
       profilePicture: true,
+      verificationStatus: true,
+      verificationTags: { select: verificationTagSelect },
     },
   },
 } as const;
@@ -346,6 +357,8 @@ export const buyerOrderInclude = {
       city: true,
       address: true,
       profilePicture: true,
+      verificationStatus: true,
+      verificationTags: { select: verificationTagSelect },
       farmerProfile: { select: { farmName: true } },
     },
   },

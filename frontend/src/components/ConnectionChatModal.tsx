@@ -1,13 +1,16 @@
 "use client";
 
 import { useEffect } from "react";
-import { ProfilePhoto } from "@/components/FarmerAvatar";
+import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { ConnectionChatPanel } from "@/components/ConnectionChatPanel";
+import type { UserVerificationTag } from "@/lib/types";
 
 interface ConnectionChatModalProps {
   partnerId: string;
   partnerName: string;
   partnerPhoto?: string | null;
+  partnerVerificationStatus?: string | null;
+  partnerVerificationTags?: UserVerificationTag[];
   currentUserId: string;
   onClose: () => void;
 }
@@ -16,6 +19,8 @@ export function ConnectionChatModal({
   partnerId,
   partnerName,
   partnerPhoto,
+  partnerVerificationStatus,
+  partnerVerificationTags,
   currentUserId,
   onClose,
 }: ConnectionChatModalProps) {
@@ -46,7 +51,13 @@ export function ConnectionChatModal({
       >
         <div className="flex items-center justify-between gap-3 border-b border-brand-100 px-5 py-4">
           <div className="flex min-w-0 items-center gap-3">
-            <ProfilePhoto src={partnerPhoto} name={partnerName} size={48} />
+            <AvatarWithVerification
+              src={partnerPhoto}
+              name={partnerName}
+              size={48}
+              verificationStatus={partnerVerificationStatus}
+              verificationTags={partnerVerificationTags}
+            />
             <div className="min-w-0">
               <h2 id="connection-chat-title" className="truncate text-lg font-bold text-brand-900">
                 Message {partnerName}
@@ -70,6 +81,8 @@ export function ConnectionChatModal({
             partnerId={partnerId}
             partnerName={partnerName}
             partnerPhoto={partnerPhoto}
+            partnerVerificationStatus={partnerVerificationStatus}
+            partnerVerificationTags={partnerVerificationTags}
             currentUserId={currentUserId}
           />
         </div>

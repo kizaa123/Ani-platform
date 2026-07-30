@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { createAuditLog } from '../middleware/audit.middleware';
 import { ApiResponse } from '../utils/response';
+import { AppError } from '../utils/errors';
 import { connectionService } from '../services/connection.service';
 import { agentService } from '../services/agent.service';
 import { chatService } from '../services/chat.service';
@@ -89,6 +90,13 @@ export class AgentController {
     } catch (e) {
       ApiResponse.error(res, e);
     }
+  };
+
+  clientFarmProducts = async (_req: AuthRequest, res: Response) => {
+    ApiResponse.error(
+      res,
+      new AppError(403, 'Farm product management is not available for liaison officers')
+    );
   };
 
   clientOrders = async (req: AuthRequest, res: Response) => {

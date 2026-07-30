@@ -11,25 +11,8 @@ export function HandlerBuyerClientNav({
   buyerName?: string;
 }) {
   const pathname = usePathname();
-  const base = `/agents/buyer/${ownerId}`;
-
-  const tabs = [
-    {
-      href: `${base}/orders`,
-      label: "Orders placed",
-      match: (p: string) => p.startsWith(`${base}/orders`) || p === base,
-    },
-    {
-      href: `${base}/financials`,
-      label: "Financial statement",
-      match: (p: string) => p.startsWith(`${base}/financials`),
-    },
-    {
-      href: `${base}/connections`,
-      label: "Farmer connections",
-      match: (p: string) => p.startsWith(`${base}/connections`),
-    },
-  ];
+  const ordersHref = `/agents/buyer/${ownerId}/orders`;
+  const onOrders = pathname.startsWith(ordersHref);
 
   return (
     <div className="mb-6">
@@ -37,28 +20,20 @@ export function HandlerBuyerClientNav({
         Back to Assigned Clients
       </Link>
       {buyerName && (
-        <p className="mt-2 text-sm text-gray-500">
-          Representing <span className="font-semibold text-brand-800">{buyerName}</span>
+        <p className="mt-2 text-xl font-medium text-gray-700">
+          Managing <span className="font-semibold text-brand-800">{buyerName}</span>
         </p>
       )}
-      <nav className="mt-4 flex flex-wrap gap-2">
-        {tabs.map((tab) => {
-          const active = tab.match(pathname);
-          return (
-            <Link
-              key={tab.href}
-              href={tab.href}
-              className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
-                active
-                  ? "bg-brand-700 text-white shadow-sm"
-                  : "btn-outline border-brand-200 py-2"
-              }`}
-            >
-              {tab.label}
-            </Link>
-          );
-        })}
-      </nav>
+      {!onOrders && (
+        <nav className="mt-4">
+          <Link
+            href={ordersHref}
+            className="btn-outline inline-block border-brand-200 px-4 py-2 text-sm font-semibold"
+          >
+            Orders placed
+          </Link>
+        </nav>
+      )}
     </div>
   );
 }

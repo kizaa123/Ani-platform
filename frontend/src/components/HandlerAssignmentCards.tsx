@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { AgentAssignment, AgentClientOwner, fullName } from "@/lib/types";
-import { FarmerAvatar } from "@/components/FarmerAvatar";
+import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
 import { Icon, type IconName } from "@/components/icons";
 
@@ -24,11 +24,13 @@ export function HandlerAssignmentIdentity({
 }) {
   return (
     <div className="flex min-w-0 items-center gap-2.5">
-      <FarmerAvatar
+      <AvatarWithVerification
         src={owner.profilePicture}
         name={owner.firstName}
         size={avatarSize}
         cacheBust={owner.updatedAt ? new Date(owner.updatedAt).getTime() : undefined}
+        verificationStatus={owner.verificationStatus}
+        verificationTags={owner.verificationTags}
       />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold leading-tight text-brand-900">
@@ -311,32 +313,12 @@ export function HandlerBuyerClientCard({ assignment }: { assignment: AgentAssign
           )}
         </div>
 
-        <div className="mt-auto space-y-1.5 pt-3">
+        <div className="mt-auto pt-3">
           <Link
             href={`/agents/buyer/${owner.id}/orders`}
-            className="btn-gold flex w-full items-center justify-center gap-1.5 py-2 text-xs"
-          >
-            View Buyer Activity
-          </Link>
-          <div className="grid grid-cols-2 gap-1.5">
-            <Link
-              href={`/agents/buyer/${owner.id}/orders`}
-              className="btn-outline py-2 text-center text-[11px]"
-            >
-              Orders
-            </Link>
-            <Link
-              href={`/agents/buyer/${owner.id}/financials`}
-              className="btn-outline py-2 text-center text-[11px]"
-            >
-              Financials
-            </Link>
-          </div>
-          <Link
-            href={`/agents/buyer/${owner.id}/connections`}
             className="btn-outline block py-2 text-center text-[11px]"
           >
-            Farmer connections
+            Orders placed
           </Link>
         </div>
       </div>

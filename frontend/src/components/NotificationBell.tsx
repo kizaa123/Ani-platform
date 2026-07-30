@@ -8,6 +8,7 @@ import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import { AppNotification } from "@/lib/types";
 import { formatDate } from "@/lib/format";
+import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { Icon, NOTIFICATION_ICONS } from "@/components/icons";
 
 function BellIcon() {
@@ -49,10 +50,13 @@ function NotificationThumbnail({ n }: { n: AppNotification }) {
 
   if (n.actor?.profilePicture) {
     return (
-      <img
+      <AvatarWithVerification
         src={n.actor.profilePicture}
-        alt=""
-        className="h-14 w-14 shrink-0 rounded-lg border border-brand-100 object-cover"
+        name={n.actor.firstName}
+        size={56}
+        verificationStatus={n.actor.verificationStatus}
+        verificationTags={n.actor.verificationTags}
+        className="shrink-0 rounded-lg"
       />
     );
   }

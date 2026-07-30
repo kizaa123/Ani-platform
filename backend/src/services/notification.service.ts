@@ -3,6 +3,7 @@ import prisma from '../database/prisma';
 import { assertFound } from '../utils/errors';
 import { normalizeImages, normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import { buyerFarmAccessSet } from '../middleware/access.middleware';
+import { formatVerificationTags, verificationTagSelect } from '../utils/verificationTags';
 import {
   FARMER_ROLES,
   MARKETPLACE_BUYER_ROLES,
@@ -11,6 +12,7 @@ import {
   isBuyerHandler,
   isFarmerHandler,
   isFarmerRole,
+  isResearcherRole,
 } from '../constants/roles';
 
 export type NotificationMetadata = {
@@ -45,7 +47,8 @@ export type NotificationTypeValue =
   | 'NEW_PRODUCT'
   | 'NEW_FARMER'
   | 'NEW_PUBLICATION'
-  | 'HANDLER_DROPPED';
+  | 'HANDLER_DROPPED'
+  | 'FARM_PRODUCTS_AVAILABLE';
 
 export type CreateNotificationInput = {
   userId: string;
@@ -65,6 +68,33 @@ function toMetadataJson(metadata?: NotificationMetadata | null): Prisma.InputJso
 function parseMetadata(value: Prisma.JsonValue | null): NotificationMetadata | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   return value as NotificationMetadata;
+}
+
+const actorSelect = {
+  id: true,
+  firstName: true,
+  lastName: true,
+  profilePicture: true,
+  verificationStatus: true,
+  verificationTags: { select: verificationTagSelect },
+} as const;
+
+function formatActor(actor: {
+  id: string;
+  firstName: string;
+  lastName: string;
+  profilePicture: string | null;
+  verificationStatus: string;
+  verificationTags?: { id: string; tagType: string; createdAt: Date }[];
+}) {
+  return {
+    id: actor.id,
+    firstName: actor.firstName,
+    lastName: actor.lastName,
+    profilePicture: normalizePublicAssetUrl(actor.profilePicture),
+    verificationStatus: actor.verificationStatus,
+    verificationTags: formatVerificationTags(actor.verificationTags ?? []),
+  };
 }
 
 function formatMetadata(metadata: NotificationMetadata | null): NotificationMetadata | null {
@@ -87,7 +117,7 @@ export async function createNotification(input: CreateNotificationInput) {
       metadata: toMetadataJson(input.metadata),
     },
     include: {
-      actor: { select: { id: true, firstName: true, lastName: true, profilePicture: true } },
+      actor: { select: actorSelect },
     },
   });
 }
@@ -133,7 +163,7 @@ export class NotificationService {
       orderBy: { createdAt: 'desc' },
       take: limit,
       include: {
-        actor: { select: { id: true, firstName: true, lastName: true, profilePicture: true } },
+        actor: { select: actorSelect },
       },
     });
 
@@ -146,14 +176,7 @@ export class NotificationService {
       metadata: formatMetadata(parseMetadata(n.metadata)),
       read: n.read,
       createdAt: n.createdAt.toISOString(),
-      actor: n.actor
-        ? {
-            id: n.actor.id,
-            firstName: n.actor.firstName,
-            lastName: n.actor.lastName,
-            profilePicture: normalizePublicAssetUrl(n.actor.profilePicture),
-          }
-        : null,
+      actor: n.actor ? formatActor(n.actor) : null,
     }));
   }
 
@@ -194,6 +217,18 @@ function formatName(firstName: string, lastName: string) {
 
 function formatLocation(city: string, region: string, country: string) {
   return [city, region, country].filter(Boolean).join(', ');
+}
+
+async function financialStatementLink(userId: string): Promise<string> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { roleId: true },
+  });
+  if (!user) return '/financials';
+  if (isFarmerRole(user.roleId)) return '/farm/financials';
+  if (isResearcherRole(user.roleId)) return '/researcher/financials';
+  if (isFarmerHandler(user.roleId) || isBuyerHandler(user.roleId)) return '/agents/financials';
+  return '/financials';
 }
 
 function snippet(text: string | null | undefined, max = 140) {
@@ -351,6 +386,10 @@ export async function notifyChatMessage(
     title: 'New message',
     body: `${senderName}: ${preview.slice(0, 120)}${preview.length > 120 ? '…' : ''}`,
     link: '/connections',
+    metadata: {
+      actionUrl: '/connections',
+      actionLabel: 'View message',
+    },
   }).catch(() => undefined);
 }
 
@@ -422,13 +461,19 @@ export async function notifyProductPurchase(
   totalAmount: number,
   orderId?: string
 ) {
+  const link = orderId ? `/orders?order=${orderId}` : '/orders';
   await createNotification({
     userId: buyerId,
     actorId: farmerId,
     type: 'PRODUCT_PURCHASE',
     title: 'Order placed — save your release code',
     body: `You purchased ${productName} from ${farmerName} for GHC ${totalAmount.toFixed(2)}. Check My Orders for your 4-digit release code and financial statement PDF.`,
-    link: orderId ? `/orders?order=${orderId}` : '/orders',
+    link,
+    metadata: {
+      actionUrl: link,
+      actionLabel: 'View order',
+      orderName: productName,
+    },
   }).catch(() => undefined);
 }
 
@@ -561,6 +606,10 @@ export async function notifyConnectionRequest(
     title: 'New farm access request',
     body: `${buyerName} requested access to your farm. ANI admin will review the request — no action needed from you.`,
     link: '/connections',
+    metadata: {
+      actionUrl: '/connections',
+      actionLabel: 'View request',
+    },
   });
 }
 
@@ -582,6 +631,10 @@ export async function notifyAdminsConnectionRequest(
       title: 'Farm access request pending',
       body: `${buyerName} requested access to ${farmerName}'s farm. Review and approve on Connections or Admin.`,
       link: '/admin',
+      metadata: {
+        actionUrl: '/admin',
+        actionLabel: 'Review request',
+      },
     }
   );
 }
@@ -597,7 +650,13 @@ export async function notifyConnectionApproved(
     type: 'CONNECTION_APPROVED',
     title: 'Farm access approved',
     body: `ANI approved your access to ${farmerName}'s farm. You can now browse products and message them.`,
-    link: '/connections',
+    link: '/marketplace',
+    metadata: {
+      farmerUserId: farmerId,
+      farmerName,
+      actionUrl: '/marketplace',
+      actionLabel: 'Browse farm',
+    },
   }).catch(() => undefined);
 }
 
@@ -612,7 +671,13 @@ export async function notifyConnectionDeclined(
     type: 'CONNECTION_DECLINED',
     title: 'Farm access declined',
     body: `Your access request for ${farmerName}'s farm was declined by ANI.`,
-    link: '/connections',
+    link: '/marketplace',
+    metadata: {
+      farmerUserId: farmerId,
+      farmerName,
+      actionUrl: '/marketplace',
+      actionLabel: 'Browse farms',
+    },
   }).catch(() => undefined);
 }
 
@@ -623,13 +688,22 @@ export async function notifyFarmAccessPaid(
   farmerName: string,
   amount: number
 ) {
+  const link = await financialStatementLink(buyerId);
   await createNotification({
     userId: buyerId,
     actorId: farmerId,
     type: 'FARM_ACCESS_PAID',
     title: 'Farm access payment',
     body: `You paid GHC ${amount.toFixed(2)} for access to ${farmerName}. Recorded on your financial statement — awaiting ANI admin approval.`,
-    link: '/financials',
+    link,
+    metadata: {
+      farmerUserId: farmerId,
+      farmerName,
+      price: amount,
+      priceLabel: `GHC ${amount.toFixed(2)}`,
+      actionUrl: link,
+      actionLabel: 'View statement',
+    },
   }).catch(() => undefined);
 
   await notifyConnectionRequest(farmerId, buyerId, buyerName);
@@ -650,6 +724,10 @@ export async function notifyResearchPurchase(
     title: 'Publication purchased',
     body: `${studentName} paid GHC ${amount.toFixed(2)} for "${publicationTitle}".`,
     link: '/researcher/financials',
+    metadata: {
+      actionUrl: '/researcher/financials',
+      actionLabel: 'View earnings',
+    },
   }).catch(() => undefined);
 
   await createNotification({
@@ -659,6 +737,10 @@ export async function notifyResearchPurchase(
     title: 'Access granted',
     body: `You now have access to "${publicationTitle}".`,
     link: '/library',
+    metadata: {
+      actionUrl: '/library',
+      actionLabel: 'Read publication',
+    },
   }).catch(() => undefined);
 }
 
@@ -713,6 +795,48 @@ export async function notifyHandlerDropped(
     metadata: {
       actionLabel: 'View clients',
       actionUrl: '/agents',
+    },
+  }).catch(() => undefined);
+}
+
+export async function notifyFarmProductsAvailable(params: {
+  farmerUserId: string;
+  clientId: string;
+  customMessage?: string;
+}) {
+  const { farmerUserId, clientId, customMessage } = params;
+  const farmer = await prisma.user.findUnique({
+    where: { id: farmerUserId },
+    select: {
+      firstName: true,
+      lastName: true,
+      farmerProfile: { select: { farmName: true } },
+    },
+  });
+  if (!farmer) return;
+
+  const farmerName = formatName(farmer.firstName, farmer.lastName);
+  const farmName = farmer.farmerProfile?.farmName?.trim() || farmerName;
+  const defaultMessage = 'Farm products are available, please access my farm';
+  const body = customMessage?.trim() || defaultMessage;
+  const link = '/marketplace';
+
+  const accessSet = await buyerFarmAccessSet(clientId);
+  const hasAccess = accessSet.has(farmerUserId);
+  const actionLabel = hasAccess ? 'View farm' : 'Access farm';
+
+  await createNotification({
+    userId: clientId,
+    actorId: farmerUserId,
+    type: 'FARM_PRODUCTS_AVAILABLE',
+    title: `${farmName} — products available`,
+    body,
+    link,
+    metadata: {
+      farmerUserId,
+      farmerName,
+      actionUrl: link,
+      actionLabel,
     },
   }).catch(() => undefined);
 }

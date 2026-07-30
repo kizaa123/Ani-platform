@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import { BuyerFinancialStatement, isMarketplaceBuyer } from "@/lib/types";
+import { BuyerOrdersTable } from "@/components/ProductOrdersList";
 import { formatDate, formatGhc, orderStatusStyle } from "@/lib/format";
 
 export default function BuyerFinancialsPage() {
@@ -84,6 +85,35 @@ export default function BuyerFinancialsPage() {
         </div>
       </div>
 
+      <div className="mb-6 overflow-hidden rounded-2xl border border-green-100 bg-white shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-green-100 bg-green-50/50 px-6 py-4">
+          <div>
+            <h3 className="text-base font-semibold text-brand-900">Product orders</h3>
+            <p className="text-sm text-gray-500">Products you ordered from farmers on the marketplace</p>
+          </div>
+          <Link href="/orders" className="text-sm font-semibold text-brand-700 hover:underline">
+            View all orders
+          </Link>
+        </div>
+
+        {statement.productOrders.length === 0 ? (
+          <div className="px-6 py-12 text-center text-gray-500">
+            No product orders yet.{" "}
+            <Link href="/marketplace" className="font-semibold text-brand-700 underline">
+              Browse the marketplace
+            </Link>{" "}
+            to place your first order.
+          </div>
+        ) : (
+          <>
+            <BuyerOrdersTable items={statement.productOrders} />
+            <div className="border-t border-green-100 bg-green-50 px-6 py-3 text-right text-sm font-semibold text-green-800">
+              Total product spend: {formatGhc(summary.totalProductSpend)}
+            </div>
+          </>
+        )}
+      </div>
+
       <div className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
         <div className="border-b border-brand-100 bg-brand-50/40 px-6 py-4">
           <h3 className="text-base font-semibold text-brand-900">Farm access payments</h3>
@@ -151,11 +181,7 @@ export default function BuyerFinancialsPage() {
       </div>
 
       <p className="mt-4 text-center text-xs text-gray-400">
-        Product order details are on{" "}
-        <Link href="/orders" className="text-brand-700 underline">
-          My Orders
-        </Link>
-        . Only confirmed paid amounts are included here.
+        Only confirmed paid amounts are included in totals above.
       </p>
     </div>
   );

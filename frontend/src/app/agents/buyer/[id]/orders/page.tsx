@@ -57,13 +57,6 @@ export default function HandlerClientBuyerOrdersPage() {
     <div className="mx-auto max-w-5xl px-4 py-8">
       <HandlerBuyerClientNav ownerId={ownerId} buyerName={buyerName} />
 
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-brand-900">Orders placed</h1>
-        <p className="text-gray-500">
-          Every product order your buyer placed on the marketplace — read-only view
-        </p>
-      </div>
-
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase text-gray-500">Total orders</p>

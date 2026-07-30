@@ -63,7 +63,7 @@ function SidebarContent({
         <AvatarWithVerification
           src={user.profilePicture}
           name={user.firstName}
-          size={64}
+          size={76}
           cacheBust={photoCacheBust}
           verificationStatus={user.verificationStatus}
           verificationTags={user.verificationTags}

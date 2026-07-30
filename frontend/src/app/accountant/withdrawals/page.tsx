@@ -135,7 +135,7 @@ export default function AccountantWithdrawalsPage() {
         <Link href="/accountant" className="text-xs text-brand-600 hover:underline">
           ← Financial Overview
         </Link>
-        <h1 className="mt-2 text-xl font-bold text-brand-900">Order Shared & Withdrawals</h1>
+        <h1 className="mt-2 text-xl font-bold text-brand-900">Order share</h1>
         <p className="text-xs text-gray-500">
           Distribute released order escrow, track ANI order-share income, and record withdrawals
         </p>

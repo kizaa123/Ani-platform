@@ -31,10 +31,10 @@ function badgeSize(avatarPx: number): string {
   return "h-4 w-4";
 }
 
-function badgeOverlap(avatarPx: number): string {
-  if (avatarPx >= 140) return "-ml-2";
-  if (avatarPx >= 96) return "-ml-1.5";
-  return "-ml-1";
+function badgeGap(avatarPx: number): string {
+  if (avatarPx >= 140) return "gap-2";
+  if (avatarPx >= 96) return "gap-1.5";
+  return "gap-1";
 }
 
 export function AvatarWithVerification({
@@ -50,7 +50,7 @@ export function AvatarWithVerification({
   const px = resolveSize(size);
   const badges = getAvatarVerificationBadges(verificationTags, verificationStatus);
   const iconClass = badgeSize(px);
-  const overlapClass = badgeOverlap(px);
+  const gapClass = badgeGap(px);
 
   return (
     <div
@@ -66,12 +66,11 @@ export function AvatarWithVerification({
         className="!shadow-none"
       />
       {badges.length > 0 && (
-        <div className="absolute -bottom-0.5 -right-0.5 z-10 flex items-end justify-end">
-          {badges.map((tagType, index) => (
+        <div className={`absolute -bottom-0.5 -right-0.5 z-10 flex items-end justify-end ${gapClass}`}>
+          {badges.map((tagType) => (
             <span
               key={tagType}
-              className={`${index > 0 ? overlapClass : ""} drop-shadow-sm`}
-              style={{ zIndex: index + 1 }}
+              className="drop-shadow-sm"
               title={TAG_STYLES[tagType].label}
             >
               <VerificationTagIcon tagType={tagType} className={iconClass} />

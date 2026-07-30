@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import prisma from '../database/prisma';
 import { AppError, assertFound, assertAuthorized } from '../utils/errors';
-import { ROLES, isFarmerRole, isStaffRole, isMarketplaceBuyerRole } from '../constants/roles';
+import { isFarmerRole, isStaffRole, isMarketplaceBuyerRole, isFarmerHandler, isBuyerHandler } from '../constants/roles';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import { formatVerificationTags } from '../utils/verificationTags';
 import {
@@ -214,6 +214,10 @@ export class ConnectionService {
   }
 
   async listForUser(userId: string, roleId: number) {
+    if (isFarmerHandler(roleId) || isBuyerHandler(roleId)) {
+      throw new AppError(403, 'Liaison officers cannot view connections');
+    }
+
     if (isFarmerRole(roleId)) {
       const rows = await prisma.connectionRequest.findMany({
         where: { farmerId: userId },
@@ -230,40 +234,6 @@ export class ConnectionService {
     if (isMarketplaceBuyerRole(roleId)) {
       const rows = await prisma.connectionRequest.findMany({
         where: { buyerId: userId },
-        include: {
-          buyer: { select: buyerSelect },
-          farmer: { select: farmerSelect },
-          agent: { select: { id: true, firstName: true, lastName: true } },
-        },
-        orderBy: { createdAt: 'desc' },
-      });
-      return this.formatConnections(rows);
-    }
-
-    if (roleId === ROLES.BUYER_HANDLER) {
-      const assignments = await prisma.agentAssignment.findMany({
-        where: { agentId: userId, relationshipType: 'BUYER_REPRESENTATIVE' },
-      });
-      const buyerIds = assignments.map((a) => a.ownerId);
-      const rows = await prisma.connectionRequest.findMany({
-        where: { buyerId: { in: buyerIds } },
-        include: {
-          farmer: { select: farmerSelect },
-          buyer: { select: buyerSelect },
-          agent: { select: { id: true, firstName: true, lastName: true } },
-        },
-        orderBy: { createdAt: 'desc' },
-      });
-      return this.formatConnections(rows);
-    }
-
-    if (roleId === ROLES.FARMER_HANDLER) {
-      const assignments = await prisma.agentAssignment.findMany({
-        where: { agentId: userId, relationshipType: 'FARMER_REPRESENTATIVE' },
-      });
-      const farmerIds = assignments.map((a) => a.ownerId);
-      const rows = await prisma.connectionRequest.findMany({
-        where: { farmerId: { in: farmerIds } },
         include: {
           buyer: { select: buyerSelect },
           farmer: { select: farmerSelect },

@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { api } from "@/lib/api";
-import { Message, fullName } from "@/lib/types";
-import { ProfilePhoto } from "@/components/FarmerAvatar";
+import { Message, fullName, UserVerificationTag } from "@/lib/types";
 
 interface ConnectionChatPanelProps {
   partnerId: string;
   partnerName: string;
   partnerPhoto?: string | null;
+  partnerVerificationStatus?: string | null;
+  partnerVerificationTags?: UserVerificationTag[];
   currentUserId: string;
   embedded?: boolean;
 }
@@ -17,6 +19,8 @@ export function ConnectionChatPanel({
   partnerId,
   partnerName,
   partnerPhoto,
+  partnerVerificationStatus,
+  partnerVerificationTags,
   currentUserId,
   embedded = false,
 }: ConnectionChatPanelProps) {
@@ -59,7 +63,13 @@ export function ConnectionChatPanel({
     <div className={embedded ? "" : "mt-4 border-t border-brand-100 pt-4"}>
       {!embedded && (
         <div className="mb-3 flex items-center gap-3">
-          <ProfilePhoto src={partnerPhoto} name={partnerName} size={44} />
+          <AvatarWithVerification
+            src={partnerPhoto}
+            name={partnerName}
+            size={44}
+            verificationStatus={partnerVerificationStatus}
+            verificationTags={partnerVerificationTags}
+          />
           <p className="text-sm font-semibold text-brand-900">Chat with {partnerName}</p>
         </div>
       )}

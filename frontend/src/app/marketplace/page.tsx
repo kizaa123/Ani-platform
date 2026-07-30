@@ -330,6 +330,8 @@ export default function MarketplacePage() {
           farmerId={purchaseFarmer.farmerId}
           farmerName={purchaseFarmer.farmerName}
           farmerPhoto={purchaseFarmer.profilePicture}
+          farmerVerificationStatus={purchaseFarmer.verificationStatus}
+          farmerVerificationTags={purchaseFarmer.verificationTags}
           country={purchaseFarmer.country}
           region={purchaseFarmer.region}
           onSelectProduct={(p) => setActiveListingId(p.id)}

@@ -314,55 +314,38 @@ export default function HomePage() {
           </ScrollReveal>
 
           {/* Team cards grid */}
-          <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-3">
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {TEAM.map((member, i) => (
               <ScrollReveal key={member.name} delay={scrollStagger(i, 120)} duration={600} direction="fade-up">
-                <div className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-brand-700/60 bg-brand-900 shadow-xl transition-all duration-500 hover:-translate-y-2 hover:border-yellow-500/40 hover:shadow-[0_20px_60px_rgba(0,0,0,0.5),0_0_0_1px_rgba(234,179,8,0.15)]">
-
-                  {/* Portrait image — tall */}
-                  <div className="relative h-80 w-full overflow-hidden">
+                <article className="group flex h-full flex-col overflow-hidden rounded-3xl border border-brand-700/50 bg-brand-900 shadow-xl transition-all duration-500 hover:-translate-y-1 hover:border-yellow-500/30 hover:shadow-[0_24px_48px_rgba(0,0,0,0.45)]">
+                  <div className="relative aspect-[4/5] w-full shrink-0 overflow-hidden bg-brand-800">
                     <Image
                       src={member.img}
                       alt={member.name}
                       fill
-                      className="object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                      className="object-cover object-[center_18%] transition-transform duration-700 group-hover:scale-[1.03]"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 384px"
                     />
-                    {/* Bottom-to-top gradient overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-brand-950 via-brand-950/60 to-transparent" />
-
-                    {/* Role badge — top right */}
-                    <div className="absolute right-4 top-4 rounded-xl bg-yellow-400/90 px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-brand-900 shadow-lg backdrop-blur-sm">
-                      ANI
-                    </div>
                   </div>
 
-                  {/* Info block */}
-                  <div className="relative flex flex-1 flex-col gap-3 px-6 pb-7 pt-5">
-                    {/* Decorative top accent line */}
-                    <div className="absolute left-6 right-6 top-0 h-px bg-gradient-to-r from-transparent via-yellow-400/40 to-transparent" />
-
-                    <div>
-                      <h3 className="text-lg font-extrabold leading-tight text-white group-hover:text-yellow-300 transition-colors duration-300">
+                  <div className="flex flex-1 flex-col gap-2.5 px-6 py-6">
+                    <div className="space-y-1">
+                      <h3 className="text-xl font-bold leading-snug text-white transition-colors duration-300 group-hover:text-yellow-300">
                         {member.name.trim()}
                       </h3>
-                      <p className="mt-1.5 inline-block rounded-lg bg-brand-800 px-3 py-1 text-[11px] font-semibold text-yellow-400">
+                      <p className="text-sm font-semibold leading-snug text-yellow-400">
                         {member.role.trim()}
                       </p>
                     </div>
-
-                    {/* Bio — pipe-separated tags rendered as chips */}
-                    <div className="mt-1 flex flex-wrap gap-1.5">
-                      {member.bio.split("|").map((tag) => (
-                        <span
-                          key={tag}
-                          className="rounded-full border border-brand-600/50 bg-brand-800/70 px-2.5 py-0.5 text-[10px] font-medium text-brand-300 leading-snug"
-                        >
-                          {tag.trim()}
-                        </span>
-                      ))}
-                    </div>
+                    <p className="text-sm leading-relaxed text-brand-200">
+                      {member.bio
+                        .split("|")
+                        .map((part) => part.trim())
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
                   </div>
-                </div>
+                </article>
               </ScrollReveal>
             ))}
           </div>

@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { ResearchComment, ResearchPublication } from "@/lib/types";
+import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { Icon } from "@/components/icons";
-import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { SpinnerLabel } from "@/components/LoadingPrimitives";
 import { api } from "@/lib/api";
 
@@ -91,19 +91,13 @@ export function PublicationCommentsModal({
               {comments.map((comment) => (
                 <li key={comment.id} className="rounded-xl bg-gray-50 px-3 py-2.5">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-7 w-7 shrink-0 overflow-hidden rounded-full bg-white">
-                      {comment.user.profilePicture ? (
-                        <ProfilePhoto
-                          src={comment.user.profilePicture}
-                          name={comment.user.name}
-                          size={28}
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-gray-100 text-xs font-bold text-gray-400">
-                          {comment.user.name.charAt(0)}
-                        </div>
-                      )}
-                    </div>
+                    <AvatarWithVerification
+                      src={comment.user.profilePicture}
+                      name={comment.user.name}
+                      size={28}
+                      verificationStatus={comment.user.verificationStatus}
+                      verificationTags={comment.user.verificationTags}
+                    />
                     <span className="text-xs font-semibold text-gray-800">{comment.user.name}</span>
                     <span className="text-xs text-gray-400">{formatCommentDate(comment.createdAt)}</span>
                   </div>

@@ -9,6 +9,8 @@ export interface HandlerProfile {
   city?: string;
   profilePicture?: string | null;
   updatedAt?: string;
+  verificationStatus?: string;
+  verificationTags?: UserVerificationTag[];
 }
 
 export interface User {
@@ -298,6 +300,8 @@ export interface ProductOrderLineItem extends OrderEscrowFields {
   buyerLocation: string;
   buyerCountry?: string;
   buyerProfilePicture?: string | null;
+  buyerVerificationStatus?: string;
+  buyerVerificationTags?: UserVerificationTag[];
   purchaseCount?: number;
   orderName?: string;
   orderDescription?: string;
@@ -379,6 +383,8 @@ export interface BuyerOrderLineItem extends OrderEscrowFields {
   farmerLocation: string;
   farmerCountry?: string;
   farmerProfilePicture?: string | null;
+  farmerVerificationStatus?: string;
+  farmerVerificationTags?: UserVerificationTag[];
   farmName?: string | null;
   purchaseCount?: number;
   /** @deprecated use productName */
@@ -439,6 +445,7 @@ export interface AgentClientOwner {
   city?: string;
   roleId?: number;
   verificationStatus?: string;
+  verificationTags?: UserVerificationTag[];
   role: { roleName: string };
   isFarmer?: boolean;
   commodities?: Array<{ id: number; name: string; category: string }>;
@@ -473,6 +480,7 @@ export interface HandlerClientFarm {
     city: string;
     address?: string | null;
     verificationStatus: string;
+    verificationTags?: UserVerificationTag[];
     role: string;
     farmName: string;
     farmSize?: string | null;
@@ -493,6 +501,7 @@ export interface HandlerClientFarm {
     company?: string | null;
     industry?: string | null;
     verificationStatus: string;
+    verificationTags?: UserVerificationTag[];
     role: string;
   };
   stats?: {
@@ -549,6 +558,20 @@ export interface ConnectionUser {
   verificationTags?: UserVerificationTag[];
 }
 
+export interface FarmClient {
+  id: string;
+  firstName: string;
+  lastName: string;
+  profilePicture?: string | null;
+  city?: string | null;
+  region?: string;
+  country?: string;
+  roleId: number;
+  roleLabel: string;
+  verificationStatus?: string;
+  verificationTags?: UserVerificationTag[];
+}
+
 export interface NotificationMetadata {
   imageUrl?: string | null;
   price?: number | null;
@@ -581,6 +604,8 @@ export interface AppNotification {
     firstName: string;
     lastName: string;
     profilePicture?: string | null;
+    verificationStatus?: string;
+    verificationTags?: UserVerificationTag[];
   } | null;
 }
 
@@ -774,6 +799,8 @@ export interface ResearchComment {
     id: string;
     name: string;
     profilePicture?: string | null;
+    verificationStatus?: string;
+    verificationTags?: UserVerificationTag[];
   };
 }
 
@@ -1050,6 +1077,20 @@ export interface HandlerFinancialTransaction {
   transactionId?: string | null;
 }
 
+export interface HandlerPendingDistribution {
+  id: string;
+  date: string;
+  orderId: string;
+  ownerId: string;
+  orderName: string;
+  orderAmount: number;
+  shareAmount: number;
+  status: 'PENDING' | 'DISTRIBUTED';
+  relatedPartyName: string;
+  clientName: string;
+  counterpartyName: string;
+}
+
 export interface HandlerFinancialStatement {
   agentName: string;
   handlerType: 'farmer' | 'buyer';
@@ -1062,10 +1103,13 @@ export interface HandlerFinancialStatement {
     totalProductSpend?: number;
     totalFarmAccessSpend?: number;
     transactionCount: number;
+    pendingDistributionCount?: number;
+    pendingDistributionTotal?: number;
   };
   transactions: HandlerFinancialTransaction[];
   handlerPayments?: HandlerFinancialTransaction[];
   clientTransactions?: HandlerFinancialTransaction[];
+  pendingDistributions?: HandlerPendingDistribution[];
 }
 
 export interface AdminVerificationUser {

@@ -58,7 +58,7 @@ export default function DashboardPage() {
     { href: "/financials", title: "Financial Statement", desc: "Spending & farm access fees", icon: "chart", show: isMarketplaceBuyer(user.roleId) },
     { href: "/orders", title: "My Orders", desc: "Track marketplace purchases", icon: "package", show: isMarketplaceBuyer(user.roleId) },
     { href: "/student/settings", title: "Profile", desc: "Account & contact details", icon: "user", show: isStudent(user.roleId) },
-    { href: "/connections", title: "Connections", desc: "Manage buyer-farmer requests", icon: "handshake", show: !isResearcher(user.roleId) },
+    { href: "/connections", title: "Connections", desc: "Manage buyer-farmer requests", icon: "handshake", show: !isResearcher(user.roleId) && !isLiaison },
     { href: "/agents", title: isClo ? "My Buyers" : "My Clients", desc: isClo ? "View orders, spending & connections" : "View assigned farmers/buyers", icon: "users", show: isHandler(user.roleId) && !isLiaison },
     { href: "/agents/financials", title: "Financial Statement", desc: isClo ? "Your liaison commission from client orders" : "Your 10% liaison commission from farmer orders", icon: "chart", show: isHandler(user.roleId) && !isLiaison },
     { href: "/admin", title: "Admin Panel", desc: "Analytics, verification & moderation", icon: "shield", show: isAdmin(user.roleId) },

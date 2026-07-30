@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import { Connection, fullName, isAccountant } from "@/lib/types";
-import { ProfilePhoto } from "@/components/FarmerAvatar";
+import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
 import { VerificationBadge } from "@/components/VerificationBadge";
 import { formatDate, formatGhc } from "@/lib/format";
@@ -103,7 +103,13 @@ export default function AccountantFarmAccessPage() {
                   className="flex flex-wrap items-start justify-between gap-4 rounded-xl border border-brand-100 bg-white p-4"
                 >
                   <div className="flex min-w-0 items-start gap-3">
-                    <ProfilePhoto src={c.buyer?.profilePicture} name={c.buyer?.firstName} size={56} />
+                    <AvatarWithVerification
+                      src={c.buyer?.profilePicture}
+                      name={c.buyer?.firstName}
+                      size={56}
+                      verificationStatus={c.buyer?.verificationStatus}
+                      verificationTags={c.buyer?.verificationTags}
+                    />
                     <div className="min-w-0">
                       <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Buyer</p>
                       <p className="font-bold text-brand-900">

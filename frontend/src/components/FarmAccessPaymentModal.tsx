@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { FarmerBrowseCard } from "@/lib/types";
-import { FarmerAvatar } from "@/components/FarmerAvatar";
+import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
 import { PaymentCheckout } from "@/components/PaymentCheckout";
 import { PaymentResultOverlay } from "@/components/PaymentResultOverlay";
@@ -58,7 +58,13 @@ export function FarmAccessPaymentModal({
       >
         <div className="flex items-start justify-between gap-3 border-b border-brand-100 bg-brand-50/60 p-5">
           <div className="flex items-center gap-3">
-            <FarmerAvatar src={farmer.profilePicture} name={farmer.farmerName} size="md" />
+            <AvatarWithVerification
+              src={farmer.profilePicture}
+              name={farmer.farmerName}
+              size="md"
+              verificationStatus={farmer.verificationStatus}
+              verificationTags={farmer.verificationTags}
+            />
             <div>
               <h2 className="text-lg font-bold text-brand-900">{farmer.farmerName}</h2>
               <p className="text-sm text-brand-700">{farmer.farmName}</p>

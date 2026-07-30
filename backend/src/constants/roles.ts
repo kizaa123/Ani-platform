@@ -29,6 +29,9 @@ export const ROLE_NAMES: Record<number, string> = {
 /** Roles that browse marketplace farms and place product orders (same access flow as buyers). */
 export const MARKETPLACE_BUYER_ROLES = [ROLES.BUYER, ROLES.RESEARCHER] as const;
 
+/** Buyers, researchers, and legacy student accounts — all treated as farmer "clients". */
+export const CLIENT_ROLES = [ROLES.BUYER, ROLES.RESEARCHER, ROLES.STUDENT] as const;
+
 export const PERMISSIONS = {
   CREATE_LISTING: 'create_listing',
   MANAGE_COMMODITIES: 'manage_commodities',

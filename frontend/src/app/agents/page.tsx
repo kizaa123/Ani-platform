@@ -52,7 +52,7 @@ export default function AgentsPage() {
       ? "Assigned Farmers"
       : "My Clients";
   const pageSubtitle = isBuyerHandlerUser
-    ? "Buyers who assigned you as their liaison officer — view their full activity"
+    ? "Buyers who assigned you as their liaison officer"
     : isFarmerHandlerUser
       ? "Farmers who assigned you as their liaison officer"
       : "Farmers and buyers who assigned you as their handler";
@@ -105,7 +105,7 @@ export default function AgentsPage() {
             <section>
               <SectionHeader
                 title="Farmer clients"
-                subtitle="View profiles and access their farms to support them"
+                subtitle="View profiles and manage buyer orders"
                 count={visibleFarmerClients.length}
               />
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -120,7 +120,7 @@ export default function AgentsPage() {
             <section>
               <SectionHeader
                 title="Assigned clients"
-                subtitle="Full transparency into orders, spending, and farmer connections"
+                subtitle="View profiles and track orders placed"
                 count={visibleBuyerClients.length}
               />
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

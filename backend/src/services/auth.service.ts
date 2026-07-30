@@ -18,6 +18,7 @@ import {
   isBuyerHandler,
 } from '../constants/roles';
 import { categoryMatchesFarmerRole } from '../constants/commodities';
+import { formatVerificationTags, verificationTagSelect } from '../utils/verificationTags';
 import { defaultListingUnit } from '../constants/units';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import { normalizePhone, PHONE_VALIDATION_MESSAGE } from '../utils/phone';
@@ -453,6 +454,8 @@ export class AuthService {
             city: true,
             profilePicture: true,
             updatedAt: true,
+            verificationStatus: true,
+            verificationTags: { select: verificationTagSelect },
           },
         },
       },
@@ -471,6 +474,8 @@ export class AuthService {
       city: assignment.agent.city,
       profilePicture: normalizePublicAssetUrl(assignment.agent.profilePicture),
       updatedAt: assignment.agent.updatedAt.toISOString(),
+      verificationStatus: assignment.agent.verificationStatus,
+      verificationTags: formatVerificationTags(assignment.agent.verificationTags ?? []),
     };
   }
 

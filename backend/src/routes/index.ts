@@ -17,7 +17,7 @@ import {
 import { authenticate, requirePermission } from '../middleware/auth.middleware';
 import { validateBody } from '../middleware/validate.middleware';
 import { registerSchema, loginSchema, updateUserProfileSchema, updateHandlerSchema } from '../services/auth.service';
-import { updateFarmSchema, addCommoditySchema, updateOrderTrackSchema } from '../services/farm.service';
+import { updateFarmSchema, addCommoditySchema, updateOrderTrackSchema, notifyClientSchema } from '../services/farm.service';
 import { listingSchema, updateListingSchema } from '../services/marketplace.service';
 import { purchaseSchema, packageSchema, purchaseFarmAccessSchema } from '../services/payment.service';
 import { purchaseProductSchema, releaseOrderSchema } from '../services/order.service';
@@ -122,6 +122,13 @@ router.get('/commodities/category/:name', commodityController.getByCategory);
 router.get('/farm/profile', authenticate, farmController.getProfile);
 router.get('/farm/financial-statement', authenticate, farmController.financialStatement);
 router.get('/farm/orders', authenticate, farmController.orders);
+router.get('/farm/clients', authenticate, farmController.listClients);
+router.post(
+  '/farm/notify-client',
+  authenticate,
+  validateBody(notifyClientSchema),
+  farmController.notifyClient
+);
 router.patch(
   '/farm/orders/track',
   authenticate,
@@ -269,6 +276,7 @@ router.patch('/connections/:id/status', authenticate, requirePermission(PERMISSI
 router.get('/agents/profile', authenticate, agentController.profile);
 router.get('/agents/assignments', authenticate, agentController.assignments);
 router.get('/agents/clients/:ownerId/farm', authenticate, agentController.clientFarm);
+router.get('/agents/clients/:ownerId/farm/products', authenticate, agentController.clientFarmProducts);
 router.get('/agents/clients/:ownerId/orders', authenticate, agentController.clientOrders);
 router.patch(
   '/agents/clients/:ownerId/orders/track',

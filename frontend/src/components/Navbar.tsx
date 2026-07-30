@@ -135,6 +135,7 @@ export function Navbar() {
 
   const links = NAV.filter((n) => {
     if (n.href === "/marketplace" && (isFarmerHandler(user.roleId) || isBuyerHandler(user.roleId))) return false;
+    if (n.href === "/connections" && isHandler(user.roleId)) return false;
     if (n.farmer && !isFarmer(user.roleId)) return false;
     if (n.buyer && !isBuyer(user.roleId)) return false;
     if (n.handler && !isHandler(user.roleId)) return false;

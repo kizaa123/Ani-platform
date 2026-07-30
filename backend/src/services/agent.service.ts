@@ -3,16 +3,18 @@ import prisma from '../database/prisma';
 import { assertFound, assertAuthorized } from '../utils/errors';
 import { ROLES, isFarmerHandler, isBuyerHandler, isFarmerRole, FARMER_ROLES } from '../constants/roles';
 import { AppError } from '../utils/errors';
-import { normalizeImages, normalizePublicAssetUrl } from '../middleware/upload.middleware';
-import { formatHarvestLabel, toHarvestDateInput } from '../utils/harvest';
+import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import { farmService } from './farm.service';
 import { buyerService } from './buyer.service';
 import { connectionService } from './connection.service';
 import { buyerHasActiveAccess } from '../middleware/access.middleware';
 import {
   fetchDistributedLines,
+  fetchHandlerDistributionLines,
   mapDistributionToHandlerPayment,
+  mapDistributionToHandlerPendingLine,
 } from '../utils/distributionFinancials';
+import { formatVerificationTags, verificationTagSelect } from '../utils/verificationTags';
 
 export const assignmentSchema = z.object({
   ownerId: z.string().uuid(),
@@ -34,6 +36,8 @@ export class AgentService {
         city: true,
         profilePicture: true,
         updatedAt: true,
+        verificationStatus: true,
+        verificationTags: { select: verificationTagSelect },
       },
       orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
     });
@@ -49,6 +53,8 @@ export class AgentService {
       city: handler.city,
       profilePicture: normalizePublicAssetUrl(handler.profilePicture),
       updatedAt: handler.updatedAt.toISOString(),
+      verificationStatus: handler.verificationStatus,
+      verificationTags: formatVerificationTags(handler.verificationTags ?? []),
     }));
   }
 
@@ -82,6 +88,7 @@ export class AgentService {
             city: true,
             roleId: true,
             verificationStatus: true,
+            verificationTags: { select: verificationTagSelect },
             role: { select: { roleName: true } },
             farmerProfile: {
               select: {
@@ -119,6 +126,7 @@ export class AgentService {
         city: row.owner.city,
         roleId: row.owner.roleId,
         verificationStatus: row.owner.verificationStatus,
+        verificationTags: formatVerificationTags(row.owner.verificationTags ?? []),
         role: row.owner.role,
         farmerProfile: row.owner.farmerProfile
           ? {
@@ -166,16 +174,12 @@ export class AgentService {
           address: true,
           roleId: true,
           verificationStatus: true,
+          verificationTags: { select: verificationTagSelect },
           role: { select: { roleName: true } },
           farmerProfile: {
             include: {
               farmerCommodities: {
                 include: { commodity: { include: { category: true } } },
-              },
-              listings: {
-                where: { status: { in: ['ACTIVE', 'SOLD'] } },
-                include: { commodity: { include: { category: true } } },
-                orderBy: { createdAt: 'desc' },
               },
             },
           },
@@ -191,27 +195,6 @@ export class AgentService {
       }
 
       const profile = owner.farmerProfile;
-      const products = profile.listings.map((listing) => ({
-        id: listing.id,
-        title: listing.title,
-        description: listing.description,
-        quantity: listing.quantity,
-        price: listing.price,
-        unit: listing.unit,
-        priceLabel: `GHC ${listing.price}/${listing.unit}`,
-        quantityLabel: `${listing.quantity} ${listing.unit}`,
-        images: normalizeImages(listing.images).map(
-          (img) => normalizePublicAssetUrl(img) ?? img
-        ),
-        location: listing.location,
-        harvestStartDate: toHarvestDateInput(listing.harvestStartDate),
-        harvestEndDate: toHarvestDateInput(listing.harvestEndDate),
-        harvestLabel: formatHarvestLabel(listing.harvestStartDate, listing.harvestEndDate),
-        status: listing.status,
-        available: listing.status === 'ACTIVE' && listing.quantity > 0,
-        commodity: listing.commodity,
-        createdAt: listing.createdAt.toISOString(),
-      }));
 
       return {
         assignmentId: assignment.id,
@@ -229,6 +212,7 @@ export class AgentService {
           city: owner.city,
           address: owner.address,
           verificationStatus: owner.verificationStatus,
+          verificationTags: formatVerificationTags(owner.verificationTags ?? []),
           role: owner.role.roleName,
           farmName: profile.farmName,
           farmSize: profile.farmSize,
@@ -240,8 +224,8 @@ export class AgentService {
             unit: fc.unit,
           })),
         },
-        products,
-        productCount: products.length,
+        products: [],
+        productCount: 0,
       };
     }
 
@@ -263,6 +247,7 @@ export class AgentService {
         company: owner.buyerProfile?.company ?? null,
         industry: owner.buyerProfile?.industry ?? null,
         verificationStatus: owner.verificationStatus,
+        verificationTags: formatVerificationTags(owner.verificationTags ?? []),
         role: owner.role.roleName,
       },
       stats: await this.buildBuyerClientStats(ownerId),
@@ -323,22 +308,7 @@ export class AgentService {
 
   async getClientConnections(agentId: string, roleId: number, ownerId: string) {
     assertAuthorized(isFarmerHandler(roleId) || isBuyerHandler(roleId), 'Handlers only');
-
-    const assignment = await this.assertClientAssignment(agentId, ownerId);
-
-    if (assignment.relationshipType === 'BUYER_REPRESENTATIVE') {
-      const owner = assertFound(
-        await prisma.user.findUnique({ where: { id: ownerId }, select: { roleId: true } }),
-        'Client not found'
-      );
-      if (owner.roleId !== ROLES.BUYER) {
-        throw new AppError(400, 'Assigned client is not a buyer');
-      }
-      return connectionService.listForBuyer(ownerId);
-    }
-
-    await this.assertFarmerClientAssignment(agentId, ownerId);
-    return connectionService.listForFarmer(ownerId);
+    throw new AppError(403, 'Liaison officers cannot view client connections');
   }
 
   async createAssignment(agentId: string, roleId: number, ownerId: string) {
@@ -466,6 +436,9 @@ export class AgentService {
     }
 
     await this.assertBuyerClientAssignment(agentId, ownerId);
+    if (isBuyerHandler(roleId)) {
+      throw new AppError(403, 'Client liaison officers cannot view buyer financials');
+    }
     return buyerService.buildFinancialStatementForBuyer(ownerId);
   }
 
@@ -489,9 +462,17 @@ export class AgentService {
     });
 
     const handlerRole = relationshipType === 'FARMER_REPRESENTATIVE' ? 'FARMER_HANDLER' : 'BUYER_HANDLER';
-    const distributedLines = await fetchDistributedLines(agentId, [handlerRole]);
+    const [distributedLines, pendingLines] = await Promise.all([
+      fetchDistributedLines(agentId, [handlerRole]),
+      fetchHandlerDistributionLines(agentId, [handlerRole], ['PENDING']),
+    ]);
     const handlerPayments = distributedLines.map(mapDistributionToHandlerPayment);
+    const pendingDistributions = pendingLines.map(mapDistributionToHandlerPendingLine);
     const totalRevenue = handlerPayments.reduce((sum, payment) => sum + payment.amount, 0);
+    const pendingDistributionTotal = pendingDistributions.reduce(
+      (sum, line) => sum + line.shareAmount,
+      0
+    );
 
     return {
       agentName: `${agent.firstName} ${agent.lastName}`,
@@ -502,9 +483,12 @@ export class AgentService {
         totalRevenue,
         totalSalesCount: handlerPayments.length,
         transactionCount: handlerPayments.length,
+        pendingDistributionCount: pendingDistributions.length,
+        pendingDistributionTotal,
       },
       transactions: handlerPayments,
       handlerPayments,
+      pendingDistributions,
     };
   }
 }

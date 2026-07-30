@@ -4,7 +4,7 @@ import { AppError, assertFound, assertAuthorized } from '../utils/errors';
 import { ROLES, isResearcherRole } from '../constants/roles';
 import { getPaymentProvider } from './payment.provider';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
-import { formatVerificationTags } from '../utils/verificationTags';
+import { formatVerificationTags, verificationTagSelect } from '../utils/verificationTags';
 import { notifyResearchPurchase, notifyNewPublication } from './notification.service';
 import { fetchUploadedFileBuffer } from './storage.service';
 
@@ -110,7 +110,14 @@ function formatComment(comment: {
   id: string;
   content: string;
   createdAt: Date;
-  user: { id: string; firstName: string; lastName: string; profilePicture: string | null };
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    profilePicture: string | null;
+    verificationStatus: string;
+    verificationTags?: { id: string; tagType: string; createdAt: Date }[];
+  };
 }) {
   return {
     id: comment.id,
@@ -120,6 +127,8 @@ function formatComment(comment: {
       id: comment.user.id,
       name: `${comment.user.firstName} ${comment.user.lastName}`,
       profilePicture: normalizePublicAssetUrl(comment.user.profilePicture),
+      verificationStatus: comment.user.verificationStatus,
+      verificationTags: formatVerificationTags(comment.user.verificationTags ?? []),
     },
   };
 }
@@ -790,7 +799,16 @@ export class ResearcherService {
     const comments = await prisma.researchComment.findMany({
       where: { publicationId },
       include: {
-        user: { select: { id: true, firstName: true, lastName: true, profilePicture: true } },
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            profilePicture: true,
+            verificationStatus: true,
+            verificationTags: { select: verificationTagSelect },
+          },
+        },
       },
       orderBy: { createdAt: 'asc' },
     });
@@ -808,7 +826,16 @@ export class ResearcherService {
         content: data.content.trim(),
       },
       include: {
-        user: { select: { id: true, firstName: true, lastName: true, profilePicture: true } },
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            profilePicture: true,
+            verificationStatus: true,
+            verificationTags: { select: verificationTagSelect },
+          },
+        },
       },
     });
 

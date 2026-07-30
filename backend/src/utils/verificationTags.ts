@@ -4,6 +4,11 @@ export const verificationTagSelect = {
   createdAt: true,
 } as const;
 
+export const userVerificationFields = {
+  verificationStatus: true,
+  verificationTags: { select: verificationTagSelect },
+} as const;
+
 type VerificationTagRow = {
   id: string;
   tagType: string;

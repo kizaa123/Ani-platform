@@ -87,6 +87,25 @@ export class FarmController {
       ApiResponse.error(res, e);
     }
   };
+
+  listClients = async (req: AuthRequest, res: Response) => {
+    try {
+      const clients = await farmService.listClients(req.user!.userId, req.user!.roleId);
+      ApiResponse.success(res, clients);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  notifyClient = async (req: AuthRequest, res: Response) => {
+    try {
+      const result = await farmService.notifyClient(req.user!.userId, req.user!.roleId, req.body);
+      await createAuditLog(req, 'FARM_CLIENT_NOTIFIED', 'notification');
+      ApiResponse.success(res, result);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
 }
 
 export const farmController = new FarmController();

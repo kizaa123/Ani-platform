@@ -3,13 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { Listing, formatListingUnit } from "@/lib/types";
-import { FarmerAvatar } from "@/components/FarmerAvatar";
+import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
 import { FarmerProductCard } from "@/components/FarmerProductCard";
 import { ProductMediaGallery } from "@/components/ProductMediaGallery";
 import { PaymentCheckout } from "@/components/PaymentCheckout";
 import { PaymentResultOverlay } from "@/components/PaymentResultOverlay";
 import { HarvestCalendarTrigger } from "@/components/HarvestCalendarTrigger";
+import type { UserVerificationTag } from "@/lib/types";
 
 const EMPTY_MEDIA: never[] = [];
 
@@ -19,6 +20,8 @@ interface PurchaseViewProps {
   farmerId: string;
   farmerName: string;
   farmerPhoto?: string | null;
+  farmerVerificationStatus?: string | null;
+  farmerVerificationTags?: UserVerificationTag[];
   country?: string;
   region?: string;
   onSelectProduct: (product: Listing) => void;
@@ -32,6 +35,8 @@ export function PurchaseModal({
   farmerId: _farmerId,
   farmerName,
   farmerPhoto,
+  farmerVerificationStatus,
+  farmerVerificationTags,
   country,
   region,
   onSelectProduct,
@@ -115,7 +120,13 @@ export function PurchaseModal({
             Back
           </button>
           <div className="flex items-center gap-2">
-            <FarmerAvatar src={farmerPhoto} name={farmerName} size="sm" />
+            <AvatarWithVerification
+              src={farmerPhoto}
+              name={farmerName}
+              size="sm"
+              verificationStatus={farmerVerificationStatus}
+              verificationTags={farmerVerificationTags}
+            />
             <div className="hidden text-right sm:block">
               <p className="text-sm font-semibold text-brand-900">{farmerName}</p>
               <CountryBadge country={country} region={region} />
@@ -137,31 +148,32 @@ export function PurchaseModal({
               />
             </div>
 
-            <div className="flex flex-col">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h1 className="text-xl font-bold text-brand-900 sm:text-2xl">{listing.title}</h1>
-                  <p className="mt-0.5 text-sm text-brand-600">{listing.commodity?.name}</p>
+            <div className="flex flex-col gap-5">
+              <div className="space-y-2">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h1 className="text-xl font-bold text-brand-900 sm:text-2xl">{listing.title}</h1>
+                    {listing.commodity?.name && (
+                      <p className="mt-1 text-sm text-brand-600">{listing.commodity.name}</p>
+                    )}
+                  </div>
+                  <span
+                    className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
+                      listing.available ? "bg-green-500 text-white" : "bg-red-500 text-white"
+                    }`}
+                  >
+                    {listing.available ? "Available" : "Unavailable"}
+                  </span>
                 </div>
-                <span
-                  className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
-                    listing.available ? "bg-green-500 text-white" : "bg-red-500 text-white"
-                  }`}
-                >
-                  {listing.available ? "Available" : "Unavailable"}
-                </span>
               </div>
 
-              {listing.description?.trim() && (
-                <p className="mt-3 text-sm leading-relaxed text-gray-600 whitespace-pre-wrap">
-                  {listing.description.trim()}
+              <div className="rounded-xl border border-brand-100 bg-brand-50/60 px-4 py-4">
+                <p className="text-2xl font-bold text-brand-900">
+                  {listing.priceLabel || `GHC ${unitPrice}/${unitLabel}`}
                 </p>
-              )}
-
-              <div className="mt-4 rounded-xl border border-brand-100 bg-brand-50/60 px-4 py-3">
-                <div className="flex items-center justify-between gap-4">
-                  <p className="text-xl font-bold text-brand-900">
-                    {listing.priceLabel || `GHC ${unitPrice}/${unitLabel}`}
+                <div className="mt-3 flex items-center justify-between gap-3 border-t border-brand-100 pt-3">
+                  <p className="text-sm text-gray-600">
+                    {listing.quantityLabel || `${maxQty} ${unitLabel} in stock`}
                   </p>
                   <HarvestCalendarTrigger
                     harvestStartDate={listing.harvestStartDate}
@@ -175,17 +187,25 @@ export function PurchaseModal({
                     iconClassName="h-4 w-4"
                   />
                 </div>
-                <p className="mt-0.5 text-sm text-gray-600">
-                  {listing.quantityLabel || `${maxQty} ${unitLabel} in stock`}
-                </p>
               </div>
 
+              {listing.description?.trim() && (
+                <div className="space-y-1.5">
+                  <h2 className="text-xs font-semibold uppercase tracking-wide text-brand-500">
+                    Description
+                  </h2>
+                  <p className="text-sm leading-relaxed text-gray-600 whitespace-pre-wrap">
+                    {listing.description.trim()}
+                  </p>
+                </div>
+              )}
+
               {!orderPlaced && !canPurchase ? (
-                <p className="mt-4 rounded-xl bg-red-50 p-4 text-sm text-red-700">
+                <p className="rounded-xl bg-red-50 p-4 text-sm text-red-700">
                   This product is unavailable. Try another item below.
                 </p>
               ) : !orderPlaced ? (
-                <div className="mt-5 space-y-5">
+                <div className="space-y-5">
                   <div>
                     <label className="block text-sm font-semibold text-brand-900">Quantity</label>
                     <div className="mt-2 flex items-center gap-2">
@@ -239,7 +259,7 @@ export function PurchaseModal({
           {relatedProducts.length > 0 && (
             <section className="mt-8 border-t border-brand-100 pt-6">
               <h2 className="text-base font-bold text-brand-900">More from this farm</h2>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {relatedProducts.map((product) => (
                   <FarmerProductCard
                     key={product.id}

@@ -309,6 +309,12 @@ class ApiClient {
         method: "PATCH",
         body: JSON.stringify(body),
       }),
+    clients: () => this.request<import("./types").FarmClient[]>("/farm/clients"),
+    notifyClient: (body: { clientId: string; message?: string }) =>
+      this.request<{ success: boolean }>("/farm/notify-client", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
     media: {
       list: () => this.request<import("./types").FarmerMediaItem[]>("/farm/media"),
       listByFarmer: (farmerUserId: string) =>

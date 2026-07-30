@@ -44,7 +44,7 @@ export const ACCOUNTANT_NAV_LINKS: PortalNavLink[] = [
   },
   {
     href: "/accountant/withdrawals",
-    label: "Order Shared & Withdrawals",
+    label: "Order share",
     icon: "coins",
     match: (p) => p.startsWith("/accountant/withdrawals"),
     section: "Order shared",

@@ -18,6 +18,12 @@ export const FARMER_NAV_LINKS: PortalNavLink[] = [
     match: (p) => p.startsWith("/farm/orders"),
   },
   {
+    href: "/farm/clients",
+    label: "Clients",
+    icon: "users",
+    match: (p) => p.startsWith("/farm/clients"),
+  },
+  {
     href: "/marketplace",
     label: "Marketplace",
     icon: "store",

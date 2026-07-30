@@ -1,6 +1,5 @@
 "use client";
 
-import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
 import { RolePrefixedName, getRoleNamePrefix } from "@/components/RolePrefixedName";
@@ -64,7 +63,7 @@ export function ProfileIdentityHeader({ user, photoCacheBust, onEditClick }: Pro
           )}
           {(isFarmer(user.roleId) || isBuyer(user.roleId)) && user.assignedHandler && (
             <div className="mt-3 flex items-center justify-center gap-2 sm:justify-start">
-              <ProfilePhoto
+              <AvatarWithVerification
                 src={user.assignedHandler.profilePicture}
                 name={user.assignedHandler.firstName}
                 size={52}
@@ -73,6 +72,8 @@ export function ProfileIdentityHeader({ user, photoCacheBust, onEditClick }: Pro
                     ? new Date(user.assignedHandler.updatedAt).getTime()
                     : undefined
                 }
+                verificationStatus={user.assignedHandler.verificationStatus}
+                verificationTags={user.assignedHandler.verificationTags}
               />
               <p className="text-sm text-brand-700">
                 Handler:{" "}

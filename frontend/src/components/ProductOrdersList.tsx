@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ProductImage, ProfilePhoto } from "@/components/FarmerAvatar";
+import { ProductImage } from "@/components/FarmerAvatar";
+import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
 import { OrderTrackControls, OrderTrackTimeline } from "@/components/OrderTrackTimeline";
 import { api } from "@/lib/api";
@@ -310,7 +311,7 @@ function CompactOrderCard({
   );
 }
 
-function OrderDetailModal({
+export function OrderDetailModal({
   order,
   perspective,
   trackEditable,
@@ -366,28 +367,28 @@ function OrderDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
       onClick={onClose}
       role="presentation"
     >
       <div
-        className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-xl"
+        className="flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl bg-white shadow-xl sm:max-h-[90vh] sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby="order-modal-title"
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-brand-100 px-5 py-4">
-          <h2 id="order-modal-title" className="text-lg font-bold text-brand-900">
+        <div className="relative z-10 flex shrink-0 items-center justify-between gap-3 border-b border-brand-100 bg-white px-4 py-3.5 sm:px-5 sm:py-4">
+          <h2 id="order-modal-title" className="min-w-0 flex-1 truncate text-lg font-bold text-brand-900">
             Order details
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg px-2 py-1 text-sm font-semibold text-gray-600 hover:bg-gray-100"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 active:bg-gray-200"
             aria-label="Close"
           >
-            ✕
+            <Icon name="x" className="h-5 w-5" />
           </button>
         </div>
 
@@ -474,10 +475,12 @@ function OrderDetailModal({
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">From (Buyer)</p>
               <div className="flex items-center gap-3">
-                <ProfilePhoto
+                <AvatarWithVerification
                   src={!isBuyerOrder(order) ? order.buyerProfilePicture : undefined}
                   name={!isBuyerOrder(order) ? (order.buyerName ?? "Buyer") : "Buyer"}
                   size={48}
+                  verificationStatus={!isBuyerOrder(order) ? order.buyerVerificationStatus : undefined}
+                  verificationTags={!isBuyerOrder(order) ? order.buyerVerificationTags : undefined}
                 />
                 <div className="min-w-0 flex-1">
                   <p className="font-bold text-brand-900">
@@ -493,10 +496,12 @@ function OrderDetailModal({
             <div className="border-t border-brand-100 pt-3">
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">To (Farmer)</p>
               <div className="flex items-center gap-3">
-                <ProfilePhoto
+                <AvatarWithVerification
                   src={isBuyerOrder(order) ? order.farmerProfilePicture : undefined}
                   name={isBuyerOrder(order) ? order.farmerName : "Farmer"}
                   size={48}
+                  verificationStatus={isBuyerOrder(order) ? order.farmerVerificationStatus : undefined}
+                  verificationTags={isBuyerOrder(order) ? order.farmerVerificationTags : undefined}
                 />
                 <div className="min-w-0 flex-1">
                   <p className="font-bold text-brand-900">
@@ -521,6 +526,67 @@ function OrderDetailModal({
         </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+export function BuyerOrdersTable({ items }: { items: BuyerOrderLineItem[] }) {
+  if (items.length === 0) return null;
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[760px] text-sm">
+        <thead>
+          <tr className="border-b border-brand-50 bg-brand-50/50 text-left text-xs font-semibold uppercase text-gray-600">
+            <th className="px-4 py-3">Picture</th>
+            <th className="px-4 py-3">Name</th>
+            <th className="px-4 py-3">Client</th>
+            <th className="px-4 py-3 text-right">Quantity</th>
+            <th className="px-4 py-3 text-right">Price</th>
+            <th className="px-4 py-3">Time and date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item) => (
+            <tr key={item.id} className="border-b border-brand-50 hover:bg-green-50/20">
+              <td className="px-4 py-3">
+                {item.productImage ? (
+                  <ProductImage
+                    src={item.productImage}
+                    alt={item.productName}
+                    className="h-12 w-12 shrink-0 rounded-lg object-cover"
+                  />
+                ) : (
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-brand-50">
+                    <Icon name="wheat" className="h-6 w-6 text-brand-300" />
+                  </div>
+                )}
+              </td>
+              <td className="px-4 py-3">
+                <span className="font-medium text-brand-900">{item.productName}</span>
+              </td>
+              <td className="px-4 py-3">
+                <p className="font-medium text-gray-900">{item.farmerName}</p>
+                {item.farmName && <p className="text-xs text-brand-700">{item.farmName}</p>}
+              </td>
+              <td className="px-4 py-3 text-right text-gray-800">
+                {item.quantity} {formatListingUnit(item.unit)}
+              </td>
+              <td className="px-4 py-3 text-right font-semibold text-green-700">
+                {formatGhc(item.totalAmount)}
+              </td>
+              <td className="px-4 py-3 whitespace-nowrap text-gray-600">
+                {formatDateTime(item.date)}
+                {(item.purchaseCount ?? 1) > 1 && (
+                  <span className="block text-[10px] text-brand-700">
+                    {item.purchaseCount} purchases combined
+                  </span>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
