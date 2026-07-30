@@ -686,15 +686,19 @@ export async function notifyFarmAccessPaid(
   farmerId: string,
   buyerName: string,
   farmerName: string,
-  amount: number
+  amount: number,
+  autoApproved = false
 ) {
-  const link = await financialStatementLink(buyerId);
+  const statementLink = await financialStatementLink(buyerId);
+  const link = autoApproved ? '/marketplace' : statementLink;
   await createNotification({
     userId: buyerId,
     actorId: farmerId,
-    type: 'FARM_ACCESS_PAID',
-    title: 'Farm access payment',
-    body: `You paid GHC ${amount.toFixed(2)} for access to ${farmerName}. Recorded on your financial statement — awaiting ANI admin approval.`,
+    type: autoApproved ? 'CONNECTION_APPROVED' : 'FARM_ACCESS_PAID',
+    title: autoApproved ? 'Farm access granted' : 'Farm access payment',
+    body: autoApproved
+      ? `You paid GHC ${amount.toFixed(2)} for access to ${farmerName}. You can now browse products and place orders.`
+      : `You paid GHC ${amount.toFixed(2)} for access to ${farmerName}. Recorded on your financial statement — access will activate once payment is confirmed.`,
     link,
     metadata: {
       farmerUserId: farmerId,
@@ -702,9 +706,24 @@ export async function notifyFarmAccessPaid(
       price: amount,
       priceLabel: `GHC ${amount.toFixed(2)}`,
       actionUrl: link,
-      actionLabel: 'View statement',
+      actionLabel: autoApproved ? 'Browse farm' : 'View statement',
     },
   }).catch(() => undefined);
+
+  if (autoApproved) {
+    await notifyFarmerTeam(farmerId, {
+      actorId: buyerId,
+      type: 'FARM_ACCESS_PAID',
+      title: 'New farm access client',
+      body: `${buyerName} paid the access fee and can now view your farm and products.`,
+      link: '/connections',
+      metadata: {
+        actionUrl: '/connections',
+        actionLabel: 'View connections',
+      },
+    });
+    return;
+  }
 
   await notifyConnectionRequest(farmerId, buyerId, buyerName);
   await notifyAdminsConnectionRequest(buyerId, buyerName, farmerId, farmerName);

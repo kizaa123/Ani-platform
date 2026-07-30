@@ -50,8 +50,8 @@ const PERMISSIONS = [
 ];
 
 const ROLE_PERMS: Record<number, string[]> = {
-  1: ['create_listing', 'manage_commodities', 'view_farmer_preview', 'send_messages', 'view_publications'],
-  2: ['create_listing', 'manage_commodities', 'view_farmer_preview', 'send_messages', 'view_publications'],
+  1: ['create_listing', 'manage_commodities', 'view_farmer_preview', 'send_messages', 'view_publications', 'purchase_access', 'request_connection'],
+  2: ['create_listing', 'manage_commodities', 'view_farmer_preview', 'send_messages', 'view_publications', 'purchase_access', 'request_connection'],
   3: ['view_farmer_preview', 'view_full_farmer_data', 'manage_listings', 'negotiate_as_farmer', 'represent_farmer', 'send_messages', 'view_publications'],
   4: ['view_farmer_preview', 'view_full_farmer_data', 'request_connection', 'negotiate_as_buyer', 'represent_buyer', 'purchase_access', 'send_messages', 'view_publications', 'purchase_publication'],
   5: ['view_farmer_preview', 'view_full_farmer_data', 'request_connection', 'search_farmers', 'negotiate_as_buyer', 'represent_buyer', 'send_messages', 'view_publications'],

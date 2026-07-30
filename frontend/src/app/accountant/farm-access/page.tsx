@@ -70,7 +70,7 @@ export default function AccountantFarmAccessPage() {
         </Link>
         <h1 className="mt-2 text-xl font-bold text-brand-900">Farm Access Approvals</h1>
         <p className="text-xs text-gray-500">
-          Part of access income — approve buyer farm access after payment is confirmed
+          Part of access income — review unpaid connection requests (paid access is granted automatically)
         </p>
       </div>
 
@@ -94,7 +94,7 @@ export default function AccountantFarmAccessPage() {
           {pageLoading ? (
             <p className="text-gray-500">Loading…</p>
           ) : connections.length === 0 ? (
-            <p className="text-gray-500">No paid farm access requests awaiting approval.</p>
+            <p className="text-gray-500">No paid farm access requests awaiting approval. Paid access is granted automatically.</p>
           ) : (
             <div className="space-y-3">
               {connections.map((c) => (

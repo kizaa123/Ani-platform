@@ -14,7 +14,7 @@ import {
   accountantController,
   aiController,
 } from '../controllers/platform.controller';
-import { authenticate, requirePermission } from '../middleware/auth.middleware';
+import { authenticate, requirePermission, requireCanPurchaseFromMarketplace } from '../middleware/auth.middleware';
 import { validateBody } from '../middleware/validate.middleware';
 import { registerSchema, loginSchema, updateUserProfileSchema, updateHandlerSchema } from '../services/auth.service';
 import { updateFarmSchema, addCommoditySchema, updateOrderTrackSchema, notifyClientSchema } from '../services/farm.service';
@@ -240,7 +240,7 @@ router.get('/marketplace/my', authenticate, marketplaceController.myListings);
 router.post(
   '/marketplace/:id/purchase',
   authenticate,
-  requirePermission(PERMISSIONS.REQUEST_CONNECTION),
+  requireCanPurchaseFromMarketplace(),
   validateBody(purchaseProductSchema),
   orderController.purchase
 );
@@ -249,7 +249,7 @@ router.get('/orders/:id/statement', authenticate, orderController.statement);
 router.post(
   '/orders/:id/release',
   authenticate,
-  requirePermission(PERMISSIONS.REQUEST_CONNECTION),
+  requireCanPurchaseFromMarketplace(),
   validateBody(releaseOrderSchema),
   orderController.release
 );
@@ -262,7 +262,7 @@ router.delete('/marketplace/:id', authenticate, requirePermission(PERMISSIONS.CR
 router.get('/payments/packages', paymentController.getPackages);
 router.get('/payments/access', authenticate, paymentController.accessStatus);
 router.post('/payments/purchase', authenticate, requirePermission(PERMISSIONS.PURCHASE_ACCESS), validateBody(purchaseSchema), paymentController.purchase);
-router.post('/payments/farm-access', authenticate, requirePermission(PERMISSIONS.PURCHASE_ACCESS), validateBody(purchaseFarmAccessSchema), paymentController.purchaseFarmAccess);
+router.post('/payments/farm-access', authenticate, requireCanPurchaseFromMarketplace(), validateBody(purchaseFarmAccessSchema), paymentController.purchaseFarmAccess);
 router.get('/payments/history', authenticate, paymentController.history);
 router.get('/payments/admin', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), paymentController.allPayments);
 router.post('/payments/packages', authenticate, requirePermission(PERMISSIONS.MANAGE_PACKAGES), validateBody(packageSchema), paymentController.createPackage);

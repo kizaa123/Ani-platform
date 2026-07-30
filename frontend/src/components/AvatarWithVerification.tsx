@@ -32,14 +32,12 @@ function tagSizeForAvatar(avatarPx: number): "xs" | "sm" | "md" {
   return "xs";
 }
 
-/** Nudge badge cluster onto the circular avatar edge at bottom-right. */
+/** Anchor badge cluster to the avatar's bottom-right rim (~4–5 o'clock). */
 function edgeBadgeStyle(avatarPx: number): CSSProperties {
-  const offset = avatarPx >= 120 ? 0.06 : avatarPx >= 72 ? 0.04 : 0.02;
-  const shift = avatarPx >= 120 ? 0.14 : avatarPx >= 72 ? 0.16 : 0.18;
+  const nudge = Math.max(2, Math.round(avatarPx * 0.08));
   return {
-    bottom: `${offset * 100}%`,
-    right: `${offset * 100}%`,
-    transform: `translate(${shift * 100}%, ${shift * 100}%)`,
+    bottom: -nudge,
+    right: -nudge,
   };
 }
 
@@ -66,7 +64,7 @@ export function AvatarWithVerification({
       size={tagSize}
       showLabels={false}
       layout="row"
-      className={tagPlacement === "overlay" ? "gap-0.5" : undefined}
+      className={tagPlacement === "overlay" ? "gap-0.5 !justify-end" : undefined}
       badgeClassName={
         tagPlacement === "overlay" ? "ring-2 ring-white shadow-sm" : undefined
       }
@@ -86,7 +84,7 @@ export function AvatarWithVerification({
         />
         {tags && (
           <div
-            className="pointer-events-none absolute z-10 flex flex-row items-center"
+            className="pointer-events-none absolute z-10 flex flex-row items-end justify-end"
             style={edgeBadgeStyle(px)}
           >
             {tags}

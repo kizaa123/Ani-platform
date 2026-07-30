@@ -145,7 +145,7 @@ export default function AccountantOverviewPage() {
               {
                 label: "Pending farm access",
                 value: String(overview.pendingPaidConnections),
-                sub: "Paid — awaiting approval",
+                sub: "Legacy paid requests only",
                 valueClass: "text-lg font-bold text-amber-700",
                 href: "/accountant/farm-access",
               },

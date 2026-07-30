@@ -69,7 +69,7 @@ export function NotifyClientModal({ client, onClose, onSend }: NotifyClientModal
             <AvatarWithVerification
               src={client.profilePicture}
               name={client.firstName}
-              size={44}
+              size={64}
               verificationStatus={client.verificationStatus}
               verificationTags={client.verificationTags}
             />

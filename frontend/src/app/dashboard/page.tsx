@@ -68,7 +68,7 @@ export default function DashboardPage() {
     { href: "/accountant/transactions", title: "Access Ledger", desc: "Farm & publication access payments", icon: "credit-card", show: isAccountant(user.roleId) },
     { href: "/accountant/withdrawals", title: "Order Shared & Withdrawals", desc: "Distribute orders & record withdrawals", icon: "coins", show: isAccountant(user.roleId) },
     { href: "/accountant/receipts", title: "Order Receipts", desc: "Released order statement PDFs", icon: "package", show: isAccountant(user.roleId) },
-    { href: "/accountant/farm-access", title: "Farm Access", desc: "Approve paid buyer farm access", icon: "handshake", show: isAccountant(user.roleId) },
+    { href: "/accountant/farm-access", title: "Farm Access", desc: "Review legacy paid connection requests", icon: "handshake", show: isAccountant(user.roleId) },
     { href: "/farm/settings", title: "Profile", desc: "Profile, handler, farm & commodities", icon: "user", show: isFarmer(user.roleId) },
     { href: "/settings", title: "Profile", desc: "Profile, location & handler", icon: "user", show: isBuyer(user.roleId) },
     { href: "/agents/settings", title: "Profile", desc: "Profile photo & contact details", icon: "user", show: isHandler(user.roleId) },

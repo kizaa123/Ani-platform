@@ -36,7 +36,7 @@ export function HandlerAssignmentIdentity({
   owner,
   subtitle,
   stat,
-  avatarSize = "sm",
+  avatarSize = "md",
   showPhone = false,
 }: {
   owner: AgentClientOwner;
@@ -148,7 +148,7 @@ export function HandlerAssignmentsPreviewCard({
         {loading ? (
           Array.from({ length: 2 }).map((_, i) => (
             <div key={i} className="flex items-center gap-2.5">
-              <div className="h-12 w-12 shrink-0 animate-pulse rounded-full bg-gray-200" />
+              <div className="h-14 w-14 shrink-0 animate-pulse rounded-full bg-gray-200" />
               <div className="min-w-0 flex-1 space-y-1.5">
                 <div className="h-3.5 w-2/3 animate-pulse rounded bg-gray-200" />
                 <div className="h-3 w-1/2 animate-pulse rounded bg-gray-100" />

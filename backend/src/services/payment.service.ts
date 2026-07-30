@@ -151,6 +151,9 @@ export class PaymentService {
       throw new AppError(402, 'Payment failed');
     }
 
+    const paymentCompleted = result.status === 'COMPLETED';
+    const connectionStatus = paymentCompleted ? 'ACCEPTED' : 'PENDING';
+
     const txResult = await prisma.$transaction(async (tx) => {
       const farmAccess = await tx.buyerFarmerAccess.upsert({
         where: { buyerId_farmerId: { buyerId, farmerId: data.farmerId } },
@@ -160,28 +163,31 @@ export class PaymentService {
           amount: accessPackage.price,
           paymentMethod: data.paymentMethod,
           transactionId: result.transactionId,
-          status: result.status === 'COMPLETED' ? 'COMPLETED' : 'PENDING',
+          status: paymentCompleted ? 'COMPLETED' : 'PENDING',
         },
         update: {
           amount: accessPackage.price,
           paymentMethod: data.paymentMethod,
           transactionId: result.transactionId,
-          status: result.status === 'COMPLETED' ? 'COMPLETED' : 'PENDING',
+          status: paymentCompleted ? 'COMPLETED' : 'PENDING',
         },
       });
 
       await tx.connectionRequest.upsert({
         where: { buyerId_farmerId: { buyerId, farmerId: data.farmerId } },
-        create: { buyerId, farmerId: data.farmerId, status: 'PENDING' },
-        update: { status: 'PENDING' },
+        create: { buyerId, farmerId: data.farmerId, status: connectionStatus },
+        update: { status: connectionStatus },
       });
 
       return {
         farmAccess,
-        message: `Payment received — waiting for ANI admin to approve your farm access`,
+        message: paymentCompleted
+          ? `Access granted — you can now view ${farmer.firstName}'s farm and products`
+          : `Payment received — farm access will activate once payment is confirmed`,
         amountPaid: accessPackage.price,
         farmerName: `${farmer.firstName} ${farmer.lastName}`,
-        pendingApproval: true,
+        pendingApproval: !paymentCompleted,
+        accessGranted: paymentCompleted,
       };
     });
 
@@ -195,7 +201,8 @@ export class PaymentService {
       data.farmerId,
       buyerName,
       `${farmer.firstName} ${farmer.lastName}`,
-      accessPackage.price
+      accessPackage.price,
+      paymentCompleted
     );
 
     return txResult;

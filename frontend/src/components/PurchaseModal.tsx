@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { Listing, formatListingUnit } from "@/lib/types";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
@@ -55,8 +55,6 @@ export function PurchaseModal({
     | { variant: "error"; message: string }
     | null
   >(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
-
   const total = Math.round(quantity * unitPrice * 100) / 100;
   const canPurchase = listing.available !== false && maxQty > 0;
   const orderPlaced = result?.variant === "success";
@@ -71,7 +69,6 @@ export function PurchaseModal({
   useEffect(() => {
     setQuantity(Math.min(1, maxQty) || 1);
     setResult(null);
-    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, [listing.id]);
 
   useEffect(() => {
@@ -96,7 +93,6 @@ export function PurchaseModal({
       const purchaseResult = await api.marketplace.purchase(listing.id, { quantity, paymentMethod });
       const message = `${quantity} ${unitLabel} — GHC ${total.toFixed(2)} held in escrow until you confirm delivery.`;
       setResult({ variant: "success", message, releaseOtp: purchaseResult.releaseOtp });
-      scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
       onSuccess();
     } catch (e) {
       setResult({
@@ -135,7 +131,7 @@ export function PurchaseModal({
         </div>
       </header>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-lg px-4 py-6 sm:max-w-6xl sm:py-8">
           <div className="grid gap-6 lg:grid-cols-2 lg:gap-10 lg:items-start">
             <div className="flex flex-col gap-3">

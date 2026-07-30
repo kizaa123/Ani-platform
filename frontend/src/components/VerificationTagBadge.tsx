@@ -1,7 +1,7 @@
 import { VerifiedBadgeIcon } from "@/components/VerificationBadge";
 import type { UserVerificationTag, VerificationTagType } from "@/lib/types";
 
-const TAG_STYLES: Record<
+const TAG_PILL_STYLES: Record<
   VerificationTagType,
   { label: string; shortLabel: string; className: string }
 > = {
@@ -54,7 +54,7 @@ export function VerificationTagIcon({
   /** When true, hide from screen readers (parent provides aria-label). */
   decorative?: boolean;
 }) {
-  const label = TAG_STYLES[tagType].label;
+  const label = TAG_PILL_STYLES[tagType].label;
 
   return (
     <VerifiedBadgeIcon
@@ -96,7 +96,7 @@ export function VerificationTagBadge({
   onRemove?: () => void;
   removing?: boolean;
 }) {
-  const style = TAG_STYLES[tagType];
+  const style = TAG_PILL_STYLES[tagType];
   const labelVisible = showLabel ?? false;
   const label = size === "sm" ? style.shortLabel : style.label;
 
@@ -106,11 +106,11 @@ export function VerificationTagBadge({
         role="img"
         aria-label={style.label}
         title={style.label}
-        className={`inline-flex shrink-0 items-center justify-center rounded-full border ${BADGE_CIRCLE_SIZE[size]} ${style.className} ${className}`}
+        className={`inline-flex shrink-0 items-center justify-center ${className}`}
       >
         <VerificationTagIcon
           tagType={tagType}
-          className={BADGE_ICON_SIZE[size]}
+          className={BADGE_CIRCLE_SIZE[size]}
           decorative
         />
       </span>
@@ -187,4 +187,4 @@ export function VerificationTags({
   );
 }
 
-export { TAG_STYLES };
+export { TAG_PILL_STYLES as TAG_STYLES };

@@ -98,9 +98,9 @@ export function FarmAccessPaymentModal({
         {result?.variant === "success" && (
           <PaymentResultOverlay
             variant="success"
-            title="Payment received"
-            message={`${feeLabel} paid for access to ${farmer.farmName}.`}
-            hint="Admin will review your request. You can view products once approved."
+            title="Access granted"
+            message={`${feeLabel} paid for access to ${farmer.farmName}. You can view products and place orders now.`}
+            hint="Access is active now. Browse products and place orders from this farm."
             onDismiss={onClose}
           />
         )}

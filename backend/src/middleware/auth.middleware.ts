@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyAccessToken, TokenPayload } from '../utils/jwt';
 import prisma from '../database/prisma';
+import { canPurchaseFromMarketplace } from '../constants/roles';
 
 export interface AuthRequest extends Request {
   user?: TokenPayload & { permissions: string[] };
@@ -46,6 +47,19 @@ export function requireRole(...roleIds: number[]) {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.user || !roleIds.includes(req.user.roleId)) {
       return res.status(403).json({ success: false, error: 'Role not authorized' });
+    }
+    next();
+  };
+}
+
+/** Buyers, researchers, and farmers who browse/purchase from other farms on the marketplace. */
+export function requireCanPurchaseFromMarketplace() {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+    if (!canPurchaseFromMarketplace(req.user.roleId)) {
+      return res.status(403).json({ success: false, error: 'Insufficient permissions' });
     }
     next();
   };

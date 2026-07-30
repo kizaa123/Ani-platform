@@ -82,19 +82,16 @@ export function MarketplaceFarmerCard({
   onViewFarm,
 }: MarketplaceFarmerCardProps) {
   const isDesktop = useMinWidth("(min-width: 640px)");
-  const avatarSize = isDesktop ? "lg" : 112;
+  const avatarSize = isDesktop ? "xl" : "lg";
   const productCount = farmer.products.length;
-  const productCountLabel = farmer.canViewProducts
-    ? productCount === 0
+  const productCountLabel =
+    productCount === 0
       ? "No products listed"
-      : `${productCount} product${productCount === 1 ? "" : "s"} listed`
-    : farmer.hasFarmAccess && farmer.connectionStatus === "PENDING"
-      ? "Pending approval"
-      : "Hidden until access";
+      : `${productCount} product${productCount === 1 ? "" : "s"} listed`;
 
   return (
     <article className="card-elevated card-elevated-hover flex h-full flex-col overflow-hidden rounded-2xl p-5">
-      <div className="flex items-start gap-3 sm:gap-4">
+      <div className="flex items-start gap-4 sm:gap-5">
         <AvatarWithVerification
           src={farmer.profilePicture}
           name={farmer.farmerName}
@@ -114,8 +111,8 @@ export function MarketplaceFarmerCard({
 
       <div className="mt-4">
         <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Location</p>
-        <div className="mt-1.5">
-          <CountryBadge country={farmer.country} region={farmer.region} />
+        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+          <CountryBadge country={farmer.country} region={farmer.region} city={farmer.city} />
         </div>
       </div>
 
@@ -137,10 +134,11 @@ export function MarketplaceFarmerCard({
         )}
       </div>
 
-      <div className="mt-3 grid gap-3 sm:grid-cols-2">
-        <DetailTile label="Farm size" value={farmer.farmSize || "Not specified"} />
-        <DetailTile label="Products" value={productCountLabel} />
-      </div>
+      {farmer.canViewProducts && (
+        <div className="mt-3">
+          <DetailTile label="Products" value={productCountLabel} />
+        </div>
+      )}
 
       <div className="mt-auto pt-4">
         <FarmActionButton

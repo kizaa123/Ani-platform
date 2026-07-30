@@ -199,25 +199,27 @@ interface CountryBadgeProps {
 
   region?: string | null;
 
+  city?: string | null;
+
   className?: string;
 
 }
 
 
 
-export function CountryBadge({ country, region, className = "" }: CountryBadgeProps) {
+export function CountryBadge({ country, region, city, className = "" }: CountryBadgeProps) {
 
-  if (!country && !region) return null;
+  if (!country && !region && !city) return null;
 
 
 
   return (
 
-    <p className={`flex flex-wrap items-center gap-1.5 text-xs text-gray-500 ${className}`}>
+    <p className={`inline-flex max-w-full flex-wrap items-center gap-1.5 text-xs text-gray-500 ${className}`}>
 
       {country && (
 
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-2 py-0.5 font-medium text-brand-900">
+        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-2 py-0.5 font-medium text-brand-900">
 
           <CountryFlag countryName={country} size={18} />
 
@@ -227,7 +229,9 @@ export function CountryBadge({ country, region, className = "" }: CountryBadgePr
 
       )}
 
-      {region && <span>{region}</span>}
+      {region && <span className="shrink-0">{region}</span>}
+
+      {city && <span className="shrink-0">{city}</span>}
 
     </p>
 
