@@ -12,6 +12,10 @@ import {
   canPurchaseFromMarketplace,
 } from '../constants/roles';
 import { notifyOrderPaymentReleased } from './notification.service';
+import {
+  fetchCounterpartHandlerForOwner,
+  type CounterpartHandlerContact,
+} from '../utils/counterpartHandler';
 
 type OrderForStatement = NonNullable<Awaited<ReturnType<typeof loadOrderForStatement>>>;
 
@@ -418,6 +422,19 @@ export async function getOrderDetail(orderId: string, userId: string, roleId: nu
     order.status === 'PAID' &&
     order.escrowStatus === 'HELD';
 
+  let counterpartHandler: CounterpartHandlerContact | null = null;
+  if (isFarmerHandler(roleId)) {
+    counterpartHandler = await fetchCounterpartHandlerForOwner(
+      order.buyerId,
+      'BUYER_REPRESENTATIVE'
+    );
+  } else if (isBuyerHandler(roleId)) {
+    counterpartHandler = await fetchCounterpartHandlerForOwner(
+      order.farmerId,
+      'FARMER_REPRESENTATIVE'
+    );
+  }
+
   return {
     id: order.id,
     buyerId: order.buyerId,
@@ -441,6 +458,7 @@ export async function getOrderDetail(orderId: string, userId: string, roleId: nu
     productName: order.listing.title,
     buyerName: `${order.buyer.firstName} ${order.buyer.lastName}`,
     farmerName: `${order.farmer.firstName} ${order.farmer.lastName}`,
+    counterpartHandler,
   };
 }
 

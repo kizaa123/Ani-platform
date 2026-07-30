@@ -127,11 +127,11 @@ export const PORTAL_NAV_IMAGES_BUYER = {
 
   /** Change image here: Buyer Financial Statement card */
 
-  "/financials": "/accountant-filing-invoice.webp",
+  "/financials": "/purchase financials.jpg",
 
   /** Change image here: My Orders card */
 
-  "/orders": "/order agric image.jpg",
+  "/orders": "/my order.webp",
 
   /** Change image here: Buyer Profile card */
 

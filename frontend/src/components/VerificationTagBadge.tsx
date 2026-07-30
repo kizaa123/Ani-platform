@@ -152,6 +152,7 @@ export function VerificationTags({
   showLabels,
   layout = "row",
   className = "",
+  badgeClassName = "",
 }: {
   verificationTags?: UserVerificationTag[];
   verificationStatus?: string | null;
@@ -160,6 +161,7 @@ export function VerificationTags({
   showLabels?: boolean;
   layout?: "row" | "stack";
   className?: string;
+  badgeClassName?: string;
 }) {
   const badges = getAvatarVerificationBadges(verificationTags, verificationStatus);
   if (badges.length === 0) return null;
@@ -178,6 +180,7 @@ export function VerificationTags({
           tagType={tagType}
           size={size}
           showLabel={labelVisible}
+          className={badgeClassName}
         />
       ))}
     </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AgentAssignment, AgentClientOwner, fullName } from "@/lib/types";
+import { AgentAssignment, AgentClientOwner, fullName, isResearcher } from "@/lib/types";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
 import { Icon, type IconName } from "@/components/icons";
@@ -306,11 +306,18 @@ export function HandlerFarmerClientCard({ assignment }: { assignment: AgentAssig
 }
 
 /** Compact buyer client card for /agents list */
+function clientOrganization(owner: AgentClientOwner): string | undefined {
+  if (isResearcher(owner.roleId ?? 0)) {
+    return owner.researcherProfile?.institution?.trim() || undefined;
+  }
+  return owner.buyerProfile?.company?.trim() || undefined;
+}
+
 export function HandlerBuyerClientCard({ assignment }: { assignment: AgentAssignment }) {
   const { owner } = assignment;
-  const company = owner.buyerProfile?.company;
+  const organization = clientOrganization(owner);
   const location = formatLocation(owner);
-  const subtitle = [company, location].filter(Boolean).join(" · ");
+  const subtitle = [organization, location].filter(Boolean).join(" · ");
 
   return (
     <article className="card-elevated flex flex-col overflow-hidden rounded-xl transition hover:shadow-md">

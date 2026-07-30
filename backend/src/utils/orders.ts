@@ -209,11 +209,12 @@ export function groupFarmerIncomingOrders(orders: FarmerIncomingOrderRow[]) {
 
 /** Orders placed by a buyer (farmer details shown). */
 export function formatBuyerPlacedOrder(
-  order: OrderCore & { buyerId: string; listingId: string; farmer: FarmerFields }
+  order: OrderCore & { buyerId: string; farmerId: string; listingId: string; farmer: FarmerFields }
 ) {
   return {
     id: order.id,
     buyerId: order.buyerId,
+    farmerId: order.farmerId,
     listingId: order.listingId,
     date: order.createdAt.toISOString(),
     productName: order.listing.title,
@@ -246,6 +247,7 @@ export function formatBuyerPlacedOrder(
 
 export type BuyerPlacedOrderRow = OrderCore & {
   buyerId: string;
+  farmerId: string;
   listingId: string;
   farmer: FarmerFields;
 };

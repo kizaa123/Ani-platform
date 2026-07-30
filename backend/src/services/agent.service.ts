@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import prisma from '../database/prisma';
 import { assertFound, assertAuthorized } from '../utils/errors';
-import { ROLES, isFarmerHandler, isBuyerHandler, isFarmerRole, FARMER_ROLES } from '../constants/roles';
+import { ROLES, isFarmerHandler, isBuyerHandler, isFarmerRole, FARMER_ROLES, CLIENT_ROLES } from '../constants/roles';
 import { AppError } from '../utils/errors';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import { farmService } from './farm.service';
@@ -15,6 +15,7 @@ import {
   mapDistributionToHandlerPendingLine,
 } from '../utils/distributionFinancials';
 import { formatVerificationTags, verificationTagSelect } from '../utils/verificationTags';
+import { enrichOrdersWithCounterpartHandler } from '../utils/counterpartHandler';
 
 export const assignmentSchema = z.object({
   ownerId: z.string().uuid(),
@@ -71,10 +72,18 @@ export class AgentService {
   }
 
   async getAssignments(agentId: string, roleId: number) {
-    assertAuthorized(isFarmerHandler(roleId) || isBuyerHandler(roleId), 'Handlers only');
+    const normalizedRoleId = Number(roleId);
+    assertAuthorized(
+      isFarmerHandler(normalizedRoleId) || isBuyerHandler(normalizedRoleId),
+      'Handlers only'
+    );
+
+    const relationshipType = isFarmerHandler(normalizedRoleId)
+      ? 'FARMER_REPRESENTATIVE'
+      : 'BUYER_REPRESENTATIVE';
 
     const rows = await prisma.agentAssignment.findMany({
-      where: { agentId },
+      where: { agentId, relationshipType },
       include: {
         owner: {
           select: {
@@ -105,6 +114,7 @@ export class AgentService {
               },
             },
             buyerProfile: { select: { company: true } },
+            researcherProfile: { select: { institution: true, expertise: true } },
           },
         },
       },
@@ -138,6 +148,7 @@ export class AgentService {
             }
           : null,
         buyerProfile: row.owner.buyerProfile,
+        researcherProfile: row.owner.researcherProfile,
         isFarmer: FARMER_ROLES.includes(row.owner.roleId as typeof ROLES.CROP_FARMER),
         commodities:
           row.owner.farmerProfile?.farmerCommodities.map((fc) => ({
@@ -370,8 +381,8 @@ export class AgentService {
       'Client not found'
     );
 
-    if (owner.roleId !== ROLES.BUYER) {
-      throw new AppError(400, 'Assigned client is not a buyer');
+    if (!CLIENT_ROLES.includes(owner.roleId as typeof ROLES.BUYER)) {
+      throw new AppError(400, 'Assigned client is not a buyer or researcher');
     }
 
     return assignment;
@@ -404,11 +415,13 @@ export class AgentService {
 
     if (assignment.relationshipType === 'FARMER_REPRESENTATIVE') {
       await this.assertFarmerClientAssignment(agentId, ownerId);
-      return farmService.fetchFarmerOrders(ownerId);
+      const orders = await farmService.fetchFarmerOrders(ownerId);
+      return enrichOrdersWithCounterpartHandler(orders, 'BUYER_REPRESENTATIVE', 'buyerId');
     }
 
     await this.assertBuyerClientAssignment(agentId, ownerId);
-    return buyerService.fetchOrdersForBuyer(ownerId);
+    const orders = await buyerService.fetchOrdersForBuyer(ownerId);
+    return enrichOrdersWithCounterpartHandler(orders, 'FARMER_REPRESENTATIVE', 'farmerId');
   }
 
   async updateClientOrderTrack(

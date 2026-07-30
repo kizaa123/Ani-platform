@@ -651,7 +651,7 @@ export default function RegisterPage() {
                   handlerRoleId={isFarmerRole ? ROLES.FARMER_HANDLER : ROLES.BUYER_HANDLER}
                 />
                 <p className="auth-hint mt-3">
-                  All registered {isFarmerRole ? "farmer" : "buyer"} handlers appear here. Your
+                  All registered {isFarmerRole ? "fellow liaison officers" : "client liaison officers"} appear here. Your
                   handler supports you on the platform.
                 </p>
               </div>

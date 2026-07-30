@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { ProfilePhoto } from "@/components/FarmerAvatar";
 import {
   VerificationTags,
@@ -14,8 +15,8 @@ type AvatarWithVerificationProps = {
   verificationTags?: UserVerificationTag[];
   className?: string;
   onClick?: () => void;
-  /** Where to place verification pills relative to the avatar */
-  tagPlacement?: "below" | "overlay" | "none";
+  /** Where to place verification badges relative to the avatar */
+  tagPlacement?: "overlay" | "below" | "none";
 };
 
 const sizeMap = { sm: 56, md: 96, lg: 140, xl: 180 };
@@ -31,6 +32,17 @@ function tagSizeForAvatar(avatarPx: number): "xs" | "sm" | "md" {
   return "xs";
 }
 
+/** Nudge badge cluster onto the circular avatar edge at bottom-right. */
+function edgeBadgeStyle(avatarPx: number): CSSProperties {
+  const offset = avatarPx >= 120 ? 0.06 : avatarPx >= 72 ? 0.04 : 0.02;
+  const shift = avatarPx >= 120 ? 0.14 : avatarPx >= 72 ? 0.16 : 0.18;
+  return {
+    bottom: `${offset * 100}%`,
+    right: `${offset * 100}%`,
+    transform: `translate(${shift * 100}%, ${shift * 100}%)`,
+  };
+}
+
 export function AvatarWithVerification({
   src,
   name,
@@ -40,7 +52,7 @@ export function AvatarWithVerification({
   verificationTags,
   className = "",
   onClick,
-  tagPlacement = "below",
+  tagPlacement = "overlay",
 }: AvatarWithVerificationProps) {
   const px = resolveSize(size);
   const badges = getAvatarVerificationBadges(verificationTags, verificationStatus);
@@ -54,6 +66,10 @@ export function AvatarWithVerification({
       size={tagSize}
       showLabels={false}
       layout="row"
+      className={tagPlacement === "overlay" ? "gap-0.5" : undefined}
+      badgeClassName={
+        tagPlacement === "overlay" ? "ring-2 ring-white shadow-sm" : undefined
+      }
     />
   ) : null;
 
@@ -69,7 +85,10 @@ export function AvatarWithVerification({
           className="!shadow-none"
         />
         {tags && (
-          <div className="absolute -bottom-1 -right-1 flex max-w-[calc(100%+0.75rem)] flex-row flex-wrap items-end justify-end gap-0.5">
+          <div
+            className="pointer-events-none absolute z-10 flex flex-row items-center"
+            style={edgeBadgeStyle(px)}
+          >
             {tags}
           </div>
         )}

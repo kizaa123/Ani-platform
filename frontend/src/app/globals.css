@@ -155,6 +155,48 @@ html {
       0 2px 4px rgba(27, 67, 50, 0.05),
       0 6px 16px rgba(27, 67, 50, 0.05);
   }
+
+  /* Very subtle brand-green glow at the bottom of portal nav card images (dashboard + homepage). */
+  .portal-nav-card-image {
+    @apply relative;
+    box-shadow: inset 0 -32px 40px -16px rgba(82, 183, 136, 0.12);
+  }
+
+  .portal-nav-card-image::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0 0;
+    z-index: 1;
+    height: 45%;
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse 110% 80% at 50% 100%,
+      rgba(82, 183, 136, 0.14),
+      rgba(116, 198, 157, 0.05) 50%,
+      transparent 70%
+    );
+  }
+
+  .group:hover .portal-nav-card-image {
+    box-shadow: inset 0 -36px 44px -14px rgba(82, 183, 136, 0.18);
+  }
+
+  .group:hover .portal-nav-card-image::after {
+    background: radial-gradient(
+      ellipse 110% 80% at 50% 100%,
+      rgba(82, 183, 136, 0.2),
+      rgba(116, 198, 157, 0.07) 50%,
+      transparent 70%
+    );
+  }
+
+  .portal-nav-card-body {
+    box-shadow: inset 0 10px 18px -14px rgba(82, 183, 136, 0.1);
+  }
+
+  .group:hover .portal-nav-card-body {
+    box-shadow: inset 0 12px 20px -12px rgba(82, 183, 136, 0.14);
+  }
 }
 
 @layer utilities {

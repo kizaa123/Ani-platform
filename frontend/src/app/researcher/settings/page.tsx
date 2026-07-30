@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { isResearcher } from "@/lib/types";
+import { HandlerProfile, isResearcher, ROLES } from "@/lib/types";
 import { ProfilePhoto } from "@/components/FarmerAvatar";
+import { HandlerSelect } from "@/components/HandlerSelect";
 import { SpinnerLabel, PageContentSkeleton } from "@/components/LoadingPrimitives";
 import {
   ProfileIdentityHeader,
@@ -23,6 +24,8 @@ export default function ResearcherSettingsPage() {
   const router = useRouter();
   const photoRef = useRef<HTMLInputElement>(null);
 
+  const [buyerHandlers, setBuyerHandlers] = useState<HandlerProfile[]>([]);
+  const [handlerId, setHandlerId] = useState("");
   const [editing, setEditing] = useState(false);
   const [photoCacheBust, setPhotoCacheBust] = useState(0);
   const [institution, setInstitution] = useState("");
@@ -36,13 +39,22 @@ export default function ResearcherSettingsPage() {
   useEffect(() => {
     if (!loading && !user) router.push("/login");
     if (user && !isResearcher(user.roleId)) router.push("/dashboard");
-  }, [user, loading, router]);
+    if (user) {
+      setHandlerId(user.assignedHandler?.id || "");
+      setPhotoCacheBust(Date.now());
+    }
+  }, [user?.id, loading, router]);
+
+  useEffect(() => {
+    api.auth.handlers("buyer").then(setBuyerHandlers).catch(console.error);
+  }, []);
 
   const populateFormFromUser = () => {
     if (!user) return;
     setInstitution(user.researcherProfile?.institution || "");
     setExpertise(user.researcherProfile?.expertise || "");
     setBio(user.researcherProfile?.bio || "");
+    setHandlerId(user.assignedHandler?.id || "");
   };
 
   const startEditing = () => {
@@ -80,7 +92,11 @@ export default function ResearcherSettingsPage() {
     setError("");
     try {
       await api.research.updateProfile({ institution, expertise, bio });
+      if (handlerId && handlerId !== user?.assignedHandler?.id) {
+        await api.auth.updateHandler(handlerId);
+      }
       await refreshUser();
+      await api.auth.handlers("buyer").then(setBuyerHandlers);
       setMessage("Profile updated.");
       setEditing(false);
     } catch (e) {
@@ -194,7 +210,26 @@ export default function ResearcherSettingsPage() {
             </div>
           </section>
 
-          <ProfileEditActions onCancel={resetForm} onSave={save} saving={saving} />
+          <section className="rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
+            <HandlerSelect
+              handlers={buyerHandlers}
+              value={handlerId}
+              onChange={setHandlerId}
+              label="Your Client Liaison Officer"
+              emptyMessage="No client liaison officers registered yet."
+              handlerRoleId={ROLES.BUYER_HANDLER}
+            />
+            <p className="mt-2 text-xs text-gray-500">
+              Choose the liaison officer who represents you on the platform, same as buyer clients.
+            </p>
+          </section>
+
+          <ProfileEditActions
+            onCancel={resetForm}
+            onSave={save}
+            saving={saving}
+            saveDisabled={!handlerId}
+          />
         </ProfileEditSection>
       )}
     </div>

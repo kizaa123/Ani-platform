@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { AgentAssignment, isFarmer, isHandler, isBuyerHandler, isFarmerHandler } from "@/lib/types";
+import { AgentAssignment, isFarmerAssignment, isBuyerAssignment, isHandler, isBuyerHandler, isFarmerHandler } from "@/lib/types";
 import {
   HandlerFarmerClientCard,
   HandlerBuyerClientCard,
@@ -34,12 +34,8 @@ export default function AgentsPage() {
     return <div className="p-12 text-center text-gray-500">Loading...</div>;
   }
 
-  const farmerClients = assignments.filter(
-    (a) => a.owner.isFarmer || isFarmer(a.owner.roleId ?? 0)
-  );
-  const buyerClients = assignments.filter(
-    (a) => !(a.owner.isFarmer || isFarmer(a.owner.roleId ?? 0))
-  );
+  const farmerClients = assignments.filter(isFarmerAssignment);
+  const buyerClients = assignments.filter(isBuyerAssignment);
 
   const isBuyerHandlerUser = isBuyerHandler(user.roleId);
   const isFarmerHandlerUser = isFarmerHandler(user.roleId);
@@ -52,7 +48,7 @@ export default function AgentsPage() {
       ? "Assigned Farmers"
       : "My Clients";
   const pageSubtitle = isBuyerHandlerUser
-    ? "Buyers who assigned you as their liaison officer"
+    ? "Clients and researchers who assigned you as their liaison officer"
     : isFarmerHandlerUser
       ? "Farmers who assigned you as their liaison officer"
       : "Farmers and buyers who assigned you as their handler";
@@ -93,7 +89,7 @@ export default function AgentsPage() {
           </p>
           <p className="mt-1 text-sm text-gray-500">
             {isBuyerHandlerUser
-              ? "Buyers choose you as their liaison officer when they register on the platform."
+              ? "Clients and researchers choose you as their liaison officer when they register on the platform."
               : isFarmerHandlerUser
                 ? "Farmers choose you as their liaison officer when they register on the platform."
                 : "Clients choose you as their handler when they register on the platform."}

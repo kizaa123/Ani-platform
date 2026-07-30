@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { AgentAssignment, AppNotification } from "@/lib/types";
+import { AgentAssignment, AppNotification, isBuyerAssignment } from "@/lib/types";
 import {
   HandlerAssignmentsPreviewCard,
   HandlerOrderAlertsCard,
@@ -18,31 +18,39 @@ const ORDER_NOTIFICATION_TYPES = new Set([
   "MONEY_DISTRIBUTED",
 ]);
 
-function isBuyerAssignment(a: AgentAssignment) {
-  return !(a.owner.isFarmer || a.owner.roleId === 1 || a.owner.roleId === 2);
-}
-
 export function BuyerHandlerDashboardCards() {
   const [clients, setClients] = useState<AgentAssignment[] | null>(null);
   const [orderAlertCount, setOrderAlertCount] = useState<number | null>(null);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
 
-    Promise.all([api.agents.assignments(), api.notifications.list()])
-      .then(([assignments, notifications]) => {
+    api.agents
+      .assignments()
+      .then((assignments) => {
         if (cancelled) return;
         setClients(assignments.filter(isBuyerAssignment));
+        setLoadError("");
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setClients([]);
+          setLoadError(e instanceof Error ? e.message : "Failed to load assigned clients");
+        }
+      });
+
+    api.notifications
+      .list()
+      .then((notifications) => {
+        if (cancelled) return;
         const unreadOrderAlerts = (notifications as AppNotification[]).filter(
           (n) => !n.read && ORDER_NOTIFICATION_TYPES.has(n.type)
         ).length;
         setOrderAlertCount(unreadOrderAlerts);
       })
       .catch(() => {
-        if (!cancelled) {
-          setClients([]);
-          setOrderAlertCount(0);
-        }
+        if (!cancelled) setOrderAlertCount(0);
       });
 
     return () => {
@@ -54,6 +62,11 @@ export function BuyerHandlerDashboardCards() {
 
   return (
     <>
+      {loadError && (
+        <p className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+          {loadError}
+        </p>
+      )}
       <ScrollReveal delay={scrollStagger(0, 90)} duration={500} direction="fade-up">
         <HandlerAssignmentsPreviewCard
           href="/agents"

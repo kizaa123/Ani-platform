@@ -5,10 +5,10 @@ import { CountryBadge } from "@/components/CountrySelect";
 import { RolePrefixedName, getRoleNamePrefix } from "@/components/RolePrefixedName";
 import {
   isFarmer,
-  isBuyer,
   isHandler,
   isBuyerHandler,
   ROLES,
+  hasAssignedHandlerRole,
   type UserProfile,
 } from "@/lib/types";
 
@@ -61,7 +61,7 @@ export function ProfileIdentityHeader({ user, photoCacheBust, onEditClick }: Pro
                 : "Fellow liaison — manage your assigned farmers"}
             </p>
           )}
-          {(isFarmer(user.roleId) || isBuyer(user.roleId)) && user.assignedHandler && (
+          {hasAssignedHandlerRole(user.roleId) && user.assignedHandler && (
             <div className="mt-3 flex items-center justify-center gap-2 sm:justify-start">
               <AvatarWithVerification
                 src={user.assignedHandler.profilePicture}
@@ -79,7 +79,7 @@ export function ProfileIdentityHeader({ user, photoCacheBust, onEditClick }: Pro
                 Handler:{" "}
                 <RolePrefixedName
                   user={{
-                    roleId: isBuyer(user.roleId) ? ROLES.BUYER_HANDLER : ROLES.FARMER_HANDLER,
+                    roleId: isFarmer(user.roleId) ? ROLES.FARMER_HANDLER : ROLES.BUYER_HANDLER,
                     firstName: user.assignedHandler.firstName,
                     lastName: user.assignedHandler.lastName,
                   }}

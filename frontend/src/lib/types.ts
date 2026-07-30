@@ -246,6 +246,17 @@ export interface OrderEscrowFields {
   releaseOtp?: string | null;
 }
 
+/** Assigned liaison officer on the other side of an order — handler portals only. */
+export interface CounterpartHandlerContact {
+  id: string;
+  firstName: string;
+  lastName: string;
+  name: string;
+  email: string;
+  phone?: string | null;
+  profilePicture?: string | null;
+}
+
 export interface OrderDetail extends OrderEscrowFields {
   id: string;
   buyerId: string;
@@ -264,6 +275,7 @@ export interface OrderDetail extends OrderEscrowFields {
   productName: string;
   buyerName: string;
   farmerName: string;
+  counterpartHandler?: CounterpartHandlerContact | null;
 }
 
 export interface OrderReleaseResult {
@@ -305,6 +317,8 @@ export interface ProductOrderLineItem extends OrderEscrowFields {
   purchaseCount?: number;
   orderName?: string;
   orderDescription?: string;
+  /** Buyer's assigned CLO — included on handler-scoped order endpoints only. */
+  counterpartHandler?: CounterpartHandlerContact | null;
 }
 
 export interface FinancialStatementLineItem {
@@ -375,6 +389,7 @@ export interface FinancialStatement {
 export interface BuyerOrderLineItem extends OrderEscrowFields {
   id: string;
   buyerId?: string;
+  farmerId?: string;
   listingId?: string;
   date: string;
   productName: string;
@@ -405,6 +420,8 @@ export interface BuyerOrderLineItem extends OrderEscrowFields {
   title?: string;
   /** @deprecated use farmerLocation */
   farmerRegion?: string;
+  /** Farmer's assigned FLO — included on handler-scoped order endpoints only. */
+  counterpartHandler?: CounterpartHandlerContact | null;
 }
 
 export interface BuyerAccessPaymentLineItem {
@@ -469,6 +486,7 @@ export interface AgentClientOwner {
     experienceYears?: number | null;
   } | null;
   buyerProfile?: { company?: string | null } | null;
+  researcherProfile?: { institution?: string | null; expertise?: string | null } | null;
 }
 
 export interface AgentAssignment {
@@ -739,6 +757,26 @@ export function isBuyerHandler(roleId: number) {
 
 export function isFarmerHandler(roleId: number) {
   return roleId === ROLES.FARMER_HANDLER;
+}
+
+/** Roles that pick and display an assigned liaison officer. */
+export function hasAssignedHandlerRole(roleId: number) {
+  return isFarmer(roleId) || isBuyer(roleId) || isResearcher(roleId);
+}
+
+export function isFarmerAssignment(a: AgentAssignment) {
+  return (
+    a.relationshipType === "FARMER_REPRESENTATIVE" ||
+    a.owner.isFarmer === true ||
+    isFarmer(a.owner.roleId ?? 0)
+  );
+}
+
+export function isBuyerAssignment(a: AgentAssignment) {
+  return (
+    a.relationshipType === "BUYER_REPRESENTATIVE" ||
+    (!isFarmerAssignment(a) && !isFarmer(a.owner.roleId ?? 0))
+  );
 }
 
 export function isStaff(roleId: number) {

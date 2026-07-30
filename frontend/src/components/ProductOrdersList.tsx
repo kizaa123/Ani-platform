@@ -15,8 +15,10 @@ import {
   orderStatusStyle,
 } from "@/lib/format";
 import { OrderTrackStage } from "@/lib/orderTrack";
-import { BuyerOrderLineItem, formatListingUnit, ProductOrderLineItem } from "@/lib/types";
+import { BuyerOrderLineItem, CounterpartHandlerContact, formatListingUnit, ProductOrderLineItem } from "@/lib/types";
 import { Icon } from "@/components/icons";
+import { HandlerPhoneLink } from "@/components/HandlerAssignmentCards";
+import { floDisplayName, cloDisplayName } from "@/lib/handlerDisplayName";
 
 export type OrderListPerspective = "farmer" | "buyer";
 type OrderListItem = ProductOrderLineItem | BuyerOrderLineItem;
@@ -27,6 +29,45 @@ function isBuyerOrder(order: OrderListItem): order is BuyerOrderLineItem {
 
 function orderStatementId(order: OrderListItem): string | null {
   return order.orderId ?? null;
+}
+
+function CounterpartHandlerSection({
+  handler,
+  label,
+  roleTag,
+}: {
+  handler: CounterpartHandlerContact;
+  label: string;
+  roleTag: string;
+}) {
+  return (
+    <div className="mt-5 rounded-xl border-2 border-brand-200 bg-brand-50/60 p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <Icon name="users" className="h-4 w-4 shrink-0 text-brand-700" />
+        <p className="text-xs font-semibold uppercase tracking-wide text-brand-800">{label}</p>
+        <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-bold uppercase text-brand-800">
+          {roleTag}
+        </span>
+      </div>
+      <p className="mt-3 text-base font-bold text-brand-900">{handler.name}</p>
+      <div className="mt-2 space-y-1 text-sm text-gray-700">
+        <p>
+          Phone: <HandlerPhoneLink phone={handler.phone} />
+        </p>
+        {handler.email && (
+          <p>
+            Email:{" "}
+            <a href={`mailto:${handler.email}`} className="font-semibold text-brand-800 hover:underline">
+              {handler.email}
+            </a>
+          </p>
+        )}
+      </div>
+      <p className="mt-3 text-xs text-gray-500">
+        Contact your counterpart liaison to coordinate delivery and logistics.
+      </p>
+    </div>
+  );
 }
 
 function OrderReleaseSummary({ order }: { order: OrderListItem }) {
@@ -439,6 +480,18 @@ export function OrderDetailModal({
               </p>
             )}
           </div>
+
+          {handlerOwnerId && order.counterpartHandler && (
+            <CounterpartHandlerSection
+              handler={order.counterpartHandler}
+              label={perspective === "farmer" ? "Client's liaison officer" : "Fellow's liaison officer"}
+              roleTag={
+                perspective === "farmer"
+                  ? cloDisplayName(order.counterpartHandler.firstName)
+                  : floDisplayName(order.counterpartHandler.firstName)
+              }
+            />
+          )}
 
           <div className="mt-5 grid grid-cols-2 gap-3 rounded-xl border border-brand-100 bg-brand-50/40 p-4 text-sm">
             <div>
