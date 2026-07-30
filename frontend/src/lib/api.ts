@@ -89,7 +89,9 @@ class ApiClient {
             : detail.message
           : undefined) ||
         "Request failed";
-      throw new Error(message);
+      const err = new Error(message) as Error & { details?: ApiValidationIssue[] };
+      if (json.details?.length) err.details = json.details;
+      throw err;
     }
     return json.data as T;
   }
@@ -204,6 +206,39 @@ class ApiClient {
         method: "POST",
         body: JSON.stringify({ refreshToken: this.refreshToken }),
       }),
+    googleDevSignIn: (body: { email: string; firstName: string; lastName?: string }) =>
+      this.request<{
+        user: import("./types").User;
+        accessToken: string;
+        refreshToken: string;
+        needsProfile: boolean;
+        needsEmailVerification: boolean;
+      }>("/auth/google/dev", { method: "POST", body: JSON.stringify(body) }),
+    sendEmailVerification: (email: string) =>
+      this.request<{
+        challengeId: string;
+        choices: number[];
+        expiresAt: string;
+        devMode?: boolean;
+        devHint?: string;
+      }>("/auth/email-verification/send", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      }),
+    verifyEmailChallenge: (body: {
+      email: string;
+      challengeId: string;
+      selectedIndex: number;
+    }) =>
+      this.request<{ verified: boolean }>("/auth/email-verification/verify", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    completeProfile: (body: Record<string, unknown>) =>
+      this.request<{ user: import("./types").User; accessToken: string; refreshToken: string }>(
+        "/auth/complete-profile",
+        { method: "POST", body: JSON.stringify(body) }
+      ),
   };
 
   commodities = {
@@ -368,8 +403,20 @@ class ApiClient {
       }),
     financialStatement: () =>
       this.request<import("./types").ResearcherFinancialStatement>("/research/financial-statement"),
+    clients: () => this.request<import("./types").FarmClient[]>("/research/clients"),
+    notifyClient: (body: { clientId: string; message?: string }) =>
+      this.request<{ success: boolean }>("/research/notify-client", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
     updateProfile: (body: Record<string, unknown>) =>
       this.request("/research/profile", { method: "PUT", body: JSON.stringify(body) }),
+    publicationPolicyStatus: () =>
+      this.request<{ accepted: boolean; acceptedAt: string | null }>("/research/publication-policy"),
+    acceptPublicationPolicy: () =>
+      this.request<{ accepted: boolean; acceptedAt: string }>("/research/publication-policy/accept", {
+        method: "POST",
+      }),
     like: (id: string) =>
       this.request<{ liked: boolean; likesCount: number }>(`/research/${id}/like`, {
         method: "POST",

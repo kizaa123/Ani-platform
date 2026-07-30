@@ -49,12 +49,15 @@ model User {
   firstName          String             @map("first_name")
   lastName           String             @map("last_name")
   email              String             @unique
-  phone              String
-  passwordHash       String             @map("password_hash")
+  phone              String             @default("")
+  passwordHash       String?            @map("password_hash")
+  googleId           String?            @unique @map("google_id")
+  emailVerified      Boolean            @default(false) @map("email_verified")
+  profileComplete    Boolean            @default(true) @map("profile_complete")
   profilePicture     String?            @db.Text @map("profile_picture")
-  country            String
-  region             String
-  city               String
+  country            String             @default("")
+  region             String             @default("")
+  city               String             @default("")
   address            String?
   gpsLatitude        Float?             @map("gps_latitude")
   gpsLongitude       Float?             @map("gps_longitude")
@@ -113,6 +116,19 @@ model RefreshToken {
   @@map("refresh_tokens")
 }
 
+model EmailVerificationChallenge {
+  id           String   @id @default(uuid())
+  email        String
+  choices      Int[]
+  correctIndex Int      @map("correct_index")
+  verified     Boolean  @default(false)
+  expiresAt    DateTime @map("expires_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([email])
+  @@map("email_verification_challenges")
+}
+
 // ─── Profiles ────────────────────────────────────────────────────────────────
 
 model FarmerProfile {
@@ -158,11 +174,12 @@ model AgentProfile {
 }
 
 model ResearcherProfile {
-  id           String  @id @default(uuid())
-  userId       String  @unique @map("user_id")
-  institution  String?
-  expertise    String?
-  bio          String?
+  id                          String    @id @default(uuid())
+  userId                      String    @unique @map("user_id")
+  institution                 String?
+  expertise                   String?
+  bio                         String?
+  publicationPolicyAcceptedAt DateTime? @map("publication_policy_accepted_at")
 
   user         User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   publications ResearchPublication[]
@@ -247,15 +264,16 @@ enum ListingStatus {
 }
 
 model CommodityListing {
-  id          String        @id @default(uuid())
-  farmerId    String        @map("farmer_id")
-  commodityId Int           @map("commodity_id")
-  title       String
-  description String?
-  quantity    Float
-  price       Float
-  unit        String        @default("kg")
-  images      Json          @default("[]")
+  id                  String        @id @default(uuid())
+  farmerId            String        @map("farmer_id")
+  commodityId         Int?          @map("commodity_id")
+  customCommodityName String?       @map("custom_commodity_name")
+  title               String
+  description         String?
+  quantity            Float
+  price               Float
+  unit                String        @default("kg")
+  images              Json          @default("[]")
   location          String?
   harvestStartDate  DateTime?     @map("harvest_start_date")
   harvestEndDate    DateTime?     @map("harvest_end_date")
@@ -263,7 +281,7 @@ model CommodityListing {
   createdAt         DateTime      @default(now()) @map("created_at")
 
   farmer    FarmerProfile @relation(fields: [farmerId], references: [id], onDelete: Cascade)
-  commodity Commodity     @relation(fields: [commodityId], references: [id])
+  commodity Commodity?    @relation(fields: [commodityId], references: [id])
   orders    ProductOrder[]
   media     ProductMedia[]
 

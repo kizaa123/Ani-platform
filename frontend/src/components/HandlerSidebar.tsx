@@ -10,7 +10,7 @@ const clientMatch = (p: string) =>
 
 export const FLO_NAV_LINKS: PortalNavLink[] = [
   { href: "/dashboard", label: "Dashboard", icon: "home", match: (p) => p === "/dashboard" },
-  { href: "/agents", label: "My Farmers", icon: "users", match: clientMatch },
+  { href: "/agents", label: "My Fellows", icon: "users", match: clientMatch },
   {
     href: "/agents/financials",
     label: "Financials",
@@ -28,7 +28,7 @@ export const FLO_NAV_LINKS: PortalNavLink[] = [
 
 export const CLO_NAV_LINKS: PortalNavLink[] = [
   { href: "/dashboard", label: "Dashboard", icon: "home", match: (p) => p === "/dashboard" },
-  { href: "/agents", label: "My Buyers", icon: "users", match: clientMatch },
+  { href: "/agents", label: "My Clients", icon: "users", match: clientMatch },
   {
     href: "/agents/financials",
     label: "Financials",

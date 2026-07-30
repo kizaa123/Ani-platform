@@ -81,7 +81,7 @@ export default function HandlerClientOrdersPage() {
         orders={orders}
         trackEditable
         handlerOwnerId={ownerId}
-        emptyMessage="No buyer orders for this farmer yet."
+        emptyMessage="No client orders for this fellow yet."
       />
     </div>
   );

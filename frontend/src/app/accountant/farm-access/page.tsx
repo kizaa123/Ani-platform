@@ -111,9 +111,9 @@ export default function AccountantFarmAccessPage() {
                       verificationTags={c.buyer?.verificationTags}
                     />
                     <div className="min-w-0">
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Buyer</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Client</p>
                       <p className="font-bold text-brand-900">
-                        {c.buyer ? fullName(c.buyer) : "Unknown buyer"}
+                        {c.buyer ? fullName(c.buyer) : "Unknown client"}
                       </p>
                       {c.buyer?.verificationStatus && (
                         <VerificationBadge adminView status={c.buyer.verificationStatus} className="mt-1" />

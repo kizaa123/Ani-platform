@@ -15,11 +15,16 @@ type AvatarWithVerificationProps = {
   verificationTags?: UserVerificationTag[];
   className?: string;
   onClick?: () => void;
-  /** Where to place verification badges relative to the avatar */
-  tagPlacement?: "overlay" | "below" | "none";
+  /**
+   * Where to place verification badges relative to the avatar.
+   * "auto" (default) hides tags on avatars 72px or smaller; use "overlay" or "below" to force.
+   */
+  tagPlacement?: "auto" | "overlay" | "below" | "none";
 };
 
 const sizeMap = { sm: 56, md: 96, lg: 140, xl: 180 };
+/** Avatars of 72px or smaller hide verification tags unless placement is forced. */
+const MIN_TAG_AVATAR_PX = 72;
 
 function resolveSize(size: AvatarWithVerificationProps["size"]): number {
   if (typeof size === "number") return size;
@@ -28,8 +33,18 @@ function resolveSize(size: AvatarWithVerificationProps["size"]): number {
 
 function tagSizeForAvatar(avatarPx: number): "xs" | "sm" | "md" {
   if (avatarPx >= 120) return "md";
-  if (avatarPx >= 72) return "sm";
+  if (avatarPx >= MIN_TAG_AVATAR_PX) return "sm";
   return "xs";
+}
+
+function resolveTagPlacement(
+  tagPlacement: NonNullable<AvatarWithVerificationProps["tagPlacement"]>,
+  avatarPx: number,
+): "overlay" | "below" | "none" {
+  if (tagPlacement === "none") return "none";
+  if (tagPlacement === "below") return "below";
+  if (tagPlacement === "overlay") return "overlay";
+  return avatarPx > MIN_TAG_AVATAR_PX ? "overlay" : "none";
 }
 
 /** Anchor badge cluster to the avatar's bottom-right rim (~4–5 o'clock). */
@@ -50,11 +65,12 @@ export function AvatarWithVerification({
   verificationTags,
   className = "",
   onClick,
-  tagPlacement = "overlay",
+  tagPlacement = "auto",
 }: AvatarWithVerificationProps) {
   const px = resolveSize(size);
+  const placement = resolveTagPlacement(tagPlacement, px);
   const badges = getAvatarVerificationBadges(verificationTags, verificationStatus);
-  const hasTags = badges.length > 0 && tagPlacement !== "none";
+  const hasTags = badges.length > 0 && placement !== "none";
   const tagSize = tagSizeForAvatar(px);
 
   const tags = hasTags ? (
@@ -64,14 +80,14 @@ export function AvatarWithVerification({
       size={tagSize}
       showLabels={false}
       layout="row"
-      className={tagPlacement === "overlay" ? "gap-0.5 !justify-end" : undefined}
+      className={placement === "overlay" ? "gap-0.5 !justify-end" : undefined}
       badgeClassName={
-        tagPlacement === "overlay" ? "ring-2 ring-white shadow-sm" : undefined
+        placement === "overlay" ? "ring-2 ring-white shadow-sm" : undefined
       }
     />
   ) : null;
 
-  if (tagPlacement === "overlay") {
+  if (placement === "overlay") {
     return (
       <div className={`relative inline-flex shrink-0 ${className}`}>
         <ProfilePhoto

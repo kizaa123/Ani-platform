@@ -7,6 +7,8 @@ interface PlatformBrandTitleProps {
   size?: "hero" | "panel" | "compact";
   showIcon?: boolean;
   showMotto?: boolean;
+  /** Override default motto text (e.g. homepage hero headline) */
+  motto?: string;
   className?: string;
 }
 
@@ -32,11 +34,14 @@ const sizeStyles = {
   },
 } as const;
 
+const DEFAULT_MOTTO = "The premier Commodity Exchange Platform";
+
 export function PlatformBrandTitle({
   theme = "light",
   size = "hero",
   showIcon = false,
   showMotto = true,
+  motto = DEFAULT_MOTTO,
   className = "",
 }: PlatformBrandTitleProps) {
   const styles = sizeStyles[size];
@@ -57,7 +62,7 @@ export function PlatformBrandTitle({
             </p>
             {showMotto && (
               <p className={`${styles.motto} ${mottoColor}`}>
-                Ghana&apos;s Agricultural Exchange
+                {motto}
               </p>
             )}
           </div>
@@ -71,7 +76,7 @@ export function PlatformBrandTitle({
           </p>
           {showMotto && (
             <p className={`${styles.motto} ${mottoColor}`}>
-              Ghana&apos;s Agricultural Exchange
+              {motto}
             </p>
           )}
         </div>

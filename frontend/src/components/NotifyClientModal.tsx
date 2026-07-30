@@ -5,17 +5,23 @@ import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { Icon } from "@/components/icons";
 import { fullName, type FarmClient } from "@/lib/types";
 
-const DEFAULT_MESSAGE = "Farm products are available, please access my farm";
+const FARM_DEFAULT_MESSAGE = "Farm products are available, please access my farm";
 
 interface NotifyClientModalProps {
   client: FarmClient;
   onClose: () => void;
   onSend: (message: string) => Promise<void>;
+  defaultMessage?: string;
 }
 
-export function NotifyClientModal({ client, onClose, onSend }: NotifyClientModalProps) {
+export function NotifyClientModal({
+  client,
+  onClose,
+  onSend,
+  defaultMessage = FARM_DEFAULT_MESSAGE,
+}: NotifyClientModalProps) {
   const [useCustom, setUseCustom] = useState(false);
-  const [customMessage, setCustomMessage] = useState(DEFAULT_MESSAGE);
+  const [customMessage, setCustomMessage] = useState(defaultMessage);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
@@ -36,7 +42,7 @@ export function NotifyClientModal({ client, onClose, onSend }: NotifyClientModal
     setBusy(true);
     setError(null);
     try {
-      const message = useCustom ? customMessage.trim() : DEFAULT_MESSAGE;
+      const message = useCustom ? customMessage.trim() : defaultMessage;
       if (!message) {
         setError("Message cannot be empty.");
         return;
@@ -98,7 +104,7 @@ export function NotifyClientModal({ client, onClose, onSend }: NotifyClientModal
           ) : (
             <>
               <div className="rounded-xl border border-brand-100 bg-brand-50/50 px-4 py-3">
-                <p className="text-sm text-brand-900">{DEFAULT_MESSAGE}</p>
+                <p className="text-sm text-brand-900">{defaultMessage}</p>
               </div>
 
               <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-700">

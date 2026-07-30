@@ -4,6 +4,7 @@ import Link from "next/link";
 import { AgentAssignment, AgentClientOwner, fullName, isResearcher } from "@/lib/types";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
+import { EmailText } from "@/components/EmailText";
 import { Icon, type IconName } from "@/components/icons";
 
 function formatLocation(owner: AgentClientOwner): string {
@@ -178,7 +179,7 @@ export function HandlerAssignmentsPreviewCard({
 
       {!loading && assignments.length > 0 && remaining === 0 && (
         <div className="border-t border-brand-50 px-3 py-1.5 text-[11px] font-medium text-brand-600">
-          View all {clientType === "farmer" ? "farmers" : "clients"}
+          View all {clientType === "farmer" ? "fellows" : "clients"}
         </div>
       )}
     </Link>
@@ -255,7 +256,7 @@ export function HandlerFarmerClientCard({ assignment }: { assignment: AgentAssig
             <HandlerPhoneLink phone={owner.phone} />
           </DetailChip>
           <DetailChip label="Email">
-            <span className="break-all text-gray-800">{owner.email}</span>
+            <EmailText email={owner.email} className="text-gray-800" />
           </DetailChip>
           {owner.city && (
             <DetailChip label="City">
@@ -297,7 +298,7 @@ export function HandlerFarmerClientCard({ assignment }: { assignment: AgentAssig
             href={`/agents/farm/${owner.id}/orders`}
             className="btn-outline block py-2 text-center text-[11px]"
           >
-            Buyer orders
+            Client orders
           </Link>
         </div>
       </div>
@@ -336,7 +337,7 @@ export function HandlerBuyerClientCard({ assignment }: { assignment: AgentAssign
             <HandlerPhoneLink phone={owner.phone} />
           </DetailChip>
           <DetailChip label="Email">
-            <span className="break-all text-gray-800">{owner.email}</span>
+            <EmailText email={owner.email} className="text-gray-800" />
           </DetailChip>
           {owner.city && (
             <DetailChip label="City">

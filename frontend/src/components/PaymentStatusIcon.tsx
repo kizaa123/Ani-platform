@@ -5,13 +5,25 @@ export type PaymentStatusVariant = "success" | "error";
 interface PaymentStatusIconProps {
   variant: PaymentStatusVariant;
   className?: string;
+  size?: "default" | "compact";
 }
 
-export function PaymentStatusIcon({ variant, className = "" }: PaymentStatusIconProps) {
+const ICON_SIZE_CLASS = {
+  default: "h-28 w-28 sm:h-32 sm:w-32",
+  compact: "h-20 w-20",
+} as const;
+
+export function PaymentStatusIcon({
+  variant,
+  className = "",
+  size = "default",
+}: PaymentStatusIconProps) {
+  const iconSizeClass = ICON_SIZE_CLASS[size];
+
   if (variant === "success") {
     return (
       <div className={`payment-status-icon payment-status-icon--success ${className}`} aria-hidden>
-        <svg viewBox="0 0 120 120" className="h-28 w-28 sm:h-32 sm:w-32">
+        <svg viewBox="0 0 120 120" className={iconSizeClass}>
           <circle
             cx="60"
             cy="60"
@@ -50,7 +62,7 @@ export function PaymentStatusIcon({ variant, className = "" }: PaymentStatusIcon
 
   return (
     <div className={`payment-status-icon payment-status-icon--error ${className}`} aria-hidden>
-      <svg viewBox="0 0 120 120" className="h-28 w-28 sm:h-32 sm:w-32">
+      <svg viewBox="0 0 120 120" className={iconSizeClass}>
         <circle cx="60" cy="60" r="46" fill="#ef4444" className="payment-error-circle" />
         <path
           d="M44 44 L76 76"

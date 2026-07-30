@@ -16,6 +16,7 @@ import {
   fetchCounterpartHandlerForOwner,
   type CounterpartHandlerContact,
 } from '../utils/counterpartHandler';
+import { listingCommodityName, listingCommodityCategory } from '../utils/listingDisplay';
 
 type OrderForStatement = NonNullable<Awaited<ReturnType<typeof loadOrderForStatement>>>;
 
@@ -226,8 +227,8 @@ function resolveTransactionRef(order: OrderForStatement): string {
 }
 
 function formatCommodityLabel(order: OrderForStatement): string {
-  const commodity = order.listing.commodity.name;
-  const category = order.listing.commodity.category.name;
+  const commodity = listingCommodityName(order.listing);
+  const category = listingCommodityCategory(order.listing);
   return `${commodity} (${category})`;
 }
 

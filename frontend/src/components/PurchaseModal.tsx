@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { Listing, formatListingUnit } from "@/lib/types";
+import { Listing, formatListingUnit, listingCommodityName } from "@/lib/types";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
 import { FarmerProductCard } from "@/components/FarmerProductCard";
@@ -149,8 +149,8 @@ export function PurchaseModal({
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <h1 className="text-xl font-bold text-brand-900 sm:text-2xl">{listing.title}</h1>
-                    {listing.commodity?.name && (
-                      <p className="mt-1 text-sm text-brand-600">{listing.commodity.name}</p>
+                    {listingCommodityName(listing) && (
+                      <p className="mt-1 text-sm text-brand-600">{listingCommodityName(listing)}</p>
                     )}
                   </div>
                   <span
@@ -171,12 +171,12 @@ export function PurchaseModal({
                   <span className="font-semibold">Quantity:</span> {maxQty}
                 </p>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-brand-900">Harvest:</span>
+                  <span className="text-sm font-semibold text-brand-900">Delivery:</span>
                   <HarvestCalendarTrigger
                     harvestStartDate={listing.harvestStartDate}
                     harvestEndDate={listing.harvestEndDate}
                     harvestLabel={listing.harvestLabel}
-                    commodityName={listing.commodity?.name}
+                    commodityName={listingCommodityName(listing) || undefined}
                     productTitle={listing.title}
                     showLabel={false}
                     alwaysShow

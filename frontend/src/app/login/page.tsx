@@ -1,22 +1,30 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
+import { api } from "@/lib/api";
 import { Icon } from "@/components/icons";
+import { AuthDivider, GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { PlatformBrandTitle } from "@/components/PlatformBrandTitle";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
 import { authPanelBackgroundStyle, LOGIN_PANEL_BACKGROUND } from "@/lib/authImages";
 
-export default function LoginPage() {
+const GOOGLE_DEV_MODE = process.env.NEXT_PUBLIC_GOOGLE_DEV_MODE === "true";
+
+function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const [devLoading, setDevLoading] = useState(false);
+  const { login, refreshUser } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const queryError = searchParams.get("error");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +37,29 @@ export default function LoginPage() {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDevGoogle = async () => {
+    setError("");
+    setDevLoading(true);
+    try {
+      const result = await api.auth.googleDevSignIn({
+        email: email || "google.dev@ani.gh",
+        firstName: "Google",
+        lastName: "Dev User",
+      });
+      api.setTokens(result.accessToken, result.refreshToken);
+      await refreshUser();
+      if (result.needsProfile || result.needsEmailVerification) {
+        router.push("/complete-profile");
+      } else {
+        router.push("/dashboard");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Google dev sign-in failed");
+    } finally {
+      setDevLoading(false);
     }
   };
 
@@ -55,7 +86,7 @@ export default function LoginPage() {
             Connecting African Agriculture to Global Markets
           </h2>
           <p className="text-brand-100 text-lg leading-relaxed font-light">
-            Trade commodities securely, connect directly with verified buyers and crop farmers, and request support from expert handlers.
+            Trade commodities securely, connect directly with verified clients and crop fellows, and request support from expert liaison officers.
           </p>
 
           <div className="grid grid-cols-3 gap-6 pt-8 border-t border-white/10 backdrop-blur-[2px] rounded-xl p-4 bg-white/5">
@@ -93,12 +124,21 @@ export default function LoginPage() {
             <p className="mt-2 text-sm text-gray-500">Sign in to your ANI account</p>
           </header>
 
-          {error && (
+          {(error || queryError) && (
             <div className="auth-error" role="alert">
               <Icon name="x" className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>{error}</span>
+              <span>{error || queryError}</span>
             </div>
           )}
+
+          <GoogleSignInButton
+            disabled={loading}
+            showDev={GOOGLE_DEV_MODE}
+            onDevSignIn={handleDevGoogle}
+            devLoading={devLoading}
+          />
+
+          <AuthDivider />
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
@@ -163,5 +203,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-[50vh] items-center justify-center text-sm text-gray-500">Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

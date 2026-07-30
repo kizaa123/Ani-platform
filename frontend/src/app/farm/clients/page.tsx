@@ -105,7 +105,7 @@ export default function FarmClientsPage() {
     <div className="mx-auto max-w-4xl px-4 py-8">
       <h1 className="mb-2 text-2xl font-bold text-brand-900">Clients</h1>
       <p className="mb-6 text-sm text-gray-500">
-        All buyers and researchers on the platform — tap a client to notify them when your farm products are available.
+        All clients and researchers on the platform — tap a client to notify them when your farm products are available.
       </p>
 
       <div className="mb-5">

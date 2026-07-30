@@ -27,6 +27,7 @@ import {
 } from './notification.service';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import { formatVerificationTags, verificationTagSelect } from '../utils/verificationTags';
+import { listingCommodityName, listingCommodityCategory } from '../utils/listingDisplay';
 
 export const updateOrderTrackSchema = z.object({
   buyerId: z.string().uuid(),
@@ -91,14 +92,25 @@ export class FarmService {
 
   async addCommodity(userId: string, roleId: number, data: z.infer<typeof addCommoditySchema>) {
     assertAuthorized(isFarmerRole(roleId), 'Only farmers can add commodities');
-    const requiredLabel = roleId === ROLES.CROP_FARMER ? 'crop' : 'livestock';
+    const requiredLabel =
+      roleId === ROLES.CROP_FARMER
+        ? 'crop'
+        : roleId === ROLES.LIVESTOCK_FARMER
+          ? 'livestock'
+          : 'commodity';
     const commodity = await prisma.commodity.findUnique({
       where: { id: data.commodityId },
       include: { category: true },
     });
     if (
       !commodity ||
-      !categoryMatchesFarmerRole(commodity.category.name, roleId, ROLES.CROP_FARMER, ROLES.LIVESTOCK_FARMER)
+      !categoryMatchesFarmerRole(
+        commodity.category.name,
+        roleId,
+        ROLES.CROP_FARMER,
+        ROLES.LIVESTOCK_FARMER,
+        ROLES.ORGANIZATION_FARMER
+      )
     ) {
       throw new AppError(400, `Commodity must belong to a ${requiredLabel} category for your farmer role`);
     }
@@ -246,8 +258,8 @@ export class FarmService {
         id: listing.id,
         date: listing.createdAt.toISOString(),
         title: listing.title,
-        commodity: listing.commodity.name,
-        category: listing.commodity.category.name,
+        commodity: listingCommodityName(listing),
+        category: listingCommodityCategory(listing),
         quantity: listing.quantity,
         unit: listing.unit,
         unitPrice: listing.price,

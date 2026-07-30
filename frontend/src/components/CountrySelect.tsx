@@ -74,11 +74,13 @@ interface CountrySelectProps {
 
   className?: string;
 
+  invalid?: boolean;
+
 }
 
 
 
-export function CountrySelect({ value, onChange, required, className = "" }: CountrySelectProps) {
+export function CountrySelect({ value, onChange, required, className = "", invalid = false }: CountrySelectProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
@@ -136,7 +138,11 @@ export function CountrySelect({ value, onChange, required, className = "" }: Cou
         aria-expanded={open}
         aria-haspopup="listbox"
         onClick={() => (open ? closeDropdown() : openDropdown())}
-        className="flex w-full items-center gap-3 rounded-xl border border-brand-200 bg-white px-4 py-3 text-left shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+        className={`flex w-full items-center gap-3 rounded-xl border bg-white px-4 py-3 text-left shadow-sm focus:outline-none focus:ring-2 ${
+          invalid
+            ? "border-red-500 focus:border-red-500 focus:ring-red-200"
+            : "border-brand-200 focus:border-brand-500 focus:ring-brand-200"
+        }`}
       >
         {selected ? (
           <>
@@ -203,13 +209,51 @@ interface CountryBadgeProps {
 
   className?: string;
 
+  stacked?: boolean;
+
 }
 
 
 
-export function CountryBadge({ country, region, city, className = "" }: CountryBadgeProps) {
+export function CountryBadge({
+  country,
+  region,
+  city,
+  className = "",
+  stacked = false,
+}: CountryBadgeProps) {
 
   if (!country && !region && !city) return null;
+
+
+
+  if (stacked) {
+
+    return (
+
+      <div className={`flex flex-col gap-0.5 ${className}`}>
+
+        {country && (
+
+          <span className="inline-flex items-center gap-1.5 text-sm text-gray-600">
+
+            <CountryFlag countryName={country} size={18} />
+
+            <span>{country}</span>
+
+          </span>
+
+        )}
+
+        {region && <span className="text-sm text-gray-600">{region}</span>}
+
+        {city && <span className="text-sm text-gray-600">{city}</span>}
+
+      </div>
+
+    );
+
+  }
 
 
 

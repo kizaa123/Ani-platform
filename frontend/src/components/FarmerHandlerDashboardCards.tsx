@@ -36,7 +36,7 @@ export function FarmerHandlerDashboardCards() {
       .catch((e) => {
         if (!cancelled) {
           setFarmers([]);
-          setLoadError(e instanceof Error ? e.message : "Failed to load assigned farmers");
+          setLoadError(e instanceof Error ? e.message : "Failed to load assigned fellows");
         }
       });
 
@@ -70,11 +70,11 @@ export function FarmerHandlerDashboardCards() {
       <ScrollReveal delay={scrollStagger(0, 90)} duration={500} direction="fade-up">
         <HandlerAssignmentsPreviewCard
           href="/agents"
-          title="Assigned Farmers"
+          title="Assigned Fellows"
           icon="users"
           assignments={farmers ?? []}
           loading={loading}
-          emptyMessage="No farmers assigned yet"
+          emptyMessage="No fellows assigned yet"
           clientType="farmer"
           getSubtitle={(owner) => {
             const farm = owner.farmerProfile?.farmName;
@@ -89,7 +89,7 @@ export function FarmerHandlerDashboardCards() {
           href="/agents"
           count={orderAlertCount}
           loading={orderAlertCount === null}
-          entityLabel="farmers"
+          entityLabel="fellows"
         />
       </ScrollReveal>
     </>
@@ -99,7 +99,7 @@ export function FarmerHandlerDashboardCards() {
 export function FarmerHandlerDashboardHint() {
   return (
     <p className="mb-6 text-sm text-gray-500">
-      Manage your assigned farmers, track their orders, and view your liaison commission.{" "}
+      Manage your assigned fellows, track their orders, and view your liaison commission.{" "}
       <Link href="/library" className="font-semibold text-brand-700 hover:underline">
         Research Library
       </Link>{" "}

@@ -45,13 +45,13 @@ export default function AgentsPage() {
   const pageTitle = isBuyerHandlerUser
     ? "Assigned Clients"
     : isFarmerHandlerUser
-      ? "Assigned Farmers"
+      ? "Assigned Fellows"
       : "My Clients";
   const pageSubtitle = isBuyerHandlerUser
     ? "Clients and researchers who assigned you as their liaison officer"
     : isFarmerHandlerUser
-      ? "Farmers who assigned you as their liaison officer"
-      : "Farmers and buyers who assigned you as their handler";
+      ? "Fellows who assigned you as their liaison officer"
+      : "Fellows and clients who assigned you as their liaison officer";
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
@@ -69,11 +69,11 @@ export default function AgentsPage() {
       {assignments.length > 0 && visibleTotal > 0 && (
         <div className="mb-6 grid gap-3 sm:grid-cols-3">
           <StatCard
-            label={isBuyerHandlerUser ? "Assigned clients" : isFarmerHandlerUser ? "Assigned farmers" : "Total clients"}
+            label={isBuyerHandlerUser ? "Assigned clients" : isFarmerHandlerUser ? "Assigned fellows" : "Total clients"}
             value={visibleTotal}
           />
           {!isBuyerHandlerUser && (
-            <StatCard label="Farmers" value={visibleFarmerClients.length} accent="brand" />
+            <StatCard label="Fellows" value={visibleFarmerClients.length} accent="brand" />
           )}
           {!isFarmerHandlerUser && (
             <StatCard label="Clients" value={visibleBuyerClients.length} accent="muted" />
@@ -85,13 +85,13 @@ export default function AgentsPage() {
         <div className="rounded-xl border border-dashed border-brand-200 bg-brand-50/30 p-10 text-center">
           <p className="text-3xl">👥</p>
           <p className="mt-2 font-semibold text-brand-900">
-            {isBuyerHandlerUser ? "No clients yet" : isFarmerHandlerUser ? "No farmers yet" : "No clients yet"}
+            {isBuyerHandlerUser ? "No clients yet" : isFarmerHandlerUser ? "No fellows yet" : "No clients yet"}
           </p>
           <p className="mt-1 text-sm text-gray-500">
             {isBuyerHandlerUser
               ? "Clients and researchers choose you as their liaison officer when they register on the platform."
               : isFarmerHandlerUser
-                ? "Farmers choose you as their liaison officer when they register on the platform."
+                ? "Fellows choose you as their liaison officer when they register on the platform."
                 : "Clients choose you as their handler when they register on the platform."}
           </p>
         </div>
@@ -100,8 +100,8 @@ export default function AgentsPage() {
           {visibleFarmerClients.length > 0 && (
             <section>
               <SectionHeader
-                title="Farmer clients"
-                subtitle="View profiles and manage buyer orders"
+                title="Fellow clients"
+                subtitle="View profiles and manage client orders"
                 count={visibleFarmerClients.length}
               />
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

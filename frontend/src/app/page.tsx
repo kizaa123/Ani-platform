@@ -18,20 +18,20 @@ const STATS = [
 const HOW_IT_WORKS: { step: number; title: string; desc: string; image: string }[] = [
   {
     step: 1,
-    title: "Farmers Register",
-    desc: "Create a verified profile, select your crops or livestock, and list your commodities with prices, quantities and harvest dates.",
+    title: "Fellows Register",
+    desc: "Create a verified profile, select your crops or livestock, and list your commodities with prices, quantities and delivery dates.",
     image: HOW_IT_WORKS_IMAGES.farmersRegister,
   },
   {
     step: 2,
-    title: "Buyers Pay for Access",
-    desc: "Browse previews freely. Pay a one-time access fee to unlock full farmer data, quantities, contact details and direct messaging.",
+    title: "Clients Pay for Access",
+    desc: "Browse previews freely. Pay a one-time access fee to unlock full fellow data, quantities, contact details and direct messaging.",
     image: HOW_IT_WORKS_IMAGES.buyersPay,
   },
   {
     step: 3,
     title: "Agents Represent",
-    desc: "Farmer Handlers and Buyer Handlers negotiate on behalf of clients, manage relationships and streamline deals.",
+    desc: "Fellow Liaison Officers and Client Liaison Officers negotiate on behalf of clients, manage relationships and streamline deals.",
     image: HOW_IT_WORKS_IMAGES.agentsRepresent,
   },
   {
@@ -74,7 +74,7 @@ const ROLE_CARD_IMAGES = {
   fishFarmer: "/fish-farmer-holding-freshly-caught-fish-aquaculture-farm-fish-farmer-holding-freshly-caught-fish-fish-farm-demonstrating-372101156.webp",
   client: "/farmer and buyer.jpg",
   student: "/agricultural-students-woman-evaluating-crop-growth-notes-focused-documenting-plant-health-check-vegetable-growth-problems-465673929.webp",
-  organization: "/organizations.png",
+  organization: "/CropsBlaringhem-LowRes-265.jpg",
   handler: "/farmer and her agent.webp",
   researcher: "/Agric researchers.jpg",
 } as const;
@@ -83,7 +83,7 @@ const ROLE_CARDS: { icon: IconName; label: string; desc: string; image: string }
   {
     icon: "sprout",
     label: "Crop Fellow",
-    desc: "Register as a crop fellow to list produce, manage prices and harvest schedules, and track interested clients — all from one dashboard.",
+    desc: "Register as a crop fellow to list produce, manage prices and delivery schedules, and track interested clients — all from one dashboard.",
     image: ROLE_CARD_IMAGES.cropFarmer,
   },
   {
@@ -101,7 +101,7 @@ const ROLE_CARDS: { icon: IconName; label: string; desc: string; image: string }
   {
     icon: "leaf",
     label: "Fish Fellow",
-    desc: "List aquaculture produce, manage pond yields and harvest windows, and connect with clients sourcing fresh fish across Ghana.",
+    desc: "List aquaculture produce, manage pond yields and delivery windows, and connect with clients sourcing fresh fish across Ghana.",
     image: ROLE_CARD_IMAGES.fishFarmer,
   },
   {
@@ -161,12 +161,17 @@ export default function HomePage() {
         <div className="relative z-10 mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
           <div className="max-w-2xl">
             <ScrollReveal trigger="mount" delay={0} duration={500} direction="fade-up">
-              <PlatformBrandTitle theme="light" size="hero" className="mb-6 sm:mb-8" />
+              <PlatformBrandTitle
+                theme="light"
+                size="hero"
+                motto="The Premier Commodity Exchange Platform"
+                className="mb-6 sm:mb-8"
+              />
             </ScrollReveal>
 
             <ScrollReveal trigger="mount" delay={scrollStagger(2, 100)} duration={550} direction="fade-up">
               <h1 className="mb-6 text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl">
-                Where Farmers{" "}
+                Where Fellow{" "}
                 <span className="bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-300 bg-clip-text text-transparent">
                   Meet Markets
                 </span>
@@ -175,7 +180,7 @@ export default function HomePage() {
 
             <ScrollReveal trigger="mount" delay={scrollStagger(3, 100)} duration={500} direction="fade-up">
               <p className="mb-10 text-xl font-light leading-relaxed text-brand-100 md:text-2xl">
-                Connect verified farmers with trusted buyers across Ghana. Secure commodity trading with full privacy protection until payment is complete.
+                connecting verified fellows with clients. Secure commodity trading with full privacy protection.
               </p>
             </ScrollReveal>
 
@@ -365,7 +370,7 @@ export default function HomePage() {
             Ready to Transform How You Trade?
           </h2>
           <p className="mb-10 text-xl leading-relaxed text-brand-100">
-            Join thousands of farmers, buyers and handlers already using ANI to trade commodities safely and efficiently across Ghana.
+            Join thousands of fellows, clients, and liaison officers already using ANI to trade commodities safely and efficiently across Ghana.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link

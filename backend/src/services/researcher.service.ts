@@ -1,11 +1,15 @@
 import { z } from 'zod';
 import prisma from '../database/prisma';
 import { AppError, assertFound, assertAuthorized } from '../utils/errors';
-import { ROLES, isResearcherRole } from '../constants/roles';
+import { ROLES, isResearcherRole, RESEARCHER_CLIENT_ROLES } from '../constants/roles';
 import { getPaymentProvider } from './payment.provider';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import { formatVerificationTags, verificationTagSelect } from '../utils/verificationTags';
-import { notifyResearchPurchase, notifyNewPublication } from './notification.service';
+import {
+  notifyResearchPurchase,
+  notifyNewPublication,
+  notifyResearchPublicationsAvailable,
+} from './notification.service';
 import { fetchUploadedFileBuffer } from './storage.service';
 
 export const publicationSchema = z.object({
@@ -26,6 +30,11 @@ export const purchasePublicationSchema = z.object({
 
 export const commentSchema = z.object({
   content: z.string().min(1).max(2000),
+});
+
+export const notifyClientSchema = z.object({
+  clientId: z.string().uuid(),
+  message: z.string().min(1).max(500).optional(),
 });
 
 const publicationInclude = {
@@ -141,6 +150,50 @@ export class ResearcherService {
     );
   }
 
+  private assertPublicationPolicyAccepted(profile: { publicationPolicyAcceptedAt: Date | null }) {
+    assertAuthorized(
+      !!profile.publicationPolicyAcceptedAt,
+      'You must accept the publication policy before publishing research'
+    );
+  }
+
+  async getPublicationPolicyStatus(userId: string, roleId: number) {
+    assertAuthorized(isResearcherRole(roleId), 'Only researchers can view publication policy status');
+    const profile = await this.getResearcherProfile(userId);
+    return {
+      accepted: !!profile.publicationPolicyAcceptedAt,
+      acceptedAt: profile.publicationPolicyAcceptedAt?.toISOString() ?? null,
+    };
+  }
+
+  async acceptPublicationPolicy(userId: string, roleId: number) {
+    assertAuthorized(isResearcherRole(roleId), 'Only researchers can accept the publication policy');
+    const profile = await this.getResearcherProfile(userId);
+
+    if (profile.publicationPolicyAcceptedAt) {
+      return {
+        accepted: true,
+        acceptedAt: profile.publicationPolicyAcceptedAt.toISOString(),
+      };
+    }
+
+    const updated = await prisma.researcherProfile.update({
+      where: { userId },
+      data: { publicationPolicyAcceptedAt: new Date() },
+    });
+
+    return {
+      accepted: true,
+      acceptedAt: updated.publicationPolicyAcceptedAt!.toISOString(),
+    };
+  }
+
+  async ensurePublicationPolicyAccepted(userId: string, roleId: number) {
+    assertAuthorized(isResearcherRole(roleId), 'Only researchers can publish');
+    const profile = await this.getResearcherProfile(userId);
+    this.assertPublicationPolicyAccepted(profile);
+  }
+
   private async getActivePublication(publicationId: string) {
     return assertFound(
       await prisma.researchPublication.findFirst({
@@ -189,6 +242,7 @@ export class ResearcherService {
   async createPublication(userId: string, roleId: number, data: z.infer<typeof publicationSchema>) {
     assertAuthorized(isResearcherRole(roleId), 'Only researchers can create publications');
     const profile = await this.getResearcherProfile(userId);
+    this.assertPublicationPolicyAccepted(profile);
 
     const isFree = data.isFree ?? (data.price == null || data.price <= 0);
 
@@ -840,6 +894,73 @@ export class ResearcherService {
     });
 
     return formatComment(comment);
+  }
+
+  async listClients(userId: string, roleId: number) {
+    assertAuthorized(isResearcherRole(roleId), 'Only researchers can list clients');
+    const clients = await prisma.user.findMany({
+      where: {
+        roleId: { in: [...RESEARCHER_CLIENT_ROLES] },
+        id: { not: userId },
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        profilePicture: true,
+        city: true,
+        region: true,
+        country: true,
+        roleId: true,
+        verificationStatus: true,
+        verificationTags: { select: verificationTagSelect },
+      },
+      orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
+    });
+
+    return clients.map((c) => ({
+      id: c.id,
+      firstName: c.firstName,
+      lastName: c.lastName,
+      profilePicture: normalizePublicAssetUrl(c.profilePicture),
+      city: c.city,
+      region: c.region,
+      country: c.country,
+      roleId: c.roleId,
+      roleLabel:
+        c.roleId === ROLES.CROP_FARMER
+          ? 'Crop Farmer'
+          : c.roleId === ROLES.LIVESTOCK_FARMER
+            ? 'Livestock Farmer'
+            : c.roleId === ROLES.ORGANIZATION_FARMER
+              ? 'Organization Fellow'
+              : c.roleId === ROLES.STUDENT
+                ? 'Student'
+                : 'Buyer',
+      verificationStatus: c.verificationStatus,
+      verificationTags: formatVerificationTags(c.verificationTags),
+    }));
+  }
+
+  async notifyClient(
+    researcherUserId: string,
+    roleId: number,
+    data: z.infer<typeof notifyClientSchema>
+  ) {
+    assertAuthorized(isResearcherRole(roleId), 'Only researchers can notify clients');
+    const client = assertFound(
+      await prisma.user.findFirst({
+        where: { id: data.clientId, roleId: { in: [...RESEARCHER_CLIENT_ROLES] } },
+        select: { id: true },
+      }),
+      'Client not found'
+    );
+    await notifyResearchPublicationsAvailable({
+      researcherUserId,
+      clientId: client.id,
+      customMessage: data.message,
+    });
+    return { success: true };
   }
 }
 

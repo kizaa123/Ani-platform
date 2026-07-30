@@ -18,6 +18,7 @@ import { OrderTrackStage } from "@/lib/orderTrack";
 import { BuyerOrderLineItem, CounterpartHandlerContact, formatListingUnit, ProductOrderLineItem } from "@/lib/types";
 import { Icon } from "@/components/icons";
 import { HandlerPhoneLink } from "@/components/HandlerAssignmentCards";
+import { EmailText } from "@/components/EmailText";
 import { floDisplayName, cloDisplayName } from "@/lib/handlerDisplayName";
 
 export type OrderListPerspective = "farmer" | "buyer";
@@ -57,9 +58,7 @@ function CounterpartHandlerSection({
         {handler.email && (
           <p>
             Email:{" "}
-            <a href={`mailto:${handler.email}`} className="font-semibold text-brand-800 hover:underline">
-              {handler.email}
-            </a>
+            <EmailText email={handler.email} link className="font-semibold text-brand-800 hover:underline" />
           </p>
         )}
       </div>
@@ -476,7 +475,7 @@ export function OrderDetailModal({
               <p className="mt-3 text-center text-xs text-gray-500">
                 {order.trackUpdatedAt
                   ? `Last updated ${formatDate(order.trackUpdatedAt)}`
-                  : "Your farmer will update progress as your order moves forward"}
+                  : "Your fellow will update progress as your order moves forward"}
               </p>
             )}
           </div>
@@ -526,18 +525,18 @@ export function OrderDetailModal({
 
           <div className="mt-5 rounded-xl border border-brand-100 p-4 space-y-4">
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">From (Buyer)</p>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">From (Client)</p>
               <div className="flex items-center gap-3">
                 <AvatarWithVerification
                   src={!isBuyerOrder(order) ? order.buyerProfilePicture : undefined}
-                  name={!isBuyerOrder(order) ? (order.buyerName ?? "Buyer") : "Buyer"}
+                  name={!isBuyerOrder(order) ? (order.buyerName ?? "Client") : "Client"}
                   size={48}
                   verificationStatus={!isBuyerOrder(order) ? order.buyerVerificationStatus : undefined}
                   verificationTags={!isBuyerOrder(order) ? order.buyerVerificationTags : undefined}
                 />
                 <div className="min-w-0 flex-1">
                   <p className="font-bold text-brand-900">
-                    {!isBuyerOrder(order) ? (order.buyerName ?? "Buyer") : "Buyer"}
+                    {!isBuyerOrder(order) ? (order.buyerName ?? "Client") : "Client"}
                   </p>
                   <p className="text-xs text-gray-600">
                     Location: {!isBuyerOrder(order) ? (order.buyerLocation ?? "—") : "—"}
@@ -547,11 +546,11 @@ export function OrderDetailModal({
             </div>
 
             <div className="border-t border-brand-100 pt-3">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">To (Farmer)</p>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">To (Fellow)</p>
               <div className="flex items-center gap-3">
                 <AvatarWithVerification
                   src={isBuyerOrder(order) ? order.farmerProfilePicture : undefined}
-                  name={isBuyerOrder(order) ? order.farmerName : "Farmer"}
+                  name={isBuyerOrder(order) ? order.farmerName : "Fellow"}
                   size={48}
                   verificationStatus={isBuyerOrder(order) ? order.farmerVerificationStatus : undefined}
                   verificationTags={isBuyerOrder(order) ? order.farmerVerificationTags : undefined}
@@ -560,7 +559,7 @@ export function OrderDetailModal({
                   <p className="font-bold text-brand-900">
                     {isBuyerOrder(order)
                       ? `${order.farmerName}${order.farmName ? ` (${order.farmName})` : ""}`
-                      : "Farmer / My Farm"}
+                      : "Fellow / My Production"}
                   </p>
                   <p className="text-xs text-gray-600">
                     Location: {isBuyerOrder(order) ? order.farmerLocation : (order.productLocation ?? "—")}
@@ -653,7 +652,7 @@ export function SalesOrdersTable({ items }: { items: ProductOrderLineItem[] }) {
         <thead>
           <tr className="border-b border-brand-50 bg-brand-50/50 text-left text-xs font-semibold uppercase text-gray-600">
             <th className="px-4 py-3">Product</th>
-            <th className="px-4 py-3">Buyer</th>
+            <th className="px-4 py-3">Client</th>
             <th className="px-4 py-3">Location</th>
             <th className="px-4 py-3 text-right">Qty</th>
             <th className="px-4 py-3 text-right">Total</th>

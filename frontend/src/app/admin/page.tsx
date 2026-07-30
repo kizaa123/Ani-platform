@@ -23,6 +23,7 @@ import { AdminPlatformIncomeCard } from "@/components/admin/AdminPlatformIncomeC
 import { AdminDashboardChartsPanel } from "@/components/admin/AdminDashboardCharts";
 import { AnimatedStat } from "@/components/AnimatedStat";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { EmailText } from "@/components/EmailText";
 import { formatDate } from "@/lib/format";
 import { scrollStagger } from "@/lib/scrollStagger";
 import { Skeleton, PageContentSkeleton } from "@/components/LoadingPrimitives";
@@ -259,21 +260,21 @@ export default function AdminPage() {
           {(
             [
               { label: "Total Users", value: stats.users, icon: "users" as const, accent: "forest" as const },
-              { label: "Farmers", value: stats.farmers, icon: "sprout" as const, accent: "green" as const },
-              { label: "Buyers", value: stats.buyers, icon: "store" as const, accent: "teal" as const },
+              { label: "Fellows", value: stats.farmers, icon: "sprout" as const, accent: "green" as const },
+              { label: "Clients", value: stats.buyers, icon: "store" as const, accent: "teal" as const },
               {
                 label: "Client Liaison Officers",
                 value: stats.buyerHandlers,
                 icon: "handshake" as const,
                 accent: "gold" as const,
-                hint: "Buyer handlers",
+                hint: "Client liaison officers",
               },
               {
                 label: "Fellow Liaison Officers",
                 value: stats.farmerHandlers,
                 icon: "user-plus" as const,
                 accent: "emerald" as const,
-                hint: "Farmer handlers",
+                hint: "Fellow liaison officers",
               },
             ] as const
           ).map((card, i) => {
@@ -388,7 +389,7 @@ export default function AdminPage() {
                 <div>
                   <h2 className="text-lg font-bold text-brand-900">User Verification</h2>
                   <p className="mt-1 text-sm text-gray-500">
-                    Verify buyers, farmers, and handlers.
+                    Verify clients, fellows, and liaison officers.
                     {pendingCount > 0 && ` ${pendingCount} pending.`}
                   </p>
                 </div>
@@ -396,8 +397,8 @@ export default function AdminPage() {
                   {(
                     [
                       ["all", "All roles"],
-                      ["farmers", "Farmers"],
-                      ["buyers", "Buyers"],
+                      ["farmers", "Fellows"],
+                      ["buyers", "Clients"],
                       ["handlers", "Handlers"],
                     ] as const
                   ).map(([value, label]) => (
@@ -468,7 +469,7 @@ export default function AdminPage() {
                             ))}
                           </div>
                           <p className="text-sm text-gray-500">
-                            {u.email} · {u.role.roleName}
+                            <EmailText email={u.email} className="inline" /> · {u.role.roleName}
                             {subtitle ? ` · ${subtitle}` : ""}
                           </p>
                           {assignableTagsForUser(u).length > 0 && (

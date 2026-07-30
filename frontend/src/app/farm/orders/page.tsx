@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { ProductOrderLineItem, ROLES } from "@/lib/types";
+import { ProductOrderLineItem, isFarmer } from "@/lib/types";
 import { ProductOrdersList } from "@/components/ProductOrdersList";
 import { formatGhc } from "@/lib/format";
 import { basePriceFromListed } from "@/lib/listingPrice";
@@ -20,10 +20,7 @@ export default function FarmerOrdersPage() {
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
-    if (
-      user &&
-      ![ROLES.CROP_FARMER, ROLES.LIVESTOCK_FARMER].includes(user.roleId as 1 | 2)
-    ) {
+    if (user && !isFarmer(user.roleId)) {
       router.push("/dashboard");
       return;
     }
@@ -76,11 +73,11 @@ export default function FarmerOrdersPage() {
     <div className="mx-auto max-w-5xl px-4 py-8">
       <div className="mb-8">
         <Link href="/farm" className="text-sm font-medium text-brand-600 hover:underline">
-          Back to My Farm
+          Back to My Production
         </Link>
-        <h1 className="mt-2 text-3xl font-bold text-brand-900">Buyer Orders</h1>
+        <h1 className="mt-2 text-3xl font-bold text-brand-900">Client Orders</h1>
         <p className="text-gray-500">
-          Products buyers ordered from your farm — manage fulfillment, track deliveries, and view contact details.
+          Products clients ordered from your farm — manage fulfillment, track deliveries, and view contact details.
         </p>
       </div>
 
@@ -170,7 +167,7 @@ export default function FarmerOrdersPage() {
             ? "No unserved orders. All orders have been delivered!"
             : filterTab === "SERVED"
               ? "No served orders yet. Delivered orders will appear here."
-              : "No buyer orders yet. When buyers purchase from your farm listings, orders will appear here."
+              : "No client orders yet. When clients purchase from your farm listings, orders will appear here."
         }
         emptyAction={
           <Link href="/farm" className="font-semibold text-brand-700 underline">

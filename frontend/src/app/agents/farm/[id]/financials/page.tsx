@@ -9,6 +9,7 @@ import { FinancialStatement, isHandler, isFarmerHandler } from "@/lib/types";
 import { CountryBadge } from "@/components/CountrySelect";
 import { HandlerClientNav } from "@/components/HandlerClientNav";
 import { SalesOrdersTable } from "@/components/ProductOrdersList";
+import { EmailText } from "@/components/EmailText";
 import { ProductOrderLineItem } from "@/lib/types";
 
 function formatGhc(amount: number) {
@@ -125,7 +126,7 @@ export default function HandlerClientFinancialsPage() {
             <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">ANI Exchange</p>
             <h2 className="text-lg font-bold text-brand-900">{statement.farmName}</h2>
             <p className="text-brand-700">{statement.farmerName}</p>
-            <p className="text-sm text-gray-500">{statement.email}</p>
+            <EmailText email={statement.email} className="block" />
             <CountryBadge country={statement.country} region={statement.region} className="mt-2" />
           </div>
           <div className="text-left text-sm text-gray-500 sm:text-right">

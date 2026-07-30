@@ -22,6 +22,8 @@ export interface User {
   role: string;
   roleId: number;
   verificationStatus: string;
+  emailVerified?: boolean;
+  profileComplete?: boolean;
   verificationTags?: UserVerificationTag[];
 }
 
@@ -45,6 +47,7 @@ export interface ResearcherProfile {
   institution?: string;
   expertise?: string;
   bio?: string;
+  publicationPolicyAcceptedAt?: string | null;
 }
 
 export interface FarmerProfile {
@@ -177,6 +180,7 @@ export interface Listing {
   farmerId?: string;
   profilePicture?: string | null;
   commodity?: Commodity;
+  customCommodityName?: string | null;
   registeredCommodities?: RegisteredCommodity[];
   farmer?: {
     id?: string;
@@ -207,14 +211,32 @@ export const CROP_LISTING_UNITS = ["bags", "kg", "tonnes", "crates"] as const;
 export const LIVESTOCK_LISTING_UNITS = ["heads", "litres"] as const;
 export const LISTING_UNITS = [...CROP_LISTING_UNITS, ...LIVESTOCK_LISTING_UNITS] as const;
 
+export const CUSTOM_COMMODITY_ID = -1;
+export const CUSTOM_UNIT_VALUE = "__custom__";
+
 export type ListingUnit = (typeof LISTING_UNITS)[number];
 
-export function defaultListingUnit(roleId: number): ListingUnit {
+export function defaultListingUnit(roleId: number): string {
   return roleId === ROLES.LIVESTOCK_FARMER ? "heads" : "bags";
 }
 
-export function listingUnitsForRole(roleId: number): readonly ListingUnit[] {
+export function listingUnitsForRole(roleId: number): readonly string[] {
+  if (roleId === ROLES.ORGANIZATION_FARMER) return LISTING_UNITS;
   return roleId === ROLES.LIVESTOCK_FARMER ? LIVESTOCK_LISTING_UNITS : CROP_LISTING_UNITS;
+}
+
+export function isPredefinedListingUnit(unit: string, roleId: number): boolean {
+  return (listingUnitsForRole(roleId) as readonly string[]).includes(unit);
+}
+
+/** Resolve display name for a listing commodity (catalog or custom). */
+export function listingCommodityName(listing: {
+  commodity?: Commodity | null;
+  customCommodityName?: string | null;
+}): string {
+  const custom = listing.customCommodityName?.trim();
+  if (custom) return custom;
+  return listing.commodity?.name ?? "";
 }
 
 /** Human-friendly label for quantity units (e.g. heads → animals). */
@@ -223,12 +245,23 @@ export function formatListingUnit(unit: string): string {
   return unit;
 }
 
-export function normalizeListingUnit(unit: string | undefined, roleId: number): ListingUnit {
-  const allowed = listingUnitsForRole(roleId);
-  if (unit && (allowed as readonly string[]).includes(unit)) {
-    return unit as ListingUnit;
+export function normalizeListingUnit(unit: string | undefined, roleId: number): string {
+  if (unit && isPredefinedListingUnit(unit, roleId)) {
+    return unit;
   }
   return defaultListingUnit(roleId);
+}
+
+/** Unit string sent to the API (predefined or custom). */
+export function resolveListingUnitForSubmit(
+  unit: string,
+  customUnit: string,
+  roleId: number
+): string {
+  if (unit === CUSTOM_UNIT_VALUE) {
+    return customUnit.trim();
+  }
+  return normalizeListingUnit(unit, roleId);
 }
 
 export function isLivestockFarmer(roleId: number) {
@@ -661,6 +694,7 @@ export const ROLES = {
   STUDENT: 9,
   CTO: 10,
   COMMUNICATION_OFFICER: 11,
+  ORGANIZATION_FARMER: 12,
 } as const;
 
 export const STAFF_ROLE_OPTIONS = [
@@ -675,7 +709,15 @@ export function fullName(u: { firstName: string; lastName: string }) {
 }
 
 export function isFarmer(roleId: number) {
-  return roleId === ROLES.CROP_FARMER || roleId === ROLES.LIVESTOCK_FARMER;
+  return (
+    roleId === ROLES.CROP_FARMER ||
+    roleId === ROLES.LIVESTOCK_FARMER ||
+    roleId === ROLES.ORGANIZATION_FARMER
+  );
+}
+
+export function isOrganizationFarmer(roleId: number) {
+  return roleId === ROLES.ORGANIZATION_FARMER;
 }
 
 /** Crop subcategories seeded for Ghana agriculture (legacy "Crop" for existing DB rows). */
@@ -701,9 +743,10 @@ export function isLivestockCategory(name: string): boolean {
   return name === LIVESTOCK_CATEGORY_NAME;
 }
 
-export function farmerCategoryFilter(roleId: number): "Crop" | "Livestock" | null {
+export function farmerCategoryFilter(roleId: number): "Crop" | "Livestock" | "All" | null {
   if (roleId === ROLES.CROP_FARMER) return "Crop";
   if (roleId === ROLES.LIVESTOCK_FARMER) return "Livestock";
+  if (roleId === ROLES.ORGANIZATION_FARMER) return "All";
   return null;
 }
 
@@ -716,7 +759,9 @@ export function filterCategoriesForRole(
   const filtered =
     kind === "Livestock"
       ? categories.filter((c) => c.name === LIVESTOCK_CATEGORY_NAME)
-      : categories.filter((c) => isCropCategory(c.name));
+      : kind === "All"
+        ? categories.filter((c) => isCropCategory(c.name) || isLivestockCategory(c.name))
+        : categories.filter((c) => isCropCategory(c.name));
   const order = new Map(CROP_CATEGORY_NAMES.map((name, i) => [name, i]));
   return [...filtered].sort((a, b) => {
     const ai = order.get(a.name as (typeof CROP_CATEGORY_NAMES)[number]) ?? 999;
@@ -798,6 +843,11 @@ export function isAccountant(roleId: number) {
 
 export function isResearcher(roleId: number) {
   return roleId === ROLES.RESEARCHER;
+}
+
+export function hasAcceptedPublicationPolicy(user: UserProfile | null | undefined) {
+  if (!user || !isResearcher(user.roleId)) return true;
+  return !!user.researcherProfile?.publicationPolicyAcceptedAt;
 }
 
 export type ResearchPublicationCategory = "CROP_FARM" | "LIVESTOCK_FARM" | "OTHER";

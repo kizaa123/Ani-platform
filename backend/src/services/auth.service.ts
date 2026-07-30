@@ -122,6 +122,82 @@ export const updateHandlerSchema = z.object({
   handlerId: z.string().uuid(),
 });
 
+export const completeProfileSchema = z
+  .object({
+    phone: phoneSchema,
+    password: z.preprocess(emptyToUndefined, z.string().min(8).optional()),
+    profilePicture: optionalString(),
+    country: z.preprocess(
+      (val) => (typeof val === 'string' ? val.trim() : val),
+      z.string().min(2)
+    ),
+    region: z.preprocess(
+      (val) => (typeof val === 'string' ? val.trim() : val),
+      z.string().min(2)
+    ),
+    city: z.preprocess(
+      (val) => (typeof val === 'string' ? val.trim() : val),
+      z.string().min(2)
+    ),
+    address: optionalString(),
+    gpsLatitude: z.coerce.number().optional(),
+    gpsLongitude: z.coerce.number().optional(),
+    roleId: z.coerce
+      .number()
+      .int()
+      .refine(
+        (id): id is (typeof REGISTERABLE_ROLE_IDS)[number] =>
+          (REGISTERABLE_ROLE_IDS as readonly number[]).includes(id),
+        { message: 'Invalid role for registration' }
+      ),
+    farmName: optionalString(),
+    farmSize: optionalString(),
+    experienceYears: z.preprocess(
+      emptyToUndefined,
+      z.coerce.number().int().min(0).optional()
+    ),
+    institution: optionalString(),
+    expertise: optionalString(),
+    commodityIds: z.preprocess(
+      emptyToUndefined,
+      z.array(z.coerce.number().int()).optional()
+    ),
+    company: optionalString(),
+    handlerId: z.preprocess(
+      emptyToUndefined,
+      z.string().uuid().optional()
+    ),
+  })
+  .superRefine((data, ctx) => {
+    const needsHandler =
+      FARMER_ROLES.includes(data.roleId as typeof ROLES.CROP_FARMER) ||
+      data.roleId === ROLES.BUYER ||
+      data.roleId === ROLES.RESEARCHER;
+    if (needsHandler && !data.handlerId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Please select a handler',
+        path: ['handlerId'],
+      });
+    }
+  });
+
+export const emailVerificationSendSchema = z.object({
+  email: z.preprocess(
+    (val) => (typeof val === 'string' ? val.trim().toLowerCase() : val),
+    z.string().email()
+  ),
+});
+
+export const emailVerificationVerifySchema = z.object({
+  email: z.preprocess(
+    (val) => (typeof val === 'string' ? val.trim().toLowerCase() : val),
+    z.string().email()
+  ),
+  challengeId: z.string().uuid(),
+  selectedIndex: z.coerce.number().int().min(0).max(2),
+});
+
 export const updateUserProfileSchema = z.object({
   firstName: z.string().min(2).optional(),
   lastName: z.string().min(2).optional(),
@@ -140,6 +216,8 @@ function sanitizeUser(user: {
   phone: string;
   roleId: number;
   verificationStatus: string;
+  emailVerified?: boolean;
+  profileComplete?: boolean;
   role: { roleName: string };
 }) {
   return {
@@ -147,10 +225,12 @@ function sanitizeUser(user: {
     firstName: user.firstName,
     lastName: user.lastName,
     email: user.email,
-    phone: user.phone,
+    phone: user.phone || undefined,
     role: user.role.roleName,
     roleId: user.roleId,
     verificationStatus: user.verificationStatus,
+    emailVerified: user.emailVerified ?? false,
+    profileComplete: user.profileComplete ?? true,
   };
 }
 
@@ -164,10 +244,18 @@ export class AuthService {
       'Invalid role'
     );
 
+    if (!input.password) {
+      throw new AppError(400, 'Password is required for email registration');
+    }
     const passwordHash = await hashPassword(input.password);
 
     if (FARMER_ROLES.includes(input.roleId as typeof ROLES.CROP_FARMER)) {
-      const requiredLabel = input.roleId === ROLES.CROP_FARMER ? 'crop' : 'livestock';
+      const requiredLabel =
+        input.roleId === ROLES.CROP_FARMER
+          ? 'crop'
+          : input.roleId === ROLES.LIVESTOCK_FARMER
+            ? 'livestock'
+            : 'commodity';
       if (!input.commodityIds?.length) {
         throw new AppError(400, `Select at least one ${requiredLabel} commodity`);
       }
@@ -178,7 +266,13 @@ export class AuthService {
         });
         if (
           !commodity ||
-          !categoryMatchesFarmerRole(commodity.category.name, input.roleId, ROLES.CROP_FARMER, ROLES.LIVESTOCK_FARMER)
+          !categoryMatchesFarmerRole(
+            commodity.category.name,
+            input.roleId,
+            ROLES.CROP_FARMER,
+            ROLES.LIVESTOCK_FARMER,
+            ROLES.ORGANIZATION_FARMER
+          )
         ) {
           throw new AppError(400, `Commodity must belong to a ${requiredLabel} category for this farmer role`);
         }
@@ -222,6 +316,8 @@ export class AuthService {
           gpsLatitude: input.gpsLatitude,
           gpsLongitude: input.gpsLongitude,
           roleId: input.roleId,
+          emailVerified: false,
+          profileComplete: true,
         },
         include: { role: true },
       });
@@ -230,7 +326,11 @@ export class AuthService {
         const profile = await tx.farmerProfile.create({
           data: {
             userId: created.id,
-            farmName: input.farmName || `${input.firstName}'s Farm`,
+            farmName:
+              input.farmName ||
+              (input.roleId === ROLES.ORGANIZATION_FARMER
+                ? `${input.firstName}'s Organization`
+                : `${input.firstName}'s Farm`),
             farmSize: input.farmSize,
             experienceYears: input.experienceYears,
           },
@@ -346,7 +446,13 @@ export class AuthService {
       include: { role: true },
     });
 
-    if (!user || !(await comparePassword(password, user.passwordHash))) {
+    if (!user) {
+      throw new AppError(401, 'Invalid email or password');
+    }
+    if (!user.passwordHash) {
+      throw new AppError(401, 'This account uses Google sign-in. Please continue with Google.');
+    }
+    if (!(await comparePassword(password, user.passwordHash))) {
       throw new AppError(401, 'Invalid email or password');
     }
 
@@ -412,6 +518,8 @@ export class AuthService {
       role: user.role.roleName,
       roleId: user.roleId,
       verificationStatus: user.verificationStatus,
+      emailVerified: user.emailVerified,
+      profileComplete: user.profileComplete,
       verificationTags: user.verificationTags.map((tag) => ({
         id: tag.id,
         userId: tag.userId,
@@ -565,6 +673,242 @@ export class AuthService {
       data,
     });
     return this.getProfile(userId);
+  }
+
+  async markEmailVerified(userId: string) {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { emailVerified: true },
+    });
+  }
+
+  async completeProfile(userId: string, input: z.infer<typeof completeProfileSchema>) {
+    const user = assertFound(
+      await prisma.user.findUnique({
+        where: { id: userId },
+        include: {
+          role: true,
+          farmerProfile: true,
+          buyerProfile: true,
+          researcherProfile: true,
+          agentProfile: true,
+        },
+      }),
+      'User not found'
+    );
+
+    if (user.profileComplete) {
+      throw new AppError(400, 'Profile is already complete');
+    }
+    if (!user.emailVerified) {
+      throw new AppError(400, 'Verify your email before completing your profile');
+    }
+
+    const passwordHash = input.password ? await hashPassword(input.password) : user.passwordHash;
+
+    const role = assertFound(
+      await prisma.role.findUnique({ where: { id: input.roleId } }),
+      'Invalid role'
+    );
+
+    if (FARMER_ROLES.includes(input.roleId as typeof ROLES.CROP_FARMER)) {
+      const requiredLabel =
+        input.roleId === ROLES.CROP_FARMER
+          ? 'crop'
+          : input.roleId === ROLES.LIVESTOCK_FARMER
+            ? 'livestock'
+            : 'commodity';
+      if (!input.commodityIds?.length) {
+        throw new AppError(400, `Select at least one ${requiredLabel} commodity`);
+      }
+      for (const commodityId of input.commodityIds) {
+        const commodity = await prisma.commodity.findUnique({
+          where: { id: commodityId },
+          include: { category: true },
+        });
+        if (
+          !commodity ||
+          !categoryMatchesFarmerRole(
+            commodity.category.name,
+            input.roleId,
+            ROLES.CROP_FARMER,
+            ROLES.LIVESTOCK_FARMER,
+            ROLES.ORGANIZATION_FARMER
+          )
+        ) {
+          throw new AppError(400, `Commodity must belong to a ${requiredLabel} category for this farmer role`);
+        }
+      }
+    }
+
+    if (
+      input.handlerId &&
+      (FARMER_ROLES.includes(input.roleId as typeof ROLES.CROP_FARMER) ||
+        input.roleId === ROLES.BUYER ||
+        input.roleId === ROLES.RESEARCHER)
+    ) {
+      const handler = assertFound(
+        await prisma.user.findUnique({ where: { id: input.handlerId } }),
+        'Selected handler not found'
+      );
+      const expectedFarmer = FARMER_ROLES.includes(input.roleId as typeof ROLES.CROP_FARMER);
+      const expectedBuyerHandler =
+        input.roleId === ROLES.BUYER || input.roleId === ROLES.RESEARCHER;
+      if (expectedFarmer && !isFarmerHandler(handler.roleId)) {
+        throw new AppError(400, 'Selected handler is not a farmer handler');
+      }
+      if (expectedBuyerHandler && !isBuyerHandler(handler.roleId)) {
+        throw new AppError(400, 'Selected handler is not a buyer handler');
+      }
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      if (user.farmerProfile) {
+        await tx.farmerCommodity.deleteMany({
+          where: { farmerId: user.farmerProfile.id },
+        });
+        await tx.farmerProfile.delete({ where: { userId } });
+      }
+      if (user.buyerProfile) {
+        await tx.buyerProfile.delete({ where: { userId } });
+      }
+      if (user.researcherProfile) {
+        await tx.researcherProfile.delete({ where: { userId } });
+      }
+      if (user.agentProfile) {
+        await tx.agentProfile.delete({ where: { userId } });
+      }
+      await tx.agentAssignment.deleteMany({ where: { ownerId: userId } });
+
+      const saved = await tx.user.update({
+        where: { id: userId },
+        data: {
+          phone: input.phone,
+          passwordHash,
+          profilePicture: input.profilePicture ?? user.profilePicture,
+          country: input.country,
+          region: input.region,
+          city: input.city,
+          address: input.address,
+          gpsLatitude: input.gpsLatitude,
+          gpsLongitude: input.gpsLongitude,
+          roleId: input.roleId,
+          profileComplete: true,
+        },
+        include: { role: true },
+      });
+
+      if (FARMER_ROLES.includes(input.roleId as typeof ROLES.CROP_FARMER)) {
+        const profile = await tx.farmerProfile.create({
+          data: {
+            userId,
+            farmName:
+              input.farmName ||
+              (input.roleId === ROLES.ORGANIZATION_FARMER
+                ? `${user.firstName}'s Organization`
+                : `${user.firstName}'s Farm`),
+            farmSize: input.farmSize,
+            experienceYears: input.experienceYears,
+          },
+        });
+
+        if (input.commodityIds?.length) {
+          for (const commodityId of input.commodityIds) {
+            await tx.farmerCommodity.create({
+              data: {
+                farmerId: profile.id,
+                commodityId,
+                quantity: 0,
+                unit: defaultListingUnit(input.roleId),
+              },
+            });
+          }
+        }
+      }
+
+      if (input.roleId === ROLES.BUYER) {
+        await tx.buyerProfile.create({
+          data: { userId, company: input.company },
+        });
+      }
+
+      if (input.roleId === ROLES.RESEARCHER) {
+        await tx.researcherProfile.create({
+          data: {
+            userId,
+            institution: input.institution,
+            expertise: input.expertise,
+          },
+        });
+      }
+
+      if (input.roleId === ROLES.FARMER_HANDLER) {
+        await tx.agentProfile.create({
+          data: { userId, agentType: 'FARMER_REPRESENTATIVE' },
+        });
+      }
+
+      if (input.roleId === ROLES.BUYER_HANDLER) {
+        await tx.agentProfile.create({
+          data: { userId, agentType: 'BUYER_REPRESENTATIVE' },
+        });
+      }
+
+      if (
+        input.handlerId &&
+        (FARMER_ROLES.includes(input.roleId as typeof ROLES.CROP_FARMER) ||
+          input.roleId === ROLES.BUYER ||
+          input.roleId === ROLES.RESEARCHER)
+      ) {
+        const relationshipType = FARMER_ROLES.includes(
+          input.roleId as typeof ROLES.CROP_FARMER
+        )
+          ? 'FARMER_REPRESENTATIVE'
+          : 'BUYER_REPRESENTATIVE';
+
+        await tx.agentAssignment.create({
+          data: {
+            agentId: input.handlerId,
+            ownerId: userId,
+            relationshipType,
+          },
+        });
+      }
+
+      return saved;
+    });
+
+    if (FARMER_ROLES.includes(input.roleId as typeof ROLES.CROP_FARMER)) {
+      const commodities = input.commodityIds?.length
+        ? (
+            await prisma.commodity.findMany({
+              where: { id: { in: input.commodityIds } },
+              select: { name: true },
+            })
+          ).map((c) => c.name)
+        : [];
+
+      notifyNewFarmerJoined({
+        farmerUserId: updated.id,
+        farmerName: `${updated.firstName} ${updated.lastName}`.trim(),
+        farmSize: input.farmSize,
+        city: updated.city,
+        region: updated.region,
+        country: updated.country,
+        commodities,
+      }).catch(() => undefined);
+    }
+
+    const tokenPayload = { userId: updated.id, email: updated.email, roleId: updated.roleId };
+    const accessToken = generateAccessToken(tokenPayload);
+    const refreshToken = generateRefreshToken(tokenPayload);
+    await storeRefreshToken(updated.id, refreshToken);
+
+    return {
+      user: sanitizeUser(updated),
+      accessToken,
+      refreshToken,
+    };
   }
 }
 

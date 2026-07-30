@@ -91,7 +91,7 @@ function farmerHandlerNav(): BottomNavItem[] {
     { href: "/library", label: "Library", icon: "book", match: (p) => p.startsWith("/library") },
     {
       href: "/agents",
-      label: "Clients",
+      label: "Fellows",
       icon: "users",
       match: (p) =>
         (p === "/agents" || p.startsWith("/agents/farm/") || p.startsWith("/agents/buyer/")) &&
@@ -118,7 +118,7 @@ function buyerHandlerNav(): BottomNavItem[] {
     { href: "/library", label: "Library", icon: "book", match: (p) => p.startsWith("/library") },
     {
       href: "/agents",
-      label: "Buyers",
+      label: "Clients",
       icon: "users",
       match: (p) =>
         (p === "/agents" || p.startsWith("/agents/farm/") || p.startsWith("/agents/buyer/")) &&

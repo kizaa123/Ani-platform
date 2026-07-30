@@ -42,7 +42,7 @@ function statusClass(status: string) {
 }
 
 function partnerRoleLabel(isBuyerView: boolean) {
-  return isBuyerView ? "Farmer" : "Buyer";
+  return isBuyerView ? "Fellow" : "Client";
 }
 
 export default function ConnectionsPage() {
@@ -71,15 +71,15 @@ export default function ConnectionsPage() {
       <h1 className="mb-2 text-2xl font-bold text-brand-900">Connections</h1>
       <p className="mb-6 text-sm text-gray-500">
         {isFarmer(user.roleId)
-          ? "Buyers requesting access to your farm, and farmers you requested access from — ANI admin approves access"
+          ? "Clients requesting access to your farm, and fellows you requested access from — ANI admin approves access"
           : isMarketplaceBuyer(user.roleId)
-            ? "Farmers you requested access from — approved once ANI admin reviews"
+            ? "Fellows you requested access from — approved once ANI admin reviews"
             : user.roleId === ROLES.FARMER_HANDLER
-              ? "Buyer connections for your farmer clients — view-only; ANI admin approves access"
+              ? "Client connections for your fellow clients — view-only; ANI admin approves access"
               : user.roleId === ROLES.BUYER_HANDLER
-                ? "Farmer connections for your buyer clients — see who they connected with"
+                ? "Fellow connections for your clients — see who they connected with"
                 : isStaff(user.roleId)
-                  ? "Pending farm access requests — accept or reject buyer connections"
+                  ? "Pending farm access requests — accept or reject client connections"
                   : "Client connection requests"}
       </p>
 
@@ -157,7 +157,7 @@ function ConnectionCard({
       {isHandlerView && farmerClient && (
         <div className="mb-3 rounded-lg border border-brand-200 bg-brand-50/60 px-3 py-2">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-600">
-            Farmer client
+            Fellow client
           </p>
           <p className="text-sm font-bold text-brand-900">{fullName(farmerClient)}</p>
           {farmerClient.farmName && (
@@ -169,7 +169,7 @@ function ConnectionCard({
       {isBuyerHandlerView && buyerClient && (
         <div className="mb-3 rounded-lg border border-brand-200 bg-brand-50/60 px-3 py-2">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-600">
-            Buyer client
+            Client
           </p>
           <p className="text-sm font-bold text-brand-900">{fullName(buyerClient)}</p>
         </div>
@@ -185,7 +185,7 @@ function ConnectionCard({
         />
         <div className="min-w-0 flex-1">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
-            {isBuyerHandlerView ? "Farmer" : partnerRoleLabel(isBuyerView)}
+            {isBuyerHandlerView ? "Fellow" : partnerRoleLabel(isBuyerView)}
           </p>
           <p className="truncate font-bold text-brand-900">
             {partner ? fullName(partner) : "Unknown"}

@@ -81,7 +81,7 @@ export default function HandlerClientBuyerOrdersPage() {
         perspective="buyer"
         orders={orders}
         handlerOwnerId={ownerId}
-        emptyMessage="This buyer has not placed any orders yet."
+        emptyMessage="This client has not placed any orders yet."
       />
     </div>
   );

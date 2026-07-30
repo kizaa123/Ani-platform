@@ -10,6 +10,7 @@ export const ROLES = {
   STUDENT: 9,
   CTO: 10,
   COMMUNICATION_OFFICER: 11,
+  ORGANIZATION_FARMER: 12,
 } as const;
 
 export const ROLE_NAMES: Record<number, string> = {
@@ -24,6 +25,7 @@ export const ROLE_NAMES: Record<number, string> = {
   9: 'Student',
   10: 'CTO',
   11: 'Communication Officer',
+  12: 'Organization Fellow',
 };
 
 /** Roles that browse marketplace farms and place product orders (same access flow as buyers). */
@@ -58,7 +60,11 @@ export const PERMISSIONS = {
   PURCHASE_PUBLICATION: 'purchase_publication',
 } as const;
 
-export const FARMER_ROLES = [ROLES.CROP_FARMER, ROLES.LIVESTOCK_FARMER];
+export const FARMER_ROLES = [ROLES.CROP_FARMER, ROLES.LIVESTOCK_FARMER, ROLES.ORGANIZATION_FARMER];
+
+/** Farmers, buyers, and students — platform users researchers can notify about publications. */
+export const RESEARCHER_CLIENT_ROLES = [...FARMER_ROLES, ROLES.BUYER, ROLES.STUDENT] as const;
+
 export const AGENT_ROLES = [ROLES.FARMER_HANDLER, ROLES.BUYER_HANDLER];
 export const STAFF_ROLES = [
   ROLES.ANI_ACCOUNTANT,
@@ -80,6 +86,7 @@ export const VERIFIABLE_ROLE_IDS = [...FARMER_ROLES, ROLES.BUYER, ROLES.RESEARCH
 export const REGISTERABLE_ROLE_IDS = [
   ROLES.CROP_FARMER,
   ROLES.LIVESTOCK_FARMER,
+  ROLES.ORGANIZATION_FARMER,
   ROLES.FARMER_HANDLER,
   ROLES.BUYER,
   ROLES.BUYER_HANDLER,

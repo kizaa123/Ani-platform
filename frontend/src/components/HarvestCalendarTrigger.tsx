@@ -43,7 +43,7 @@ export function HarvestCalendarTrigger({
           setOpen(true);
         }}
         className={className}
-        aria-label="View harvest calendar"
+        aria-label="View delivery calendar"
       >
         <Icon name="calendar" className={iconClassName} />
         {showLabel && harvestLabel ? (

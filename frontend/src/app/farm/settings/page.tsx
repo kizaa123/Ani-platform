@@ -12,6 +12,7 @@ import {
   ROLES,
   farmerCategoryFilter,
   defaultListingUnit,
+  isFarmer,
 } from "@/lib/types";
 import { isValidPhone, normalizePhone, PHONE_VALIDATION_MESSAGE } from "@/lib/phone";
 import { ProfilePhoto } from "@/components/FarmerAvatar";
@@ -79,10 +80,7 @@ export default function FarmSettingsPage() {
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
-    if (
-      user &&
-      ![ROLES.CROP_FARMER, ROLES.LIVESTOCK_FARMER].includes(user.roleId as 1 | 2)
-    ) {
+    if (user && !isFarmer(user.roleId)) {
       router.push("/dashboard");
       return;
     }
@@ -207,11 +205,11 @@ export default function FarmSettingsPage() {
     <div className="mx-auto max-w-3xl px-4 py-8">
       <div className="mb-8">
         <Link href="/farm" className="text-sm text-brand-600 hover:underline">
-          Back to My Farm
+          Back to My Production
         </Link>
         <h1 className="mt-2 text-3xl font-bold text-brand-900">Profile</h1>
         <p className="text-gray-500">
-          Your farmer profile, farm details, handler, and commodities
+          Your fellow profile, farm details, liaison officer, and commodities
         </p>
       </div>
 
@@ -331,11 +329,11 @@ export default function FarmSettingsPage() {
           handlers={farmerHandlers}
           value={handlerId}
           onChange={setHandlerId}
-          label="Your Farmer Handler"
-          emptyMessage="No farmer handlers registered yet."
+          label="Your Fellow Liaison Officer"
+          emptyMessage="No fellow liaison officers registered yet."
         />
         <p className="mt-2 text-xs text-gray-500">
-          Choose the handler who represents you on the platform. All registered farmer handlers
+          Choose the liaison officer who represents you on the platform. All registered fellow liaison officers
           are listed here.
         </p>
       </section>
@@ -370,7 +368,7 @@ export default function FarmSettingsPage() {
       <section className="rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
         <h2 className="mb-1 text-lg font-bold text-brand-900">My Commodities</h2>
         <p className="mb-4 text-sm text-gray-500">
-          These appear when you post products and on your buyer profile. Add {categoryFilter?.toLowerCase()} commodities you produce.
+          These appear when you post products and on your client-facing profile. Add {categoryFilter?.toLowerCase()} commodities you produce.
         </p>
 
         {registered.length === 0 ? (

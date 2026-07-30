@@ -47,6 +47,8 @@ export function FarmAccessPaymentModal({
     }
   };
 
+  const isSuccess = result?.variant === "success";
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center"
@@ -56,63 +58,83 @@ export function FarmAccessPaymentModal({
         className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between gap-3 border-b border-brand-100 bg-brand-50/60 p-5">
-          <div className="flex items-center gap-3">
-            <AvatarWithVerification
-              src={farmer.profilePicture}
-              name={farmer.farmerName}
-              size="md"
-              verificationStatus={farmer.verificationStatus}
-              verificationTags={farmer.verificationTags}
-            />
-            <div>
-              <h2 className="text-lg font-bold text-brand-900">{farmer.farmerName}</h2>
-              <p className="text-sm text-brand-700">{farmer.farmName}</p>
-              <CountryBadge country={farmer.country} region={farmer.region} />
+        {isSuccess ? (
+          <div className="flex flex-col">
+            <div className="flex justify-end border-b border-brand-100 bg-brand-50/40 px-4 py-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-lg p-1.5 text-gray-400 hover:bg-white hover:text-brand-700"
+                aria-label="Close"
+              >
+                <Icon name="x" className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="flex flex-col items-center px-6 py-8 text-center sm:px-8 sm:py-10">
+              <PaymentResultOverlay
+                variant="success"
+                embedded
+                title="Access granted"
+                message={`Your ${feeLabel} payment was successful. Instant access to ${farmer.farmName} is now active.`}
+                hint="Browse products and place orders from this farm."
+                actionLabel="Browse farm"
+                onDismiss={onClose}
+              />
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg p-1.5 text-gray-400 hover:bg-white hover:text-brand-700"
-            aria-label="Close"
-          >
-            <Icon name="x" className="h-5 w-5" />
-          </button>
-        </div>
+        ) : (
+          <>
+            <div className="flex items-start justify-between gap-3 border-b border-brand-100 bg-brand-50/60 p-5">
+              <div className="flex items-center gap-3">
+                <AvatarWithVerification
+                  src={farmer.profilePicture}
+                  name={farmer.farmerName}
+                  size="md"
+                  verificationStatus={farmer.verificationStatus}
+                  verificationTags={farmer.verificationTags}
+                />
+                <div className="min-w-0 text-left">
+                  <h2 className="text-lg font-bold text-brand-900">{farmer.farmerName}</h2>
+                  <p className="text-sm text-brand-700">{farmer.farmName}</p>
+                  <CountryBadge country={farmer.country} region={farmer.region} />
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-lg p-1.5 text-gray-400 hover:bg-white hover:text-brand-700"
+                aria-label="Close"
+              >
+                <Icon name="x" className="h-5 w-5" />
+              </button>
+            </div>
 
-        <div className="p-5">
-          <p className="text-sm text-gray-600">
-            One-time fee to view products, prices, and purchase from this farm.
-          </p>
+            <div className="p-5">
+              <p className="text-sm text-gray-600">
+                One-time fee to view products, prices, and purchase from this farm.
+              </p>
 
-          <PaymentCheckout
-            totalLabel="Farm access"
-            totalAmount={feeLabel}
-            payLabel={`Pay ${feeLabel}`}
-            onPay={handlePay}
-            submitting={submitting}
-          />
-        </div>
+              <PaymentCheckout
+                totalLabel="Farm access"
+                totalAmount={feeLabel}
+                payLabel={`Pay ${feeLabel}`}
+                onPay={handlePay}
+                submitting={submitting}
+              />
+            </div>
 
-        {result?.variant === "success" && (
-          <PaymentResultOverlay
-            variant="success"
-            title="Access granted"
-            message={`${feeLabel} paid for access to ${farmer.farmName}. You can view products and place orders now.`}
-            hint="Access is active now. Browse products and place orders from this farm."
-            onDismiss={onClose}
-          />
-        )}
-
-        {result?.variant === "error" && (
-          <PaymentResultOverlay
-            variant="error"
-            message={result.message}
-            onAction={() => setResult(null)}
-            onDismiss={onClose}
-            dismissLabel="Close"
-          />
+            {result?.variant === "error" && (
+              <PaymentResultOverlay
+                variant="error"
+                compact
+                message={result.message}
+                onAction={() => setResult(null)}
+                onDismiss={onClose}
+                dismissLabel="Close"
+              />
+            )}
+          </>
         )}
       </div>
     </div>

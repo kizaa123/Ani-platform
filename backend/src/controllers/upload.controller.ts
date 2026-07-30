@@ -5,6 +5,7 @@ import { AuthRequest } from '../middleware/auth.middleware';
 import { ApiResponse } from '../utils/response';
 import { isFarmerRole } from '../constants/roles';
 import { persistUploadedFile } from '../services/storage.service';
+import { researcherService } from '../services/researcher.service';
 
 function isPdfFile(file: Express.Multer.File): boolean {
   return file.mimetype === 'application/pdf' || path.extname(file.originalname).toLowerCase() === '.pdf';
@@ -50,6 +51,8 @@ export class UploadController {
 
   uploadPublicationFiles = async (req: AuthRequest, res: Response) => {
     try {
+      await researcherService.ensurePublicationPolicyAccepted(req.user!.userId, req.user!.roleId);
+
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
       const file = files?.file?.[0];
       const cover = files?.cover?.[0];

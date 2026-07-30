@@ -14,6 +14,10 @@ export interface PaymentResultOverlayProps {
   dismissLabel?: string;
   /** Auto-dismiss after ms (success only). Omit to require manual dismiss. */
   autoDismissMs?: number;
+  /** Tighter layout for nested card modals (farm/publication access). */
+  compact?: boolean;
+  /** Inline centered layout — replaces modal body instead of absolute overlay. */
+  embedded?: boolean;
 }
 
 const DEFAULT_TITLES: Record<PaymentStatusVariant, string> = {
@@ -31,6 +35,8 @@ export function PaymentResultOverlay({
   onDismiss,
   dismissLabel,
   autoDismissMs,
+  compact = false,
+  embedded = false,
 }: PaymentResultOverlayProps) {
   const resolvedTitle = title ?? DEFAULT_TITLES[variant];
   const isSuccess = variant === "success";
@@ -45,16 +51,27 @@ export function PaymentResultOverlay({
   const secondaryLabel = dismissLabel ?? (isSuccess ? "Close" : "Cancel");
   const handlePrimary = onAction ?? onDismiss;
 
+  const overlayClass = embedded
+    ? "payment-result-embedded"
+    : `payment-result-overlay${compact ? " payment-result-overlay--compact" : ""}`;
+
+  const cardClass = embedded
+    ? "payment-result-card payment-result-card--embedded"
+    : `payment-result-card${compact ? " card-elevated" : ""}`;
+
   return (
     <div
-      className="payment-result-overlay"
+      className={overlayClass}
       role={isSuccess ? "status" : "alertdialog"}
       aria-live="assertive"
       aria-labelledby="payment-result-title"
       aria-describedby="payment-result-message"
     >
-      <div className="payment-result-card">
-        <PaymentStatusIcon variant={variant} />
+      <div className={cardClass}>
+        <PaymentStatusIcon
+          variant={variant}
+          size={compact || embedded ? "compact" : "default"}
+        />
         <div className="payment-result-copy">
           <h2 id="payment-result-title" className="payment-result-title">
             {resolvedTitle}

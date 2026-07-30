@@ -13,6 +13,7 @@ import {
 } from "@/lib/types";
 import { formatDate } from "@/lib/format";
 import { PageContentSkeleton } from "@/components/LoadingPrimitives";
+import { EmailText } from "@/components/EmailText";
 
 type StaffFormState = {
   firstName: string;
@@ -330,7 +331,7 @@ export default function AdminStaffPage() {
                           </span>
                         )}
                       </td>
-                      <td className="py-3 pr-4 text-gray-600">{member.email}</td>
+                      <td className="py-3 pr-4"><EmailText email={member.email} /></td>
                       <td className="py-3 pr-4 text-gray-700">{member.roleName}</td>
                       <td className="py-3 pr-4">
                         <span

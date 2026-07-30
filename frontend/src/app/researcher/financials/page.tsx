@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import { ResearcherFinancialStatement, isResearcher } from "@/lib/types";
+import { EmailText } from "@/components/EmailText";
 
 function formatGhc(amount: number) {
   return `GHC ${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -115,7 +116,7 @@ export default function ResearcherFinancialsPage() {
                     <td className="px-4 py-3 font-medium text-brand-900">{item.title}</td>
                     <td className="px-4 py-3 text-gray-600">
                       {item.studentName}
-                      <span className="block text-xs text-gray-400">{item.studentEmail}</span>
+                      <EmailText email={item.studentEmail} className="block text-gray-400" />
                     </td>
                     <td className="px-4 py-3 text-gray-600 capitalize">{item.paymentMethod.replace("_", " ")}</td>
                     <td className="px-6 py-3 text-right font-semibold text-green-700">{formatGhc(item.amount)}</td>

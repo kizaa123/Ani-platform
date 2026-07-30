@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { Listing, ROLES, defaultListingUnit, listingUnitsForRole, formatListingUnit, isLivestockFarmer, normalizeListingUnit, type ListingUnit, ProductMediaItem } from "@/lib/types";
+import { Listing, ROLES, defaultListingUnit, listingUnitsForRole, formatListingUnit, isLivestockFarmer, isFarmer, normalizeListingUnit, listingCommodityName, CUSTOM_COMMODITY_ID, CUSTOM_UNIT_VALUE, resolveListingUnitForSubmit, isPredefinedListingUnit, ProductMediaItem } from "@/lib/types";
 import { ProductImage } from "@/components/FarmerAvatar";
 import { Icon } from "@/components/icons";
 import { PageContentSkeleton, SpinnerLabel } from "@/components/LoadingPrimitives";
@@ -46,11 +46,13 @@ interface FarmProfile {
 
 const emptyListingForm = (roleId: number) => ({
   commodityId: 0,
+  customCommodityName: "",
   title: "",
   description: "",
   quantity: 0,
   price: 0,
   unit: defaultListingUnit(roleId),
+  customUnit: "",
   location: "",
   images: [] as string[],
   harvestStartDate: "",
@@ -96,7 +98,7 @@ export default function FarmPage() {
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
-    if (user && [ROLES.CROP_FARMER, ROLES.LIVESTOCK_FARMER].includes(user.roleId as 1 | 2)) {
+    if (user && isFarmer(user.roleId)) {
       load().catch(console.error);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- load once per farmer session
@@ -159,14 +161,21 @@ export default function FarmPage() {
   };
 
   const startEdit = (listing: Listing) => {
+    const roleId = user?.roleId ?? ROLES.CROP_FARMER;
+    const hasCustomCommodity = Boolean(listing.customCommodityName?.trim());
+    const storedUnit = listing.unit ?? defaultListingUnit(roleId);
+    const usesCustomUnit = storedUnit ? !isPredefinedListingUnit(storedUnit, roleId) : false;
+
     setEditingId(listing.id);
     setForm({
-      commodityId: listing.commodity?.id ?? 0,
+      commodityId: hasCustomCommodity ? CUSTOM_COMMODITY_ID : (listing.commodity?.id ?? 0),
+      customCommodityName: listing.customCommodityName ?? "",
       title: listing.title,
       description: listing.description || "",
       quantity: listing.quantity ?? 0,
       price: basePriceFromListed(listing.price ?? 0),
-      unit: normalizeListingUnit(listing.unit, user?.roleId ?? ROLES.CROP_FARMER),
+      unit: usesCustomUnit ? CUSTOM_UNIT_VALUE : normalizeListingUnit(storedUnit, roleId),
+      customUnit: usesCustomUnit ? storedUnit : "",
       location: listing.location || "",
       images: listing.images ?? [],
       harvestStartDate: listing.harvestStartDate || "",
@@ -182,11 +191,26 @@ export default function FarmPage() {
   };
 
   const saveListing = async () => {
-    if (!form.commodityId || !form.title || !form.quantity || !form.price) {
+    const roleId = user?.roleId ?? ROLES.CROP_FARMER;
+    const usesCustomCommodity = form.commodityId === CUSTOM_COMMODITY_ID;
+    const hasCommodity = usesCustomCommodity
+      ? Boolean(form.customCommodityName.trim())
+      : Boolean(form.commodityId);
+    const resolvedUnit = resolveListingUnitForSubmit(form.unit, form.customUnit, roleId);
+
+    if (!hasCommodity || !form.title || !form.quantity || !form.price) {
       alert("Fill in commodity, title, quantity and price");
       return;
     }
-    if (isLivestockFarmer(user?.roleId ?? 0) && form.quantity !== Math.floor(form.quantity)) {
+    if (usesCustomCommodity && form.customCommodityName.trim().length < 2) {
+      alert("Enter a custom commodity name (at least 2 characters)");
+      return;
+    }
+    if (form.unit === CUSTOM_UNIT_VALUE && !form.customUnit.trim()) {
+      alert("Enter a custom unit");
+      return;
+    }
+    if (isLivestockFarmer(roleId) && form.quantity !== Math.floor(form.quantity)) {
       alert("Enter a whole number of animals");
       return;
     }
@@ -195,14 +219,22 @@ export default function FarmPage() {
       form.harvestEndDate &&
       form.harvestEndDate < form.harvestStartDate
     ) {
-      alert("Harvest end date must be on or after the start date");
+      alert("Delivery end date must be on or after the start date");
       return;
     }
     const payload = {
-      ...form,
-      images: [],
+      title: form.title,
+      description: form.description,
+      quantity: form.quantity,
+      price: form.price,
+      unit: resolvedUnit,
+      location: form.location,
+      images: [] as string[],
       harvestStartDate: form.harvestStartDate,
       harvestEndDate: form.harvestEndDate,
+      ...(usesCustomCommodity
+        ? { customCommodityName: form.customCommodityName.trim() }
+        : { commodityId: form.commodityId }),
     };
     if (editingId) {
       await api.marketplace.update(editingId, payload);
@@ -218,7 +250,7 @@ export default function FarmPage() {
   };
 
   const removeListing = async (listing: Listing) => {
-    if (!confirm(`Remove "${listing.title}" from your farm? Buyers will no longer see it.`)) return;
+    if (!confirm(`Remove "${listing.title}" from your farm? Clients will no longer see it.`)) return;
     try {
       await api.marketplace.remove(listing.id);
       if (editingId === listing.id) resetForm();
@@ -238,6 +270,12 @@ export default function FarmPage() {
     [form.price]
   );
 
+  const previewUnitLabel = useMemo(() => {
+    const roleId = user?.roleId ?? ROLES.CROP_FARMER;
+    const resolved = resolveListingUnitForSubmit(form.unit, form.customUnit, roleId);
+    return formatListingUnit(resolved || defaultListingUnit(roleId));
+  }, [form.unit, form.customUnit, user?.roleId]);
+
   if (loading || !user) {
     return <PageContentSkeleton variant="form" maxWidth="max-w-4xl" />;
   }
@@ -251,7 +289,7 @@ export default function FarmPage() {
       <div className="mb-8 rounded-2xl border border-brand-100 bg-white p-6 shadow-md">
         <div className="rounded-xl border border-brand-100 bg-brand-50 p-4">
           <p className="mb-2 text-sm font-semibold text-brand-900">
-            Commodities you produce <span className="font-normal text-gray-500">(visible to buyers)</span>
+            Commodities you produce <span className="font-normal text-gray-500">(visible to clients)</span>
           </p>
           {registeredCommodities.length === 0 ? (
             <p className="text-sm text-gray-500">No commodities registered yet.</p>
@@ -275,7 +313,7 @@ export default function FarmPage() {
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold text-brand-900">Products on Your Farm</h2>
-          <p className="text-sm text-gray-500">Add, edit, or remove products listed for buyers</p>
+          <p className="text-sm text-gray-500">Add, edit, or remove products listed for clients</p>
         </div>
         <button
           onClick={() => {
@@ -311,7 +349,7 @@ export default function FarmPage() {
                 {editingId ? "Edit Product Listing" : "Add New Product to Your Farm"}
               </h3>
               <p className="mt-0.5 text-xs text-gray-500">
-                Specify your commodity, pricing, and availability for buyers.
+                Specify your commodity, pricing, and availability for clients.
               </p>
             </div>
             <button
@@ -333,12 +371,22 @@ export default function FarmPage() {
                 <select
                   value={form.commodityId}
                   onChange={(e) => {
-                    const commodityId = parseInt(e.target.value);
+                    const commodityId = parseInt(e.target.value, 10);
+                    if (commodityId === CUSTOM_COMMODITY_ID) {
+                      setForm({
+                        ...form,
+                        commodityId,
+                        customCommodityName: form.customCommodityName,
+                      });
+                      return;
+                    }
                     const fc = registeredCommodities.find((c) => c.commodity.id === commodityId);
                     setForm({
                       ...form,
                       commodityId,
+                      customCommodityName: "",
                       unit: normalizeListingUnit(fc?.unit, user?.roleId ?? ROLES.CROP_FARMER),
+                      customUnit: "",
                     });
                   }}
                   className="w-full rounded-xl border border-brand-200 bg-white px-4 py-2.5 text-sm shadow-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
@@ -349,7 +397,17 @@ export default function FarmPage() {
                       {fc.commodity.name} ({fc.commodity.category.name})
                     </option>
                   ))}
+                  <option value={CUSTOM_COMMODITY_ID}>Other (not listed)</option>
                 </select>
+                {form.commodityId === CUSTOM_COMMODITY_ID && (
+                  <input
+                    type="text"
+                    placeholder="Enter commodity name"
+                    value={form.customCommodityName}
+                    onChange={(e) => setForm({ ...form, customCommodityName: e.target.value })}
+                    className="mt-2 w-full rounded-xl border border-brand-200 bg-white px-4 py-2.5 text-sm shadow-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                  />
+                )}
               </div>
 
               <div>
@@ -417,7 +475,13 @@ export default function FarmPage() {
                   <label className="mb-1 block text-xs font-semibold text-gray-700">Unit *</label>
                   <select
                     value={form.unit}
-                    onChange={(e) => setForm({ ...form, unit: e.target.value as ListingUnit })}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        unit: e.target.value,
+                        customUnit: e.target.value === CUSTOM_UNIT_VALUE ? form.customUnit : "",
+                      })
+                    }
                     className="w-full rounded-xl border border-brand-200 bg-white px-4 py-2 text-sm shadow-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
                   >
                     {listingUnitsForRole(user?.roleId ?? ROLES.CROP_FARMER).map((u) => (
@@ -425,7 +489,17 @@ export default function FarmPage() {
                         {formatListingUnit(u)}
                       </option>
                     ))}
+                    <option value={CUSTOM_UNIT_VALUE}>Other (custom unit)</option>
                   </select>
+                  {form.unit === CUSTOM_UNIT_VALUE && (
+                    <input
+                      type="text"
+                      placeholder="e.g. bundles, trays, pieces"
+                      value={form.customUnit}
+                      onChange={(e) => setForm({ ...form, customUnit: e.target.value })}
+                      className="mt-2 w-full rounded-xl border border-brand-200 bg-white px-4 py-2 text-sm shadow-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                    />
+                  )}
                 </div>
 
                 <div>
@@ -446,17 +520,17 @@ export default function FarmPage() {
                 {form.price > 0 ? (
                   <p className="font-medium text-brand-900">
                     <span className="font-semibold text-brand-700">Post price:</span> GHC {listedPricePreview} per{" "}
-                    {formatListingUnit(form.unit)}
+                    {previewUnitLabel}
                   </p>
                 ) : (
                   <p className="text-gray-500">
-                    Enter your price to see the post price per {formatListingUnit(form.unit)}.
+                    Enter your price to see the post price per {previewUnitLabel}.
                   </p>
                 )}
               </div>
             </div>
 
-            {/* Location & Harvest Dates */}
+            {/* Location & Delivery Dates */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-brand-900">
@@ -471,7 +545,7 @@ export default function FarmPage() {
               </div>
 
               <div className="rounded-xl border border-brand-100 bg-brand-50/50 p-4">
-                <p className="text-xs font-bold uppercase tracking-wider text-brand-900">Harvest / Availability Dates</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-brand-900">Delivery / Availability Dates</p>
                 <div className="mt-2 grid grid-cols-2 gap-2">
                   <div>
                     <label className="mb-1 block text-[10px] font-semibold text-gray-600">Start Date</label>
@@ -619,7 +693,7 @@ export default function FarmPage() {
       <div className="space-y-4">
         {listings.length === 0 ? (
           <div className="rounded-xl border border-dashed border-brand-200 p-8 text-center text-gray-500">
-            No products on your farm yet. Click <strong>Add Product</strong> above to list one for buyers.
+            No products on your farm yet. Click <strong>Add Product</strong> above to list one for clients.
           </div>
         ) : (
           listings.map((l) => {
@@ -652,19 +726,22 @@ export default function FarmPage() {
                 )}
                 <div className="flex-1">
                   <h3 className="font-bold text-brand-900">{l.title}</h3>
+                  {listingCommodityName(l) && (
+                    <p className="text-xs font-medium text-brand-600">{listingCommodityName(l)}</p>
+                  )}
                   <p className="mt-1 text-sm text-brand-700">
                     {l.quantityLabel ||
-                      `${l.quantity} ${formatListingUnit(normalizeListingUnit(l.unit, user?.roleId ?? ROLES.CROP_FARMER))}`}
+                      `${l.quantity} ${formatListingUnit(l.unit ?? defaultListingUnit(user?.roleId ?? ROLES.CROP_FARMER))}`}
                   </p>
                   <p className="text-lg font-bold text-brand-900">
                     Listed:{" "}
                     {l.priceLabel ||
-                      `GHC ${l.price}/${formatListingUnit(normalizeListingUnit(l.unit, user?.roleId ?? ROLES.CROP_FARMER))}`}
+                      `GHC ${l.price}/${formatListingUnit(l.unit ?? defaultListingUnit(user?.roleId ?? ROLES.CROP_FARMER))}`}
                   </p>
                   {l.price != null && l.price > 0 && (
                     <p className="text-xs text-gray-500">
                       Your price: GHC {basePriceFromListed(l.price)}/
-                      {formatListingUnit(normalizeListingUnit(l.unit, user?.roleId ?? ROLES.CROP_FARMER))}
+                      {formatListingUnit(l.unit ?? defaultListingUnit(user?.roleId ?? ROLES.CROP_FARMER))}
                     </p>
                   )}
                   {(l.harvestStartDate || l.harvestEndDate || l.harvestLabel) && (
@@ -673,9 +750,9 @@ export default function FarmPage() {
                         harvestStartDate={l.harvestStartDate}
                         harvestEndDate={l.harvestEndDate}
                         harvestLabel={
-                          l.harvestLabel ? `Harvest: ${l.harvestLabel}` : null
+                          l.harvestLabel ? `Delivery: ${l.harvestLabel}` : null
                         }
-                        commodityName={l.commodity?.name}
+                        commodityName={listingCommodityName(l) || undefined}
                         productTitle={l.title}
                         className="inline-flex items-center gap-1 rounded-lg px-0 py-0.5 text-xs text-brand-700 hover:bg-brand-50"
                       />

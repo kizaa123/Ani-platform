@@ -4,11 +4,17 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { ResearchPublication, ResearchPublicationCategory, isResearcher } from "@/lib/types";
+import {
+  ResearchPublication,
+  ResearchPublicationCategory,
+  hasAcceptedPublicationPolicy,
+  isResearcher,
+} from "@/lib/types";
 import { PUBLICATION_CATEGORY_OPTIONS } from "@/lib/publicationCategories";
 import { Icon } from "@/components/icons";
 import { FileUploadZone } from "@/components/FileUploadZone";
 import { PublicationCoverImage } from "@/components/PublicationCoverImage";
+import { PublicationPolicyModal } from "@/components/PublicationPolicyModal";
 import { PageContentSkeleton, SpinnerLabel } from "@/components/LoadingPrimitives";
 import { assetUrl } from "@/lib/assetUrl";
 
@@ -23,11 +29,12 @@ const emptyForm = {
 };
 
 export default function ResearcherPublicationsPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, refreshUser } = useAuth();
   const router = useRouter();
 
   const [publications, setPublications] = useState<ResearchPublication[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [showPolicyModal, setShowPolicyModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [uploadingDoc, setUploadingDoc] = useState(false);
@@ -51,7 +58,22 @@ export default function ResearcherPublicationsPage() {
     };
   }, [localCoverPreview]);
 
+  const policyAccepted = hasAcceptedPublicationPolicy(user);
+
+  const requirePolicyAcceptance = () => {
+    if (policyAccepted) return true;
+    setShowPolicyModal(true);
+    return false;
+  };
+
+  const handleAcceptPolicy = async () => {
+    await api.research.acceptPublicationPolicy();
+    await refreshUser();
+    setShowPolicyModal(false);
+  };
+
   const handleDocSelect = async (file: File) => {
+    if (!requirePolicyAcceptance()) return;
     const isPdf =
       file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
     if (!isPdf) {
@@ -76,6 +98,7 @@ export default function ResearcherPublicationsPage() {
   };
 
   const handleCoverSelect = async (file: File) => {
+    if (!requirePolicyAcceptance()) return;
     if (localCoverPreview) URL.revokeObjectURL(localCoverPreview);
     setLocalCoverPreview(URL.createObjectURL(file));
     setUploadingCover(true);
@@ -118,7 +141,13 @@ export default function ResearcherPublicationsPage() {
     setError("");
   };
 
+  const openUploadForm = () => {
+    if (!requirePolicyAcceptance()) return;
+    setShowForm(true);
+  };
+
   const save = async () => {
+    if (!editingId && !requirePolicyAcceptance()) return;
     if (!form.title.trim() || !form.fileUrl) {
       setError("Title and PDF file are required");
       return;
@@ -180,7 +209,7 @@ export default function ResearcherPublicationsPage() {
           <p className="text-sm text-gray-500">Upload PDF publications for students to read</p>
         </div>
         {!showForm && (
-          <button type="button" className="btn-primary" onClick={() => setShowForm(true)}>
+          <button type="button" className="btn-primary" onClick={openUploadForm}>
             + Upload publication
           </button>
         )}
@@ -357,6 +386,13 @@ export default function ResearcherPublicationsPage() {
             </article>
           ))}
         </div>
+      )}
+      {showPolicyModal && (
+        <PublicationPolicyModal
+          dismissible
+          onClose={() => setShowPolicyModal(false)}
+          onAccept={handleAcceptPolicy}
+        />
       )}
     </div>
   );

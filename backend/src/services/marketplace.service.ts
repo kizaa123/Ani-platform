@@ -21,10 +21,11 @@ import { normalizeImages, normalizePublicAssetUrl } from '../middleware/upload.m
 import { formatHarvestLabel, parseHarvestDate, toHarvestDateInput } from '../utils/harvest';
 import {
   LISTING_UNITS,
-  assertUnitForRole,
+  validateListingUnit,
   defaultListingUnit,
 } from '../constants/units';
 import { computeListedPrice } from '../utils/listingPrice';
+import { listingCommodityName } from '../utils/listingDisplay';
 import { productMediaService } from './productMedia.service';
 import { notifyNewProductListing } from './notification.service';
 
@@ -52,28 +53,67 @@ const harvestDateRefine = (
   if (start && end && end < start) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: 'Harvest end date must be on or after start date',
+      message: 'Delivery end date must be on or after start date',
       path: ['harvestEndDate'],
     });
   }
 };
 
-export const listingBaseSchema = z.object({
-  commodityId: z.number().int(),
+const commodityRefine = (
+  data: { commodityId?: number; customCommodityName?: string | null },
+  ctx: z.RefinementCtx
+) => {
+  const hasCatalog = data.commodityId !== undefined && data.commodityId > 0;
+  const custom = data.customCommodityName?.trim();
+  const hasCustom = Boolean(custom);
+  if (!hasCatalog && !hasCustom) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Select a commodity or enter a custom commodity name',
+      path: ['commodityId'],
+    });
+  }
+  if (hasCatalog && hasCustom) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Provide either a catalog commodity or a custom name, not both',
+      path: ['customCommodityName'],
+    });
+  }
+};
+
+const listingFieldsSchema = z.object({
+  commodityId: z.number().int().positive().optional(),
+  customCommodityName: z.string().min(2).max(100).optional(),
   title: z.string().min(3),
   description: z.string().optional(),
   quantity: z.number().positive(),
   price: z.number().positive(),
-  unit: z.enum(LISTING_UNITS).optional(),
+  unit: z.string().min(1).max(50).optional(),
   images: z.array(z.string()).optional(),
   location: z.string().optional(),
   harvestStartDate: harvestDateField,
   harvestEndDate: harvestDateField,
 });
 
-export const listingSchema = listingBaseSchema.superRefine(harvestDateRefine);
+export const listingBaseSchema = listingFieldsSchema.superRefine(commodityRefine);
 
-export const updateListingSchema = listingBaseSchema.partial().superRefine(harvestDateRefine);
+export const listingSchema = listingFieldsSchema
+  .superRefine(commodityRefine)
+  .superRefine(harvestDateRefine);
+
+export const updateListingSchema = listingFieldsSchema.partial().superRefine((data, ctx) => {
+  harvestDateRefine(data, ctx);
+  if (data.commodityId !== undefined || data.customCommodityName !== undefined) {
+    commodityRefine(
+      {
+        commodityId: data.commodityId,
+        customCommodityName: data.customCommodityName,
+      },
+      ctx
+    );
+  }
+});
 
 function listingHarvestFields(data: {
   harvestStartDate?: string | null;
@@ -204,6 +244,7 @@ export class MarketplaceService {
       harvestEndDate?: Date | null;
       status: string;
       createdAt: Date;
+      customCommodityName?: string | null;
       commodity: unknown;
       farmer: Parameters<MarketplaceService['buildContext']>[0];
     },
@@ -227,6 +268,7 @@ export class MarketplaceService {
       status: listing.status,
       createdAt: listing.createdAt,
       commodity: listing.commodity,
+      customCommodityName: listing.customCommodityName,
     };
     const extras = {
       connectionStatus: access.connectionStatus,
@@ -245,14 +287,17 @@ export class MarketplaceService {
       'Farmer profile required'
     );
 
-    const unit = data.unit ?? defaultListingUnit(roleId);
-    assertUnitForRole(roleId, unit);
+    const unit = validateListingUnit(roleId, data.unit ?? defaultListingUnit(roleId));
     assertLivestockQuantity(roleId, data.quantity);
+
+    const customCommodityName = data.customCommodityName?.trim() || null;
+    const commodityId = customCommodityName ? null : (data.commodityId ?? null);
 
     const listing = await prisma.commodityListing.create({
       data: {
         farmerId: profile.id,
-        commodityId: data.commodityId,
+        commodityId,
+        customCommodityName,
         title: data.title,
         description: data.description,
         quantity: data.quantity,
@@ -415,7 +460,7 @@ export class MarketplaceService {
           ...registeredCommodities.map((c) => c.name),
           ...registeredCommodities.map((c) => c.category),
           ...profile.listings.map((l) => l.title),
-          ...profile.listings.map((l) => l.commodity.name),
+          ...profile.listings.map((l) => listingCommodityName(l)),
         ]
           .filter(Boolean)
           .join(' ')
@@ -502,16 +547,31 @@ export class MarketplaceService {
       'Listing not found or not owned by you'
     );
     if (data.unit !== undefined) {
-      assertUnitForRole(roleId, data.unit);
+      validateListingUnit(roleId, data.unit);
     }
     if (data.quantity !== undefined) {
       assertLivestockQuantity(roleId, data.quantity);
     }
-    const { harvestStartDate, harvestEndDate, images, price, ...rest } = data;
+    const { harvestStartDate, harvestEndDate, images, price, customCommodityName, commodityId, unit, ...rest } = data;
+
+    const commodityUpdate =
+      customCommodityName !== undefined || commodityId !== undefined
+        ? {
+            customCommodityName: customCommodityName?.trim() || null,
+            commodityId: customCommodityName?.trim()
+              ? null
+              : commodityId !== undefined
+                ? commodityId ?? null
+                : undefined,
+          }
+        : {};
+
     return prisma.commodityListing.update({
       where: { id: existing.id },
       data: {
         ...rest,
+        ...commodityUpdate,
+        ...(unit !== undefined ? { unit: validateListingUnit(roleId, unit) } : {}),
         ...(price !== undefined ? { price: computeListedPrice(price) } : {}),
         ...(images !== undefined ? { images: normalizeImages(images) } : {}),
         ...(harvestStartDate !== undefined || harvestEndDate !== undefined

@@ -38,6 +38,7 @@ const ROLES = [
   { id: 9, roleName: 'Student' },
   { id: 10, roleName: 'CTO' },
   { id: 11, roleName: 'Communication Officer' },
+  { id: 12, roleName: 'Organization Fellow' },
 ];
 
 const PERMISSIONS = [
@@ -52,6 +53,7 @@ const PERMISSIONS = [
 const ROLE_PERMS: Record<number, string[]> = {
   1: ['create_listing', 'manage_commodities', 'view_farmer_preview', 'send_messages', 'view_publications', 'purchase_access', 'request_connection'],
   2: ['create_listing', 'manage_commodities', 'view_farmer_preview', 'send_messages', 'view_publications', 'purchase_access', 'request_connection'],
+  12: ['create_listing', 'manage_commodities', 'view_farmer_preview', 'send_messages', 'view_publications', 'purchase_access', 'request_connection'],
   3: ['view_farmer_preview', 'view_full_farmer_data', 'manage_listings', 'negotiate_as_farmer', 'represent_farmer', 'send_messages', 'view_publications'],
   4: ['view_farmer_preview', 'view_full_farmer_data', 'request_connection', 'negotiate_as_buyer', 'represent_buyer', 'purchase_access', 'send_messages', 'view_publications', 'purchase_publication'],
   5: ['view_farmer_preview', 'view_full_farmer_data', 'request_connection', 'search_farmers', 'negotiate_as_buyer', 'represent_buyer', 'send_messages', 'view_publications'],
@@ -322,7 +324,7 @@ async function main() {
     });
     if (!tomatoListing) {
       await prisma.commodityListing.create({
-        data: { farmerId: profile.id, commodityId: tomato.id, title: 'Fresh Tomatoes Available', description: 'Farm-fresh weekly harvest', quantity: 500, price: 3, unit: 'kg', location: 'Central Region' },
+        data: { farmerId: profile.id, commodityId: tomato.id, title: 'Fresh Tomatoes Available', description: 'Farm-fresh weekly delivery', quantity: 500, price: 3, unit: 'kg', location: 'Central Region' },
       });
     }
   }

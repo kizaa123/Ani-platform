@@ -13,7 +13,7 @@ import { Logo, LogoIcon } from "@/components/Logo";
 const NAV = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/marketplace", label: "Marketplace" },
-  { href: "/farm", label: "My Farm", farmer: true },
+  { href: "/farm", label: "My Production", farmer: true },
   { href: "/financials", label: "Financials", buyer: true },
   { href: "/orders", label: "My Orders", buyer: true },
   { href: "/agents", label: "Clients", handler: true },

@@ -3,6 +3,9 @@ import { AuthRequest } from '../middleware/auth.middleware';
 import { ApiResponse } from '../utils/response';
 import { authService } from '../services/auth.service';
 import { agentService } from '../services/agent.service';
+import { googleAuthService } from '../services/googleAuth.service';
+import { emailVerificationService } from '../services/emailVerification.service';
+import { getGoogleOAuthConfig } from '../config/google.config';
 import { createAuditLog } from '../middleware/audit.middleware';
 
 export class AuthController {
@@ -82,6 +85,96 @@ export class AuthController {
       );
       await createAuditLog(req, 'HANDLER_UPDATED', 'agent_assignment');
       ApiResponse.success(res, assignment);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  googleStart = async (_req: AuthRequest, res: Response) => {
+    try {
+      const config = getGoogleOAuthConfig();
+      if (!config.enabled) {
+        if (config.devMode) {
+          return ApiResponse.success(res, {
+            devMode: true,
+            message: 'Google OAuth is not configured. Use POST /auth/google/dev in development.',
+          });
+        }
+        throw new Error('Google sign-in is not configured');
+      }
+      res.redirect(googleAuthService.getAuthorizationUrl());
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  googleCallback = async (req: AuthRequest, res: Response) => {
+    try {
+      const code = typeof req.query.code === 'string' ? req.query.code : '';
+      if (!code) {
+        throw new Error('Missing Google authorization code');
+      }
+      const result = await googleAuthService.handleCallback(code);
+      await createAuditLog(req, 'USER_GOOGLE_LOGIN', 'users', { userId: result.user.id });
+      res.redirect(result.redirectUrl);
+    } catch (e) {
+      const base = process.env.FRONTEND_URL?.split(',')[0] || 'http://localhost:3000';
+      const message = e instanceof Error ? e.message : 'Google sign-in failed';
+      res.redirect(`${base}/login?error=${encodeURIComponent(message)}`);
+    }
+  };
+
+  googleDev = async (req: AuthRequest, res: Response) => {
+    try {
+      const result = await googleAuthService.devSignIn(req.body);
+      await createAuditLog(req, 'USER_GOOGLE_DEV_LOGIN', 'users', { userId: result.user.id });
+      ApiResponse.success(res, {
+        user: result.user,
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+        needsProfile: result.needsProfile,
+        needsEmailVerification: result.needsEmailVerification,
+      });
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  sendEmailVerification = async (req: AuthRequest, res: Response) => {
+    try {
+      const profile = await authService.getProfile(req.user!.userId);
+      const email = req.body.email?.trim().toLowerCase() || profile.email;
+      if (email !== profile.email) {
+        throw new Error('Email must match your account email');
+      }
+      const result = await emailVerificationService.sendChallenge(email);
+      ApiResponse.success(res, result);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  verifyEmailChallenge = async (req: AuthRequest, res: Response) => {
+    try {
+      const profile = await authService.getProfile(req.user!.userId);
+      const email = req.body.email?.trim().toLowerCase() || profile.email;
+      await emailVerificationService.verifyChallenge(
+        email,
+        req.body.challengeId,
+        req.body.selectedIndex
+      );
+      await authService.markEmailVerified(req.user!.userId);
+      ApiResponse.success(res, { verified: true });
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  completeProfile = async (req: AuthRequest, res: Response) => {
+    try {
+      const result = await authService.completeProfile(req.user!.userId, req.body);
+      await createAuditLog(req, 'USER_PROFILE_COMPLETED', 'users', { userId: result.user.id });
+      ApiResponse.success(res, result);
     } catch (e) {
       ApiResponse.error(res, e);
     }

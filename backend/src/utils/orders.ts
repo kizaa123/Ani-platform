@@ -1,6 +1,7 @@
 import { normalizeImages, normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import { maxTrackStage, type OrderTrackStage } from '../constants/orderTrack';
 import { formatVerificationTags, verificationTagSelect } from './verificationTags';
+import { listingCommodityName, listingCommodityCategory } from './listingDisplay';
 
 type BuyerFields = {
   firstName: string;
@@ -42,7 +43,8 @@ type ListingFields = {
   location: string | null;
   images: unknown;
   media?: ListingMediaFields[];
-  commodity: { name: string; category: { name: string } };
+  commodity: { name: string; category: { name: string } } | null;
+  customCommodityName?: string | null;
 };
 
 type OrderCore = {
@@ -117,8 +119,8 @@ export function formatFarmerIncomingOrder(
     date: order.createdAt.toISOString(),
     productName: order.listing.title,
     productImage: productImage(order.listing),
-    commodity: order.listing.commodity.name,
-    category: order.listing.commodity.category.name,
+    commodity: listingCommodityName(order.listing),
+    category: listingCommodityCategory(order.listing),
     productLocation: order.listing.location,
     quantity: order.quantity,
     unit: order.unit,
@@ -219,8 +221,8 @@ export function formatBuyerPlacedOrder(
     date: order.createdAt.toISOString(),
     productName: order.listing.title,
     productImage: productImage(order.listing),
-    commodity: order.listing.commodity.name,
-    category: order.listing.commodity.category.name,
+    commodity: listingCommodityName(order.listing),
+    category: listingCommodityCategory(order.listing),
     productLocation: order.listing.location,
     quantity: order.quantity,
     unit: order.unit,

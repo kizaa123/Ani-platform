@@ -106,13 +106,13 @@ export function MarketplaceFarmerCard({
           <p className="truncate text-sm font-medium text-brand-700">
             {farmer.farmName || "Farm name not set"}
           </p>
-        </div>
-      </div>
-
-      <div className="mt-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Location</p>
-        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-          <CountryBadge country={farmer.country} region={farmer.region} city={farmer.city} />
+          <CountryBadge
+            country={farmer.country}
+            region={farmer.region}
+            city={farmer.city}
+            stacked
+            className="mt-1.5"
+          />
         </div>
       </div>
 

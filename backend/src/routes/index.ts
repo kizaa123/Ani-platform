@@ -16,7 +16,7 @@ import {
 } from '../controllers/platform.controller';
 import { authenticate, requirePermission, requireCanPurchaseFromMarketplace } from '../middleware/auth.middleware';
 import { validateBody } from '../middleware/validate.middleware';
-import { registerSchema, loginSchema, updateUserProfileSchema, updateHandlerSchema } from '../services/auth.service';
+import { registerSchema, loginSchema, updateUserProfileSchema, updateHandlerSchema, completeProfileSchema, emailVerificationSendSchema, emailVerificationVerifySchema } from '../services/auth.service';
 import { updateFarmSchema, addCommoditySchema, updateOrderTrackSchema, notifyClientSchema } from '../services/farm.service';
 import { listingSchema, updateListingSchema } from '../services/marketplace.service';
 import { purchaseSchema, packageSchema, purchaseFarmAccessSchema } from '../services/payment.service';
@@ -104,6 +104,9 @@ router.post(
 );
 
 // Auth
+router.get('/auth/google', authController.googleStart);
+router.get('/auth/google/callback', authController.googleCallback);
+router.post('/auth/google/dev', authRateLimiter, authController.googleDev);
 router.post('/auth/register', authRateLimiter, validateBody(registerSchema), authController.register);
 router.get('/auth/handlers/:type', authController.listHandlers);
 router.post('/auth/login', authRateLimiter, validateBody(loginSchema), authController.login);
@@ -112,6 +115,9 @@ router.post('/auth/logout', authenticate, authController.logout);
 router.get('/auth/me', authenticate, authController.me);
 router.put('/auth/profile', authenticate, validateBody(updateUserProfileSchema), authController.updateProfile);
 router.put('/auth/handler', authenticate, validateBody(updateHandlerSchema), authController.updateHandler);
+router.post('/auth/email-verification/send', authenticate, validateBody(emailVerificationSendSchema), authController.sendEmailVerification);
+router.post('/auth/email-verification/verify', authenticate, validateBody(emailVerificationVerifySchema), authController.verifyEmailChallenge);
+router.post('/auth/complete-profile', authenticate, validateBody(completeProfileSchema), authController.completeProfile);
 
 // Commodities (public catalog)
 router.get('/commodities/categories', commodityController.getCategories);
@@ -192,12 +198,32 @@ router.get('/buyer/financial-statement', authenticate, buyerController.financial
 router.get('/buyer/orders', authenticate, buyerController.orders);
 
 // Research library
+router.get('/research/clients', authenticate, requirePermission(PERMISSIONS.MANAGE_PUBLICATIONS), researcherController.listClients);
+router.post(
+  '/research/notify-client',
+  authenticate,
+  requirePermission(PERMISSIONS.MANAGE_PUBLICATIONS),
+  validateBody(notifyClientSchema),
+  researcherController.notifyClient
+);
 router.get('/research/browse', authenticate, researcherController.browse);
 router.get('/research/publishers', authenticate, researcherController.browsePublishers);
 router.get('/research/publisher/:publisherId', authenticate, researcherController.getPublisherLibrary);
 router.get('/research/my', authenticate, requirePermission(PERMISSIONS.MANAGE_PUBLICATIONS), researcherController.myPublications);
 router.get('/research/financial-statement', authenticate, requirePermission(PERMISSIONS.MANAGE_PUBLICATIONS), researcherController.financialStatement);
 router.put('/research/profile', authenticate, requirePermission(PERMISSIONS.MANAGE_PUBLICATIONS), researcherController.updateProfile);
+router.get(
+  '/research/publication-policy',
+  authenticate,
+  requirePermission(PERMISSIONS.MANAGE_PUBLICATIONS),
+  researcherController.publicationPolicyStatus
+);
+router.post(
+  '/research/publication-policy/accept',
+  authenticate,
+  requirePermission(PERMISSIONS.MANAGE_PUBLICATIONS),
+  researcherController.acceptPublicationPolicy
+);
 router.get('/research/:id/document', authenticate, researcherController.document);
 router.get('/research/:id/comments', authenticate, researcherController.listComments);
 router.post('/research/:id/comments', authenticate, validateBody(commentSchema), researcherController.addComment);

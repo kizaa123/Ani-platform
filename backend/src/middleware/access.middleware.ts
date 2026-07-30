@@ -170,6 +170,7 @@ export function fullListing(
     status: listing.status,
     createdAt: listing.createdAt,
     commodity: listing.commodity,
+    customCommodityName: listing.customCommodityName,
     registeredCommodities,
     available,
     connectionStatus: extras?.connectionStatus ?? 'ACCEPTED',

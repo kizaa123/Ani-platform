@@ -10,6 +10,7 @@ import { isValidPhone, normalizePhone, PHONE_VALIDATION_MESSAGE } from "@/lib/ph
 import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { CountrySelect } from "@/components/CountrySelect";
 import { RolePrefixedName } from "@/components/RolePrefixedName";
+import { EmailText } from "@/components/EmailText";
 import { DEFAULT_COUNTRY } from "@/lib/africanCountries";
 import { ProfileIdentityHeader, ProfileEditSection, ProfileEditActions } from "@/components/ProfileIdentityHeader";
 
@@ -158,7 +159,8 @@ export default function HandlerSettingsPage() {
             </div>
           </div>
           <p className="mt-3 text-sm text-brand-700">
-            <RolePrefixedName user={user} nameClassName="text-brand-700" /> · {user.email}
+            <RolePrefixedName user={user} nameClassName="text-brand-700" /> ·{" "}
+            <EmailText email={user.email} className="text-brand-700" />
           </p>
         </section>
 

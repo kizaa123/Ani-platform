@@ -4,7 +4,7 @@ import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title: "ANI Agricultural Exchange Platform",
-  description: "Connect farmers, buyers, and agents across Ghana",
+  description: "Connect fellows, clients, and liaison officers across Ghana",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,

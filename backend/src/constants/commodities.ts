@@ -27,8 +27,12 @@ export function categoryMatchesFarmerRole(
   categoryName: string,
   roleId: number,
   cropFarmerRoleId: number,
-  livestockFarmerRoleId: number
+  livestockFarmerRoleId: number,
+  organizationFarmerRoleId?: number
 ): boolean {
+  if (organizationFarmerRoleId !== undefined && roleId === organizationFarmerRoleId) {
+    return isCropCategory(categoryName) || isLivestockCategory(categoryName);
+  }
   if (roleId === cropFarmerRoleId) return isCropCategory(categoryName);
   if (roleId === livestockFarmerRoleId) return isLivestockCategory(categoryName);
   return false;

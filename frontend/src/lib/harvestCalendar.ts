@@ -82,7 +82,7 @@ export function getHarvestCalendarTitle(
   commodityName?: string | null
 ): string {
   const name = productTitle?.trim() || commodityName?.trim() || "Product";
-  return `Harvest Calendar: ${name}`;
+  return `Delivery Calendar: ${name}`;
 }
 
 export const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;

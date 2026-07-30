@@ -1,7 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { PortalSidebarLayout, type PortalNavLink } from "@/components/PortalSidebarLayout";
-import type { UserProfile } from "@/lib/types";
+import { PublicationPolicyModal } from "@/components/PublicationPolicyModal";
+import { useAuth } from "@/context/AuthProvider";
+import { api } from "@/lib/api";
+import { hasAcceptedPublicationPolicy, type UserProfile } from "@/lib/types";
 
 export const RESEARCHER_NAV_LINKS: PortalNavLink[] = [
   { href: "/dashboard", label: "Dashboard", icon: "home", match: (p) => p === "/dashboard" },
@@ -16,6 +20,12 @@ export const RESEARCHER_NAV_LINKS: PortalNavLink[] = [
     label: "Publications",
     icon: "book",
     match: (p) => p.startsWith("/researcher/publications"),
+  },
+  {
+    href: "/researcher/clients",
+    label: "Clients",
+    icon: "users",
+    match: (p) => p.startsWith("/researcher/clients"),
   },
   {
     href: "/library",
@@ -43,6 +53,18 @@ function researcherSubtitle(user: UserProfile) {
 }
 
 export function ResearcherPortalLayout({ children }: { children: React.ReactNode }) {
+  const { user, refreshUser } = useAuth();
+  const [policyAcceptedLocally, setPolicyAcceptedLocally] = useState(false);
+
+  const needsPolicyAcceptance =
+    !!user && !hasAcceptedPublicationPolicy(user) && !policyAcceptedLocally;
+
+  const handleAcceptPolicy = async () => {
+    await api.research.acceptPublicationPolicy();
+    await refreshUser();
+    setPolicyAcceptedLocally(true);
+  };
+
   return (
     <PortalSidebarLayout
       navLinks={RESEARCHER_NAV_LINKS}
@@ -51,6 +73,7 @@ export function ResearcherPortalLayout({ children }: { children: React.ReactNode
       defaultMobileTitle="Researcher Portal"
     >
       {children}
+      {needsPolicyAcceptance && <PublicationPolicyModal onAccept={handleAcceptPolicy} />}
     </PortalSidebarLayout>
   );
 }

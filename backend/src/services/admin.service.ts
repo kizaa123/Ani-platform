@@ -69,6 +69,7 @@ function formatMonthLabel(key: string): string {
 const ROLE_CHART_LABELS: Record<number, string> = {
   [ROLES.CROP_FARMER]: 'Crop Farmers',
   [ROLES.LIVESTOCK_FARMER]: 'Livestock Farmers',
+  [ROLES.ORGANIZATION_FARMER]: 'Organization Fellows',
   [ROLES.FARMER_HANDLER]: 'Fellow Liaison Officers',
   [ROLES.BUYER]: 'Buyers',
   [ROLES.BUYER_HANDLER]: 'Client Liaison Officers',

@@ -1,22 +1,21 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { CommodityCategory, HandlerProfile, ROLES, farmerCategoryFilter } from "@/lib/types";
+import { CommodityCategory, HandlerProfile, ROLES, farmerCategoryFilter, isFarmer, isOrganizationFarmer } from "@/lib/types";
 import {
   getDialCodeForCountryName,
-  isValidPhone,
   normalizePhone,
-  PHONE_VALIDATION_MESSAGE,
   stripDialCode,
 } from "@/lib/phone";
 import { CountrySelect } from "@/components/CountrySelect";
 import { HandlerSelect } from "@/components/HandlerSelect";
 import { CommodityPicker } from "@/components/CommodityPicker";
 import { Icon } from "@/components/icons";
+import { AuthDivider, GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { PlatformBrandTitle } from "@/components/PlatformBrandTitle";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
@@ -25,11 +24,28 @@ import {
   REGISTER_PANEL_BACKGROUND,
   REGISTER_PANEL_BACKGROUND_POSITION,
 } from "@/lib/authImages";
+import {
+  blockingMessages,
+  canProceedStep1,
+  canProceedStep2,
+  canProceedStep3,
+  mergeFieldErrors,
+  parseRegistrationError,
+  stepsWithErrors,
+  validateStep1,
+  validateStep2,
+  validateStep3,
+  type FieldErrors,
+  type RegisterField,
+} from "@/lib/registerValidation";
+
+const GOOGLE_DEV_MODE = process.env.NEXT_PUBLIC_GOOGLE_DEV_MODE === "true";
 
 /** Flat list of all roles for the <select> dropdown */
 const ALL_ROLES = [
-  { group: "Farmers",                  id: ROLES.CROP_FARMER,      label: "Fellow — Crop" },
-  { group: "Farmers",                  id: ROLES.LIVESTOCK_FARMER, label: "Fellow — Livestock" },
+  { group: "Fellow",                  id: ROLES.CROP_FARMER,         label: "Fellow — Crop" },
+  { group: "Fellow",                  id: ROLES.LIVESTOCK_FARMER,    label: "Fellow — Livestock" },
+  { group: "Fellow",                  id: ROLES.ORGANIZATION_FARMER, label: "Fellow — Organizations" },
   { group: "Research & Commerce",      id: ROLES.RESEARCHER,       label: "Researcher" },
   { group: "Research & Commerce",      id: ROLES.BUYER,            label: "Client" },
   { group: "Support & Operations",     id: ROLES.FARMER_HANDLER,   label: "Fellow Liaison Officer" },
@@ -38,7 +54,7 @@ const ALL_ROLES = [
 ];
 
 const ROLE_GROUPS_FOR_SELECT = [
-  { groupLabel: "Farmers",              roles: ALL_ROLES.filter((r) => r.group === "Farmers") },
+  { groupLabel: "Fellow",              roles: ALL_ROLES.filter((r) => r.group === "Fellow") },
   { groupLabel: "Research & Commerce", roles: ALL_ROLES.filter((r) => r.group === "Research & Commerce") },
   { groupLabel: "Support & Operations",roles: ALL_ROLES.filter((r) => r.group === "Support & Operations") },
 ];
@@ -99,6 +115,96 @@ function buildRegisterPayload(
   return payload;
 }
 
+function FieldErrorMessage({ message }: { message?: string }) {
+  if (!message) return null;
+  return (
+    <p className="auth-field-error" role="alert">
+      {message}
+    </p>
+  );
+}
+
+function ValidationSummary({ items }: { items: string[] }) {
+  if (items.length === 0) return null;
+  return (
+    <div className="auth-validation-summary mb-5" role="status">
+      <p className="auth-validation-summary-title">Complete these to continue:</p>
+      <ul className="auth-validation-summary-list">
+        {items.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function RegisterActionButton({
+  blocked,
+  blockingItems,
+  loading,
+  onBlocked,
+  onClick,
+  children,
+  className = "btn-primary auth-nav-btn",
+}: {
+  blocked: boolean;
+  blockingItems: string[];
+  loading?: boolean;
+  onBlocked: () => void;
+  onClick: () => void;
+  children: ReactNode;
+  className?: string;
+}) {
+  const handleClick = () => {
+    if (loading) return;
+    if (blocked) {
+      onBlocked();
+      return;
+    }
+    onClick();
+  };
+
+  return (
+    <div className="group relative w-full sm:flex-1">
+      <button
+        type="button"
+        onClick={handleClick}
+        aria-disabled={blocked || loading}
+        className={`${className} w-full ${blocked || loading ? "cursor-not-allowed opacity-50" : ""}`}
+      >
+        {children}
+      </button>
+      {blocked && blockingItems.length > 0 && (
+        <div
+          className="pointer-events-none absolute bottom-full left-0 right-0 z-20 mb-2 hidden opacity-0 transition-opacity group-hover:block group-hover:opacity-100"
+          role="tooltip"
+        >
+          <div className="auth-validation-summary shadow-lg">
+            <p className="auth-validation-summary-title">Complete these to continue:</p>
+            <ul className="auth-validation-summary-list">
+              {blockingItems.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const STEP1_FIELDS: RegisterField[] = ["firstName", "lastName", "email", "phone", "password", "country", "roleId"];
+const STEP2_FIELDS: RegisterField[] = ["region", "city", "handlerId"];
+const STEP3_FIELDS: RegisterField[] = ["commodities", "handlerId"];
+
+function errorsForStep(errors: FieldErrors, fields: RegisterField[]): FieldErrors {
+  const out: FieldErrors = {};
+  for (const field of fields) {
+    if (errors[field]) out[field] = errors[field];
+  }
+  return out;
+}
+
 export default function RegisterPage() {
   const [step, setStep] = useState(1);
   const [categories, setCategories] = useState<CommodityCategory[]>([]);
@@ -107,6 +213,9 @@ export default function RegisterPage() {
   const [profileFile, setProfileFile] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [devLoading, setDevLoading] = useState(false);
+  const [showValidation, setShowValidation] = useState(false);
+  const [backendFieldErrors, setBackendFieldErrors] = useState<FieldErrors>({});
   const { register, refreshUser } = useAuth();
   const router = useRouter();
   const profileInputRef = useRef<HTMLInputElement>(null);
@@ -121,7 +230,7 @@ export default function RegisterPage() {
     handlerId: "",
   });
 
-  const isFarmerRole = form.roleId === ROLES.CROP_FARMER || form.roleId === ROLES.LIVESTOCK_FARMER;
+  const isFarmerRole = isFarmer(form.roleId);
   const isBuyerRole = form.roleId === ROLES.BUYER;
   const isResearcherRole = form.roleId === ROLES.RESEARCHER;
   const needsHandler = isFarmerRole || isBuyerRole || isResearcherRole;
@@ -140,6 +249,98 @@ export default function RegisterPage() {
   const totalSteps = isFarmerRole ? 3 : 2;
   const stepLabels = isFarmerRole ? STEP_LABELS : STEP_LABELS.slice(0, 2);
   const phoneDialCode = getDialCodeForCountryName(form.country);
+
+  const validationCtx = useMemo(
+    () => ({
+      form: {
+        firstName: form.firstName,
+        lastName: form.lastName,
+        email: form.email,
+        phone: form.phone,
+        password: form.password,
+        country: form.country,
+        region: form.region,
+        city: form.city,
+        roleId: form.roleId,
+        handlerId: form.handlerId,
+      },
+      selectedCommodities,
+      isFarmerRole,
+      needsHandler,
+      availableHandlersCount: availableHandlers.length,
+      handlerLabel,
+    }),
+    [
+      form.firstName,
+      form.lastName,
+      form.email,
+      form.phone,
+      form.password,
+      form.country,
+      form.region,
+      form.city,
+      form.roleId,
+      form.handlerId,
+      selectedCommodities,
+      isFarmerRole,
+      needsHandler,
+      availableHandlers.length,
+      handlerLabel,
+    ]
+  );
+
+  const step1Errors = useMemo(() => validateStep1(validationCtx.form), [validationCtx.form]);
+  const step2Errors = useMemo(() => validateStep2(validationCtx), [validationCtx]);
+  const step3Errors = useMemo(() => validateStep3(validationCtx), [validationCtx]);
+
+  const stepProceed = {
+    1: canProceedStep1(validationCtx.form),
+    2: canProceedStep2(validationCtx),
+    3: canProceedStep3(validationCtx),
+  } as const;
+
+  const currentClientErrors =
+    step === 1 ? step1Errors : step === 2 ? step2Errors : step3Errors;
+
+  const visibleFieldErrors = useMemo(() => {
+    const client = showValidation ? currentClientErrors : {};
+    const stepFields =
+      step === 1 ? STEP1_FIELDS : step === 2 ? STEP2_FIELDS : STEP3_FIELDS;
+    const backend = errorsForStep(backendFieldErrors, stepFields);
+    return mergeFieldErrors(client, backend);
+  }, [showValidation, currentClientErrors, backendFieldErrors, step]);
+
+  const currentBlockingItems = useMemo(
+    () => blockingMessages(mergeFieldErrors(showValidation ? currentClientErrors : {}, errorsForStep(backendFieldErrors, step === 1 ? STEP1_FIELDS : step === 2 ? STEP2_FIELDS : STEP3_FIELDS))),
+    [showValidation, currentClientErrors, backendFieldErrors, step]
+  );
+
+  const stepsWithValidationErrors = useMemo(() => {
+    if (!showValidation && Object.keys(backendFieldErrors).length === 0) return [];
+    return stepsWithErrors(validationCtx, totalSteps);
+  }, [showValidation, backendFieldErrors, validationCtx, totalSteps]);
+
+  const clearBackendError = useCallback((field: RegisterField) => {
+    setBackendFieldErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  }, []);
+
+  const revealValidation = useCallback(() => setShowValidation(true), []);
+
+  const fieldError = useCallback(
+    (field: RegisterField) => visibleFieldErrors[field],
+    [visibleFieldErrors]
+  );
+
+  const inputClass = useCallback(
+    (field: RegisterField) =>
+      fieldError(field) ? "auth-input auth-input-invalid" : "auth-input",
+    [fieldError]
+  );
 
   const handleCountryChange = (country: string) => {
     const previousDialCode = form.country ? getDialCodeForCountryName(form.country) : undefined;
@@ -171,46 +372,51 @@ export default function RegisterPage() {
     setProfilePreview(URL.createObjectURL(file));
   };
 
-  const canContinueStep1 =
-    form.firstName.trim().length >= 2 &&
-    form.lastName.trim().length >= 2 &&
-    form.email.trim() &&
-    isValidPhone(form.phone) &&
-    form.password.length >= 8 &&
-    form.country.trim();
-
   const goToStep2 = () => {
-    if (!canContinueStep1) {
-      setError(`Please fill in all required fields (names at least 2 characters, ${PHONE_VALIDATION_MESSAGE.toLowerCase()}) and select your country.`);
+    if (!stepProceed[1]) {
+      revealValidation();
+      setError("");
       return;
     }
+    setShowValidation(false);
+    setBackendFieldErrors((prev) => errorsForStep(prev, STEP2_FIELDS.concat(STEP3_FIELDS)));
     setError("");
     setStep(2);
   };
 
-  const canContinueStep2 =
-    form.region.trim().length >= 2 &&
-    form.city.trim().length >= 2 &&
-    (!needsHandler || (form.handlerId.trim() && availableHandlers.length > 0));
-
   const goToStep3 = () => {
-    if (!canContinueStep2) {
-      setError(
-        needsHandler && !form.handlerId
-          ? "Please select a handler to continue."
-          : "Please complete all required fields."
-      );
+    if (!stepProceed[2]) {
+      revealValidation();
+      setError("");
       return;
     }
+    setShowValidation(false);
+    setBackendFieldErrors((prev) => errorsForStep(prev, STEP3_FIELDS));
     setError("");
     setStep(3);
   };
 
   const handleSubmit = async () => {
-    if (needsHandler && !form.handlerId) {
-      setError("Please select a handler before creating your account.");
+    const submitStep = isFarmerRole && step === 3 ? 3 : 2;
+    const canSubmit = submitStep === 3 ? stepProceed[3] : stepProceed[2];
+
+    if (!canSubmit) {
+      revealValidation();
+      if (submitStep === 3 && !stepProceed[2]) {
+        setError("Complete step 2 (Details) before creating your account.");
+        setStep(2);
+      } else {
+        setError("");
+      }
       return;
     }
+
+    if (needsHandler && !form.handlerId) {
+      revealValidation();
+      setError("");
+      return;
+    }
+
     setError("");
     setLoading(true);
     try {
@@ -223,7 +429,7 @@ export default function RegisterPage() {
           await api.upload.profilePicture(profileFile);
           await refreshUser();
         } catch {
-          // Account created — photo can be added on My Farm
+          // Account created — photo can be added on My Production
         }
       }
 
@@ -231,9 +437,34 @@ export default function RegisterPage() {
         isFarmerRole ? "/farm" : isResearcherRole ? "/researcher/publications" : "/dashboard"
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Registration failed");
+      const parsed = parseRegistrationError(err);
+      setBackendFieldErrors(parsed.fieldErrors);
+      setShowValidation(true);
+      setError(parsed.message);
+      if (parsed.targetStep && parsed.targetStep !== step) {
+        setStep(parsed.targetStep);
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDevGoogle = async () => {
+    setError("");
+    setDevLoading(true);
+    try {
+      const result = await api.auth.googleDevSignIn({
+        email: form.email || "google.dev@ani.gh",
+        firstName: form.firstName || "Google",
+        lastName: form.lastName || "Dev User",
+      });
+      api.setTokens(result.accessToken, result.refreshToken);
+      await refreshUser();
+      router.push("/complete-profile");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Google dev sign-in failed");
+    } finally {
+      setDevLoading(false);
     }
   };
 
@@ -307,20 +538,34 @@ export default function RegisterPage() {
             {Array.from({ length: totalSteps }, (_, i) => i + 1).map((s) => (
               <div
                 key={s}
-                className={`auth-step-bar ${step >= s ? "auth-step-bar-active" : ""}`}
+                className={`auth-step-bar ${step >= s ? "auth-step-bar-active" : ""} ${
+                  stepsWithValidationErrors.includes(s) ? "auth-step-bar-error" : ""
+                }`}
                 aria-hidden
               />
             ))}
           </div>
           <div className="auth-step-labels">
-            {stepLabels.map((label, index) => (
-              <span
-                key={label}
-                className={step >= index + 1 ? "auth-step-label-active" : undefined}
-              >
-                {label}
-              </span>
-            ))}
+            {stepLabels.map((label, index) => {
+              const stepNum = index + 1;
+              const hasError = stepsWithValidationErrors.includes(stepNum);
+              return (
+                <span
+                  key={label}
+                  className={
+                    hasError
+                      ? "auth-step-label-error"
+                      : step >= stepNum
+                        ? "auth-step-label-active"
+                        : undefined
+                  }
+                  title={hasError ? `${label} has items to fix` : undefined}
+                >
+                  {label}
+                  {hasError ? " *" : ""}
+                </span>
+              );
+            })}
           </div>
         </div>
 
@@ -329,6 +574,23 @@ export default function RegisterPage() {
             <Icon name="x" className="mt-0.5 h-4 w-4 shrink-0" />
             <span>{error}</span>
           </div>
+        )}
+
+        {showValidation && currentBlockingItems.length > 0 && (
+          <ValidationSummary items={currentBlockingItems} />
+        )}
+
+        {step === 1 && (
+          <>
+            <GoogleSignInButton
+              label="Sign up with Google"
+              disabled={loading}
+              showDev={GOOGLE_DEV_MODE}
+              onDevSignIn={handleDevGoogle}
+              devLoading={devLoading}
+            />
+            <AuthDivider text="or register with email" />
+          </>
         )}
 
         {step === 1 && (
@@ -343,9 +605,15 @@ export default function RegisterPage() {
                   required
                   autoComplete="given-name"
                   value={form.firstName}
-                  onChange={(e) => setForm({ ...form, firstName: e.target.value })}
-                  className="auth-input"
+                  onChange={(e) => {
+                    clearBackendError("firstName");
+                    setForm({ ...form, firstName: e.target.value });
+                  }}
+                  className={inputClass("firstName")}
+                  aria-invalid={!!fieldError("firstName")}
+                  aria-describedby={fieldError("firstName") ? "reg-first-name-error" : undefined}
                 />
+                <FieldErrorMessage message={fieldError("firstName")} />
               </div>
               <div className="auth-field">
                 <label htmlFor="reg-last-name" className="auth-label">
@@ -356,9 +624,14 @@ export default function RegisterPage() {
                   required
                   autoComplete="family-name"
                   value={form.lastName}
-                  onChange={(e) => setForm({ ...form, lastName: e.target.value })}
-                  className="auth-input"
+                  onChange={(e) => {
+                    clearBackendError("lastName");
+                    setForm({ ...form, lastName: e.target.value });
+                  }}
+                  className={inputClass("lastName")}
+                  aria-invalid={!!fieldError("lastName")}
                 />
+                <FieldErrorMessage message={fieldError("lastName")} />
               </div>
             </div>
 
@@ -372,26 +645,44 @@ export default function RegisterPage() {
                 required
                 autoComplete="email"
                 value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="auth-input"
+                onChange={(e) => {
+                  clearBackendError("email");
+                  setForm({ ...form, email: e.target.value });
+                }}
+                className={inputClass("email")}
+                aria-invalid={!!fieldError("email")}
               />
+              <FieldErrorMessage message={fieldError("email")} />
             </div>
 
             <div className="auth-field">
               <label className="auth-label">Country</label>
               <CountrySelect
                 value={form.country}
-                onChange={handleCountryChange}
+                onChange={(country) => {
+                  clearBackendError("country");
+                  handleCountryChange(country);
+                }}
                 required
+                invalid={!!fieldError("country")}
               />
-              <p className="auth-hint">Select the African country where you are based</p>
+              <FieldErrorMessage message={fieldError("country")} />
+              {!fieldError("country") && (
+                <p className="auth-hint">Select the African country where you are based</p>
+              )}
             </div>
 
             <div className="auth-field">
               <label htmlFor="reg-phone" className="auth-label">
                 Phone
               </label>
-              <div className="flex overflow-hidden rounded-xl border border-brand-200 bg-white shadow-sm focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-200">
+              <div
+                className={`flex overflow-hidden rounded-xl border bg-white shadow-sm focus-within:ring-2 ${
+                  fieldError("phone")
+                    ? "border-red-500 focus-within:border-red-500 focus-within:ring-red-200"
+                    : "border-brand-200 focus-within:border-brand-500 focus-within:ring-brand-200"
+                }`}
+              >
                 <span className="flex shrink-0 items-center border-r border-brand-200 bg-brand-50/80 px-3 text-sm font-semibold text-brand-800">
                   {phoneDialCode || "—"}
                 </span>
@@ -401,12 +692,19 @@ export default function RegisterPage() {
                   autoComplete="tel-national"
                   inputMode="numeric"
                   value={form.phone}
-                  onChange={(e) => handlePhoneChange(e.target.value)}
+                  onChange={(e) => {
+                    clearBackendError("phone");
+                    handlePhoneChange(e.target.value);
+                  }}
                   placeholder="241234567"
                   className="min-w-0 flex-1 border-0 bg-transparent px-4 py-3 text-sm focus:outline-none focus:ring-0"
+                  aria-invalid={!!fieldError("phone")}
                 />
               </div>
-              <p className="auth-hint">Local number only — country code updates when you select a country</p>
+              <FieldErrorMessage message={fieldError("phone")} />
+              {!fieldError("phone") && (
+                <p className="auth-hint">Local number only — country code updates when you select a country</p>
+              )}
             </div>
 
             <div className="auth-field">
@@ -420,10 +718,17 @@ export default function RegisterPage() {
                 minLength={8}
                 autoComplete="new-password"
                 value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                className="auth-input"
+                onChange={(e) => {
+                  clearBackendError("password");
+                  setForm({ ...form, password: e.target.value });
+                }}
+                className={inputClass("password")}
+                aria-invalid={!!fieldError("password")}
               />
-              <p className="auth-hint">At least 8 characters</p>
+              <FieldErrorMessage message={fieldError("password")} />
+              {!fieldError("password") && (
+                <p className="auth-hint">At least 8 characters</p>
+              )}
             </div>
 
             <div className="auth-field">
@@ -433,8 +738,12 @@ export default function RegisterPage() {
               <select
                 id="reg-role"
                 value={form.roleId}
-                onChange={(e) => setForm({ ...form, roleId: Number(e.target.value) })}
-                className="auth-input w-full"
+                onChange={(e) => {
+                  clearBackendError("roleId");
+                  setForm({ ...form, roleId: Number(e.target.value) });
+                }}
+                className={`${inputClass("roleId")} w-full`}
+                aria-invalid={!!fieldError("roleId")}
               >
                 {ROLE_GROUPS_FOR_SELECT.map((group) => (
                   <optgroup key={group.groupLabel} label={group.groupLabel}>
@@ -446,21 +755,28 @@ export default function RegisterPage() {
                   </optgroup>
                 ))}
               </select>
-              {isFarmerRole && (
+              {isFarmerRole && categoryFilter && categoryFilter !== "All" && (
                 <p className="auth-hint text-brand-700 mt-1">
-                  You will only select {categoryFilter?.toLowerCase()} commodities in step 3.
+                  You will only select {categoryFilter.toLowerCase()} commodities in step 3.
                 </p>
               )}
+              {isOrganizationFarmer(form.roleId) && (
+                <p className="auth-hint text-brand-700 mt-1">
+                  You will select crop and livestock commodities in step 3.
+                </p>
+              )}
+              <FieldErrorMessage message={fieldError("roleId")} />
             </div>
 
-            <button
-              type="button"
+            <RegisterActionButton
+              blocked={!stepProceed[1]}
+              blockingItems={blockingMessages(step1Errors)}
+              loading={loading}
+              onBlocked={revealValidation}
               onClick={goToStep2}
-              disabled={!canContinueStep1}
-              className="btn-primary auth-nav-btn disabled:cursor-not-allowed disabled:opacity-50"
             >
               Continue
-            </button>
+            </RegisterActionButton>
           </div>
         )}
 
@@ -486,9 +802,14 @@ export default function RegisterPage() {
                   id="reg-region"
                   required
                   value={form.region}
-                  onChange={(e) => setForm({ ...form, region: e.target.value })}
-                  className="auth-input"
+                  onChange={(e) => {
+                    clearBackendError("region");
+                    setForm({ ...form, region: e.target.value });
+                  }}
+                  className={inputClass("region")}
+                  aria-invalid={!!fieldError("region")}
                 />
+                <FieldErrorMessage message={fieldError("region")} />
               </div>
               <div className="auth-field">
                 <label htmlFor="reg-city" className="auth-label">
@@ -498,9 +819,14 @@ export default function RegisterPage() {
                   id="reg-city"
                   required
                   value={form.city}
-                  onChange={(e) => setForm({ ...form, city: e.target.value })}
-                  className="auth-input"
+                  onChange={(e) => {
+                    clearBackendError("city");
+                    setForm({ ...form, city: e.target.value });
+                  }}
+                  className={inputClass("city")}
+                  aria-invalid={!!fieldError("city")}
                 />
+                <FieldErrorMessage message={fieldError("city")} />
               </div>
               <div className="auth-field sm:col-span-2">
                 <label htmlFor="reg-address" className="auth-label">
@@ -553,13 +879,17 @@ export default function RegisterPage() {
 
                 <div className="auth-field">
                   <label htmlFor="reg-farm-name" className="auth-label">
-                    Farm Name
+                    {isOrganizationFarmer(form.roleId) ? "Organization Name" : "Farm Name"}
                   </label>
                   <input
                     id="reg-farm-name"
                     value={form.farmName}
                     onChange={(e) => setForm({ ...form, farmName: e.target.value })}
-                    placeholder={`${form.firstName || "My"}'s Farm`}
+                    placeholder={
+                      isOrganizationFarmer(form.roleId)
+                        ? `${form.firstName || "My"}'s Organization`
+                        : `${form.firstName || "My"}'s Farm`
+                    }
                     className="auth-input"
                   />
                 </div>
@@ -644,35 +974,46 @@ export default function RegisterPage() {
                 <HandlerSelect
                   handlers={availableHandlers}
                   value={form.handlerId}
-                  onChange={(handlerId) => setForm({ ...form, handlerId })}
+                  onChange={(handlerId) => {
+                    clearBackendError("handlerId");
+                    setForm({ ...form, handlerId });
+                  }}
                   label={handlerLabel}
                   emptyMessage={handlerEmptyMessage}
                   variant="compact"
                   handlerRoleId={isFarmerRole ? ROLES.FARMER_HANDLER : ROLES.BUYER_HANDLER}
+                  invalid={!!fieldError("handlerId")}
                 />
-                <p className="auth-hint mt-3">
-                  All registered {isFarmerRole ? "fellow liaison officers" : "client liaison officers"} appear here. Your
-                  handler supports you on the platform.
-                </p>
+                <FieldErrorMessage message={fieldError("handlerId")} />
+                {!fieldError("handlerId") && (
+                  <p className="auth-hint mt-3">
+                    All registered {isFarmerRole ? "fellow liaison officers" : "client liaison officers"} appear here. Your
+                    handler supports you on the platform.
+                  </p>
+                )}
               </div>
             )}
 
             <div className="auth-nav">
               <button
                 type="button"
-                onClick={() => setStep(1)}
+                onClick={() => {
+                  setShowValidation(false);
+                  setStep(1);
+                }}
                 className="btn-outline auth-nav-btn"
               >
                 Back
               </button>
-              <button
-                type="button"
+              <RegisterActionButton
+                blocked={!stepProceed[2]}
+                blockingItems={blockingMessages(step2Errors)}
+                loading={loading}
+                onBlocked={revealValidation}
                 onClick={() => (isFarmerRole ? goToStep3() : handleSubmit())}
-                disabled={loading || (needsHandler && !canContinueStep2)}
-                className="btn-primary auth-nav-btn disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {loading ? "Creating..." : isFarmerRole ? "Continue" : "Create Account"}
-              </button>
+              </RegisterActionButton>
             </div>
           </div>
         )}
@@ -683,10 +1024,13 @@ export default function RegisterPage() {
               <div className="flex items-start gap-3">
                 <Icon name="leaf" className="mt-0.5 h-5 w-5 shrink-0 text-brand-700" />
                 <div>
-                  <h3 className="auth-section-title">Select {categoryFilter} Commodities</h3>
+                  <h3 className="auth-section-title">
+                    Select {categoryFilter === "All" ? "Commodities" : `${categoryFilter} Commodities`}
+                  </h3>
                   <p className="auth-hint mt-1">
-                    Search and choose the {categoryFilter?.toLowerCase()} you produce. Buyers will see
-                    these on your profile.
+                    Search and choose the{" "}
+                    {categoryFilter === "All" ? "crop and livestock products" : categoryFilter?.toLowerCase()}{" "}
+                    you produce. Buyers will see these on your profile.
                   </p>
                 </div>
               </div>
@@ -697,26 +1041,35 @@ export default function RegisterPage() {
               roleId={form.roleId}
               mode="multi"
               selectedIds={selectedCommodities}
-              onSelectionChange={setSelectedCommodities}
+              onSelectionChange={(ids) => {
+                clearBackendError("commodities");
+                setSelectedCommodities(ids);
+              }}
               idPrefix="reg-commodity"
+              invalid={!!fieldError("commodities")}
             />
+            <FieldErrorMessage message={fieldError("commodities")} />
 
             <div className="auth-nav">
               <button
                 type="button"
-                onClick={() => setStep(2)}
+                onClick={() => {
+                  setShowValidation(false);
+                  setStep(2);
+                }}
                 className="btn-outline auth-nav-btn"
               >
                 Back
               </button>
-              <button
-                type="button"
+              <RegisterActionButton
+                blocked={!stepProceed[3]}
+                blockingItems={blockingMessages(step3Errors)}
+                loading={loading}
+                onBlocked={revealValidation}
                 onClick={handleSubmit}
-                disabled={loading || selectedCommodities.length === 0 || !form.handlerId}
-                className="btn-primary auth-nav-btn disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {loading ? "Creating..." : "Create Account"}
-              </button>
+              </RegisterActionButton>
             </div>
           </div>
         )}

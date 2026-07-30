@@ -11,6 +11,7 @@ import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { CountrySelect } from "@/components/CountrySelect";
 import { HandlerSelect } from "@/components/HandlerSelect";
 import { RolePrefixedName } from "@/components/RolePrefixedName";
+import { EmailText } from "@/components/EmailText";
 import { DEFAULT_COUNTRY } from "@/lib/africanCountries";
 import { ProfileIdentityHeader, ProfileEditSection, ProfileEditActions } from "@/components/ProfileIdentityHeader";
 
@@ -125,7 +126,7 @@ export default function BuyerSettingsPage() {
           Back to Dashboard
         </Link>
         <h1 className="mt-2 text-3xl font-bold text-brand-900">Profile</h1>
-        <p className="text-gray-500">Your buyer profile, location, and handler</p>
+        <p className="text-gray-500">Your client profile, location, and liaison officer</p>
       </div>
 
       <ProfileIdentityHeader
@@ -171,7 +172,8 @@ export default function BuyerSettingsPage() {
             </div>
           </div>
           <p className="mt-3 text-sm text-brand-700">
-            <RolePrefixedName user={user} nameClassName="text-brand-700" /> · {user.email}
+            <RolePrefixedName user={user} nameClassName="text-brand-700" /> ·{" "}
+            <EmailText email={user.email} className="text-brand-700" />
           </p>
         </section>
 
@@ -228,11 +230,11 @@ export default function BuyerSettingsPage() {
             handlers={buyerHandlers}
             value={handlerId}
             onChange={setHandlerId}
-            label="Your Buyer Handler"
-            emptyMessage="No buyer handlers registered yet."
+            label="Your Client Liaison Officer"
+            emptyMessage="No client liaison officers registered yet."
           />
           <p className="mt-2 text-xs text-gray-500">
-            Choose the handler who represents you on the platform. All registered buyer handlers
+            Choose the liaison officer who represents you on the platform. All registered client liaison officers
             are listed here.
           </p>
         </section>

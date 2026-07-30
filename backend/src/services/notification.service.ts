@@ -860,6 +860,52 @@ export async function notifyFarmProductsAvailable(params: {
   }).catch(() => undefined);
 }
 
+export async function notifyResearchPublicationsAvailable(params: {
+  researcherUserId: string;
+  clientId: string;
+  customMessage?: string;
+}) {
+  const { researcherUserId, clientId, customMessage } = params;
+  const researcher = await prisma.user.findUnique({
+    where: { id: researcherUserId },
+    select: {
+      firstName: true,
+      lastName: true,
+      researcherProfile: { select: { institution: true } },
+    },
+  });
+  if (!researcher) return;
+
+  const researcherName = formatName(researcher.firstName, researcher.lastName);
+  const displayName = researcher.researcherProfile?.institution?.trim() || researcherName;
+  const defaultMessage = 'Research publications are available, please visit my library';
+  const body = customMessage?.trim() || defaultMessage;
+  const link = `/library/publisher/${researcherUserId}`;
+
+  const purchase = await prisma.researchPurchase.findFirst({
+    where: {
+      studentId: clientId,
+      researcherId: researcherUserId,
+      status: 'COMPLETED',
+    },
+    select: { id: true },
+  });
+  const actionLabel = purchase ? 'View publications' : 'Browse library';
+
+  await createNotification({
+    userId: clientId,
+    actorId: researcherUserId,
+    type: 'NEW_PUBLICATION',
+    title: `${displayName} — publications available`,
+    body,
+    link,
+    metadata: {
+      actionUrl: link,
+      actionLabel,
+    },
+  }).catch(() => undefined);
+}
+
 export async function getUserDisplayName(userId: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },

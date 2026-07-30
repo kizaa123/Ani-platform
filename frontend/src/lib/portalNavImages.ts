@@ -69,7 +69,7 @@ export const PORTAL_NAV_IMAGES_CROP_FARMER = {
 
   "/marketplace": "/a-seller-arranging-fresh-produce-at-a-farmers-market.avif",
 
-  /** CROP: My Farm */
+  /** CROP: My Production */
 
   "/farm": "/young-farmer-is-writing-notes-in-his-growing-corn-field-2XCDAWT.jpg",
 
@@ -82,6 +82,9 @@ export const PORTAL_NAV_IMAGES_CROP_FARMER = {
   "/farm/settings": "/happy-couple-agriculturists-using-touchpad-260nw-2667020919.webp",
   /** CROP: Buyer Orders card */
   "/farm/orders": "/order agric image.jpg",
+
+  /** CROP: Clients card */
+  "/farm/clients": "/all the client image card.jpg",
 
 } as const;
 
@@ -101,7 +104,7 @@ export const PORTAL_NAV_IMAGES_LIVESTOCK_FARMER = {
 
   "/marketplace": "/poultry.webp",
 
-  /** LIVESTOCK: My Farm */
+  /** LIVESTOCK: My Production */
 
   "/farm": "/live stock farm.jpg",
 
@@ -116,6 +119,9 @@ export const PORTAL_NAV_IMAGES_LIVESTOCK_FARMER = {
   /** LIVESTOCK: Buyer Orders card */
 
   "/farm/orders": "/order agric image.jpg",
+
+  /** LIVESTOCK: Clients card */
+  "/farm/clients": "/all the client image card.jpg",
 
 } as const;
 
@@ -152,6 +158,9 @@ export const PORTAL_NAV_IMAGES_RESEARCHER = {
   /** Change image here: Researcher Profile card */
 
   "/researcher/settings": "/happy-couple-agriculturists-using-touchpad-260nw-2667020919.webp",
+
+  /** Change image here: Researcher Clients card */
+  "/researcher/clients": "/farmer and buyer.jpg",
 
 } as const;
 
@@ -277,7 +286,7 @@ function roleNavImage(config: RoleNavImages, href: string): string | undefined {
 
 export function getPortalNavImage(href: string, roleId?: number): string {
 
-  if (roleId === ROLES.CROP_FARMER) {
+  if (roleId === ROLES.CROP_FARMER || roleId === ROLES.ORGANIZATION_FARMER) {
 
     const crop = roleNavImage(PORTAL_NAV_IMAGES_CROP_FARMER, href);
 

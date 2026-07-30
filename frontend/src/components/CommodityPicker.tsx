@@ -23,6 +23,7 @@ export interface CommodityPickerProps {
   onSelectAdd?: (commodityId: number) => void;
   loading?: boolean;
   idPrefix?: string;
+  invalid?: boolean;
 }
 
 export function CommodityPicker({
@@ -35,6 +36,7 @@ export function CommodityPicker({
   onSelectAdd,
   loading = false,
   idPrefix = "commodity",
+  invalid = false,
 }: CommodityPickerProps) {
   const [search, setSearch] = useState("");
   const [selectValue, setSelectValue] = useState("");
@@ -106,7 +108,9 @@ export function CommodityPicker({
   const selectId = `${idPrefix}-select`;
 
   return (
-    <div className="space-y-4">
+    <div
+      className={`space-y-4 ${invalid ? "rounded-xl border border-red-500 bg-red-50/30 p-4" : ""}`}
+    >
       {/* Search + Select combined in one bordered container */}
       <div>
         <label htmlFor={selectId} className="mb-1.5 block text-sm font-medium text-brand-900">
@@ -186,7 +190,8 @@ export function CommodityPicker({
 
       {mode === "multi" && selectedCommodities.length === 0 && (
         <p className="text-sm text-gray-500">
-          Select at least one {categoryLabel?.toLowerCase()} commodity using the dropdown above.
+          Select at least one{" "}
+          {categoryLabel === "All" ? "commodity" : `${categoryLabel?.toLowerCase()} commodity`} using the dropdown above.
         </p>
       )}
     </div>

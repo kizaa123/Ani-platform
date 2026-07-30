@@ -77,12 +77,48 @@ html {
     @apply text-xs leading-relaxed text-gray-500;
   }
 
+  .email-display {
+    @apply text-xs break-all text-gray-600;
+  }
+
+  .email-display-truncate {
+    @apply text-xs truncate text-gray-600;
+  }
+
   .auth-input {
     @apply w-full rounded-xl border border-brand-200 bg-white px-4 py-3 text-brand-900 shadow-sm transition placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200;
   }
 
   .auth-error {
     @apply flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700;
+  }
+
+  .auth-field-error {
+    @apply text-xs leading-relaxed text-red-600;
+  }
+
+  .auth-input-invalid {
+    @apply border-red-500 focus:border-red-500 focus:ring-red-200;
+  }
+
+  .auth-validation-summary {
+    @apply rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950;
+  }
+
+  .auth-validation-summary-title {
+    @apply mb-2 font-semibold text-amber-900;
+  }
+
+  .auth-validation-summary-list {
+    @apply list-inside list-disc space-y-1 text-amber-900/90;
+  }
+
+  .auth-step-bar-error {
+    @apply bg-red-500;
+  }
+
+  .auth-step-label-error {
+    @apply font-semibold text-red-600;
   }
 
   .auth-switch {
@@ -135,6 +171,24 @@ html {
 
   .auth-info-box {
     @apply rounded-xl border border-brand-100 bg-brand-50 p-4 text-xs leading-relaxed text-gray-600;
+  }
+
+  .auth-divider {
+    @apply relative flex items-center py-1;
+  }
+
+  .auth-divider::before,
+  .auth-divider::after {
+    content: "";
+    @apply h-px flex-1 bg-brand-100;
+  }
+
+  .auth-divider span {
+    @apply px-3 text-xs font-semibold uppercase tracking-wide text-gray-400;
+  }
+
+  .auth-google-btn {
+    @apply flex w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 hover:shadow;
   }
 
   /* Subtle elevation for white-surface cards (homepage roles, portal nav, panels). */
@@ -273,8 +327,40 @@ body {
 /* Payment result overlay — animated success/error feedback */
 @layer components {
   .payment-result-overlay {
-    @apply absolute inset-0 z-10 flex items-center justify-center bg-white/95 p-6 backdrop-blur-sm;
+    @apply absolute inset-0 z-10 flex items-center justify-center overflow-y-auto bg-white/95 p-6 backdrop-blur-sm;
     animation: payment-overlay-in 0.25s ease-out both;
+  }
+
+  .payment-result-overlay--compact {
+    @apply p-5;
+  }
+
+  .payment-result-embedded {
+    @apply flex w-full flex-col items-center justify-center text-center;
+  }
+
+  .payment-result-card--embedded {
+    @apply w-full max-w-sm flex-col items-center;
+  }
+
+  .payment-result-embedded .payment-result-copy {
+    @apply mt-5 w-full space-y-2;
+  }
+
+  .payment-result-embedded .payment-result-title {
+    @apply text-xl font-bold text-brand-900;
+  }
+
+  .payment-result-embedded .payment-result-hint {
+    @apply mt-1 rounded-xl border border-brand-100 bg-brand-50/70 px-4 py-3 text-sm leading-relaxed text-brand-700;
+  }
+
+  .payment-result-embedded .payment-result-actions {
+    @apply mt-6 w-full;
+  }
+
+  .payment-result-embedded .payment-result-btn {
+    @apply w-full;
   }
 
   .payment-result-card {
@@ -282,13 +368,28 @@ body {
     animation: payment-content-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
   }
 
+  .payment-result-overlay--compact .payment-result-card {
+    @apply max-w-none rounded-2xl border border-brand-100/90 bg-white px-5 py-6;
+    box-shadow:
+      0 1px 2px rgba(27, 67, 50, 0.04),
+      0 2px 8px rgba(27, 67, 50, 0.03);
+  }
+
   .payment-result-copy {
-    @apply mt-6 space-y-2;
+    @apply mt-6 w-full space-y-2;
     animation: payment-content-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both;
+  }
+
+  .payment-result-overlay--compact .payment-result-copy {
+    @apply mt-4 space-y-1.5;
   }
 
   .payment-result-title {
     @apply text-2xl font-bold text-brand-900;
+  }
+
+  .payment-result-overlay--compact .payment-result-title {
+    @apply text-xl;
   }
 
   .payment-result-message {
@@ -296,12 +397,20 @@ body {
   }
 
   .payment-result-hint {
-    @apply text-sm leading-relaxed text-gray-500;
+    @apply text-sm leading-relaxed text-brand-600;
+  }
+
+  .payment-result-overlay--compact .payment-result-hint {
+    @apply rounded-xl border border-brand-100 bg-brand-50/70 px-3 py-2.5 text-brand-700;
   }
 
   .payment-result-actions {
     @apply mt-6 flex w-full flex-col gap-2 sm:flex-row sm:justify-center;
     animation: payment-content-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.5s both;
+  }
+
+  .payment-result-overlay--compact .payment-result-actions {
+    @apply mt-5;
   }
 
   .payment-result-btn {

@@ -2,6 +2,7 @@
 
 import { HandlerProfile } from "@/lib/types";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
+import { EmailText } from "@/components/EmailText";
 import { CountryBadge } from "@/components/CountrySelect";
 import { RolePrefixedName } from "@/components/RolePrefixedName";
 import { Icon } from "@/components/icons";
@@ -14,6 +15,7 @@ interface HandlerSelectProps {
   emptyMessage: string;
   variant?: "default" | "compact";
   handlerRoleId?: number;
+  invalid?: boolean;
 }
 
 function formatHandlerLocation(handler: HandlerProfile): string {
@@ -28,10 +30,17 @@ export function HandlerSelect({
   emptyMessage,
   variant = "default",
   handlerRoleId,
+  invalid = false,
 }: HandlerSelectProps) {
   if (handlers.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-brand-200 bg-brand-50/50 p-4 text-sm text-brand-700">
+      <div
+        className={`rounded-xl border border-dashed p-4 text-sm ${
+          invalid
+            ? "border-red-300 bg-red-50 text-red-700"
+            : "border-brand-200 bg-brand-50/50 text-brand-700"
+        }`}
+      >
         {emptyMessage}
       </div>
     );
@@ -40,7 +49,7 @@ export function HandlerSelect({
   const compact = variant === "compact";
 
   return (
-    <div>
+    <div className={invalid ? "rounded-xl ring-2 ring-red-200" : undefined}>
       <label className="auth-label mb-2 block">{label}</label>
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {handlers.map((handler) => {
@@ -92,7 +101,7 @@ export function HandlerSelect({
                   ) : null
                 ) : (
                   <>
-                    <p className="truncate text-xs text-gray-500">{handler.email}</p>
+                    <EmailText email={handler.email} truncate className="text-gray-500" as="p" />
                     {handler.phone && (
                       <p className="truncate text-xs text-gray-500">{handler.phone}</p>
                     )}

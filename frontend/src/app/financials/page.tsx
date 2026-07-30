@@ -89,7 +89,7 @@ export default function BuyerFinancialsPage() {
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-green-100 bg-green-50/50 px-6 py-4">
           <div>
             <h3 className="text-base font-semibold text-brand-900">Product orders</h3>
-            <p className="text-sm text-gray-500">Products you ordered from farmers on the marketplace</p>
+            <p className="text-sm text-gray-500">Products you ordered from fellows on the marketplace</p>
           </div>
           <Link href="/orders" className="text-sm font-semibold text-brand-700 hover:underline">
             View all orders
@@ -134,7 +134,7 @@ export default function BuyerFinancialsPage() {
               <thead>
                 <tr className="border-b border-brand-50 bg-brand-50/50 text-left text-xs font-semibold uppercase text-gray-500">
                   <th className="px-6 py-3">Date</th>
-                  <th className="px-4 py-3">Farmer / Farm</th>
+                  <th className="px-4 py-3">Fellow / Farm</th>
                   <th className="px-4 py-3 text-right">Amount</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-6 py-3">Payment</th>

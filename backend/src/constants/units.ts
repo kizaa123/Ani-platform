@@ -12,16 +12,39 @@ export function defaultListingUnit(roleId: number): ListingUnit {
 }
 
 export function listingUnitsForRole(roleId: number): readonly ListingUnit[] {
+  if (roleId === ROLES.ORGANIZATION_FARMER) return LISTING_UNITS;
   return roleId === ROLES.LIVESTOCK_FARMER ? LIVESTOCK_LISTING_UNITS : CROP_LISTING_UNITS;
 }
 
 export function assertUnitForRole(roleId: number, unit: string): void {
   const allowed = listingUnitsForRole(roleId);
   if (!allowed.includes(unit as ListingUnit)) {
-    const label = roleId === ROLES.LIVESTOCK_FARMER ? 'livestock' : 'crop';
+    const label =
+      roleId === ROLES.LIVESTOCK_FARMER
+        ? 'livestock'
+        : roleId === ROLES.ORGANIZATION_FARMER
+          ? 'organization'
+          : 'crop';
     throw new AppError(
       400,
       `${label} farmers must use ${allowed.join(' or ')} — not "${unit}"`
     );
   }
+}
+
+const CUSTOM_UNIT_MAX_LENGTH = 50;
+
+/** Accept predefined units (role-checked) or any custom unit label. */
+export function validateListingUnit(roleId: number, unit: string): string {
+  const trimmed = unit.trim();
+  if (!trimmed) {
+    throw new AppError(400, 'Unit is required');
+  }
+  if (trimmed.length > CUSTOM_UNIT_MAX_LENGTH) {
+    throw new AppError(400, `Unit must be ${CUSTOM_UNIT_MAX_LENGTH} characters or less`);
+  }
+  if ((LISTING_UNITS as readonly string[]).includes(trimmed)) {
+    assertUnitForRole(roleId, trimmed);
+  }
+  return trimmed;
 }

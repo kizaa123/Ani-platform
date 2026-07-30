@@ -10,7 +10,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (data: Record<string, unknown>) => Promise<void>;
   logout: () => Promise<void>;
-  refreshUser: () => Promise<void>;
+  refreshUser: () => Promise<UserProfile>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -22,12 +22,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshUser = useCallback(async () => {
     const profile = await api.auth.me();
     setUser(profile);
+    return profile;
   }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     if (token) {
-      refreshUser().catch(() => api.clearTokens()).finally(() => setLoading(false));
+      refreshUser()
+        .then((profile) => {
+          if (
+            typeof window !== "undefined" &&
+            profile &&
+            !profile.profileComplete &&
+            !window.location.pathname.startsWith("/complete-profile") &&
+            !window.location.pathname.startsWith("/auth/")
+          ) {
+            window.location.href = "/complete-profile";
+          }
+        })
+        .catch(() => api.clearTokens())
+        .finally(() => setLoading(false));
     } else {
       setLoading(false);
     }

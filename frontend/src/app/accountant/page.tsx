@@ -81,7 +81,7 @@ export default function AccountantOverviewPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-brand-900">Financial Overview</h1>
         <p className="mt-1 text-sm text-gray-500">
-          ANI earns through access fees and order-share remainder from released buyer orders
+          ANI earns through access fees and order-share remainder from released client orders
         </p>
       </div>
 

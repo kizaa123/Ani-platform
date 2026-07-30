@@ -144,7 +144,7 @@ export function HarvestCalendarModal({
         <div className="flex-1 overflow-y-auto p-5">
           {!hasPeriod && (
             <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-              No harvest dates have been set for this listing yet.
+              No delivery dates have been set for this listing yet.
               {harvestLabel ? (
                 <p className="mt-1 font-medium">{harvestLabel}</p>
               ) : null}

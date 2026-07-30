@@ -4,7 +4,7 @@ import { PortalSidebarLayout, type PortalNavLink } from "@/components/PortalSide
 
 export const FARMER_NAV_LINKS: PortalNavLink[] = [
   { href: "/dashboard", label: "Dashboard", icon: "home", match: (p) => p === "/dashboard" },
-  { href: "/farm", label: "My Farm", icon: "wheat", match: (p) => p === "/farm" },
+  { href: "/farm", label: "My Production", icon: "wheat", match: (p) => p === "/farm" },
   {
     href: "/farm/financials",
     label: "Financials",
@@ -13,7 +13,7 @@ export const FARMER_NAV_LINKS: PortalNavLink[] = [
   },
   {
     href: "/farm/orders",
-    label: "Buyer Orders",
+    label: "Client Orders",
     icon: "package",
     match: (p) => p.startsWith("/farm/orders"),
   },

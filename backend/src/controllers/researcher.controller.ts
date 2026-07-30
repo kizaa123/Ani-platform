@@ -135,6 +135,24 @@ export class ResearcherController {
     }
   };
 
+  listClients = async (req: AuthRequest, res: Response) => {
+    try {
+      const clients = await researcherService.listClients(req.user!.userId, req.user!.roleId);
+      ApiResponse.success(res, clients);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  notifyClient = async (req: AuthRequest, res: Response) => {
+    try {
+      const result = await researcherService.notifyClient(req.user!.userId, req.user!.roleId, req.body);
+      ApiResponse.success(res, result);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
   toggleLike = async (req: AuthRequest, res: Response) => {
     try {
       const data = await researcherService.toggleLike(req.params.id as string, req.user!.userId);
@@ -185,6 +203,30 @@ export class ResearcherController {
       res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
       res.setHeader('Cache-Control', 'no-store');
       res.send(buffer);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  publicationPolicyStatus = async (req: AuthRequest, res: Response) => {
+    try {
+      const data = await researcherService.getPublicationPolicyStatus(
+        req.user!.userId,
+        req.user!.roleId
+      );
+      ApiResponse.success(res, data);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  acceptPublicationPolicy = async (req: AuthRequest, res: Response) => {
+    try {
+      const data = await researcherService.acceptPublicationPolicy(
+        req.user!.userId,
+        req.user!.roleId
+      );
+      ApiResponse.success(res, data);
     } catch (e) {
       ApiResponse.error(res, e);
     }

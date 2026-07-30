@@ -149,7 +149,7 @@ export default function MarketplacePage() {
       <ScrollReveal trigger="mount" delay={0} duration={450} direction="fade-up" className="mb-8">
         <h1 className="text-3xl font-bold text-brand-900">Marketplace</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Discover farmers, pay for farm access, and place orders
+          Discover fellows, pay for farm access, and place orders
         </p>
         {!browseLoading && !search.trim() && filteredFarmers.length > 0 && (
           <p className="mt-2 text-sm text-gray-500">
@@ -160,7 +160,7 @@ export default function MarketplacePage() {
 
       <ScrollReveal trigger="mount" delay={80} duration={450} direction="fade-up" className="mb-8">
         <label htmlFor="marketplace-search" className="sr-only">
-          Search farmers, commodities, or products
+          Search fellows, commodities, or products
         </label>
         <div className="relative">
           <Icon
@@ -172,13 +172,13 @@ export default function MarketplacePage() {
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by farmer name, commodity, or product..."
+            placeholder="Search by fellow name, commodity, or product..."
             className="w-full rounded-2xl border border-brand-200 bg-white py-3.5 pl-12 pr-4 text-sm text-brand-900 shadow-sm placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
           />
         </div>
         {search.trim() && (
           <p className="mt-2 text-sm text-gray-500">
-            {filteredFarmers.length} farmer{filteredFarmers.length !== 1 ? "s" : ""} found
+            {filteredFarmers.length} fellow{filteredFarmers.length !== 1 ? "s" : ""} found
           </p>
         )}
       </ScrollReveal>
@@ -206,7 +206,7 @@ export default function MarketplacePage() {
         <CardGridSkeleton count={6} columns="sm:grid-cols-2 lg:grid-cols-3" />
       ) : filteredFarmers.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-brand-200 bg-white p-12 text-center text-gray-500">
-          {search.trim() ? "No farmers match your search." : "No farmers registered yet."}
+          {search.trim() ? "No fellows match your search." : "No fellows registered yet."}
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

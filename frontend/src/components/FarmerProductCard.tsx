@@ -1,6 +1,6 @@
 "use client";
 
-import { Listing, formatListingUnit } from "@/lib/types";
+import { Listing, formatListingUnit, listingCommodityName } from "@/lib/types";
 import { ProductImage } from "@/components/FarmerAvatar";
 import { productMediaIsVideo, productMediaThumbnail } from "@/components/ProductMediaGallery";
 import { assetUrl } from "@/lib/assetUrl";
@@ -113,12 +113,12 @@ export function FarmerProductCard({
             )}
             {hasHarvestInfo && (
               <div className="mt-auto flex items-center gap-1.5 pt-1">
-                <span className="text-xs font-semibold text-brand-800">Harvest:</span>
+                <span className="text-xs font-semibold text-brand-800">Delivery:</span>
                 <HarvestCalendarTrigger
                   harvestStartDate={product.harvestStartDate}
                   harvestEndDate={product.harvestEndDate}
                   harvestLabel={product.harvestLabel}
-                  commodityName={product.commodity?.name}
+                  commodityName={listingCommodityName(product) || undefined}
                   productTitle={product.title}
                   showLabel={false}
                   className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-brand-200 bg-white text-brand-700 hover:bg-brand-50"
@@ -163,7 +163,7 @@ export function FarmerProductCard({
             harvestStartDate={product.harvestStartDate}
             harvestEndDate={product.harvestEndDate}
             harvestLabel={product.harvestLabel}
-            commodityName={product.commodity?.name}
+            commodityName={listingCommodityName(product) || undefined}
             productTitle={product.title}
             showLabel={false}
             className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-brand-200 bg-white text-brand-700 hover:bg-brand-50"

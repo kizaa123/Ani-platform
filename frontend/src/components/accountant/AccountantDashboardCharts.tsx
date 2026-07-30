@@ -652,7 +652,7 @@ export function AccountantDashboardChartsPanel({ charts }: { charts: AccountantD
         </ScrollReveal>
 
         <ScrollReveal delay={scrollStagger(1, 100)} duration={500} direction="fade-up">
-          <ChartPanel title="Order share trend" subtitle="ANI remainder from released buyer orders (~13.34% after splits)">
+          <ChartPanel title="Order share trend" subtitle="ANI remainder from released client orders (~13.34% after splits)">
             <RevenueAreaChart
               data={charts.monthlyOrderShareRevenue}
               strokeColor={STREAM_COLORS.orderShare}

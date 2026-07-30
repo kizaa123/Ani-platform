@@ -78,7 +78,7 @@ export default function BuyerOrdersPage() {
           Back to Dashboard
         </Link>
         <h1 className="mt-2 text-3xl font-bold text-brand-900">My Orders</h1>
-        <p className="text-gray-500">Products you ordered from farmers on the marketplace</p>
+        <p className="text-gray-500">Products you ordered from fellows on the marketplace</p>
       </div>
 
       <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">

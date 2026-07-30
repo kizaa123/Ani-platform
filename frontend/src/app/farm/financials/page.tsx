@@ -9,7 +9,7 @@ import {
   FarmerPendingDistribution,
   FinancialStatement,
   ProductOrderLineItem,
-  ROLES,
+  isFarmer,
 } from "@/lib/types";
 import { formatDate, formatGhc, orderStatusStyle } from "@/lib/format";
 import { OrderDetailModal, SalesOrdersTable } from "@/components/ProductOrdersList";
@@ -50,10 +50,7 @@ export default function FinancialStatementPage() {
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
-    if (
-      user &&
-      ![ROLES.CROP_FARMER, ROLES.LIVESTOCK_FARMER].includes(user.roleId as 1 | 2)
-    ) {
+    if (user && !isFarmer(user.roleId)) {
       router.push("/dashboard");
       return;
     }
@@ -137,7 +134,7 @@ export default function FinancialStatementPage() {
     <div className="mx-auto max-w-5xl px-4 py-8">
       <div className="mb-8">
         <Link href="/farm" className="text-sm text-brand-600 hover:underline">
-          Back to My Farm
+          Back to My Production
         </Link>
         <h1 className="mt-2 text-2xl font-bold text-brand-900">Money Summary</h1>
         <p className="text-sm text-gray-500">What you have listed, sold, and earned</p>
@@ -187,7 +184,7 @@ export default function FinancialStatementPage() {
               <thead>
                 <tr className="border-b border-amber-50 bg-amber-50/50 text-left text-xs font-semibold uppercase text-gray-500">
                   <th className="px-6 py-3">Order</th>
-                  <th className="px-4 py-3">Buyer</th>
+                  <th className="px-4 py-3">Client</th>
                   <th className="px-4 py-3 text-right">Share amount</th>
                   <th className="px-4 py-3">Order date</th>
                   <th className="px-4 py-3">Status</th>
