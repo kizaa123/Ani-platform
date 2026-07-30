@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useRef, useMemo, useCallback, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState, useRef, useMemo, useCallback, type ReactNode } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
@@ -205,7 +205,7 @@ function errorsForStep(errors: FieldErrors, fields: RegisterField[]): FieldError
   return out;
 }
 
-export default function RegisterPage() {
+function RegisterForm() {
   const [step, setStep] = useState(1);
   const [categories, setCategories] = useState<CommodityCategory[]>([]);
   const [selectedCommodities, setSelectedCommodities] = useState<number[]>([]);
@@ -218,6 +218,8 @@ export default function RegisterPage() {
   const [backendFieldErrors, setBackendFieldErrors] = useState<FieldErrors>({});
   const { register, refreshUser } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryError = searchParams.get("error");
   const profileInputRef = useRef<HTMLInputElement>(null);
 
   const [farmerHandlers, setFarmerHandlers] = useState<HandlerProfile[]>([]);
@@ -569,10 +571,10 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        {error && (
+        {(error || queryError) && (
           <div className="auth-error mb-5" role="alert">
             <Icon name="x" className="mt-0.5 h-4 w-4 shrink-0" />
-            <span>{error}</span>
+            <span>{error || queryError}</span>
           </div>
         )}
 
@@ -1087,3 +1089,10 @@ export default function RegisterPage() {
   );
 }
 
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-[50vh] items-center justify-center text-sm text-gray-500">Loading...</div>}>
+      <RegisterForm />
+    </Suspense>
+  );
+}

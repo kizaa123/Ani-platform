@@ -34,7 +34,7 @@ const sizeStyles = {
   },
 } as const;
 
-const DEFAULT_MOTTO = "The premier Commodity Exchange Platform";
+const DEFAULT_MOTTO = "The Premier Commodity Exchange Platform";
 
 export function PlatformBrandTitle({
   theme = "light",

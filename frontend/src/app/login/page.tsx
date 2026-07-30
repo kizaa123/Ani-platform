@@ -4,23 +4,19 @@ import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
-import { api } from "@/lib/api";
 import { Icon } from "@/components/icons";
-import { AuthDivider, GoogleSignInButton } from "@/components/GoogleSignInButton";
+import { LogoIcon } from "@/components/Logo";
 import { PlatformBrandTitle } from "@/components/PlatformBrandTitle";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
 import { authPanelBackgroundStyle, LOGIN_PANEL_BACKGROUND } from "@/lib/authImages";
-
-const GOOGLE_DEV_MODE = process.env.NEXT_PUBLIC_GOOGLE_DEV_MODE === "true";
 
 function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [devLoading, setDevLoading] = useState(false);
-  const { login, refreshUser } = useAuth();
+  const { login } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -37,29 +33,6 @@ function LoginForm() {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleDevGoogle = async () => {
-    setError("");
-    setDevLoading(true);
-    try {
-      const result = await api.auth.googleDevSignIn({
-        email: email || "google.dev@ani.gh",
-        firstName: "Google",
-        lastName: "Dev User",
-      });
-      api.setTokens(result.accessToken, result.refreshToken);
-      await refreshUser();
-      if (result.needsProfile || result.needsEmailVerification) {
-        router.push("/complete-profile");
-      } else {
-        router.push("/dashboard");
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Google dev sign-in failed");
-    } finally {
-      setDevLoading(false);
     }
   };
 
@@ -117,10 +90,10 @@ function LoginForm() {
         <ScrollReveal trigger="mount" delay={120} duration={500} direction="fade-up" className="w-full max-w-md">
         <div className="space-y-8 bg-white p-8 rounded-2xl border border-brand-100 shadow-xl">
           <header className="text-center lg:text-left">
-            <div className="hidden lg:inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-100 text-brand-700 mb-4">
-              <Icon name="lock" className="h-6 w-6" />
+            <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50/80 p-2 border border-brand-100/80 shadow-2xs">
+              <LogoIcon theme="dark" className="h-8 w-auto" />
             </div>
-            <h1 className="text-3xl font-extrabold text-brand-900 tracking-tight">Welcome Back</h1>
+            <h1 className="text-3xl font-extrabold text-brand-900 tracking-tight">Login here</h1>
             <p className="mt-2 text-sm text-gray-500">Sign in to your ANI account</p>
           </header>
 
@@ -130,15 +103,6 @@ function LoginForm() {
               <span>{error || queryError}</span>
             </div>
           )}
-
-          <GoogleSignInButton
-            disabled={loading}
-            showDev={GOOGLE_DEV_MODE}
-            onDevSignIn={handleDevGoogle}
-            devLoading={devLoading}
-          />
-
-          <AuthDivider />
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">

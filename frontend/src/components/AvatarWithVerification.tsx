@@ -82,7 +82,7 @@ export function AvatarWithVerification({
       layout="row"
       className={placement === "overlay" ? "gap-0.5 !justify-end" : undefined}
       badgeClassName={
-        placement === "overlay" ? "ring-2 ring-white shadow-sm" : undefined
+        placement === "overlay" ? "drop-shadow-xs" : undefined
       }
     />
   ) : null;

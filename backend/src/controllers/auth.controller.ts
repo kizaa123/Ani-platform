@@ -5,7 +5,7 @@ import { authService } from '../services/auth.service';
 import { agentService } from '../services/agent.service';
 import { googleAuthService } from '../services/googleAuth.service';
 import { emailVerificationService } from '../services/emailVerification.service';
-import { getGoogleOAuthConfig } from '../config/google.config';
+import { getFrontendBaseUrl, getGoogleOAuthConfig } from '../config/google.config';
 import { createAuditLog } from '../middleware/audit.middleware';
 
 export class AuthController {
@@ -94,13 +94,10 @@ export class AuthController {
     try {
       const config = getGoogleOAuthConfig();
       if (!config.enabled) {
-        if (config.devMode) {
-          return ApiResponse.success(res, {
-            devMode: true,
-            message: 'Google OAuth is not configured. Use POST /auth/google/dev in development.',
-          });
-        }
-        throw new Error('Google sign-in is not configured');
+        const base = getFrontendBaseUrl();
+        const message =
+          'Google sign-in is not configured. Register with email or use the dev sign-in button.';
+        return res.redirect(`${base}/register?error=${encodeURIComponent(message)}`);
       }
       res.redirect(googleAuthService.getAuthorizationUrl());
     } catch (e) {
@@ -118,9 +115,9 @@ export class AuthController {
       await createAuditLog(req, 'USER_GOOGLE_LOGIN', 'users', { userId: result.user.id });
       res.redirect(result.redirectUrl);
     } catch (e) {
-      const base = process.env.FRONTEND_URL?.split(',')[0] || 'http://localhost:3000';
+      const base = getFrontendBaseUrl();
       const message = e instanceof Error ? e.message : 'Google sign-in failed';
-      res.redirect(`${base}/login?error=${encodeURIComponent(message)}`);
+      res.redirect(`${base}/register?error=${encodeURIComponent(message)}`);
     }
   };
 

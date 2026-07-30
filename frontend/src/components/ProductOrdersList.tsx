@@ -96,10 +96,13 @@ function OrderReleaseSummary({ order }: { order: OrderListItem }) {
 function OrderEscrowPanel({
   order,
   perspective,
+  handlerView = false,
   onUpdated,
 }: {
   order: OrderListItem;
   perspective: OrderListPerspective;
+  /** Liaison officer (FLO/CLO) viewing a client order — hide buyer-only release OTP UI. */
+  handlerView?: boolean;
   onUpdated?: (updated: Partial<OrderListItem>) => void;
 }) {
   const [otp, setOtp] = useState("");
@@ -110,7 +113,25 @@ function OrderEscrowPanel({
 
   const statementId = orderStatementId(order);
   const escrowStatus = order.escrowStatus ?? "HELD";
-  const canRelease = perspective === "buyer" && order.canRelease && escrowStatus === "HELD";
+  const canRelease =
+    !handlerView && perspective === "buyer" && order.canRelease && escrowStatus === "HELD";
+
+  if (handlerView) {
+    if (!order.escrowStatus) return null;
+
+    return (
+      <div className="mt-5 rounded-xl border border-brand-100 bg-brand-50/30 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Payment trust</p>
+          <span
+            className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${escrowStatusStyle(escrowStatus)}`}
+          >
+            {escrowStatusLabel(escrowStatus)}
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   const openStatement = async () => {
     if (!statementId) return;
@@ -518,6 +539,7 @@ export function OrderDetailModal({
           <OrderEscrowPanel
             order={order}
             perspective={perspective}
+            handlerView={Boolean(handlerOwnerId)}
             onUpdated={(updated) => onTrackUpdated?.({ ...order, ...updated })}
           />
 

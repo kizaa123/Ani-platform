@@ -171,7 +171,7 @@ export default function HomePage() {
 
             <ScrollReveal trigger="mount" delay={scrollStagger(2, 100)} duration={550} direction="fade-up">
               <h1 className="mb-6 text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl">
-                Where Fellow{" "}
+                Where Fellow's{" "}
                 <span className="bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-300 bg-clip-text text-transparent">
                   Meet Markets
                 </span>

@@ -35,8 +35,8 @@ function AuthCallbackContent() {
           <Icon name="x" className="mt-0.5 h-4 w-4 shrink-0" />
           <span>{error}</span>
         </div>
-        <a href="/login" className="auth-switch-link font-semibold">
-          Back to sign in
+        <a href="/register" className="auth-switch-link font-semibold">
+          Back to registration
         </a>
       </div>
     );

@@ -106,7 +106,7 @@ export function VerificationTagBadge({
         role="img"
         aria-label={style.label}
         title={style.label}
-        className={`inline-flex shrink-0 items-center justify-center ${className}`}
+        className={`inline-flex shrink-0 items-center justify-center rounded-full ${className}`}
       >
         <VerificationTagIcon
           tagType={tagType}

@@ -421,7 +421,12 @@ export class AgentService {
 
     await this.assertBuyerClientAssignment(agentId, ownerId);
     const orders = await buyerService.fetchOrdersForBuyer(ownerId);
-    return enrichOrdersWithCounterpartHandler(orders, 'FARMER_REPRESENTATIVE', 'farmerId');
+    const sanitizedOrders = orders.map((order) => ({
+      ...order,
+      canRelease: false,
+      releaseOtp: null,
+    }));
+    return enrichOrdersWithCounterpartHandler(sanitizedOrders, 'FARMER_REPRESENTATIVE', 'farmerId');
   }
 
   async updateClientOrderTrack(
