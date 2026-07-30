@@ -13,7 +13,7 @@
  * 3. Keys must match the card `href` values in `frontend/src/app/dashboard/page.tsx`.
 
  * 4. Crop vs livestock farmers have separate sections — edit the one that matches your role.
- *    Buyers have their own section (`PORTAL_NAV_IMAGES_BUYER`), including a distinct Marketplace image.
+ *    Buyers have their own section (`PORTAL_NAV_IMAGES_BUYER`); Marketplace uses the shared image.
 
  * 5. For custom portal paths (e.g. `/portal/crop-marketplace.jpg`), add the file under
 
@@ -39,7 +39,7 @@ import { ROLES } from "./types";
 
 export const PORTAL_NAV_IMAGES_SHARED = {
 
-  /** Change image here: Marketplace card (handler, staff — buyers use PORTAL_NAV_IMAGES_BUYER; farmers use crop/livestock sections) */
+  /** Change image here: Marketplace card (buyer, handler, staff, researcher — farmers use crop/livestock sections) */
 
   "/marketplace": "/generic_farmers_market for crop.jpg",
 
@@ -124,10 +124,6 @@ export const PORTAL_NAV_IMAGES_LIVESTOCK_FARMER = {
 /** Buyer portal dashboard cards */
 
 export const PORTAL_NAV_IMAGES_BUYER = {
-
-  /** Change image here: Buyer Marketplace card (distinct from crop/livestock farmer marketplace images) */
-
-  "/marketplace": "/a-seller-arranging-fresh-produce-at-a-farmers-market.avif",
 
   /** Change image here: Buyer Financial Statement card */
 
@@ -225,19 +221,13 @@ export const PORTAL_CUSTOM_PATH_FALLBACKS: Record<string, string> = {};
 
 
 
-/** Buyer-only hrefs resolved via `getPortalNavImage(..., ROLES.BUYER)` — omitted from flat lookup so handlers/staff keep SHARED paths. */
-
-const { "/marketplace": _buyerMarketplace, ...PORTAL_NAV_IMAGES_BUYER_FLAT } = PORTAL_NAV_IMAGES_BUYER;
-
-
-
 /** Flat lookup for non-farmer roles — do not edit paths here; edit the role sections above. */
 
 export const PORTAL_NAV_IMAGES: Record<string, string> = {
 
   ...PORTAL_NAV_IMAGES_SHARED,
 
-  ...PORTAL_NAV_IMAGES_BUYER_FLAT,
+  ...PORTAL_NAV_IMAGES_BUYER,
 
   ...PORTAL_NAV_IMAGES_RESEARCHER,
 
