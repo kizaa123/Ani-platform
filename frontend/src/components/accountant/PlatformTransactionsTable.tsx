@@ -14,7 +14,7 @@ function typeLabel(type: LineItemType) {
     case "FARM_ACCESS":
       return "Farm access payment";
     case "RESEARCH_SALE":
-      return "Research sale";
+      return "Publication sale (ANI 10%)";
     default:
       return type;
   }
@@ -27,7 +27,7 @@ function filterLabel(filter: FinancialFilter) {
     case "FARM_ACCESS":
       return "Farm access payments";
     case "RESEARCH_SALE":
-      return "Research sales";
+      return "Publication sales (ANI share)";
     default:
       return "All payments";
   }
@@ -78,9 +78,13 @@ export function PlatformTransactionsTable({
             onClick={() => toggleFilter("FARM_ACCESS")}
           />
           <SummaryCard
-            label="Research sales"
+            label="Publication share (10%)"
             value={formatGhc(summary.researchRevenue)}
-            sub={`${summary.researchSaleCount} sale(s)`}
+            sub={
+              summary.researchGrossSales
+                ? `${summary.researchSaleCount} sale(s) · ${formatGhc(summary.researchGrossSales)} gross`
+                : `${summary.researchSaleCount} sale(s)`
+            }
             active={activeFilter === "RESEARCH_SALE"}
             onClick={() => toggleFilter("RESEARCH_SALE")}
           />
@@ -128,6 +132,11 @@ export function PlatformTransactionsTable({
                     <td className="px-4 py-2.5 text-gray-600">{item.partyName}</td>
                     <td className="px-4 py-2.5 text-right font-semibold text-brand-900">
                       {formatGhc(item.amount)}
+                      {item.type === "RESEARCH_SALE" && item.grossAmount != null && item.grossAmount !== item.amount ? (
+                        <span className="mt-0.5 block text-[10px] font-normal text-gray-500">
+                          of {formatGhc(item.grossAmount)} gross
+                        </span>
+                      ) : null}
                     </td>
                     <td className="px-5 py-2.5">
                       <span
@@ -263,6 +272,11 @@ export function OrderReceiptsTable({
                     <td className="px-4 py-2.5 text-gray-600">{item.partyName}</td>
                     <td className="px-4 py-2.5 text-right font-semibold text-brand-900">
                       {formatGhc(item.amount)}
+                      {item.type === "RESEARCH_SALE" && item.grossAmount != null && item.grossAmount !== item.amount ? (
+                        <span className="mt-0.5 block text-[10px] font-normal text-gray-500">
+                          of {formatGhc(item.grossAmount)} gross
+                        </span>
+                      ) : null}
                     </td>
                     <td className="px-5 py-2.5">
                       {unlocked ? (

@@ -81,7 +81,7 @@ export default function AccountantOverviewPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-brand-900">Financial Overview</h1>
         <p className="mt-1 text-sm text-gray-500">
-          ANI earns through access fees and order-share remainder from released client orders
+          ANI earns through access fees, publication platform share (10%), and order-share remainder
         </p>
       </div>
 
@@ -108,14 +108,24 @@ export default function AccountantOverviewPage() {
                 label: "Total platform income",
                 value: formatMoney(overview.totalRevenue),
                 prefix: "GHC ",
-                sub: "Access + order share",
+                sub: "Access + publication share + order share",
                 valueClass: "text-lg font-bold text-green-700",
               },
               {
                 label: "Access income",
-                value: formatMoney(overview.accessRevenue),
+                value: formatMoney(overview.farmAccessRevenue + overview.legacyAccessRevenue),
                 prefix: "GHC ",
-                sub: `${overview.accessPaymentCount} access payment(s)`,
+                sub: `${overview.farmAccessCount + overview.legacyAccessCount} access payment(s)`,
+                valueClass: "text-lg font-bold text-brand-800",
+                href: "/accountant/transactions",
+              },
+              {
+                label: "Publication share (10%)",
+                value: formatMoney(overview.researchRevenue),
+                prefix: "GHC ",
+                sub: overview.researchGrossSales
+                  ? `${overview.researchSaleCount} sale(s) · GHC ${formatMoney(overview.researchGrossSales)} gross`
+                  : `${overview.researchSaleCount} sale(s)`,
                 valueClass: "text-lg font-bold text-brand-800",
                 href: "/accountant/transactions",
               },

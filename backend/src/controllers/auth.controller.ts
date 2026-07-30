@@ -179,7 +179,7 @@ export class AuthController {
       await emailVerificationService.verifyChallenge(
         email,
         req.body.challengeId,
-        req.body.selectedIndex
+        req.body.code
       );
       await authService.markEmailVerified(req.user!.userId);
       ApiResponse.success(res, { verified: true });

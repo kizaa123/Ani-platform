@@ -40,6 +40,7 @@ function sanitizeAuthUser(user: {
   verificationStatus: string;
   emailVerified: boolean;
   profileComplete: boolean;
+  googleId?: string | null;
   role: { roleName: string };
 }) {
   return {
@@ -53,6 +54,7 @@ function sanitizeAuthUser(user: {
     verificationStatus: user.verificationStatus,
     emailVerified: user.emailVerified,
     profileComplete: user.profileComplete,
+    hasGoogleAuth: Boolean(user.googleId),
   };
 }
 

@@ -10,7 +10,11 @@ import {
   notifyNewPublication,
   notifyResearchPublicationsAvailable,
 } from './notification.service';
-import { fetchUploadedFileBuffer } from './storage.service';
+import { resolvePublicationDocument } from './storage.service';
+import {
+  publicationPlatformShareAmount,
+  publicationResearcherShareAmount,
+} from '../utils/distributionFinancials';
 
 export const publicationSchema = z.object({
   title: z.string().min(2),
@@ -245,6 +249,9 @@ export class ResearcherService {
     this.assertPublicationPolicyAccepted(profile);
 
     const isFree = data.isFree ?? (data.price == null || data.price <= 0);
+    if (!isFree && (!data.price || data.price <= 0)) {
+      throw new AppError(400, 'Paid publications need a price greater than 0');
+    }
 
     const publication = await prisma.researchPublication.create({
       data: {
@@ -297,6 +304,13 @@ export class ResearcherService {
         : data.price !== undefined
           ? data.price <= 0
           : existing.isFree;
+
+    if (!isFree) {
+      const nextPrice = data.price ?? existing.price;
+      if (!nextPrice || nextPrice <= 0) {
+        throw new AppError(400, 'Paid publications need a price greater than 0');
+      }
+    }
 
     return prisma.researchPublication.update({
       where: { id: publicationId },
@@ -600,12 +614,11 @@ export class ResearcherService {
     assertAuthorized(hasAccess, 'You must unlock this publication before reading');
 
     if (!pub.fileUrl?.trim()) {
-      throw new AppError(404, 'Publication file not found');
+      throw new AppError(404, 'This publication has no document attached');
     }
 
-    const buffer = await fetchUploadedFileBuffer(pub.fileUrl);
     const safeTitle = pub.title.replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-') || 'publication';
-    return { buffer, filename: `${safeTitle}.pdf` };
+    return resolvePublicationDocument(pub.fileUrl, `${safeTitle}.pdf`);
   }
 
   async recordView(userId: string, publicationId: string) {
@@ -713,7 +726,8 @@ export class ResearcherService {
       studentId,
       studentName,
       pub.title,
-      amount
+      amount,
+      publicationResearcherShareAmount(amount)
     );
 
     return {
@@ -767,7 +781,8 @@ export class ResearcherService {
       title: p.publication.title,
       studentName: `${p.student.firstName} ${p.student.lastName}`,
       studentEmail: p.student.email,
-      amount: p.amount,
+      grossAmount: p.amount,
+      amount: publicationResearcherShareAmount(p.amount),
       paymentMethod: p.paymentMethod,
       transactionId: p.transactionId,
       type: 'SALE' as const,

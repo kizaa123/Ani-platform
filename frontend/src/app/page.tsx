@@ -180,7 +180,7 @@ export default function HomePage() {
 
             <ScrollReveal trigger="mount" delay={scrollStagger(3, 100)} duration={500} direction="fade-up">
               <p className="mb-10 text-xl font-light leading-relaxed text-brand-100 md:text-2xl">
-                connecting verified fellows with clients. Secure commodity trading with full privacy protection.
+                Connecting verified fellows with clients. Secure commodity trading with full privacy protection.
               </p>
             </ScrollReveal>
 

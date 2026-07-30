@@ -217,8 +217,8 @@ class ApiClient {
     sendEmailVerification: (email: string) =>
       this.request<{
         challengeId: string;
-        choices: number[];
         expiresAt: string;
+        emailSent?: boolean;
         devMode?: boolean;
         devHint?: string;
       }>("/auth/email-verification/send", {
@@ -228,7 +228,7 @@ class ApiClient {
     verifyEmailChallenge: (body: {
       email: string;
       challengeId: string;
-      selectedIndex: number;
+      code: string;
     }) =>
       this.request<{ verified: boolean }>("/auth/email-verification/verify", {
         method: "POST",

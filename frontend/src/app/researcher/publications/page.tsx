@@ -24,7 +24,7 @@ const emptyForm = {
   fileUrl: "",
   coverImage: "",
   category: "CROP_FARM" as ResearchPublicationCategory,
-  price: 0,
+  priceInput: "",
   isFree: true,
 };
 
@@ -123,7 +123,7 @@ export default function ResearcherPublicationsPage() {
       fileUrl: pub.fileUrl || "",
       coverImage: pub.coverImage || "",
       category: pub.category ?? "OTHER",
-      price: pub.price ?? 0,
+      priceInput: pub.isFree ? "" : pub.price != null ? String(pub.price) : "",
       isFree: pub.isFree,
     });
     if (localCoverPreview) URL.revokeObjectURL(localCoverPreview);
@@ -156,7 +156,8 @@ export default function ResearcherPublicationsPage() {
       setError("Publisher type is required");
       return;
     }
-    if (!form.isFree && form.price <= 0) {
+    const price = parseFloat(form.priceInput);
+    if (!form.isFree && (!Number.isFinite(price) || price <= 0)) {
       setError("Paid publications need a price greater than 0");
       return;
     }
@@ -170,7 +171,7 @@ export default function ResearcherPublicationsPage() {
         coverImage: form.coverImage || undefined,
         category: form.category,
         isFree: form.isFree,
-        price: form.isFree ? undefined : form.price,
+        price: form.isFree ? undefined : price,
       };
       if (editingId) {
         await api.research.update(editingId, payload);
@@ -301,14 +302,16 @@ export default function ResearcherPublicationsPage() {
                       <label className="auth-label">Price (GHC)</label>
                       <input
                         type="number"
-                        min={1}
+                        min={0.01}
                         step={0.01}
                         className="auth-input"
-                        value={form.price}
-                        onChange={(e) =>
-                          setForm({ ...form, price: parseFloat(e.target.value) || 0 })
-                        }
+                        placeholder="e.g. 25.00"
+                        value={form.priceInput}
+                        onChange={(e) => setForm({ ...form, priceInput: e.target.value })}
                       />
+                      <p className="mt-1 text-xs text-gray-500">
+                        Buyers pay this exact price. You receive 90% after the platform fee.
+                      </p>
                     </div>
                   )}
                 </div>

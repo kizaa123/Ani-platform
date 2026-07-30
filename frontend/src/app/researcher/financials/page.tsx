@@ -63,7 +63,7 @@ export default function ResearcherFinancialsPage() {
         </Link>
         <h1 className="mt-2 text-2xl font-bold text-brand-900">Money Summary</h1>
         <p className="text-sm text-gray-500">
-          What you have earned from paid publications
+          Your 90% share from paid publication sales (after the 10% platform fee)
         </p>
       </div>
 
@@ -71,7 +71,7 @@ export default function ResearcherFinancialsPage() {
         <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase text-gray-500">Total earned</p>
           <p className="mt-1 text-xl font-bold text-green-700">{formatGhc(summary.totalEarnings)}</p>
-          <p className="text-xs text-gray-500">{summary.totalSales} sale(s)</p>
+          <p className="text-xs text-gray-500">90% of publication sales</p>
         </div>
         <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase text-gray-500">Publications</p>
@@ -106,7 +106,7 @@ export default function ResearcherFinancialsPage() {
                   <th className="px-4 py-3">Publication</th>
                   <th className="px-4 py-3">Student</th>
                   <th className="px-4 py-3">Payment</th>
-                  <th className="px-6 py-3 text-right">Amount</th>
+                  <th className="px-6 py-3 text-right">Your share (90%)</th>
                 </tr>
               </thead>
               <tbody>
@@ -119,7 +119,14 @@ export default function ResearcherFinancialsPage() {
                       <EmailText email={item.studentEmail} className="block text-gray-400" />
                     </td>
                     <td className="px-4 py-3 text-gray-600 capitalize">{item.paymentMethod.replace("_", " ")}</td>
-                    <td className="px-6 py-3 text-right font-semibold text-green-700">{formatGhc(item.amount)}</td>
+                    <td className="px-6 py-3 text-right font-semibold text-green-700">
+                      {formatGhc(item.amount)}
+                      {item.grossAmount != null && item.grossAmount !== item.amount ? (
+                        <span className="mt-0.5 block text-[10px] font-normal text-gray-500">
+                          of {formatGhc(item.grossAmount)} paid
+                        </span>
+                      ) : null}
+                    </td>
                   </tr>
                 ))}
               </tbody>

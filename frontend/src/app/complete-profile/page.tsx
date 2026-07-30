@@ -57,7 +57,8 @@ function buildCompletePayload(
   },
   selectedCommodities: number[],
   isFarmerRole: boolean,
-  needsHandler: boolean
+  needsHandler: boolean,
+  hasGoogleAuth: boolean
 ) {
   const payload: Record<string, unknown> = {
     phone: normalizePhone(form.phone),
@@ -66,7 +67,7 @@ function buildCompletePayload(
     city: form.city.trim(),
     roleId: form.roleId,
   };
-  if (form.password.trim()) payload.password = form.password;
+  if (!hasGoogleAuth && form.password.trim()) payload.password = form.password;
   if (form.address.trim()) payload.address = form.address.trim();
   if (needsHandler && form.handlerId.trim()) payload.handlerId = form.handlerId.trim();
   if (isFarmerRole) {
@@ -160,10 +161,12 @@ export default function CompleteProfilePage() {
     setForm((prev) => ({ ...prev, phone: local }));
   };
 
+  const hasGoogleAuth = Boolean(user?.hasGoogleAuth);
+
   const canContinueAccount =
     isValidPhone(form.phone) &&
     form.country.trim() &&
-    (!form.password || form.password.length >= 8);
+    (hasGoogleAuth || !form.password || form.password.length >= 8);
 
   const canContinueDetails =
     form.region.trim().length >= 2 &&
@@ -179,7 +182,7 @@ export default function CompleteProfilePage() {
     setSubmitting(true);
     try {
       const result = await api.auth.completeProfile(
-        buildCompletePayload(form, selectedCommodities, isFarmerRole, needsHandler)
+        buildCompletePayload(form, selectedCommodities, isFarmerRole, needsHandler, hasGoogleAuth)
       );
       api.setTokens(result.accessToken, result.refreshToken);
       if (isFarmerRole && profileFile) {
@@ -308,22 +311,24 @@ export default function CompleteProfilePage() {
                   </div>
                   <p className="auth-hint">Must be a valid mobile money number · {PHONE_VALIDATION_MESSAGE.toLowerCase()}</p>
                 </div>
-                <div className="auth-field">
-                  <label htmlFor="complete-password" className="auth-label">
-                    Platform password <span className="font-normal text-gray-500">(optional)</span>
-                  </label>
-                  <input
-                    id="complete-password"
-                    type="password"
-                    minLength={8}
-                    autoComplete="new-password"
-                    value={form.password}
-                    onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    className="auth-input"
-                    placeholder="Set a password to also sign in with email"
-                  />
-                  <p className="auth-hint">Leave blank to use Google sign-in only</p>
-                </div>
+                {!hasGoogleAuth && (
+                  <div className="auth-field">
+                    <label htmlFor="complete-password" className="auth-label">
+                      Platform password <span className="font-normal text-gray-500">(optional)</span>
+                    </label>
+                    <input
+                      id="complete-password"
+                      type="password"
+                      minLength={8}
+                      autoComplete="new-password"
+                      value={form.password}
+                      onChange={(e) => setForm({ ...form, password: e.target.value })}
+                      className="auth-input"
+                      placeholder="Set a password to also sign in with email"
+                    />
+                    <p className="auth-hint">Optional — leave blank if you only use email/password login elsewhere</p>
+                  </div>
+                )}
                 <div className="auth-field">
                   <label htmlFor="complete-role" className="auth-label">I am a…</label>
                   <select

@@ -11,23 +11,25 @@ interface EmailVerificationChallengeProps {
 }
 
 export function EmailVerificationChallenge({ email, onVerified }: EmailVerificationChallengeProps) {
-  const [choices, setChoices] = useState<number[]>([]);
   const [challengeId, setChallengeId] = useState<string | null>(null);
+  const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [devHint, setDevHint] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  const [emailSentToInbox, setEmailSentToInbox] = useState(false);
 
   const sendChallenge = async () => {
     setError("");
     setSending(true);
     try {
       const result = await api.auth.sendEmailVerification(email);
-      setChoices(result.choices);
       setChallengeId(result.challengeId);
       setSent(true);
+      setEmailSentToInbox(!result.devMode);
       setDevHint(result.devHint ?? null);
+      setCode("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not send verification email");
     } finally {
@@ -35,15 +37,15 @@ export function EmailVerificationChallenge({ email, onVerified }: EmailVerificat
     }
   };
 
-  const verifyChoice = async (selectedIndex: number) => {
-    if (!challengeId) return;
+  const verifyCode = async () => {
+    if (!challengeId || code.length !== 6) return;
     setError("");
     setLoading(true);
     try {
       await api.auth.verifyEmailChallenge({
         email,
         challengeId,
-        selectedIndex,
+        code,
       });
       onVerified();
     } catch (err) {
@@ -51,6 +53,10 @@ export function EmailVerificationChallenge({ email, onVerified }: EmailVerificat
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCodeChange = (raw: string) => {
+    setCode(raw.replace(/\D/g, "").slice(0, 6));
   };
 
   return (
@@ -61,8 +67,9 @@ export function EmailVerificationChallenge({ email, onVerified }: EmailVerificat
           <div>
             <h3 className="auth-section-title">Verify your email</h3>
             <p className="auth-hint mt-1">
-              We will email one code to <EmailText email={email} className="inline font-semibold text-brand-900" />.
-              Three numbers appear below — select the exact number from your email.
+              We will send a 6-digit code to{" "}
+              <EmailText email={email} className="inline font-semibold text-brand-900" />.
+              Enter the code from your inbox below.
             </p>
           </div>
         </div>
@@ -86,25 +93,41 @@ export function EmailVerificationChallenge({ email, onVerified }: EmailVerificat
         </button>
       ) : (
         <>
-          <p className="text-center text-sm text-gray-600">
-            Check your inbox and tap the number we sent you.
-          </p>
-          {devHint && (
+          {emailSentToInbox ? (
+            <div className="auth-info-box text-brand-800" role="status">
+              Verification code sent. Check your inbox at{" "}
+              <EmailText email={email} className="inline font-semibold" /> and enter it below.
+            </div>
+          ) : devHint ? (
             <div className="auth-info-box text-brand-800">{devHint}</div>
-          )}
-          <div className="grid grid-cols-3 gap-3">
-            {choices.map((choice, index) => (
-              <button
-                key={`${choice}-${index}`}
-                type="button"
-                disabled={loading}
-                onClick={() => verifyChoice(index)}
-                className="rounded-2xl border-2 border-brand-200 bg-white px-3 py-5 text-2xl font-bold tracking-widest text-brand-900 shadow-sm transition hover:border-brand-500 hover:bg-brand-50 disabled:opacity-50"
-              >
-                {choice}
-              </button>
-            ))}
+          ) : null}
+
+          <div className="auth-field">
+            <label htmlFor="email-verification-code" className="auth-label">
+              Verification code
+            </label>
+            <input
+              id="email-verification-code"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              value={code}
+              onChange={(e) => handleCodeChange(e.target.value)}
+              placeholder="000000"
+              className="auth-input text-center text-2xl font-bold tracking-[0.35em]"
+            />
+            <p className="auth-hint">Enter the 6-digit code from your email</p>
           </div>
+
+          <button
+            type="button"
+            onClick={verifyCode}
+            disabled={loading || code.length !== 6}
+            className="btn-primary w-full py-3 font-semibold disabled:opacity-50"
+          >
+            {loading ? "Verifying..." : "Verify email"}
+          </button>
+
           <button
             type="button"
             onClick={sendChallenge}

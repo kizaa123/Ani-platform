@@ -4,20 +4,14 @@ import { sendVerificationCodeEmail } from './email.service';
 
 const CHALLENGE_TTL_MS = 15 * 60 * 1000;
 
-function generateDistinctChoices(): { choices: number[]; correctIndex: number; correctCode: number } {
-  const choices = new Set<number>();
-  while (choices.size < 3) {
-    choices.add(1000 + Math.floor(Math.random() * 9000));
-  }
-  const list = Array.from(choices);
-  const correctIndex = Math.floor(Math.random() * 3);
-  return { choices: list, correctIndex, correctCode: list[correctIndex] };
+function generateVerificationCode(): number {
+  return Math.floor(100000 + Math.random() * 900000);
 }
 
 export class EmailVerificationService {
   async sendChallenge(email: string) {
     const normalizedEmail = email.trim().toLowerCase();
-    const { choices, correctIndex, correctCode } = generateDistinctChoices();
+    const code = generateVerificationCode();
     const expiresAt = new Date(Date.now() + CHALLENGE_TTL_MS);
 
     await prisma.emailVerificationChallenge.updateMany({
@@ -28,25 +22,30 @@ export class EmailVerificationService {
     const challenge = await prisma.emailVerificationChallenge.create({
       data: {
         email: normalizedEmail,
-        choices,
-        correctIndex,
+        choices: [code],
+        correctIndex: 0,
         expiresAt,
       },
     });
 
-    const delivery = await sendVerificationCodeEmail(normalizedEmail, correctCode);
+    const delivery = await sendVerificationCodeEmail(normalizedEmail, code);
 
     return {
       challengeId: challenge.id,
-      choices,
       expiresAt: challenge.expiresAt.toISOString(),
+      emailSent: true,
       devMode: delivery.devMode,
-      ...(delivery.devMode ? { devHint: `Dev mode: emailed code is ${correctCode}` } : {}),
+      ...(delivery.devMode ? { devHint: `Dev mode: verification code is ${code}` } : {}),
     };
   }
 
-  async verifyChallenge(email: string, challengeId: string, selectedIndex: number) {
+  async verifyChallenge(email: string, challengeId: string, code: string) {
     const normalizedEmail = email.trim().toLowerCase();
+    const normalizedCode = code.trim();
+    if (!/^\d{6}$/.test(normalizedCode)) {
+      throw new AppError(400, 'Enter the 6-digit code from your email');
+    }
+
     const challenge = await prisma.emailVerificationChallenge.findUnique({
       where: { id: challengeId },
     });
@@ -60,7 +59,9 @@ export class EmailVerificationService {
     if (challenge.expiresAt < new Date()) {
       throw new AppError(400, 'Verification code expired. Request a new one.');
     }
-    if (selectedIndex < 0 || selectedIndex > 2 || selectedIndex !== challenge.correctIndex) {
+
+    const storedCode = challenge.choices[0];
+    if (storedCode === undefined || Number(normalizedCode) !== storedCode) {
       throw new AppError(400, 'Incorrect code. Check your email and try again.');
     }
 

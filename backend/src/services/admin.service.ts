@@ -9,6 +9,7 @@ import {
   STAFF_ROLES,
   VERIFIABLE_ROLE_IDS,
 } from '../constants/roles';
+import { publicationPlatformShareAmount } from '../utils/distributionFinancials';
 
 const CHART_MONTHS = 6;
 
@@ -167,7 +168,8 @@ export class AdminService {
       type: 'RESEARCH_SALE' as const,
       description: purchase.publication.title,
       partyName: `${purchase.student.firstName} ${purchase.student.lastName} → ${purchase.researcher.firstName} ${purchase.researcher.lastName}`,
-      amount: purchase.amount,
+      grossAmount: purchase.amount,
+      amount: publicationPlatformShareAmount(purchase.amount),
       paymentMethod: purchase.paymentMethod,
       status: purchase.status,
       transactionId: purchase.transactionId,
@@ -182,6 +184,10 @@ export class AdminService {
     const productOrderRevenue = productLineItems.reduce((sum, item) => sum + item.amount, 0);
     const farmAccessRevenue = farmAccessLineItems.reduce((sum, item) => sum + item.amount, 0);
     const researchRevenue = researchLineItems.reduce((sum, item) => sum + item.amount, 0);
+    const researchGrossSales = researchLineItems.reduce(
+      (sum, item) => sum + (item.grossAmount ?? item.amount),
+      0
+    );
 
     return {
       generatedAt: new Date().toISOString(),
@@ -190,6 +196,7 @@ export class AdminService {
         productOrderRevenue,
         farmAccessRevenue,
         researchRevenue,
+        researchGrossSales,
         transactionCount: lineItems.length,
         productOrderCount: productLineItems.length,
         farmAccessCount: farmAccessLineItems.length,

@@ -195,14 +195,18 @@ export class ResearcherController {
 
   document = async (req: AuthRequest, res: Response) => {
     try {
-      const { buffer, filename } = await researcherService.getPublicationDocument(
+      const result = await researcherService.getPublicationDocument(
         req.user!.userId,
         req.params.id as string
       );
+      if (result.kind === 'redirect') {
+        res.redirect(302, result.url);
+        return;
+      }
       res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+      res.setHeader('Content-Disposition', `inline; filename="${result.filename}"`);
       res.setHeader('Cache-Control', 'no-store');
-      res.send(buffer);
+      res.send(result.buffer);
     } catch (e) {
       ApiResponse.error(res, e);
     }

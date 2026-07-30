@@ -8,12 +8,30 @@ export type UploadFolder = 'profiles' | 'listings' | 'publications' | 'farm-medi
 
 let cloudinaryConfigured = false;
 
+const STORAGE_NOT_CONFIGURED_MESSAGE =
+  'Persistent file storage is not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET on the server.';
+
+const EPHEMERAL_FILE_MISSING_MESSAGE =
+  'Publication file is no longer available on the server. Re-upload the PDF after Cloudinary is configured.';
+
 export function isCloudStorageEnabled(): boolean {
   return !!(
     process.env.CLOUDINARY_CLOUD_NAME?.trim() &&
     process.env.CLOUDINARY_API_KEY?.trim() &&
     process.env.CLOUDINARY_API_SECRET?.trim()
   );
+}
+
+export function isRemoteStorageUrl(url: string): boolean {
+  const normalized = url.trim();
+  return normalized.startsWith('http://') || normalized.startsWith('https://');
+}
+
+/** Render and similar hosts wipe local disk on redeploy — require Cloudinary in production. */
+export function assertPersistentStorageAvailable(): void {
+  if (process.env.NODE_ENV === 'production' && !isCloudStorageEnabled()) {
+    throw new AppError(503, STORAGE_NOT_CONFIGURED_MESSAGE, 'STORAGE_NOT_CONFIGURED');
+  }
 }
 
 function ensureCloudinaryConfig() {
@@ -38,7 +56,7 @@ function removeLocalFile(filePath: string) {
 async function uploadToCloudinary(
   filePath: string,
   folder: UploadFolder,
-  resourceType: 'auto' | 'video' | 'image' = 'auto'
+  resourceType: 'auto' | 'video' | 'image' | 'raw' = 'auto'
 ): Promise<{ url: string; duration?: number }> {
   ensureCloudinaryConfig();
   const result = await cloudinary.uploader.upload(filePath, {
@@ -56,6 +74,7 @@ export async function persistUploadedFile(
   file: Express.Multer.File,
   folder: UploadFolder
 ): Promise<string> {
+  assertPersistentStorageAvailable();
   if (isCloudStorageEnabled()) {
     const { url } = await uploadToCloudinary(file.path, folder);
     removeLocalFile(file.path);
@@ -64,10 +83,26 @@ export async function persistUploadedFile(
   return publicUrl(`${folder}/${file.filename}`);
 }
 
+/** Persist a publication PDF or cover image; PDFs use Cloudinary raw storage for reliable delivery. */
+export async function persistPublicationFile(
+  file: Express.Multer.File,
+  kind: 'document' | 'cover'
+): Promise<string> {
+  assertPersistentStorageAvailable();
+  if (isCloudStorageEnabled()) {
+    const resourceType = kind === 'document' ? 'raw' : 'image';
+    const { url } = await uploadToCloudinary(file.path, 'publications', resourceType);
+    removeLocalFile(file.path);
+    return url;
+  }
+  return publicUrl(`publications/${file.filename}`);
+}
+
 /** Persist farmer image/video upload; returns URL and optional video duration from Cloudinary. */
 export async function persistFarmerMediaFile(
   file: Express.Multer.File
 ): Promise<{ url: string; duration?: number }> {
+  assertPersistentStorageAvailable();
   const isVideo = file.mimetype.startsWith('video/');
   if (isCloudStorageEnabled()) {
     const result = await uploadToCloudinary(
@@ -85,6 +120,7 @@ export async function persistFarmerMediaFile(
 export async function persistProductMediaFile(
   file: Express.Multer.File
 ): Promise<{ url: string; duration?: number }> {
+  assertPersistentStorageAvailable();
   const isVideo = file.mimetype.startsWith('video/');
   if (isCloudStorageEnabled()) {
     const result = await uploadToCloudinary(
@@ -100,6 +136,13 @@ export async function persistProductMediaFile(
 
 const UPLOADS_ROOT = path.join(process.cwd(), 'uploads');
 
+function localFileMissingMessage(): string {
+  if (process.env.NODE_ENV === 'production') {
+    return EPHEMERAL_FILE_MISSING_MESSAGE;
+  }
+  return 'Publication file not found on disk';
+}
+
 /** Fetch an uploaded file as a buffer for authenticated streaming (local disk or remote URL). */
 export async function fetchUploadedFileBuffer(storedUrl: string): Promise<Buffer> {
   const normalized = normalizePublicAssetUrl(storedUrl) ?? storedUrl;
@@ -108,18 +151,46 @@ export async function fetchUploadedFileBuffer(storedUrl: string): Promise<Buffer
     const relative = normalized.slice('/uploads/'.length);
     const filePath = path.join(UPLOADS_ROOT, relative);
     if (!fs.existsSync(filePath)) {
-      throw new AppError(404, 'Publication file not found', 'NOT_FOUND');
+      throw new AppError(404, localFileMissingMessage(), 'NOT_FOUND');
     }
     return fs.readFileSync(filePath);
   }
 
-  if (normalized.startsWith('http://') || normalized.startsWith('https://')) {
-    const res = await fetch(normalized);
+  if (isRemoteStorageUrl(normalized)) {
+    let res: Response;
+    try {
+      res = await fetch(normalized);
+    } catch {
+      throw new AppError(502, 'Could not retrieve publication file from storage', 'STORAGE_FETCH_FAILED');
+    }
     if (!res.ok) {
-      throw new AppError(404, 'Publication file not found', 'NOT_FOUND');
+      throw new AppError(
+        404,
+        res.status === 404 ? 'Publication file not found in storage' : 'Could not retrieve publication file from storage',
+        'NOT_FOUND'
+      );
     }
     return Buffer.from(await res.arrayBuffer());
   }
 
-  throw new AppError(404, 'Publication file not found', 'NOT_FOUND');
+  throw new AppError(404, 'Publication file URL is invalid or unsupported', 'NOT_FOUND');
+}
+
+export type PublicationDocumentResult =
+  | { kind: 'redirect'; url: string }
+  | { kind: 'buffer'; buffer: Buffer; filename: string };
+
+/** Resolve a stored publication file for authenticated download (redirect to Cloudinary when possible). */
+export async function resolvePublicationDocument(
+  storedUrl: string,
+  filename: string
+): Promise<PublicationDocumentResult> {
+  const normalized = normalizePublicAssetUrl(storedUrl) ?? storedUrl;
+
+  if (isRemoteStorageUrl(normalized)) {
+    return { kind: 'redirect', url: normalized };
+  }
+
+  const buffer = await fetchUploadedFileBuffer(normalized);
+  return { kind: 'buffer', buffer, filename };
 }

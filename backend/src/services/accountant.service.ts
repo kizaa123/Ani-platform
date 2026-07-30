@@ -5,6 +5,7 @@ import { AppError, assertFound } from '../utils/errors';
 import {
   aniPlatformShareAmount,
   orderShareRecognizedAt,
+  publicationPlatformShareAmount,
 } from '../utils/distributionFinancials';
 
 const CHART_MONTHS = 6;
@@ -75,16 +76,15 @@ export const updateWithdrawalSchema = z.object({
 
 export class AccountantService {
   private async accessTotals() {
-    const [farmAccessAgg, researchAgg, accessPaymentRevenue] = await Promise.all([
+    const [farmAccessAgg, completedResearchPurchases, accessPaymentRevenue] = await Promise.all([
       prisma.buyerFarmerAccess.aggregate({
         where: { status: 'COMPLETED' },
         _sum: { amount: true },
         _count: { id: true },
       }),
-      prisma.researchPurchase.aggregate({
+      prisma.researchPurchase.findMany({
         where: { status: 'COMPLETED' },
-        _sum: { amount: true },
-        _count: { id: true },
+        select: { amount: true },
       }),
       prisma.payment.aggregate({
         where: { status: 'COMPLETED' },
@@ -94,7 +94,11 @@ export class AccountantService {
     ]);
 
     const farmAccessRevenue = farmAccessAgg._sum.amount ?? 0;
-    const researchRevenue = researchAgg._sum.amount ?? 0;
+    const researchGrossSales = completedResearchPurchases.reduce((sum, purchase) => sum + purchase.amount, 0);
+    const researchRevenue = completedResearchPurchases.reduce(
+      (sum, purchase) => sum + publicationPlatformShareAmount(purchase.amount),
+      0
+    );
     const legacyAccessRevenue = accessPaymentRevenue._sum.amount ?? 0;
     const accessRevenue = farmAccessRevenue + researchRevenue + legacyAccessRevenue;
 
@@ -102,12 +106,13 @@ export class AccountantService {
       accessRevenue,
       farmAccessRevenue,
       researchRevenue,
+      researchGrossSales,
       legacyAccessRevenue,
       farmAccessCount: farmAccessAgg._count.id,
-      researchSaleCount: researchAgg._count.id,
+      researchSaleCount: completedResearchPurchases.length,
       legacyAccessCount: accessPaymentRevenue._count.id,
       accessPaymentCount:
-        farmAccessAgg._count.id + researchAgg._count.id + accessPaymentRevenue._count.id,
+        farmAccessAgg._count.id + completedResearchPurchases.length + accessPaymentRevenue._count.id,
     };
   }
 
@@ -147,6 +152,7 @@ export class AccountantService {
       orderShareCount: orderShare.orderShareCount,
       farmAccessRevenue: access.farmAccessRevenue,
       researchRevenue: access.researchRevenue,
+      researchGrossSales: access.researchGrossSales,
       legacyAccessRevenue: access.legacyAccessRevenue,
       transactionCount,
       farmAccessCount: access.farmAccessCount,
@@ -248,7 +254,10 @@ export class AccountantService {
 
     const accessRows = [
       ...completedFarmAccess.map((a) => ({ createdAt: a.createdAt, amount: a.amount })),
-      ...completedResearch.map((r) => ({ createdAt: r.createdAt, amount: r.amount })),
+      ...completedResearch.map((r) => ({
+        createdAt: r.createdAt,
+        amount: publicationPlatformShareAmount(r.amount),
+      })),
       ...completedPayments.map((p) => ({ createdAt: p.createdAt, amount: p.amount })),
     ];
     const totalRows = [...accessRows, ...orderShareRows];
@@ -276,20 +285,26 @@ export class AccountantService {
     } = await this.chartWindowData();
 
     const farmRows = completedFarmAccess.map((a) => ({ createdAt: a.createdAt, amount: a.amount }));
-    const researchRows = completedResearch.map((r) => ({ createdAt: r.createdAt, amount: r.amount }));
+    const researchRows = completedResearch.map((r) => ({
+      createdAt: r.createdAt,
+      amount: publicationPlatformShareAmount(r.amount),
+    }));
     const legacyRows = completedPayments.map((p) => ({ createdAt: p.createdAt, amount: p.amount }));
-    const accessRows = [...farmRows, ...researchRows, ...legacyRows];
-    const totalRows = [...accessRows, ...orderShareRows];
 
     const farmByMonth = sumByMonth(farmRows, monthKeys);
     const researchByMonth = sumByMonth(researchRows, monthKeys);
     const legacyByMonth = sumByMonth(legacyRows, monthKeys);
-    const accessByMonth = sumByMonth(accessRows, monthKeys);
+    const accessByMonth = sumByMonth([...farmRows, ...legacyRows], monthKeys);
     const orderShareByMonth = sumByMonth(orderShareRows, monthKeys);
-    const revenueByMonth = sumByMonth(totalRows, monthKeys);
+    const revenueByMonth = sumByMonth([...farmRows, ...legacyRows, ...researchRows, ...orderShareRows], monthKeys);
     const withdrawalsByMonth = sumByMonth(withdrawals, monthKeys);
     const volumeByMonth = countByMonth(
-      [...accessRows, ...orderShareRows.map((r) => ({ createdAt: r.createdAt }))],
+      [
+        ...farmRows,
+        ...legacyRows,
+        ...researchRows,
+        ...orderShareRows.map((r) => ({ createdAt: r.createdAt })),
+      ],
       monthKeys
     );
 
@@ -312,10 +327,16 @@ export class AccountantService {
         label: formatMonthLabel(key),
         revenue: orderShareByMonth[index],
       })),
+      monthlyResearchPlatformRevenue: monthKeys.map((key, index) => ({
+        month: key,
+        label: formatMonthLabel(key),
+        revenue: researchByMonth[index],
+      })),
       revenueBySource: monthKeys.map((key, index) => ({
         month: key,
         label: formatMonthLabel(key),
         access: accessByMonth[index],
+        research: researchByMonth[index],
         orderShare: orderShareByMonth[index],
       })),
       accessBreakdownByMonth: monthKeys.map((key, index) => ({
@@ -326,12 +347,13 @@ export class AccountantService {
         legacyAccess: legacyByMonth[index],
       })),
       revenueStreamTotals: [
-        { key: 'access', label: 'Access income', amount: revenue.accessRevenue },
+        { key: 'access', label: 'Access income', amount: revenue.farmAccessRevenue + revenue.legacyAccessRevenue },
+        { key: 'research', label: 'Publication share (10%)', amount: revenue.researchRevenue },
         { key: 'orderShare', label: 'Order share', amount: revenue.orderShareRevenue },
       ].filter((row) => row.amount > 0),
       accessBreakdownTotals: [
         { key: 'farmAccess', label: 'Farm access', amount: revenue.farmAccessRevenue },
-        { key: 'research', label: 'Publication access', amount: revenue.researchRevenue },
+        { key: 'research', label: 'Publication share (10%)', amount: revenue.researchRevenue },
         { key: 'legacyAccess', label: 'Other access', amount: revenue.legacyAccessRevenue },
       ].filter((row) => row.amount > 0),
       transactionVolume: monthKeys.map((key, index) => ({

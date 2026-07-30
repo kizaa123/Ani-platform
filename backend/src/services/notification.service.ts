@@ -734,14 +734,15 @@ export async function notifyResearchPurchase(
   studentId: string,
   studentName: string,
   publicationTitle: string,
-  amount: number
+  grossAmount: number,
+  researcherShare: number
 ) {
   await createNotification({
     userId: researcherId,
     actorId: studentId,
     type: 'RESEARCH_PURCHASE',
     title: 'Publication purchased',
-    body: `${studentName} paid GHC ${amount.toFixed(2)} for "${publicationTitle}".`,
+    body: `${studentName} paid GHC ${grossAmount.toFixed(2)} for "${publicationTitle}". Your share (90%): GHC ${researcherShare.toFixed(2)}.`,
     link: '/researcher/financials',
     metadata: {
       actionUrl: '/researcher/financials',

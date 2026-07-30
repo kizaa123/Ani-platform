@@ -221,6 +221,8 @@ function RegisterForm() {
   const searchParams = useSearchParams();
   const queryError = searchParams.get("error");
   const profileInputRef = useRef<HTMLInputElement>(null);
+  const formColumnRef = useRef<HTMLDivElement>(null);
+  const skipInitialStepScrollRef = useRef(true);
 
   const [farmerHandlers, setFarmerHandlers] = useState<HandlerProfile[]>([]);
   const [buyerHandlers, setBuyerHandlers] = useState<HandlerProfile[]>([]);
@@ -368,6 +370,19 @@ function RegisterForm() {
     setSelectedCommodities([]);
     setForm((prev) => ({ ...prev, handlerId: "" }));
   }, [form.roleId]);
+
+  useEffect(() => {
+    if (skipInitialStepScrollRef.current) {
+      skipInitialStepScrollRef.current = false;
+      return;
+    }
+    if (!window.matchMedia("(max-width: 1023px)").matches) return;
+
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      formColumnRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }, [step]);
 
   const handleProfileSelect = (file: File) => {
     setProfileFile(file);
@@ -519,7 +534,10 @@ function RegisterForm() {
       </div>
 
       {/* Right Column: Form Container */}
-      <div className="lg:col-span-6 flex items-start justify-center p-6 sm:p-12 lg:p-16 overflow-y-auto">
+      <div
+        ref={formColumnRef}
+        className="lg:col-span-6 flex items-start justify-center p-6 sm:p-12 lg:p-16 overflow-y-auto"
+      >
         <ScrollReveal trigger="mount" delay={120} duration={500} direction="fade-up" className="w-full max-w-xl">
         <div className="space-y-8 bg-white p-8 rounded-2xl border border-brand-100 shadow-xl">
           <header className="text-center lg:text-left">

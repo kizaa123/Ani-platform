@@ -4,7 +4,7 @@ import prisma from '../database/prisma';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { ApiResponse } from '../utils/response';
 import { isFarmerRole } from '../constants/roles';
-import { persistUploadedFile } from '../services/storage.service';
+import { persistPublicationFile, persistUploadedFile } from '../services/storage.service';
 import { researcherService } from '../services/researcher.service';
 
 function isPdfFile(file: Express.Multer.File): boolean {
@@ -66,8 +66,8 @@ export class UploadController {
       }
 
       const result: { fileUrl?: string; coverImage?: string } = {};
-      if (file) result.fileUrl = await persistUploadedFile(file, 'publications');
-      if (cover) result.coverImage = await persistUploadedFile(cover, 'publications');
+      if (file) result.fileUrl = await persistPublicationFile(file, 'document');
+      if (cover) result.coverImage = await persistPublicationFile(cover, 'cover');
 
       ApiResponse.success(res, result);
     } catch (e) {

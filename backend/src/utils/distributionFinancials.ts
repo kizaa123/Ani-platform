@@ -13,6 +13,19 @@ export const BUYER_HANDLER_SHARE_PERCENT = 10;
 export const ANI_PLATFORM_SHARE_PERCENT =
   100 - FARMER_SHARE_PERCENT - FARMER_HANDLER_SHARE_PERCENT - BUYER_HANDLER_SHARE_PERCENT;
 
+/** Buyer pays listed price X; ANI retains 10% of publication sales. */
+export const PUBLICATION_PLATFORM_SHARE_PERCENT = 10;
+/** Researcher receives the remainder after the platform cut (90%). */
+export const PUBLICATION_RESEARCHER_SHARE_PERCENT = 90;
+
+export function publicationPlatformShareAmount(grossAmount: number): number {
+  return distributionShareAmount(grossAmount, PUBLICATION_PLATFORM_SHARE_PERCENT);
+}
+
+export function publicationResearcherShareAmount(grossAmount: number): number {
+  return roundGhc(grossAmount - publicationPlatformShareAmount(grossAmount));
+}
+
 export type DistributionAmounts = {
   farmer: number;
   farmerHandler: number;

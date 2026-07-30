@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { AppError } from '../utils/errors';
 
 function createTransport() {
   const host = process.env.SMTP_HOST?.trim();
@@ -21,22 +22,31 @@ function createTransport() {
 export async function sendVerificationCodeEmail(to: string, code: number) {
   const from = process.env.EMAIL_FROM?.trim() || 'ANI Platform <noreply@ani-platform.local>';
   const subject = 'Your ANI Platform verification code';
+  const formattedCode = String(code).padStart(6, '0');
   const text = [
     'Verify your email address on ANI Platform.',
     '',
-    `Your verification code is: ${code}`,
+    `Your verification code is: ${formattedCode}`,
     '',
-    'Return to the app and select the number shown in this email from the three options on screen.',
+    'Enter this code on the Complete Profile screen to verify your email.',
     '',
     'This code expires in 15 minutes. If you did not request this, you can ignore this message.',
   ].join('\n');
 
   const transport = createTransport();
   if (!transport) {
-    console.log('[email:dev] Verification code for', to, '→', code);
+    console.log('[email:dev] Verification code for', to, '→', formattedCode);
     return { devMode: true as const };
   }
 
-  await transport.sendMail({ from, to, subject, text });
-  return { devMode: false as const };
+  try {
+    await transport.sendMail({ from, to, subject, text });
+    return { devMode: false as const };
+  } catch (err) {
+    console.error('[email] Failed to send verification email:', err);
+    throw new AppError(
+      503,
+      'Could not send verification email. Check SMTP settings or try again later.'
+    );
+  }
 }

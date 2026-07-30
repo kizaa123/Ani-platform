@@ -9,6 +9,7 @@ import { scrollStagger } from "@/lib/scrollStagger";
 
 const STREAM_COLORS = {
   access: "#40916c",
+  research: "#52b788",
   orderShare: "#2d6a4f",
 } as const;
 
@@ -200,13 +201,14 @@ function StackedStreamChart({
   const pad = { top: 18, right: 8, bottom: 26, left: 36 };
   const innerW = width - pad.left - pad.right;
   const innerH = height - pad.top - pad.bottom;
-  const max = Math.max(...data.map((d) => d.access + d.orderShare), 1);
+  const max = Math.max(...data.map((d) => d.access + d.research + d.orderShare), 1);
   const barGroupW = innerW / Math.max(data.length, 1);
   const barW = Math.min(barGroupW * 0.55, 28);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const segments = [
     { key: "access" as const, label: "Access income", color: STREAM_COLORS.access },
+    { key: "research" as const, label: "Publication share", color: STREAM_COLORS.research },
     { key: "orderShare" as const, label: "Order share", color: STREAM_COLORS.orderShare },
   ];
 
@@ -332,7 +334,7 @@ function StackedAccessChart({
 
   const segments = [
     { key: "farmAccess" as const, label: "Farm access", color: ACCESS_COLORS.farmAccess },
-    { key: "research" as const, label: "Publication access", color: ACCESS_COLORS.research },
+    { key: "research" as const, label: "Publication share (10%)", color: ACCESS_COLORS.research },
     { key: "legacyAccess" as const, label: "Other access", color: ACCESS_COLORS.legacyAccess },
   ];
 
@@ -642,7 +644,7 @@ export function AccountantDashboardChartsPanel({ charts }: { charts: AccountantD
     <div className="space-y-4">
       <div className="grid gap-4 lg:grid-cols-2">
         <ScrollReveal delay={scrollStagger(0, 100)} duration={500} direction="fade-up">
-          <ChartPanel title="Access income trend" subtitle="Farm access, publication access, and other access fees (last 6 months)">
+          <ChartPanel title="Access income trend" subtitle="Farm access and other access fees (last 6 months)">
             <RevenueAreaChart
               data={charts.monthlyAccessRevenue}
               strokeColor={STREAM_COLORS.access}
@@ -652,6 +654,16 @@ export function AccountantDashboardChartsPanel({ charts }: { charts: AccountantD
         </ScrollReveal>
 
         <ScrollReveal delay={scrollStagger(1, 100)} duration={500} direction="fade-up">
+          <ChartPanel title="Publication platform share" subtitle="ANI 10% from publication sales (last 6 months)">
+            <RevenueAreaChart
+              data={charts.monthlyResearchPlatformRevenue}
+              strokeColor={ACCESS_COLORS.research}
+              gradientId="researchPlatformGradient"
+            />
+          </ChartPanel>
+        </ScrollReveal>
+
+        <ScrollReveal delay={scrollStagger(2, 100)} duration={500} direction="fade-up">
           <ChartPanel title="Order share trend" subtitle="ANI remainder from released client orders (~13.34% after splits)">
             <RevenueAreaChart
               data={charts.monthlyOrderShareRevenue}
@@ -663,14 +675,14 @@ export function AccountantDashboardChartsPanel({ charts }: { charts: AccountantD
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <ScrollReveal delay={scrollStagger(2, 100)} duration={500} direction="fade-up">
-          <ChartPanel title="Income streams" subtitle="Access vs order share by month">
+        <ScrollReveal delay={scrollStagger(3, 100)} duration={500} direction="fade-up">
+          <ChartPanel title="Income streams" subtitle="Access, publication share, and order share by month">
             <StackedStreamChart data={charts.revenueBySource} />
           </ChartPanel>
         </ScrollReveal>
 
-        <ScrollReveal delay={scrollStagger(3, 100)} duration={500} direction="fade-up">
-          <ChartPanel title="Platform revenue mix" subtitle="All-time share: access income vs order share">
+        <ScrollReveal delay={scrollStagger(4, 100)} duration={500} direction="fade-up">
+          <ChartPanel title="Platform revenue mix" subtitle="All-time share across income streams">
             {streamSegments.length === 0 ? (
               <p className="text-xs text-gray-500">No revenue recorded yet.</p>
             ) : (
@@ -679,13 +691,13 @@ export function AccountantDashboardChartsPanel({ charts }: { charts: AccountantD
           </ChartPanel>
         </ScrollReveal>
 
-        <ScrollReveal delay={scrollStagger(4, 100)} duration={500} direction="fade-up">
+        <ScrollReveal delay={scrollStagger(5, 100)} duration={500} direction="fade-up">
           <ChartPanel title="Access income breakdown" subtitle="Stacked monthly view of access fee types">
             <StackedAccessChart data={charts.accessBreakdownByMonth} />
           </ChartPanel>
         </ScrollReveal>
 
-        <ScrollReveal delay={scrollStagger(5, 100)} duration={500} direction="fade-up">
+        <ScrollReveal delay={scrollStagger(6, 100)} duration={500} direction="fade-up">
           <ChartPanel title="Access fee mix" subtitle="All-time share within access income">
             {accessSegments.length === 0 ? (
               <p className="text-xs text-gray-500">No access revenue recorded yet.</p>
@@ -695,13 +707,13 @@ export function AccountantDashboardChartsPanel({ charts }: { charts: AccountantD
           </ChartPanel>
         </ScrollReveal>
 
-        <ScrollReveal delay={scrollStagger(6, 100)} duration={500} direction="fade-up">
-          <ChartPanel title="Total platform income" subtitle="Combined access + order share by month">
+        <ScrollReveal delay={scrollStagger(7, 100)} duration={500} direction="fade-up">
+          <ChartPanel title="Total platform income" subtitle="Access, publication share, and order share by month">
             <RevenueAreaChart data={charts.monthlyRevenue} />
           </ChartPanel>
         </ScrollReveal>
 
-        <ScrollReveal delay={scrollStagger(7, 100)} duration={500} direction="fade-up">
+        <ScrollReveal delay={scrollStagger(8, 100)} duration={500} direction="fade-up">
           <ChartPanel title="Income vs withdrawals" subtitle="Cash received compared to completed withdrawals">
             <CashFlowChart data={charts.cashFlow} />
           </ChartPanel>

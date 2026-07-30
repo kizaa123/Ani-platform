@@ -24,6 +24,7 @@ export interface User {
   verificationStatus: string;
   emailVerified?: boolean;
   profileComplete?: boolean;
+  hasGoogleAuth?: boolean;
   verificationTags?: UserVerificationTag[];
 }
 
@@ -941,6 +942,7 @@ export interface ResearcherFinancialStatement {
     title: string;
     studentName: string;
     studentEmail: string;
+    grossAmount?: number;
     amount: number;
     paymentMethod: string;
     transactionId?: string | null;
@@ -1008,6 +1010,7 @@ export interface PlatformFinancialStatementLineItem {
   description: string;
   partyName: string;
   amount: number;
+  grossAmount?: number;
   paymentMethod: string;
   status: string;
   escrowStatus?: string;
@@ -1022,6 +1025,7 @@ export interface PlatformFinancialStatement {
     productOrderRevenue: number;
     farmAccessRevenue: number;
     researchRevenue: number;
+    researchGrossSales?: number;
     transactionCount: number;
     productOrderCount: number;
     farmAccessCount: number;
@@ -1038,6 +1042,7 @@ export interface AccountantOverview {
   orderShareCount: number;
   farmAccessRevenue: number;
   researchRevenue: number;
+  researchGrossSales?: number;
   legacyAccessRevenue: number;
   transactionCount: number;
   farmAccessCount: number;
@@ -1076,10 +1081,16 @@ export interface AccountantDashboardCharts {
     label: string;
     revenue: number;
   }[];
+  monthlyResearchPlatformRevenue: {
+    month: string;
+    label: string;
+    revenue: number;
+  }[];
   revenueBySource: {
     month: string;
     label: string;
     access: number;
+    research: number;
     orderShare: number;
   }[];
   accessBreakdownByMonth: {

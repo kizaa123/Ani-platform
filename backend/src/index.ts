@@ -13,7 +13,9 @@ app.listen(PORT, HOST, () => {
   console.log(
     isCloudStorageEnabled()
       ? 'Upload storage: Cloudinary (persistent)'
-      : 'Upload storage: local disk (dev only — set CLOUDINARY_* on Render)'
+      : process.env.NODE_ENV === 'production'
+        ? 'WARNING: Upload storage is local disk — files will be lost on redeploy. Set CLOUDINARY_* env vars.'
+        : 'Upload storage: local disk (dev only — set CLOUDINARY_* on Render for production)'
   );
 });
 

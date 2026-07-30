@@ -195,7 +195,10 @@ export const emailVerificationVerifySchema = z.object({
     z.string().email()
   ),
   challengeId: z.string().uuid(),
-  selectedIndex: z.coerce.number().int().min(0).max(2),
+  code: z.preprocess(
+    (val) => (typeof val === 'string' ? val.trim() : val),
+    z.string().regex(/^\d{6}$/, 'Enter the 6-digit code from your email')
+  ),
 });
 
 export const updateUserProfileSchema = z.object({
@@ -218,6 +221,7 @@ function sanitizeUser(user: {
   verificationStatus: string;
   emailVerified?: boolean;
   profileComplete?: boolean;
+  googleId?: string | null;
   role: { roleName: string };
 }) {
   return {
@@ -231,6 +235,7 @@ function sanitizeUser(user: {
     verificationStatus: user.verificationStatus,
     emailVerified: user.emailVerified ?? false,
     profileComplete: user.profileComplete ?? true,
+    hasGoogleAuth: Boolean(user.googleId),
   };
 }
 
@@ -520,6 +525,7 @@ export class AuthService {
       verificationStatus: user.verificationStatus,
       emailVerified: user.emailVerified,
       profileComplete: user.profileComplete,
+      hasGoogleAuth: Boolean(user.googleId),
       verificationTags: user.verificationTags.map((tag) => ({
         id: tag.id,
         userId: tag.userId,
@@ -704,7 +710,12 @@ export class AuthService {
       throw new AppError(400, 'Verify your email before completing your profile');
     }
 
-    const passwordHash = input.password ? await hashPassword(input.password) : user.passwordHash;
+    const isGoogleUser = Boolean(user.googleId);
+    const passwordHash = isGoogleUser
+      ? user.passwordHash
+      : input.password
+        ? await hashPassword(input.password)
+        : user.passwordHash;
 
     const role = assertFound(
       await prisma.role.findUnique({ where: { id: input.roleId } }),
