@@ -89,12 +89,14 @@ function LoginForm() {
         <div className="flex flex-1 items-center justify-center p-6 sm:p-12 lg:p-16">
         <ScrollReveal trigger="mount" delay={120} duration={500} direction="fade-up" className="w-full max-w-md">
         <div className="space-y-8 bg-white p-8 rounded-2xl border border-brand-100 shadow-xl">
-          <header className="text-center lg:text-left">
-            <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50/80 p-2 border border-brand-100/80 shadow-2xs">
-              <LogoIcon theme="dark" className="h-8 w-auto" />
+          <header className="text-left">
+            <div className="flex items-center gap-3.5 mb-2">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-50/80 p-2 border border-brand-100/80 shadow-2xs">
+                <LogoIcon theme="dark" className="h-8 w-auto" />
+              </div>
+              <h1 className="text-3xl font-extrabold text-brand-900 tracking-tight">Login Here</h1>
             </div>
-            <h1 className="text-3xl font-extrabold text-brand-900 tracking-tight">Login here</h1>
-            <p className="mt-2 text-sm text-gray-500">Sign in to your ANI account</p>
+            <p className="text-sm text-gray-500">Sign in to your ANI account</p>
           </header>
 
           {(error || queryError) && (
