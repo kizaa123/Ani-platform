@@ -14,6 +14,8 @@ import {
 import { CountrySelect } from "@/components/CountrySelect";
 import { HandlerSelect } from "@/components/HandlerSelect";
 import { CommodityPicker } from "@/components/CommodityPicker";
+import { CustomProductInput } from "@/components/CustomProductInput";
+import { QualificationSelector } from "@/components/QualificationSelector";
 import { Icon } from "@/components/icons";
 import { AuthDivider, GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { PlatformBrandTitle } from "@/components/PlatformBrandTitle";
@@ -45,7 +47,7 @@ const GOOGLE_DEV_MODE = process.env.NEXT_PUBLIC_GOOGLE_DEV_MODE === "true";
 const ALL_ROLES = [
   { group: "Fellow",                  id: ROLES.CROP_FARMER,         label: "Fellow — Crop" },
   { group: "Fellow",                  id: ROLES.LIVESTOCK_FARMER,    label: "Fellow — Livestock" },
-  { group: "Fellow",                  id: ROLES.ORGANIZATION_FARMER, label: "Fellow — Organizations" },
+  { group: "Fellow",                  id: ROLES.ORGANIZATION_FARMER, label: "Fellow — Organization" },
   { group: "Research & Commerce",      id: ROLES.RESEARCHER,       label: "Researcher" },
   { group: "Research & Commerce",      id: ROLES.BUYER,            label: "Client" },
   { group: "Support & Operations",     id: ROLES.FARMER_HANDLER,   label: "Fellow Liaison Officer" },
@@ -74,14 +76,15 @@ function buildRegisterPayload(
     address: string;
     roleId: number;
     farmName: string;
-    farmSize: string;
     experienceYears: number;
     company: string;
     institution: string;
     expertise: string;
+    qualifications: string[];
     handlerId: string;
   },
   selectedCommodities: number[],
+  customProducts: string[],
   isFarmerRole: boolean,
   needsHandler: boolean
 ) {
@@ -101,15 +104,16 @@ function buildRegisterPayload(
   if (needsHandler && form.handlerId.trim()) payload.handlerId = form.handlerId.trim();
 
   if (isFarmerRole) {
-    payload.commodityIds = selectedCommodities;
+    if (selectedCommodities.length > 0) payload.commodityIds = selectedCommodities;
+    if (customProducts.length > 0) payload.customProducts = customProducts;
     if (form.farmName.trim()) payload.farmName = form.farmName.trim();
-    if (form.farmSize.trim()) payload.farmSize = form.farmSize.trim();
     if (form.experienceYears > 0) payload.experienceYears = form.experienceYears;
   } else if (form.roleId === ROLES.BUYER && form.company.trim()) {
     payload.company = form.company.trim();
   } else if (form.roleId === ROLES.RESEARCHER) {
     if (form.institution.trim()) payload.institution = form.institution.trim();
     if (form.expertise.trim()) payload.expertise = form.expertise.trim();
+    if (form.qualifications.length > 0) payload.qualifications = form.qualifications;
   }
 
   return payload;
@@ -209,6 +213,8 @@ function RegisterForm() {
   const [step, setStep] = useState(1);
   const [categories, setCategories] = useState<CommodityCategory[]>([]);
   const [selectedCommodities, setSelectedCommodities] = useState<number[]>([]);
+  const [customProducts, setCustomProducts] = useState<string[]>([]);
+  const [commodityMode, setCommodityMode] = useState<"catalog" | "custom">("catalog");
   const [profilePreview, setProfilePreview] = useState<string | null>(null);
   const [profileFile, setProfileFile] = useState<File | null>(null);
   const [error, setError] = useState("");
@@ -229,8 +235,8 @@ function RegisterForm() {
   const [form, setForm] = useState({
     firstName: "", lastName: "", email: "", phone: "", password: "",
     country: "", region: "", city: "", address: "",
-    roleId: ROLES.BUYER as number, farmName: "", farmSize: "", experienceYears: 0, company: "",
-    institution: "", expertise: "",
+    roleId: ROLES.BUYER as number, farmName: "", experienceYears: 0, company: "",
+    institution: "", expertise: "", qualifications: [] as string[],
     handlerId: "",
   });
 
@@ -269,6 +275,7 @@ function RegisterForm() {
         handlerId: form.handlerId,
       },
       selectedCommodities,
+      customProducts,
       isFarmerRole,
       needsHandler,
       availableHandlersCount: availableHandlers.length,
@@ -286,6 +293,7 @@ function RegisterForm() {
       form.roleId,
       form.handlerId,
       selectedCommodities,
+      customProducts,
       isFarmerRole,
       needsHandler,
       availableHandlers.length,
@@ -368,6 +376,8 @@ function RegisterForm() {
 
   useEffect(() => {
     setSelectedCommodities([]);
+    setCustomProducts([]);
+    setCommodityMode("catalog");
     setForm((prev) => ({ ...prev, handlerId: "" }));
   }, [form.roleId]);
 
@@ -438,7 +448,7 @@ function RegisterForm() {
     setLoading(true);
     try {
       await register(
-        buildRegisterPayload(form, selectedCommodities, isFarmerRole, needsHandler)
+        buildRegisterPayload(form, selectedCommodities, customProducts, isFarmerRole, needsHandler)
       );
 
       if (isFarmerRole && profileFile) {
@@ -914,34 +924,21 @@ function RegisterForm() {
                   />
                 </div>
 
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <div className="auth-field">
-                    <label htmlFor="reg-farm-size" className="auth-label">
-                      Farm Size
-                    </label>
-                    <input
-                      id="reg-farm-size"
-                      placeholder="e.g. 10 acres"
-                      value={form.farmSize}
-                      onChange={(e) => setForm({ ...form, farmSize: e.target.value })}
-                      className="auth-input"
-                    />
-                  </div>
-                  <div className="auth-field">
-                    <label htmlFor="reg-experience" className="auth-label">
-                      Experience (years)
-                    </label>
-                    <input
-                      id="reg-experience"
-                      type="number"
-                      min={0}
-                      value={form.experienceYears}
-                      onChange={(e) =>
-                        setForm({ ...form, experienceYears: parseInt(e.target.value) || 0 })
-                      }
-                      className="auth-input"
-                    />
-                  </div>
+                <div className="auth-field">
+                  <label htmlFor="reg-experience" className="auth-label">
+                    Experience (years) <span className="font-normal text-gray-500">(optional)</span>
+                  </label>
+                  <input
+                    id="reg-experience"
+                    type="number"
+                    min={0}
+                    placeholder="e.g. 5"
+                    value={form.experienceYears || ""}
+                    onChange={(e) =>
+                      setForm({ ...form, experienceYears: parseInt(e.target.value, 10) || 0 })
+                    }
+                    className="auth-input"
+                  />
                 </div>
               </>
             )}
@@ -984,6 +981,16 @@ function RegisterForm() {
                     onChange={(e) => setForm({ ...form, expertise: e.target.value })}
                     className="auth-input"
                     placeholder="e.g. Agricultural Economics"
+                  />
+                </div>
+                <div className="auth-field">
+                  <label htmlFor="reg-qualifications" className="auth-label">
+                    Qualifications <span className="text-gray-400">(optional)</span>
+                  </label>
+                  <QualificationSelector
+                    idPrefix="reg"
+                    value={form.qualifications}
+                    onChange={(qualifications) => setForm({ ...form, qualifications })}
                   />
                 </div>
               </>
@@ -1045,29 +1052,107 @@ function RegisterForm() {
                 <Icon name="leaf" className="mt-0.5 h-5 w-5 shrink-0 text-brand-700" />
                 <div>
                   <h3 className="auth-section-title">
-                    Select {categoryFilter === "All" ? "Commodities" : `${categoryFilter} Commodities`}
+                    {commodityMode === "custom"
+                      ? "Product"
+                      : categoryFilter === "All"
+                        ? "Commodities"
+                        : `${categoryFilter} Commodities`}
                   </h3>
                   <p className="auth-hint mt-1">
-                    Search and choose the{" "}
-                    {categoryFilter === "All" ? "crop and livestock products" : categoryFilter?.toLowerCase()}{" "}
-                    you produce. Buyers will see these on your profile.
+                    {commodityMode === "custom"
+                      ? "Type the products you produce. Buyers will see these on your profile."
+                      : `Search and choose the ${
+                          categoryFilter === "All"
+                            ? "crop and livestock products"
+                            : categoryFilter?.toLowerCase()
+                        } you produce. Buyers will see these on your profile.`}
                   </p>
                 </div>
               </div>
             </div>
 
-            <CommodityPicker
-              categories={categories}
-              roleId={form.roleId}
-              mode="multi"
-              selectedIds={selectedCommodities}
-              onSelectionChange={(ids) => {
-                clearBackendError("commodities");
-                setSelectedCommodities(ids);
-              }}
-              idPrefix="reg-commodity"
-              invalid={!!fieldError("commodities")}
-            />
+            <div className="mb-4 flex rounded-xl border border-brand-200 bg-brand-50/50 p-1">
+              <button
+                type="button"
+                onClick={() => setCommodityMode("catalog")}
+                className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold transition ${
+                  commodityMode === "catalog"
+                    ? "bg-white text-brand-900 shadow-sm"
+                    : "text-gray-600 hover:text-brand-800"
+                }`}
+              >
+                Select from list
+              </button>
+              <button
+                type="button"
+                onClick={() => setCommodityMode("custom")}
+                className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold transition ${
+                  commodityMode === "custom"
+                    ? "bg-white text-brand-900 shadow-sm"
+                    : "text-gray-600 hover:text-brand-800"
+                }`}
+              >
+                Type my products
+              </button>
+            </div>
+
+            {commodityMode === "catalog" ? (
+              <CommodityPicker
+                categories={categories}
+                roleId={form.roleId}
+                mode="multi"
+                selectedIds={selectedCommodities}
+                onSelectionChange={(ids) => {
+                  clearBackendError("commodities");
+                  setSelectedCommodities(ids);
+                }}
+                idPrefix="reg-commodity"
+                invalid={!!fieldError("commodities")}
+              />
+            ) : (
+              <CustomProductInput
+                products={customProducts}
+                onChange={(products) => {
+                  clearBackendError("commodities");
+                  setCustomProducts(products);
+                }}
+                idPrefix="reg-product"
+                invalid={!!fieldError("commodities")}
+              />
+            )}
+
+            {(selectedCommodities.length > 0 || customProducts.length > 0) && (
+              <div className="rounded-xl border border-brand-100 bg-brand-50/60 p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  Your selections
+                </p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {selectedCommodities.map((id) => {
+                    const name =
+                      categories
+                        .flatMap((c) => c.commodities ?? [])
+                        .find((c) => c.id === id)?.name ?? `Commodity #${id}`;
+                    return (
+                      <span
+                        key={`catalog-${id}`}
+                        className="rounded-full border border-brand-200 bg-white px-2.5 py-0.5 text-xs font-medium text-brand-800"
+                      >
+                        {name}
+                      </span>
+                    );
+                  })}
+                  {customProducts.map((product, index) => (
+                    <span
+                      key={`custom-${product}-${index}`}
+                      className="rounded-full border border-brand-200 bg-white px-2.5 py-0.5 text-xs font-medium text-brand-800"
+                    >
+                      {product}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <FieldErrorMessage message={fieldError("commodities")} />
 
             <div className="auth-nav">

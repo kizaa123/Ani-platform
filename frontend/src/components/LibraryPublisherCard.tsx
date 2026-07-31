@@ -2,6 +2,7 @@
 
 import { PublisherBrowseCard } from "@/lib/types";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
+import { QualificationBadges } from "@/components/QualificationBadges";
 import { Icon } from "@/components/icons";
 
 interface LibraryPublisherCardProps {
@@ -56,6 +57,7 @@ export function LibraryPublisherCard({ publisher, onViewFiles }: LibraryPublishe
           <p className="mt-1 text-xs text-gray-500">
             {publisher.publicationCount} publication{publisher.publicationCount === 1 ? "" : "s"}
           </p>
+          <QualificationBadges qualifications={publisher.qualifications} className="mt-2" />
         </div>
       </div>
 

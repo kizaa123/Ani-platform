@@ -5,7 +5,7 @@ import { sendVerificationCodeEmail } from './email.service';
 const CHALLENGE_TTL_MS = 15 * 60 * 1000;
 
 function generateVerificationCode(): number {
-  return Math.floor(100000 + Math.random() * 900000);
+  return Math.floor(1000 + Math.random() * 9000);
 }
 
 export class EmailVerificationService {
@@ -40,8 +40,8 @@ export class EmailVerificationService {
   async verifyChallenge(email: string, challengeId: string, code: string) {
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedCode = code.trim();
-    if (!/^\d{6}$/.test(normalizedCode)) {
-      throw new AppError(400, 'Enter the 6-digit code from your email');
+    if (!/^\d{4}$/.test(normalizedCode)) {
+      throw new AppError(400, 'Enter the 4-digit code from your email');
     }
 
     const challenge = await prisma.emailVerificationChallenge.findUnique({

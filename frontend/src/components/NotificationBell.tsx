@@ -88,17 +88,21 @@ function RichNotificationContent({ n }: { n: AppNotification }) {
         </p>
       )}
 
-      {n.type === "NEW_FARMER" && (n.metadata?.farmSize || n.metadata?.location) && (
+      {n.type === "NEW_FARMER" && n.metadata?.location && (
         <p className="mt-1 text-xs text-gray-500">
-          {[n.metadata.farmSize ? `${n.metadata.farmSize} acres` : null, n.metadata.location]
-            .filter(Boolean)
-            .join(" · ")}
+          location: {n.metadata.location}
         </p>
       )}
 
       {n.type === "NEW_FARMER" && n.metadata?.commodities && n.metadata.commodities.length > 0 && (
         <p className="mt-1 text-xs text-gray-500">
-          {n.metadata.commodities.join(" · ")}
+          commodities: {n.metadata.commodities.join(" · ")}
+        </p>
+      )}
+
+      {n.type === "NEW_FARMER" && n.metadata?.customProducts && n.metadata.customProducts.length > 0 && (
+        <p className="mt-1 text-xs text-gray-500">
+          products: {n.metadata.customProducts.join(" · ")}
         </p>
       )}
 

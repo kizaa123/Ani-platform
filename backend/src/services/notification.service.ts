@@ -29,6 +29,7 @@ export type NotificationMetadata = {
   farmSize?: string | null;
   location?: string | null;
   commodities?: string[] | null;
+  customProducts?: string[] | null;
   farmerName?: string | null;
 };
 
@@ -303,8 +304,9 @@ export async function notifyNewFarmerJoined(params: {
   region: string;
   country: string;
   commodities: string[];
+  customProducts?: string[];
 }) {
-  const { farmerUserId, farmerName, farmSize, city, region, country, commodities } = params;
+  const { farmerUserId, farmerName, farmSize, city, region, country, commodities, customProducts = [] } = params;
   const location = formatLocation(city, region, country);
 
   const buyers = await prisma.user.findMany({
@@ -320,7 +322,7 @@ export async function notifyNewFarmerJoined(params: {
           userId: buyer.id,
           actorId: farmerUserId,
           type: 'NEW_FARMER',
-          title: `New farmer: ${farmerName}`,
+          title: `New Fellow: ${farmerName}`,
           body: 'Browse their farm and request access.',
           link: '/marketplace',
           metadata: {
@@ -329,6 +331,7 @@ export async function notifyNewFarmerJoined(params: {
             farmSize: farmSize ?? null,
             location,
             commodities,
+            customProducts,
             actionUrl: '/marketplace',
             actionLabel: 'Pay to access',
           },

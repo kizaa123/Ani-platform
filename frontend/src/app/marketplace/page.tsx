@@ -150,7 +150,7 @@ export default function MarketplacePage() {
       <ScrollReveal trigger="mount" delay={0} duration={450} direction="fade-up" className="mb-8">
         <h1 className="text-3xl font-bold text-brand-900">Marketplace</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Discover fellows, pay for farm access, and place orders
+          Discover fellows, pay for production access, and place orders
         </p>
         {!browseLoading && !search.trim() && filteredFarmers.length > 0 && (
           <p className="mt-2 text-sm text-gray-500">

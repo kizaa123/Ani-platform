@@ -15,6 +15,7 @@ import {
   publicationPlatformShareAmount,
   publicationResearcherShareAmount,
 } from '../utils/distributionFinancials';
+import { filterValidQualifications } from '../constants/qualifications';
 
 export const publicationSchema = z.object({
   title: z.string().min(2),
@@ -434,6 +435,7 @@ export class ResearcherService {
       profilePicture: string | null;
       institution: string | null;
       bio: string | null;
+      qualifications: string[];
       verificationStatus: string;
       verificationTags: ReturnType<typeof formatVerificationTags>;
       publicationCount: number;
@@ -464,6 +466,7 @@ export class ResearcherService {
           profilePicture: pub.researcher.profilePicture ?? null,
           institution: profile?.institution ?? null,
           bio: profile?.bio ?? null,
+          qualifications: profile?.qualifications ?? [],
           verificationStatus: pub.researcher.verificationStatus ?? 'UNVERIFIED',
           verificationTags: pub.researcher.verificationTags ?? [],
           publicationCount: 1,
@@ -474,6 +477,7 @@ export class ResearcherService {
             pub.researcher.name,
             profile?.institution,
             profile?.bio,
+            ...(profile?.qualifications ?? []),
             pub.title,
             pub.description,
           ]
@@ -493,6 +497,7 @@ export class ResearcherService {
         profilePicture: normalizePublicAssetUrl(p.profilePicture),
         institution: p.institution,
         bio: p.bio,
+        qualifications: p.qualifications,
         verificationStatus: p.verificationStatus,
         verificationTags: p.verificationTags,
         publicationCount: p.publicationCount,
@@ -572,6 +577,7 @@ export class ResearcherService {
         institution: profile.institution,
         bio: profile.bio,
         expertise: profile.expertise,
+        qualifications: profile.qualifications ?? [],
         verificationStatus: profile.user.verificationStatus,
         verificationTags: formatVerificationTags(profile.user.verificationTags ?? []),
         publicationCount: formattedPublications.length,
@@ -820,11 +826,24 @@ export class ResearcherService {
     };
   }
 
-  async updateProfile(userId: string, roleId: number, data: { institution?: string; expertise?: string; bio?: string }) {
+  async updateProfile(
+    userId: string,
+    roleId: number,
+    data: { institution?: string; expertise?: string; bio?: string; qualifications?: string[] }
+  ) {
     assertAuthorized(isResearcherRole(roleId), 'Only researchers can update researcher profile');
+    const updateData: {
+      institution?: string;
+      expertise?: string;
+      bio?: string;
+      qualifications?: string[];
+    } = { ...data };
+    if (data.qualifications !== undefined) {
+      updateData.qualifications = filterValidQualifications(data.qualifications);
+    }
     return prisma.researcherProfile.update({
       where: { userId },
-      data,
+      data: updateData,
     });
   }
 

@@ -20,6 +20,7 @@ import {
 import { categoryMatchesFarmerRole } from '../constants/commodities';
 import { formatVerificationTags, verificationTagSelect } from '../utils/verificationTags';
 import { defaultListingUnit } from '../constants/units';
+import { filterValidQualifications } from '../constants/qualifications';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import { normalizePhone, PHONE_VALIDATION_MESSAGE } from '../utils/phone';
 import {
@@ -41,6 +42,34 @@ const emptyToUndefined = (val: unknown) => {
 
 const optionalString = () =>
   z.preprocess(emptyToUndefined, z.string().optional());
+
+function normalizeCustomProducts(products: unknown): string[] {
+  if (!Array.isArray(products)) return [];
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const item of products) {
+    if (typeof item !== 'string') continue;
+    const trimmed = item.trim();
+    if (trimmed.length < 2 || trimmed.length > 100) continue;
+    const key = trimmed.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(trimmed);
+  }
+  return result;
+}
+
+async function resolveCommodityNamesInOrder(commodityIds: number[]): Promise<string[]> {
+  if (!commodityIds.length) return [];
+  const rows = await prisma.commodity.findMany({
+    where: { id: { in: commodityIds } },
+    select: { id: true, name: true },
+  });
+  const byId = new Map(rows.map((row) => [row.id, row.name]));
+  return commodityIds
+    .map((id) => byId.get(id))
+    .filter((name): name is string => Boolean(name));
+}
 
 export const registerSchema = z
   .object({
@@ -90,9 +119,17 @@ export const registerSchema = z
   ),
   institution: optionalString(),
   expertise: optionalString(),
+  qualifications: z.preprocess(
+    emptyToUndefined,
+    z.array(z.string()).optional()
+  ),
   commodityIds: z.preprocess(
     emptyToUndefined,
     z.array(z.coerce.number().int()).optional()
+  ),
+  customProducts: z.preprocess(
+    emptyToUndefined,
+    z.array(z.string()).optional()
   ),
   company: optionalString(),
   handlerId: z.preprocess(
@@ -162,9 +199,17 @@ export const completeProfileSchema = z
     ),
     institution: optionalString(),
     expertise: optionalString(),
+    qualifications: z.preprocess(
+      emptyToUndefined,
+      z.array(z.string()).optional()
+    ),
     commodityIds: z.preprocess(
       emptyToUndefined,
       z.array(z.coerce.number().int()).optional()
+    ),
+    customProducts: z.preprocess(
+      emptyToUndefined,
+      z.array(z.string()).optional()
     ),
     company: optionalString(),
     handlerId: z.preprocess(
@@ -201,7 +246,7 @@ export const emailVerificationVerifySchema = z.object({
   challengeId: z.string().uuid(),
   code: z.preprocess(
     (val) => (typeof val === 'string' ? val.trim() : val),
-    z.string().regex(/^\d{6}$/, 'Enter the 6-digit code from your email')
+    z.string().regex(/^\d{4}$/, 'Enter the 4-digit code from your email')
   ),
 });
 
@@ -259,16 +304,20 @@ export class AuthService {
     const passwordHash = await hashPassword(input.password);
 
     if (FARMER_ROLES.includes(input.roleId as typeof ROLES.CROP_FARMER)) {
+      const customProducts = normalizeCustomProducts(input.customProducts);
       const requiredLabel =
         input.roleId === ROLES.CROP_FARMER
           ? 'crop'
           : input.roleId === ROLES.LIVESTOCK_FARMER
             ? 'livestock'
             : 'commodity';
-      if (!input.commodityIds?.length) {
-        throw new AppError(400, `Select at least one ${requiredLabel} commodity`);
+      if (!input.commodityIds?.length && customProducts.length === 0) {
+        throw new AppError(
+          400,
+          `Select at least one ${requiredLabel} commodity or add a custom product`
+        );
       }
-      for (const commodityId of input.commodityIds) {
+      for (const commodityId of input.commodityIds ?? []) {
         const commodity = await prisma.commodity.findUnique({
           where: { id: commodityId },
           include: { category: true },
@@ -335,6 +384,7 @@ export class AuthService {
       });
 
       if (FARMER_ROLES.includes(input.roleId as typeof ROLES.CROP_FARMER)) {
+        const customProducts = normalizeCustomProducts(input.customProducts);
         const profile = await tx.farmerProfile.create({
           data: {
             userId: created.id,
@@ -345,6 +395,7 @@ export class AuthService {
                 : `${input.firstName}'s Farm`),
             farmSize: input.farmSize,
             experienceYears: input.experienceYears,
+            customProducts,
           },
         });
 
@@ -374,6 +425,7 @@ export class AuthService {
             userId: created.id,
             institution: input.institution,
             expertise: input.expertise,
+            qualifications: filterValidQualifications(input.qualifications ?? []),
           },
         });
       }
@@ -420,14 +472,8 @@ export class AuthService {
     await storeRefreshToken(user.id, refreshToken);
 
     if (FARMER_ROLES.includes(input.roleId as typeof ROLES.CROP_FARMER)) {
-      const commodities = input.commodityIds?.length
-        ? (
-            await prisma.commodity.findMany({
-              where: { id: { in: input.commodityIds } },
-              select: { name: true },
-            })
-          ).map((c) => c.name)
-        : [];
+      const customProducts = normalizeCustomProducts(input.customProducts);
+      const commodities = await resolveCommodityNamesInOrder(input.commodityIds ?? []);
 
       notifyNewFarmerJoined({
         farmerUserId: user.id,
@@ -437,6 +483,7 @@ export class AuthService {
         region: user.region,
         country: user.country,
         commodities,
+        customProducts,
       }).catch(() => undefined);
     }
 
@@ -738,16 +785,20 @@ export class AuthService {
     );
 
     if (FARMER_ROLES.includes(input.roleId as typeof ROLES.CROP_FARMER)) {
+      const customProducts = normalizeCustomProducts(input.customProducts);
       const requiredLabel =
         input.roleId === ROLES.CROP_FARMER
           ? 'crop'
           : input.roleId === ROLES.LIVESTOCK_FARMER
             ? 'livestock'
             : 'commodity';
-      if (!input.commodityIds?.length) {
-        throw new AppError(400, `Select at least one ${requiredLabel} commodity`);
+      if (!input.commodityIds?.length && customProducts.length === 0) {
+        throw new AppError(
+          400,
+          `Select at least one ${requiredLabel} commodity or add a custom product`
+        );
       }
-      for (const commodityId of input.commodityIds) {
+      for (const commodityId of input.commodityIds ?? []) {
         const commodity = await prisma.commodity.findUnique({
           where: { id: commodityId },
           include: { category: true },
@@ -828,6 +879,7 @@ export class AuthService {
       });
 
       if (FARMER_ROLES.includes(input.roleId as typeof ROLES.CROP_FARMER)) {
+        const customProducts = normalizeCustomProducts(input.customProducts);
         const profile = await tx.farmerProfile.create({
           data: {
             userId,
@@ -838,6 +890,7 @@ export class AuthService {
                 : `${user.firstName}'s Farm`),
             farmSize: input.farmSize,
             experienceYears: input.experienceYears,
+            customProducts,
           },
         });
 
@@ -867,6 +920,7 @@ export class AuthService {
             userId,
             institution: input.institution,
             expertise: input.expertise,
+            qualifications: filterValidQualifications(input.qualifications ?? []),
           },
         });
       }
@@ -908,14 +962,8 @@ export class AuthService {
     });
 
     if (FARMER_ROLES.includes(input.roleId as typeof ROLES.CROP_FARMER)) {
-      const commodities = input.commodityIds?.length
-        ? (
-            await prisma.commodity.findMany({
-              where: { id: { in: input.commodityIds } },
-              select: { name: true },
-            })
-          ).map((c) => c.name)
-        : [];
+      const customProducts = normalizeCustomProducts(input.customProducts);
+      const commodities = await resolveCommodityNamesInOrder(input.commodityIds ?? []);
 
       notifyNewFarmerJoined({
         farmerUserId: updated.id,
@@ -925,6 +973,7 @@ export class AuthService {
         region: updated.region,
         country: updated.country,
         commodities,
+        customProducts,
       }).catch(() => undefined);
     }
 

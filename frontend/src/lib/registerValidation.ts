@@ -33,6 +33,7 @@ export interface RegisterFormSlice {
 export interface RegisterValidationContext {
   form: RegisterFormSlice;
   selectedCommodities: number[];
+  customProducts: string[];
   isFarmerRole: boolean;
   needsHandler: boolean;
   availableHandlersCount: number;
@@ -120,8 +121,8 @@ export function validateStep2(ctx: RegisterValidationContext): FieldErrors {
 export function validateStep3(ctx: RegisterValidationContext): FieldErrors {
   const errors: FieldErrors = {};
 
-  if (ctx.selectedCommodities.length === 0) {
-    errors.commodities = "Select at least one commodity";
+  if (ctx.selectedCommodities.length === 0 && ctx.customProducts.length === 0) {
+    errors.commodities = "Select at least one commodity or add a custom product";
   }
 
   if (ctx.needsHandler && !ctx.form.handlerId.trim()) {
@@ -171,6 +172,7 @@ const BACKEND_FIELD_ALIASES: Record<string, RegisterField> = {
   roleid: "roleId",
   handlerid: "handlerId",
   commodityids: "commodities",
+  customproducts: "commodities",
 };
 
 function normalizeFieldKey(key: string): RegisterField | undefined {
@@ -263,7 +265,7 @@ export function roleSummaryLabel(roleId: number): string {
     case ROLES.LIVESTOCK_FARMER:
       return "Fellow — Livestock";
     case ROLES.ORGANIZATION_FARMER:
-      return "Fellow — Organizations";
+      return "Fellow — Organization";
     case ROLES.RESEARCHER:
       return "Researcher";
     case ROLES.BUYER:

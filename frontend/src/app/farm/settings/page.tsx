@@ -356,8 +356,9 @@ export default function FarmSettingsPage() {
             <input
               type="number"
               min={0}
-              value={farm.experienceYears}
-              onChange={(e) => setFarm({ ...farm, experienceYears: parseInt(e.target.value) || 0 })}
+              placeholder="e.g. 5"
+              value={farm.experienceYears || ""}
+              onChange={(e) => setFarm({ ...farm, experienceYears: parseInt(e.target.value, 10) || 0 })}
               className="w-full rounded-lg border px-4 py-2"
             />
           </div>

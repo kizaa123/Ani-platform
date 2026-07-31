@@ -15,6 +15,8 @@ import {
 import { CountrySelect } from "@/components/CountrySelect";
 import { HandlerSelect } from "@/components/HandlerSelect";
 import { CommodityPicker } from "@/components/CommodityPicker";
+import { CustomProductInput } from "@/components/CustomProductInput";
+import { QualificationSelector } from "@/components/QualificationSelector";
 import { EmailVerificationChallenge } from "@/components/EmailVerificationChallenge";
 import { EmailText } from "@/components/EmailText";
 import { Icon } from "@/components/icons";
@@ -24,7 +26,7 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 const ALL_ROLES = [
   { group: "Fellow", id: ROLES.CROP_FARMER, label: "Fellow — Crop" },
   { group: "Fellow", id: ROLES.LIVESTOCK_FARMER, label: "Fellow — Livestock" },
-  { group: "Fellow", id: ROLES.ORGANIZATION_FARMER, label: "Fellow — Organizations" },
+  { group: "Fellow", id: ROLES.ORGANIZATION_FARMER, label: "Fellow — Organization" },
   { group: "Research & Commerce", id: ROLES.RESEARCHER, label: "Researcher" },
   { group: "Research & Commerce", id: ROLES.BUYER, label: "Client" },
   { group: "Support & Operations", id: ROLES.FARMER_HANDLER, label: "Fellow Liaison Officer" },
@@ -48,14 +50,15 @@ function buildCompletePayload(
     address: string;
     roleId: number;
     farmName: string;
-    farmSize: string;
     experienceYears: number;
     company: string;
     institution: string;
     expertise: string;
+    qualifications: string[];
     handlerId: string;
   },
   selectedCommodities: number[],
+  customProducts: string[],
   isFarmerRole: boolean,
   needsHandler: boolean,
   hasGoogleAuth: boolean
@@ -71,15 +74,16 @@ function buildCompletePayload(
   if (form.address.trim()) payload.address = form.address.trim();
   if (needsHandler && form.handlerId.trim()) payload.handlerId = form.handlerId.trim();
   if (isFarmerRole) {
-    payload.commodityIds = selectedCommodities;
+    if (selectedCommodities.length > 0) payload.commodityIds = selectedCommodities;
+    if (customProducts.length > 0) payload.customProducts = customProducts;
     if (form.farmName.trim()) payload.farmName = form.farmName.trim();
-    if (form.farmSize.trim()) payload.farmSize = form.farmSize.trim();
     if (form.experienceYears > 0) payload.experienceYears = form.experienceYears;
   } else if (form.roleId === ROLES.BUYER && form.company.trim()) {
     payload.company = form.company.trim();
   } else if (form.roleId === ROLES.RESEARCHER) {
     if (form.institution.trim()) payload.institution = form.institution.trim();
     if (form.expertise.trim()) payload.expertise = form.expertise.trim();
+    if (form.qualifications.length > 0) payload.qualifications = form.qualifications;
   }
   return payload;
 }
@@ -92,6 +96,8 @@ export default function CompleteProfilePage() {
   const [step, setStep] = useState(0);
   const [categories, setCategories] = useState<CommodityCategory[]>([]);
   const [selectedCommodities, setSelectedCommodities] = useState<number[]>([]);
+  const [customProducts, setCustomProducts] = useState<string[]>([]);
+  const [commodityMode, setCommodityMode] = useState<"catalog" | "custom">("catalog");
   const [profilePreview, setProfilePreview] = useState<string | null>(null);
   const [profileFile, setProfileFile] = useState<File | null>(null);
   const [farmerHandlers, setFarmerHandlers] = useState<HandlerProfile[]>([]);
@@ -108,11 +114,11 @@ export default function CompleteProfilePage() {
     address: "",
     roleId: ROLES.BUYER as number,
     farmName: "",
-    farmSize: "",
     experienceYears: 0,
     company: "",
     institution: "",
     expertise: "",
+    qualifications: [] as string[],
     handlerId: "",
   });
 
@@ -182,7 +188,7 @@ export default function CompleteProfilePage() {
     setSubmitting(true);
     try {
       const result = await api.auth.completeProfile(
-        buildCompletePayload(form, selectedCommodities, isFarmerRole, needsHandler, hasGoogleAuth)
+        buildCompletePayload(form, selectedCommodities, customProducts, isFarmerRole, needsHandler, hasGoogleAuth)
       );
       api.setTokens(result.accessToken, result.refreshToken);
       if (isFarmerRole && profileFile) {
@@ -424,6 +430,16 @@ export default function CompleteProfilePage() {
                       <label className="auth-label">Area of expertise</label>
                       <input value={form.expertise} onChange={(e) => setForm({ ...form, expertise: e.target.value })} className="auth-input" />
                     </div>
+                    <div className="auth-field">
+                      <label className="auth-label">
+                        Qualifications <span className="text-gray-400">(optional)</span>
+                      </label>
+                      <QualificationSelector
+                        idPrefix="complete"
+                        value={form.qualifications}
+                        onChange={(qualifications) => setForm({ ...form, qualifications })}
+                      />
+                    </div>
                   </>
                 )}
 
@@ -455,19 +471,67 @@ export default function CompleteProfilePage() {
 
             {step === 3 && isFarmerRole && categoryFilter && (
               <div className="auth-form">
-                <CommodityPicker
-                  categories={categories}
-                  roleId={form.roleId}
-                  mode="multi"
-                  selectedIds={selectedCommodities}
-                  onSelectionChange={setSelectedCommodities}
-                  idPrefix="complete-commodity"
-                />
+                <div className="auth-section">
+                  <h3 className="auth-section-title">
+                    {commodityMode === "custom"
+                      ? "Product"
+                      : categoryFilter === "All"
+                        ? "Commodities"
+                        : `${categoryFilter} Commodities`}
+                  </h3>
+                </div>
+
+                <div className="mb-4 flex rounded-xl border border-brand-200 bg-brand-50/50 p-1">
+                  <button
+                    type="button"
+                    onClick={() => setCommodityMode("catalog")}
+                    className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold transition ${
+                      commodityMode === "catalog"
+                        ? "bg-white text-brand-900 shadow-sm"
+                        : "text-gray-600 hover:text-brand-800"
+                    }`}
+                  >
+                    Select from list
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCommodityMode("custom")}
+                    className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold transition ${
+                      commodityMode === "custom"
+                        ? "bg-white text-brand-900 shadow-sm"
+                        : "text-gray-600 hover:text-brand-800"
+                    }`}
+                  >
+                    Type my products
+                  </button>
+                </div>
+
+                {commodityMode === "catalog" ? (
+                  <CommodityPicker
+                    categories={categories}
+                    roleId={form.roleId}
+                    mode="multi"
+                    selectedIds={selectedCommodities}
+                    onSelectionChange={setSelectedCommodities}
+                    idPrefix="complete-commodity"
+                  />
+                ) : (
+                  <CustomProductInput
+                    products={customProducts}
+                    onChange={setCustomProducts}
+                    idPrefix="complete-product"
+                  />
+                )}
+
                 <div className="auth-nav">
                   <button type="button" onClick={() => setStep(2)} className="btn-outline auth-nav-btn">Back</button>
                   <button
                     type="button"
-                    disabled={submitting || selectedCommodities.length === 0 || !form.handlerId}
+                    disabled={
+                      submitting ||
+                      (selectedCommodities.length === 0 && customProducts.length === 0) ||
+                      !form.handlerId
+                    }
                     onClick={finish}
                     className="btn-primary auth-nav-btn disabled:opacity-50"
                   >

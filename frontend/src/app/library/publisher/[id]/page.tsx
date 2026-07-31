@@ -14,6 +14,7 @@ import { PdfViewerModal } from "@/components/PdfViewerModal";
 import { CardGridSkeleton, PageContentSkeleton } from "@/components/LoadingPrimitives";
 import { Icon } from "@/components/icons";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { QualificationBadges } from "@/components/QualificationBadges";
 import { scrollStagger } from "@/lib/scrollStagger";
 
 export default function PublisherLibraryPage() {
@@ -170,12 +171,13 @@ export default function PublisherLibraryPage() {
               {publisher.institution && (
                 <p className="mt-1 text-sm font-medium text-brand-700">{publisher.institution}</p>
               )}
-              {publisher.bio && (
-                <p className="mt-3 text-sm leading-relaxed text-gray-600">{publisher.bio}</p>
-              )}
               <p className="mt-2 text-xs text-gray-500">
                 {publisher.publicationCount} publication{publisher.publicationCount === 1 ? "" : "s"}
               </p>
+              <QualificationBadges qualifications={publisher.qualifications} className="mt-2" size="md" />
+              {publisher.bio && (
+                <p className="mt-3 text-sm leading-relaxed text-gray-600">{publisher.bio}</p>
+              )}
             </div>
           </div>
         )}

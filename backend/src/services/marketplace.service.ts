@@ -444,6 +444,7 @@ export class MarketplaceService {
           createdAt: tag.createdAt.toISOString(),
         })),
         registeredCommodities,
+        customProducts: profile.customProducts ?? [],
         connectionStatus: access.connectionStatus,
         hasFarmAccess,
         canViewProducts: access.hasAccess,
@@ -459,6 +460,7 @@ export class MarketplaceService {
           profile.user.city,
           ...registeredCommodities.map((c) => c.name),
           ...registeredCommodities.map((c) => c.category),
+          ...(profile.customProducts ?? []),
           ...profile.listings.map((l) => l.title),
           ...profile.listings.map((l) => listingCommodityName(l)),
         ]

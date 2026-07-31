@@ -34,7 +34,7 @@ export function EmailVerificationChallenge({ email, onVerified }: EmailVerificat
   };
 
   const verifyCode = async () => {
-    if (!challengeId || code.length !== 6) return;
+    if (!challengeId || code.length !== 4) return;
     setError("");
     setLoading(true);
     try {
@@ -52,7 +52,7 @@ export function EmailVerificationChallenge({ email, onVerified }: EmailVerificat
   };
 
   const handleCodeChange = (raw: string) => {
-    setCode(raw.replace(/\D/g, "").slice(0, 6));
+    setCode(raw.replace(/\D/g, "").slice(0, 4));
   };
 
   return (
@@ -63,7 +63,7 @@ export function EmailVerificationChallenge({ email, onVerified }: EmailVerificat
           <div>
             <h3 className="auth-section-title">Verify your email</h3>
             <p className="auth-hint mt-1">
-              We will send a 6-digit code to{" "}
+              We will send a 4-digit code to{" "}
               <EmailText email={email} className="inline font-semibold text-brand-900" />.
               Enter the code from your inbox below.
             </p>
@@ -102,19 +102,19 @@ export function EmailVerificationChallenge({ email, onVerified }: EmailVerificat
               id="email-verification-code"
               inputMode="numeric"
               autoComplete="one-time-code"
-              maxLength={6}
+              maxLength={4}
               value={code}
               onChange={(e) => handleCodeChange(e.target.value)}
-              placeholder="000000"
+              placeholder="0000"
               className="auth-input text-center text-2xl font-bold tracking-[0.35em]"
             />
-            <p className="auth-hint">Enter the 6-digit code from your email</p>
+            <p className="auth-hint">Enter the 4-digit code from your email</p>
           </div>
 
           <button
             type="button"
             onClick={verifyCode}
-            disabled={loading || code.length !== 6}
+            disabled={loading || code.length !== 4}
             className="btn-primary w-full py-3 font-semibold disabled:opacity-50"
           >
             {loading ? "Verifying..." : "Verify email"}

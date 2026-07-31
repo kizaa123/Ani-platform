@@ -26,7 +26,7 @@ function FarmActionButton({
         onClick={() => onViewFarm(farmer)}
         className="btn-primary w-full py-2.5 text-sm"
       >
-        View farm
+        View production
       </button>
     );
   }
@@ -118,7 +118,7 @@ export function MarketplaceFarmerCard({
 
       <div className="mt-4 min-h-[4.5rem]">
         <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Commodities</p>
-        {farmer.registeredCommodities.length > 0 ? (
+        {farmer.registeredCommodities.length > 0 || (farmer.customProducts?.length ?? 0) > 0 ? (
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {farmer.registeredCommodities.map((c) => (
               <span
@@ -126,6 +126,14 @@ export function MarketplaceFarmerCard({
                 className="rounded-full border border-brand-100 bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-800"
               >
                 {c.name}
+              </span>
+            ))}
+            {(farmer.customProducts ?? []).map((product, index) => (
+              <span
+                key={`custom-${product}-${index}`}
+                className="rounded-full border border-brand-100 bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-800"
+              >
+                {product}
               </span>
             ))}
           </div>

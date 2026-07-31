@@ -90,7 +90,7 @@ export function FarmerDetailModal({
             )}
           </div>
 
-          {farmer.registeredCommodities.length > 0 && (
+          {(farmer.registeredCommodities.length > 0 || (farmer.customProducts?.length ?? 0) > 0) && (
             <div className="mt-5">
               <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                 Commodities registered
@@ -102,6 +102,14 @@ export function FarmerDetailModal({
                     className="rounded-full border border-brand-100 bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-800"
                   >
                     {c.name}
+                  </span>
+                ))}
+                {(farmer.customProducts ?? []).map((product, index) => (
+                  <span
+                    key={`custom-${product}-${index}`}
+                    className="rounded-full border border-brand-100 bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-800"
+                  >
+                    {product}
                   </span>
                 ))}
               </div>

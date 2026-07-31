@@ -22,11 +22,11 @@ function createTransport() {
 export async function sendVerificationCodeEmail(to: string, code: number) {
   const from = process.env.EMAIL_FROM?.trim() || 'ANI Platform <noreply@ani-platform.local>';
   const subject = 'Your ANI Platform verification code';
-  const formattedCode = String(code).padStart(6, '0');
+  const formattedCode = String(code).padStart(4, '0');
   const text = [
     'Verify your email address on ANI Platform.',
     '',
-    `Your verification code is: ${formattedCode}`,
+    `Your 4-digit verification code is: ${formattedCode}`,
     '',
     'Enter this code on the Complete Profile screen to verify your email.',
     '',

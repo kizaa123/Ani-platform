@@ -13,6 +13,8 @@ import {
   ProfileEditSection,
   ProfileEditActions,
 } from "@/components/ProfileIdentityHeader";
+import { QualificationSelector } from "@/components/QualificationSelector";
+import { QualificationBadges } from "@/components/QualificationBadges";
 
 function formatLocation(city?: string, address?: string): string | null {
   const parts = [city?.trim(), address?.trim()].filter(Boolean);
@@ -30,6 +32,7 @@ export default function ResearcherSettingsPage() {
   const [photoCacheBust, setPhotoCacheBust] = useState(0);
   const [institution, setInstitution] = useState("");
   const [expertise, setExpertise] = useState("");
+  const [qualifications, setQualifications] = useState<string[]>([]);
   const [bio, setBio] = useState("");
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -53,6 +56,7 @@ export default function ResearcherSettingsPage() {
     if (!user) return;
     setInstitution(user.researcherProfile?.institution || "");
     setExpertise(user.researcherProfile?.expertise || "");
+    setQualifications(user.researcherProfile?.qualifications || []);
     setBio(user.researcherProfile?.bio || "");
     setHandlerId(user.assignedHandler?.id || "");
   };
@@ -91,7 +95,7 @@ export default function ResearcherSettingsPage() {
     setMessage("");
     setError("");
     try {
-      await api.research.updateProfile({ institution, expertise, bio });
+      await api.research.updateProfile({ institution, expertise, qualifications, bio });
       if (handlerId && handlerId !== user?.assignedHandler?.id) {
         await api.auth.updateHandler(handlerId);
       }
@@ -138,6 +142,18 @@ export default function ResearcherSettingsPage() {
               <p className="mt-1 text-brand-900">{location}</p>
             </div>
           )}
+          <div>
+            <h2 className="text-sm font-medium text-gray-500">Qualifications</h2>
+            {user.researcherProfile?.qualifications?.length ? (
+              <QualificationBadges
+                qualifications={user.researcherProfile.qualifications}
+                className="mt-2"
+                size="md"
+              />
+            ) : (
+              <p className="mt-1 text-brand-900">No qualifications added yet.</p>
+            )}
+          </div>
           <div>
             <h2 className="text-sm font-medium text-gray-500">Bio</h2>
             <p className="mt-1 whitespace-pre-wrap text-brand-900">
@@ -198,6 +214,14 @@ export default function ResearcherSettingsPage() {
                 className="auth-input"
                 value={expertise}
                 onChange={(e) => setExpertise(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="auth-label">Qualifications</label>
+              <QualificationSelector
+                idPrefix="settings"
+                value={qualifications}
+                onChange={setQualifications}
               />
             </div>
             <div>

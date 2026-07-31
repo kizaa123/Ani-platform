@@ -137,6 +137,7 @@ model FarmerProfile {
   farmName           String             @map("farm_name")
   farmSize           String?            @map("farm_size")
   experienceYears    Int?               @map("experience_years")
+  customProducts     String[]           @default([]) @map("custom_products")
   verificationStatus VerificationStatus @default(PENDING) @map("verification_status")
 
   user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -179,6 +180,7 @@ model ResearcherProfile {
   institution                 String?
   expertise                   String?
   bio                         String?
+  qualifications              String[]  @default([])
   publicationPolicyAcceptedAt DateTime? @map("publication_policy_accepted_at")
 
   user         User                  @relation(fields: [userId], references: [id], onDelete: Cascade)

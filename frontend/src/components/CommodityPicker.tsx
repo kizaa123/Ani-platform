@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CommodityCategory } from "@/lib/types";
 import {
   filterCategoriesForRole,
   farmerCategoryFilter,
 } from "@/lib/types";
+import { getCommodityEmoji } from "@/lib/commodityEmoji";
 import { Icon } from "@/components/icons";
 
 export type CommodityPickerMode = "multi" | "select-add";
@@ -38,8 +39,10 @@ export function CommodityPicker({
   idPrefix = "commodity",
   invalid = false,
 }: CommodityPickerProps) {
+  const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [selectValue, setSelectValue] = useState("");
+  const rootRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const categoryLabel = farmerCategoryFilter(roleId);
   const grouped = useMemo(
@@ -48,52 +51,76 @@ export function CommodityPicker({
   );
 
   const allCommodities = useMemo(
-    () => grouped.flatMap((cat) =>
-      (cat.commodities || []).map((c) => ({ ...c, category: c.category ?? { id: cat.id, name: cat.name } }))
-    ),
+    () =>
+      grouped.flatMap((cat) =>
+        (cat.commodities || []).map((c) => ({
+          ...c,
+          category: c.category ?? { id: cat.id, name: cat.name },
+        }))
+      ),
     [grouped]
   );
 
+  const query = search.trim().toLowerCase();
   const filteredGroups = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return grouped;
+    const excluded = excludeIds ?? new Set<number>();
+    const selected = new Set(selectedIds);
+
     return grouped
       .map((cat) => ({
         ...cat,
-        commodities: (cat.commodities || []).filter(
-          (c) =>
-            c.name.toLowerCase().includes(q) ||
-            cat.name.toLowerCase().includes(q)
-        ),
+        commodities: (cat.commodities || []).filter((c) => {
+          if (excluded.has(c.id) || selected.has(c.id)) return false;
+          if (!query) return true;
+          return (
+            c.name.toLowerCase().includes(query) ||
+            cat.name.toLowerCase().includes(query)
+          );
+        }),
       }))
       .filter((cat) => cat.commodities.length > 0);
-  }, [grouped, search]);
+  }, [grouped, query, excludeIds, selectedIds]);
 
   const selectedCommodities = useMemo(
     () => allCommodities.filter((c) => selectedIds.includes(c.id)),
     [allCommodities, selectedIds]
   );
 
-  const availableForSelect = useMemo(() => {
-    const excluded = excludeIds ?? new Set<number>();
-    const selected = new Set(selectedIds);
-    return filteredGroups.map((cat) => ({
-      ...cat,
-      commodities: cat.commodities.filter(
-        (c) => !excluded.has(c.id) && !selected.has(c.id)
-      ),
-    })).filter((cat) => cat.commodities.length > 0);
-  }, [filteredGroups, excludeIds, selectedIds]);
+  const availableCount = useMemo(
+    () => filteredGroups.reduce((sum, cat) => sum + cat.commodities.length, 0),
+    [filteredGroups]
+  );
 
-  const addFromSelect = (value: string) => {
-    const id = parseInt(value, 10);
-    if (!id) return;
+  useEffect(() => {
+    const close = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        setSearch("");
+      }
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, []);
+
+  const openDropdown = () => {
+    setOpen(true);
+    requestAnimationFrame(() => searchInputRef.current?.focus());
+  };
+
+  const closeDropdown = () => {
+    setOpen(false);
+    setSearch("");
+  };
+
+  const addCommodity = (id: number) => {
     if (mode === "select-add") {
       onSelectAdd?.(id);
-    } else {
+      closeDropdown();
+      return;
+    }
+    if (!selectedIds.includes(id)) {
       onSelectionChange?.([...selectedIds, id]);
     }
-    setSelectValue("");
   };
 
   const removeCommodity = (id: number) => {
@@ -105,57 +132,103 @@ export function CommodityPicker({
   }
 
   const searchId = `${idPrefix}-search`;
-  const selectId = `${idPrefix}-select`;
+  const triggerLabel =
+    mode === "select-add"
+      ? "Add commodity"
+      : categoryLabel === "All"
+        ? "Select commodities"
+        : `Select ${categoryLabel?.toLowerCase()} commodities`;
+
+  const triggerText =
+    mode === "multi" && selectedCommodities.length > 0
+      ? `${selectedCommodities.length} selected — click to add more`
+      : mode === "select-add"
+        ? "Search and add a commodity…"
+        : "Search and select commodities…";
 
   return (
     <div
       className={`space-y-4 ${invalid ? "rounded-xl border border-red-500 bg-red-50/30 p-4" : ""}`}
     >
-      {/* Search + Select combined in one bordered container */}
-      <div>
-        <label htmlFor={selectId} className="mb-1.5 block text-sm font-medium text-brand-900">
-          {mode === "select-add" ? "Add commodity" : "Select commodities"}
+      <div ref={rootRef} className="relative">
+        <label htmlFor={searchId} className="mb-1.5 block text-sm font-medium text-brand-900">
+          {triggerLabel}
         </label>
-        <div className="overflow-hidden rounded-xl border border-brand-200 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-200">
-          {/* Search row */}
-          <div className="relative border-b border-brand-100">
-            <Icon
-              name="search"
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
-            />
-            <input
-              id={searchId}
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name or category…"
-              className="w-full bg-transparent py-2.5 pl-9 pr-3 text-sm text-brand-900 placeholder:text-gray-400 focus:outline-none"
-              autoComplete="off"
-            />
-          </div>
-          {/* Dropdown row */}
-          <select
-            id={selectId}
-            value={selectValue}
-            onChange={(e) => addFromSelect(e.target.value)}
-            className="w-full bg-white px-3 py-2.5 text-sm text-brand-900 focus:outline-none"
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-haspopup="listbox"
+          onClick={() => (open ? closeDropdown() : openDropdown())}
+          className={`flex w-full items-center gap-3 rounded-xl border bg-white px-4 py-3 text-left shadow-sm focus:outline-none focus:ring-2 ${
+            invalid
+              ? "border-red-500 focus:border-red-500 focus:ring-red-200"
+              : "border-brand-200 focus:border-brand-500 focus:ring-brand-200"
+          }`}
+        >
+          <Icon name="search" className="h-4 w-4 shrink-0 text-gray-400" />
+          <span
+            className={`flex-1 text-sm ${
+              mode === "multi" && selectedCommodities.length > 0
+                ? "font-medium text-brand-900"
+                : "text-gray-500"
+            }`}
           >
-            <option value="">
-              {mode === "select-add" ? "Choose a commodity to add…" : "Choose to add…"}
-            </option>
-            {availableForSelect.map((cat) => (
-              <optgroup key={cat.id} label={cat.name}>
-                {cat.commodities.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-        </div>
-        {availableForSelect.length === 0 && search.trim() && (
-          <p className="mt-1 text-xs text-gray-500">No matching commodities found.</p>
+            {triggerText}
+          </span>
+          <span className="text-gray-400">{open ? "▲" : "▼"}</span>
+        </button>
+
+        {open && (
+          <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-xl border border-brand-100 bg-white shadow-lg">
+            <div className="border-b border-brand-100 p-2">
+              <input
+                ref={searchInputRef}
+                id={searchId}
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name or category…"
+                aria-label="Search commodities"
+                autoComplete="off"
+                className="w-full rounded-lg border border-brand-200 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+            <ul role="listbox" className="max-h-64 overflow-y-auto py-1">
+              {availableCount === 0 ? (
+                <li className="px-4 py-3 text-sm text-gray-500">
+                  {query ? "No matching commodities found" : "All commodities selected"}
+                </li>
+              ) : (
+                filteredGroups.map((cat) => (
+                  <li key={cat.id}>
+                    <p className="px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                      {cat.name}
+                    </p>
+                    <ul>
+                      {cat.commodities.map((c) => (
+                        <li key={c.id} role="option">
+                          <button
+                            type="button"
+                            onClick={() => addCommodity(c.id)}
+                            className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-gray-800 hover:bg-brand-50"
+                          >
+                            <span
+                              className="inline-flex h-6 w-6 shrink-0 items-center justify-center text-base leading-none"
+                              aria-hidden
+                            >
+                              {getCommodityEmoji(c.name)}
+                            </span>
+                            <span className="font-medium">{c.name}</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
         )}
       </div>
 
@@ -170,6 +243,7 @@ export function CommodityPicker({
                 key={c.id}
                 className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-3 py-1.5 text-sm font-medium text-brand-900"
               >
+                <span aria-hidden>{getCommodityEmoji(c.name)}</span>
                 <span className="whitespace-nowrap">{c.name}</span>
                 <span className="text-xs font-normal text-gray-500 whitespace-nowrap">
                   ({c.category?.name ?? "—"})
@@ -191,7 +265,8 @@ export function CommodityPicker({
       {mode === "multi" && selectedCommodities.length === 0 && (
         <p className="text-sm text-gray-500">
           Select at least one{" "}
-          {categoryLabel === "All" ? "commodity" : `${categoryLabel?.toLowerCase()} commodity`} using the dropdown above.
+          {categoryLabel === "All" ? "commodity" : `${categoryLabel?.toLowerCase()} commodity`} using
+          the search above.
         </p>
       )}
     </div>

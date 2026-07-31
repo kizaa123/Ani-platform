@@ -168,9 +168,6 @@ export default function FinancialStatementPage() {
       <div className="mb-6 overflow-hidden rounded-2xl border border-amber-100 bg-white shadow-sm">
         <div className="border-b border-amber-100 bg-amber-50/40 px-6 py-4">
           <h3 className="text-base font-semibold text-brand-900">Undistributed payments</h3>
-          <p className="text-sm text-gray-500">
-            Your 66.66% Fellow share awaiting ANI Accountant distribution after order release
-          </p>
         </div>
 
         {pendingRows.length === 0 ? (

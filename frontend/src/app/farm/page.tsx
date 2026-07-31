@@ -36,6 +36,7 @@ async function getVideoDuration(file: File): Promise<number> {
 }
 
 interface FarmProfile {
+  customProducts?: string[];
   farmerCommodities: Array<{
     id: string;
     commodityId: number;
@@ -264,6 +265,8 @@ export default function FarmPage() {
     () => profile?.farmerCommodities ?? [],
     [profile]
   );
+  const customProducts = profile?.customProducts ?? [];
+  const hasProductionProfile = registeredCommodities.length > 0 || customProducts.length > 0;
 
   const listedPricePreview = useMemo(
     () => (form.price > 0 ? computeListedPrice(form.price) : 0),
@@ -291,7 +294,7 @@ export default function FarmPage() {
           <p className="mb-2 text-sm font-semibold text-brand-900">
             Commodities you produce <span className="font-normal text-gray-500">(visible to clients)</span>
           </p>
-          {registeredCommodities.length === 0 ? (
+          {!hasProductionProfile ? (
             <p className="text-sm text-gray-500">No commodities registered yet.</p>
           ) : (
           <div className="flex gap-2 overflow-x-auto overflow-y-hidden pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -305,12 +308,21 @@ export default function FarmPage() {
                   <span className="text-xs text-gray-400">({fc.commodity.category.name})</span>
                 </span>
               ))}
+              {customProducts.map((product, index) => (
+                <span
+                  key={`custom-${product}-${index}`}
+                  className="inline-flex shrink-0 items-center gap-1 rounded-full border border-brand-200 bg-white px-3 py-1.5 text-sm font-medium text-brand-900"
+                >
+                  <Icon name="check" className="h-3.5 w-3.5 text-brand-600" />
+                  {product}
+                </span>
+              ))}
             </div>
           )}
         </div>
       </div>
 
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-bold text-brand-900">Products on Your Farm</h2>
           <p className="text-sm text-gray-500">Add, edit, or remove products listed for clients</p>
@@ -324,16 +336,16 @@ export default function FarmPage() {
               setShowForm(true);
             }
           }}
-          disabled={registeredCommodities.length === 0}
-          className="rounded-xl bg-brand-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          disabled={!hasProductionProfile}
+          className="inline-flex shrink-0 self-start items-center justify-center rounded-lg bg-brand-700 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50 sm:rounded-xl sm:px-4 sm:py-2 sm:text-sm"
         >
           + Add Product
         </button>
       </div>
 
-      {registeredCommodities.length === 0 && (
+      {!hasProductionProfile && (
         <p className="mb-4 rounded-lg border border-amber-100 bg-amber-50 p-3 text-sm text-amber-700">
-          Add commodities in{" "}
+          Add commodities or products in{" "}
           <Link href="/farm/settings" className="font-semibold underline">
             Profile
           </Link>{" "}
@@ -670,18 +682,18 @@ export default function FarmPage() {
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-3 pt-2">
+            <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:items-center sm:gap-3">
               <button
                 onClick={saveListing}
                 disabled={uploading || productMediaUploading}
-                className="rounded-xl bg-brand-700 px-7 py-3 text-sm font-bold text-white shadow-md transition hover:bg-brand-800 active:scale-98 disabled:opacity-50"
+                className="inline-flex w-auto self-start items-center justify-center rounded-lg bg-brand-700 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:bg-brand-800 active:scale-98 disabled:opacity-50 sm:rounded-xl sm:px-5 sm:py-2.5"
               >
                 {editingId ? "Save Changes" : "Add Product to Farm"}
               </button>
               <button
                 type="button"
                 onClick={resetForm}
-                className="rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                className="inline-flex w-auto self-start items-center justify-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 sm:rounded-xl sm:px-5 sm:py-2.5"
               >
                 Cancel
               </button>

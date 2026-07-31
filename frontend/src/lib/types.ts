@@ -48,6 +48,7 @@ export interface ResearcherProfile {
   institution?: string;
   expertise?: string;
   bio?: string;
+  qualifications?: string[];
   publicationPolicyAcceptedAt?: string | null;
 }
 
@@ -56,6 +57,7 @@ export interface FarmerProfile {
   farmName: string;
   farmSize?: string;
   experienceYears?: number;
+  customProducts?: string[];
   verificationStatus: string;
   farmerCommodities?: FarmerCommodity[];
 }
@@ -146,6 +148,7 @@ export interface FarmerBrowseCard {
   region: string;
   city?: string;
   registeredCommodities: RegisteredCommodity[];
+  customProducts?: string[];
   connectionStatus: string;
   hasFarmAccess: boolean;
   canViewProducts: boolean;
@@ -520,7 +523,11 @@ export interface AgentClientOwner {
     experienceYears?: number | null;
   } | null;
   buyerProfile?: { company?: string | null } | null;
-  researcherProfile?: { institution?: string | null; expertise?: string | null } | null;
+  researcherProfile?: {
+    institution?: string | null;
+    expertise?: string | null;
+    qualifications?: string[];
+  } | null;
 }
 
 export interface AgentAssignment {
@@ -653,6 +660,7 @@ export interface NotificationMetadata {
   farmSize?: string | null;
   location?: string | null;
   commodities?: string[] | null;
+  customProducts?: string[] | null;
   farmerName?: string | null;
 }
 
@@ -908,6 +916,7 @@ export interface PublisherBrowseCard {
   profilePicture?: string | null;
   institution?: string | null;
   bio?: string | null;
+  qualifications?: string[];
   verificationStatus?: string;
   verificationTags?: UserVerificationTag[];
   publicationCount: number;
