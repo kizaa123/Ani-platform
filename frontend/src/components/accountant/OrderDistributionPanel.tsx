@@ -298,6 +298,7 @@ export function OrderDistributionPanel({
         open={pdfLine !== null}
         onClose={closeMessagePdf}
         loadUrl={loadMessagePdf}
+        allowDownload
       />
 
       {paymentResult && (

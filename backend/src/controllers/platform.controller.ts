@@ -510,7 +510,7 @@ export class AccountantController {
         req.params.lineId as string
       );
       res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
       res.send(buffer);
     } catch (e) {
       ApiResponse.error(res, e);

@@ -140,7 +140,7 @@ function OrderEscrowPanel({
     try {
       await api.orders.statement(statementId);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not open statement");
+      setError(e instanceof Error ? e.message : "Could not download statement");
     } finally {
       setOpening(false);
     }
@@ -233,7 +233,7 @@ function OrderEscrowPanel({
             className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-brand-200 bg-white px-3 py-2 text-sm font-semibold text-brand-800 hover:bg-brand-50 disabled:opacity-50 shadow-sm"
           >
             <Icon name="download" className="h-4 w-4 text-brand-600" />
-            {opening ? "Opening PDF…" : "View financial statement (PDF)"}
+            {opening ? "Downloading PDF…" : "Download financial statement (PDF)"}
           </button>
         ) : (
           <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50/70 p-3 text-center">

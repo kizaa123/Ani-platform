@@ -114,6 +114,7 @@ export default function AccountantReceiptsPage() {
         open={pdfOpen}
         onClose={closePdf}
         loadUrl={loadStatementPdf}
+        allowDownload
       />
     </div>
   );

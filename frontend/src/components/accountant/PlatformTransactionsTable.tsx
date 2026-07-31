@@ -242,7 +242,7 @@ export function OrderReceiptsTable({
     <div className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
       <div className="border-b border-brand-100 bg-brand-50/40 px-5 py-3">
         <h3 className="text-sm font-semibold text-brand-900">Order receipts</h3>
-        <p className="text-xs text-gray-500">Paid product orders — print or open financial statement PDFs</p>
+        <p className="text-xs text-gray-500">Paid product orders — view or download financial statement PDFs</p>
       </div>
 
       {productOrders.length === 0 ? (
@@ -297,7 +297,7 @@ export function OrderReceiptsTable({
                           disabled={openingId === item.id}
                           className="rounded-lg bg-brand-700 px-3 py-1.5 text-[10px] font-semibold text-white disabled:opacity-50"
                         >
-                          {openingId === item.id ? "Opening…" : "Print / Open PDF"}
+                          {openingId === item.id ? "Opening…" : "View / Download PDF"}
                         </button>
                       ) : (
                         <span className="text-[10px] text-gray-400">Awaiting delivery release</span>

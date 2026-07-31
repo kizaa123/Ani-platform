@@ -9,9 +9,19 @@ type PdfViewerModalProps = {
   open: boolean;
   onClose: () => void;
   loadUrl: () => Promise<string>;
+  /** When true, shows a download button and enables the PDF toolbar. Defaults to false (view-only). */
+  allowDownload?: boolean;
+  downloadFilename?: string;
 };
 
-export function PdfViewerModal({ title, open, onClose, loadUrl }: PdfViewerModalProps) {
+export function PdfViewerModal({
+  title,
+  open,
+  onClose,
+  loadUrl,
+  allowDownload = false,
+  downloadFilename,
+}: PdfViewerModalProps) {
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -69,6 +79,18 @@ export function PdfViewerModal({ title, open, onClose, loadUrl }: PdfViewerModal
     };
   }, [url]);
 
+  const downloadPdf = () => {
+    if (!url) return;
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download =
+      downloadFilename ??
+      `${title.replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-") || "document"}.pdf`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+  };
+
   if (!open) return null;
 
   return (
@@ -76,16 +98,30 @@ export function PdfViewerModal({ title, open, onClose, loadUrl }: PdfViewerModal
       <div className="flex shrink-0 items-center justify-between gap-3 border-b border-brand-800 bg-brand-900 px-4 py-3">
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-white">{title}</p>
-          <p className="text-xs text-brand-200">In-platform viewer</p>
+          <p className="text-xs text-brand-200">
+            {allowDownload ? "View or download" : "In-platform viewer only"}
+          </p>
         </div>
-        <button
-          type="button"
-          className="rounded-lg p-2 text-brand-100 hover:bg-brand-800"
-          onClick={close}
-          aria-label="Close PDF viewer"
-        >
-          <Icon name="x" className="h-5 w-5" />
-        </button>
+        <div className="flex shrink-0 items-center gap-1">
+          {allowDownload && url && !loading && !error && (
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-brand-100 hover:bg-brand-800"
+              onClick={downloadPdf}
+            >
+              <Icon name="download" className="h-4 w-4" />
+              Download
+            </button>
+          )}
+          <button
+            type="button"
+            className="rounded-lg p-2 text-brand-100 hover:bg-brand-800"
+            onClick={close}
+            aria-label="Close PDF viewer"
+          >
+            <Icon name="x" className="h-5 w-5" />
+          </button>
+        </div>
       </div>
       <div className="relative min-h-0 flex-1 bg-brand-950">
         {loading && (
@@ -104,7 +140,7 @@ export function PdfViewerModal({ title, open, onClose, loadUrl }: PdfViewerModal
         {url && !loading && !error && (
           <iframe
             title={title}
-            src={`${url}#toolbar=1&navpanes=0`}
+            src={`${url}#toolbar=${allowDownload ? 1 : 0}&navpanes=0`}
             className="h-full w-full border-0 bg-white"
           />
         )}

@@ -96,7 +96,7 @@ class ApiClient {
     return json.data as T;
   }
 
-  private async fetchPdfBlobUrl(path: string): Promise<string> {
+  private async fetchPdfResponse(path: string): Promise<Response> {
     const headers: Record<string, string> = {};
     if (this.accessToken) headers.Authorization = `Bearer ${this.accessToken}`;
 
@@ -130,22 +130,37 @@ class ApiClient {
       throw new Error(`Could not load PDF (${res.status})`);
     }
 
+    return res;
+  }
+
+  private async fetchPdfBlob(path: string): Promise<{ blob: Blob; filename: string }> {
+    const res = await this.fetchPdfResponse(path);
+    const disposition = res.headers.get("Content-Disposition") || "";
+    const match = disposition.match(/filename="([^"]+)"/);
+    const filename = match?.[1] ?? "document.pdf";
     const blob = await res.blob();
     const pdfBlob =
       blob.type === "application/pdf" ? blob : new Blob([blob], { type: "application/pdf" });
-    return URL.createObjectURL(pdfBlob);
+    return { blob: pdfBlob, filename };
+  }
+
+  private async fetchPdfBlobUrl(path: string): Promise<string> {
+    const { blob } = await this.fetchPdfBlob(path);
+    return URL.createObjectURL(blob);
   }
 
   fetchPdfUrl = (path: string) => this.fetchPdfBlobUrl(path);
 
-  private async openPdfRequest(path: string): Promise<void> {
-    const url = await this.fetchPdfBlobUrl(path);
-    const tab = window.open(url, "_blank", "noopener,noreferrer");
-    if (!tab) {
-      URL.revokeObjectURL(url);
-      throw new Error("Could not open PDF. Please allow pop-ups for this site.");
-    }
-    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  private async downloadPdfRequest(path: string, filenameHint?: string): Promise<void> {
+    const { blob, filename } = await this.fetchPdfBlob(path);
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filenameHint ?? filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   private async uploadRequest<T>(path: string, formData: FormData): Promise<T> {
@@ -302,7 +317,8 @@ class ApiClient {
   orders = {
     get: (id: string) =>
       this.request<import("./types").OrderDetail>(`/orders/${id}`),
-    statement: (id: string) => this.openPdfRequest(`/orders/${id}/statement`),
+    statement: (id: string) => this.downloadPdfRequest(`/orders/${id}/statement`),
+    downloadStatement: (id: string) => this.downloadPdfRequest(`/orders/${id}/statement`),
     statementUrl: (id: string) => this.fetchPdfBlobUrl(`/orders/${id}/statement`),
     release: (id: string, otp: string) =>
       this.request<import("./types").OrderReleaseResult>(`/orders/${id}/release`, {

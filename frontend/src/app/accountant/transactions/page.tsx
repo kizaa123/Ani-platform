@@ -102,6 +102,7 @@ export default function AccountantTransactionsPage() {
         open={pdfOpen}
         onClose={closePdf}
         loadUrl={loadStatementPdf}
+        allowDownload
       />
     </div>
   );
