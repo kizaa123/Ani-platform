@@ -28,14 +28,12 @@ export class EmailVerificationService {
       },
     });
 
-    const delivery = await sendVerificationCodeEmail(normalizedEmail, code);
+    await sendVerificationCodeEmail(normalizedEmail, code);
 
     return {
       challengeId: challenge.id,
       expiresAt: challenge.expiresAt.toISOString(),
       emailSent: true,
-      devMode: delivery.devMode,
-      ...(delivery.devMode ? { devHint: `Dev mode: verification code is ${code}` } : {}),
     };
   }
 

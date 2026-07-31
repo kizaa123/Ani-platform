@@ -6,6 +6,7 @@ import { formatGhc, formatGhcAxis } from "@/lib/format";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { useAnimateOnView } from "@/hooks/useAnimateOnView";
 import { scrollStagger } from "@/lib/scrollStagger";
+import { aniPlatformSharePercentOfTotal } from "@/lib/handlerDisplayName";
 
 const STREAM_COLORS = {
   access: "#40916c",
@@ -664,7 +665,7 @@ export function AccountantDashboardChartsPanel({ charts }: { charts: AccountantD
         </ScrollReveal>
 
         <ScrollReveal delay={scrollStagger(2, 100)} duration={500} direction="fade-up">
-          <ChartPanel title="Order share trend" subtitle="ANI remainder from released client orders (~13.34% after splits)">
+          <ChartPanel title="Order share trend" subtitle={`ANI remainder from released client orders (~${aniPlatformSharePercentOfTotal(100).toFixed(2)}% when both handlers assigned)`}>
             <RevenueAreaChart
               data={charts.monthlyOrderShareRevenue}
               strokeColor={STREAM_COLORS.orderShare}

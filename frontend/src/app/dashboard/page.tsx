@@ -12,6 +12,7 @@ import { getPortalNavImage } from "@/lib/portalNavImages";
 import { FarmerHandlerDashboardCards, FarmerHandlerDashboardHint } from "@/components/FarmerHandlerDashboardCards";
 import { BuyerHandlerDashboardCards, BuyerHandlerDashboardHint } from "@/components/BuyerHandlerDashboardCards";
 import type { IconName } from "@/components/icons";
+import { AdSlot } from "@/components/AdSlot";
 
 type DashboardCard = {
   href: string;
@@ -68,6 +69,7 @@ export default function DashboardPage() {
     { href: "/agents/financials", title: "Financial Statement", desc: isClo ? "Your liaison commission from client orders" : "Your 10% liaison commission from fellow orders", icon: "chart", show: isHandler(user.roleId) && !isLiaison },
     { href: "/admin", title: "Admin Panel", desc: "Analytics, verification & moderation", icon: "shield", show: isAdmin(user.roleId) },
     { href: "/admin/staff", title: "ANI Team", desc: "Manage staff accounts & roles", icon: "users", show: isAdmin(user.roleId) },
+    { href: "/admin/ads", title: "Internal Ads", desc: "Manage banner promotions", icon: "leaf", show: isAdmin(user.roleId) },
     { href: "/admin/financials", title: "Financial Statement", desc: "Platform-wide revenue (read-only)", icon: "chart", show: isAdmin(user.roleId) },
     { href: "/accountant", title: "Financial Overview", desc: "Access income, order share & balances", icon: "chart", show: isAccountant(user.roleId) && isAccountantApproved(user) },
     { href: "/accountant/transactions", title: "Access Ledger", desc: "Farm & publication access payments", icon: "credit-card", show: isAccountant(user.roleId) && isAccountantApproved(user) },
@@ -89,6 +91,8 @@ export default function DashboardPage() {
         {isFlo && <FarmerHandlerDashboardHint />}
         {isClo && <BuyerHandlerDashboardHint />}
       </ScrollReveal>
+
+      <AdSlot placement="dashboard" className="mb-8" />
 
       {isAccountantAwaitingAccess(user) && (
         <div className="mb-8">

@@ -104,7 +104,7 @@ export function PublicationAccessPaymentModal({
               <PaymentCheckout
                 totalLabel="Publication"
                 totalAmount={priceLabel}
-                subtitle={`Buyers pay ${priceLabel}; 90% goes to ${publication.researcher.name}`}
+                subtitle={`Pay ${priceLabel} once; 90% goes to ${publication.researcher.name}`}
                 payLabel={`Pay ${priceLabel}`}
                 onPay={handlePay}
                 submitting={submitting}
@@ -112,7 +112,7 @@ export function PublicationAccessPaymentModal({
             </>
           ) : (
             <p className="text-sm text-gray-600">
-              Register as a Client or Student to purchase and read paid publications.
+              Your account type cannot purchase publications. Fellows, clients, and students can pay to read paid research.
             </p>
           )}
         </div>

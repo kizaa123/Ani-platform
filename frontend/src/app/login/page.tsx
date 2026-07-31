@@ -27,8 +27,8 @@ function LoginForm() {
     setError("");
     setLoading(true);
     try {
-      await login(email, password);
-      router.push("/dashboard");
+      const profile = await login(email, password);
+      router.push(profile.profileComplete === false ? "/complete-profile" : "/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {

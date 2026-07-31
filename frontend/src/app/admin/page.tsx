@@ -229,6 +229,12 @@ export default function AdminPage() {
             Manage Team
           </Link>
           <Link
+            href="/admin/ads"
+            className="rounded-lg border border-brand-200 bg-white px-4 py-2 text-sm font-semibold text-brand-800 hover:bg-brand-50"
+          >
+            Internal Ads
+          </Link>
+          <Link
             href="/admin/financials"
             className="rounded-lg border border-brand-200 bg-white px-4 py-2 text-sm font-semibold text-brand-800 hover:bg-brand-50"
           >

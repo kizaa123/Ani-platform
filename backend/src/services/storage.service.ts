@@ -4,7 +4,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import { normalizePublicAssetUrl, publicUrl } from '../middleware/upload.middleware';
 import { AppError } from '../utils/errors';
 
-export type UploadFolder = 'profiles' | 'listings' | 'publications' | 'farm-media' | 'product-media';
+export type UploadFolder = 'profiles' | 'listings' | 'publications' | 'farm-media' | 'product-media' | 'ads';
 
 let cloudinaryConfigured = false;
 

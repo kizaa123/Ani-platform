@@ -7,6 +7,15 @@ export interface AuthRequest extends Request {
   user?: TokenPayload & { permissions: string[] };
 }
 
+/** Routes that incomplete Google / OAuth users may call while finishing registration. */
+const PROFILE_COMPLETION_EXEMPT = new Set([
+  '/auth/me',
+  '/auth/logout',
+  '/auth/email-verification/send',
+  '/auth/email-verification/verify',
+  '/auth/complete-profile',
+]);
+
 export async function authenticate(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const authHeader = req.headers.authorization;
@@ -24,6 +33,21 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
       ...payload,
       permissions: permissions.map((rp) => rp.permission.permissionName),
     };
+
+    if (!PROFILE_COMPLETION_EXEMPT.has(req.path)) {
+      const user = await prisma.user.findUnique({
+        where: { id: payload.userId },
+        select: { profileComplete: true },
+      });
+      if (!user?.profileComplete) {
+        return res.status(403).json({
+          success: false,
+          error: 'Complete your profile before accessing the platform',
+          code: 'PROFILE_INCOMPLETE',
+        });
+      }
+    }
+
     next();
   } catch {
     return res.status(401).json({ success: false, error: 'Invalid or expired token' });

@@ -169,6 +169,11 @@ class ApiClient {
       files.forEach((f) => fd.append("images", f));
       return this.uploadRequest<{ urls: string[] }>("/upload/listing-images", fd);
     },
+    adImage: (file: File) => {
+      const fd = new FormData();
+      fd.append("images", file);
+      return this.uploadRequest<{ url: string }>("/upload/ad-image", fd);
+    },
     publicationFiles: (file?: File, cover?: File) => {
       const fd = new FormData();
       if (file) fd.append("file", file);
@@ -219,8 +224,6 @@ class ApiClient {
         challengeId: string;
         expiresAt: string;
         emailSent?: boolean;
-        devMode?: boolean;
-        devHint?: string;
       }>("/auth/email-verification/send", {
         method: "POST",
         body: JSON.stringify({ email }),
@@ -487,6 +490,11 @@ class ApiClient {
       this.request("/notifications/read-all", { method: "PATCH" }),
   };
 
+  ads = {
+    list: (placement: import("./types").AdPlacement) =>
+      this.request<import("./types").PlatformAd[]>(`/ads?placement=${placement}`),
+  };
+
   admin = {
     stats: () => this.request<import("./types").AdminStats>("/admin/stats"),
     dashboardCharts: () =>
@@ -546,6 +554,48 @@ class ApiClient {
           method: "PATCH",
           body: JSON.stringify(body),
         }),
+    },
+    ads: {
+      list: () => this.request<import("./types").PlatformAd[]>("/admin/ads"),
+      create: (body: {
+        title: string;
+        description?: string;
+        imageUrl: string;
+        linkUrl?: string;
+        ctaLabel?: string;
+        placement: import("./types").AdPlacement;
+        targetRoleIds?: number[];
+        active?: boolean;
+        priority?: number;
+        startsAt?: string | null;
+        endsAt?: string | null;
+      }) =>
+        this.request<import("./types").PlatformAd>("/admin/ads", {
+          method: "POST",
+          body: JSON.stringify(body),
+        }),
+      update: (
+        id: string,
+        body: Partial<{
+          title: string;
+          description: string | null;
+          imageUrl: string;
+          linkUrl: string | null;
+          ctaLabel: string | null;
+          placement: import("./types").AdPlacement;
+          targetRoleIds: number[];
+          active: boolean;
+          priority: number;
+          startsAt: string | null;
+          endsAt: string | null;
+        }>
+      ) =>
+        this.request<import("./types").PlatformAd>(`/admin/ads/${id}`, {
+          method: "PUT",
+          body: JSON.stringify(body),
+        }),
+      remove: (id: string) =>
+        this.request<{ deleted: boolean }>(`/admin/ads/${id}`, { method: "DELETE" }),
     },
   };
 

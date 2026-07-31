@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { formatGhc } from "@/lib/format";
 import type { OrderDistributionLine, OrderMoneyDistributionSnapshot } from "@/lib/types";
 import { DistributionSplitBreakdown } from "@/components/accountant/DistributionSplitBreakdown";
+import { PaymentResultOverlay } from "@/components/PaymentResultOverlay";
 import { PdfViewerModal } from "@/components/PdfViewerModal";
 
 interface OrderDistributionPanelProps {
@@ -38,10 +39,16 @@ function recipientDisplayLabel(line: OrderDistributionLine, farmerName: string):
 }
 
 function recipientRoleHint(line: OrderDistributionLine): string | null {
-  if (line.role === "FARMER_HANDLER") return "Fellow Liaison Officer";
-  if (line.role === "BUYER_HANDLER") return "Client Liaison Officer";
+  if (line.role === "FARMER_HANDLER") return "Fellow Liaison Officer · 10% of remainder";
+  if (line.role === "BUYER_HANDLER") return "Client Liaison Officer · 10% of remainder";
   return null;
 }
+
+type DistributionPaymentResult = {
+  title: string;
+  message: string;
+  hint?: string;
+};
 
 export function OrderDistributionPanel({
   orderId,
@@ -56,6 +63,7 @@ export function OrderDistributionPanel({
   const [paymentMethod, setPaymentMethod] = useState("Bank transfer");
   const [snapshot, setSnapshot] = useState<OrderMoneyDistributionSnapshot | null>(null);
   const [pdfLine, setPdfLine] = useState<OrderDistributionLine | null>(null);
+  const [paymentResult, setPaymentResult] = useState<DistributionPaymentResult | null>(null);
 
   const orderPrefix = `${orderId}:`;
   const isOrderBusy = useMemo(
@@ -87,6 +95,7 @@ export function OrderDistributionPanel({
 
   const distributeLine = async (lineId: string) => {
     const key = distributionKey(orderId, lineId);
+    const line = snapshot?.lines.find((entry) => entry.id === lineId);
     onDistributingChange(key, true);
     setError("");
     try {
@@ -94,6 +103,18 @@ export function OrderDistributionPanel({
         paymentMethod: paymentMethod.trim() || "Bank transfer",
       });
       setSnapshot(data);
+      const distributedLine = data.lines.find((entry) => entry.id === lineId) ?? line;
+      if (distributedLine) {
+        const recipient = recipientDisplayLabel(
+          distributedLine,
+          data.farmerName.split(" ")[0] ?? "Fellow"
+        );
+        setPaymentResult({
+          title: "Payment sent",
+          message: `${formatGhc(distributedLine.amount)} sent to ${recipient}.`,
+          hint: `Order ${orderLabel} · ${paymentMethod.trim() || "Bank transfer"}`,
+        });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Distribution failed");
     } finally {
@@ -110,6 +131,17 @@ export function OrderDistributionPanel({
         paymentMethod: paymentMethod.trim() || "Bank transfer",
       });
       setSnapshot(data);
+      const paidLines = data.lines.filter(
+        (line) => line.role !== "ANI_PLATFORM" && line.status === "DISTRIBUTED"
+      );
+      const paidTotal = paidLines.reduce((sum, line) => sum + line.amount, 0);
+      setPaymentResult({
+        title: "Distribution complete",
+        message: `${paidLines.length} recipient share${paidLines.length === 1 ? "" : "s"} (${formatGhc(paidTotal)}) sent for "${orderLabel}".`,
+        hint: data.allDistributed
+          ? "All assigned recipients have been paid. ANI platform share is retained automatically."
+          : undefined,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Distribution failed");
     } finally {
@@ -133,7 +165,7 @@ export function OrderDistributionPanel({
   const fellowFirstName = snapshot?.farmerName.split(" ")[0] ?? "Fellow";
 
   return (
-    <div className="rounded-xl border border-brand-100 bg-white">
+    <div className="relative rounded-xl border border-brand-100 bg-white">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -162,6 +194,7 @@ export function OrderDistributionPanel({
             <>
               <DistributionSplitBreakdown
                 fellowName={fellowFirstName}
+                orderAmount={snapshot.totalAmount}
                 hidePlatformShare
                 className="mb-4 max-w-md rounded-lg bg-brand-50/50 px-3 py-2.5"
               />
@@ -215,7 +248,9 @@ export function OrderDistributionPanel({
                               <p className="text-[10px] text-gray-500">{roleHint}</p>
                             )}
                           </td>
-                          <td className="px-3 py-2.5 text-right tabular-nums">{line.percentage.toFixed(2)}%</td>
+                          <td className="px-3 py-2.5 text-right tabular-nums">
+                            {line.percentage > 0 ? `${line.percentage.toFixed(2)}%` : "—"}
+                          </td>
                           <td className="px-3 py-2.5 text-right font-semibold tabular-nums text-brand-900">
                             {formatGhc(line.amount)}
                           </td>
@@ -268,6 +303,18 @@ export function OrderDistributionPanel({
         onClose={closeMessagePdf}
         loadUrl={loadMessagePdf}
       />
+
+      {paymentResult && (
+        <PaymentResultOverlay
+          variant="success"
+          compact
+          title={paymentResult.title}
+          message={paymentResult.message}
+          hint={paymentResult.hint}
+          onDismiss={() => setPaymentResult(null)}
+          dismissLabel="Close"
+        />
+      )}
     </div>
   );
 }

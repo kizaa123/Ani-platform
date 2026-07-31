@@ -7,11 +7,10 @@ import prisma from '../database/prisma';
 import { AppError, assertFound } from '../utils/errors';
 import { notifyMoneyDistributed } from './notification.service';
 import {
-  ANI_PLATFORM_SHARE_PERCENT,
-  BUYER_HANDLER_SHARE_PERCENT,
   calculateDistributionAmounts,
-  FARMER_HANDLER_SHARE_PERCENT,
   FARMER_SHARE_PERCENT,
+  HANDLER_REMAINDER_SHARE_PERCENT,
+  aniPlatformSharePercentOfTotal,
   orderListingLabels,
 } from '../utils/distributionFinancials';
 
@@ -297,9 +296,14 @@ function buildLineSeeds(
   handlers: Awaited<ReturnType<typeof resolveHandlers>>
 ): DistributionLineSeed[] {
   const farmerName = order.farmer.firstName;
+  const hasFarmerHandler = Boolean(handlers.farmerHandler?.agent);
+  const hasBuyerHandler = Boolean(handlers.buyerHandler?.agent);
   const farmerHandlerName = handlerRecipientName('FARMER_HANDLER', handlers.farmerHandler?.agent);
   const buyerHandlerName = handlerRecipientName('BUYER_HANDLER', handlers.buyerHandler?.agent);
-  const amounts = calculateDistributionAmounts(totalAmount);
+  const amounts = calculateDistributionAmounts(totalAmount, {
+    hasFarmerHandler,
+    hasBuyerHandler,
+  });
 
   return [
     {
@@ -311,21 +315,24 @@ function buildLineSeeds(
     },
     {
       role: 'FARMER_HANDLER',
-      percentage: FARMER_HANDLER_SHARE_PERCENT,
+      percentage: hasFarmerHandler ? HANDLER_REMAINDER_SHARE_PERCENT : 0,
       amount: amounts.farmerHandler,
       recipientUserId: handlers.farmerHandler?.agent.id ?? null,
       recipientName: farmerHandlerName,
     },
     {
       role: 'BUYER_HANDLER',
-      percentage: BUYER_HANDLER_SHARE_PERCENT,
+      percentage: hasBuyerHandler ? HANDLER_REMAINDER_SHARE_PERCENT : 0,
       amount: amounts.buyerHandler,
       recipientUserId: handlers.buyerHandler?.agent.id ?? null,
       recipientName: buyerHandlerName,
     },
     {
       role: 'ANI_PLATFORM',
-      percentage: ANI_PLATFORM_SHARE_PERCENT,
+      percentage: aniPlatformSharePercentOfTotal(totalAmount, {
+        hasFarmerHandler,
+        hasBuyerHandler,
+      }),
       amount: amounts.aniPlatform,
       recipientUserId: null,
       recipientName: 'ANI',

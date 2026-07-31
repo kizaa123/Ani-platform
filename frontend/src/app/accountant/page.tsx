@@ -11,6 +11,7 @@ import { AnimatedStat } from "@/components/AnimatedStat";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
 import { PageContentSkeleton, Skeleton } from "@/components/LoadingPrimitives";
+import { aniPlatformSharePercentOfTotal } from "@/lib/handlerDisplayName";
 
 function OverviewSkeleton() {
   return (
@@ -133,7 +134,7 @@ export default function AccountantOverviewPage() {
                 label: "Order share income",
                 value: formatMoney(overview.orderShareRevenue),
                 prefix: "GHC ",
-                sub: `${overview.orderShareCount} released order(s) · ~13.34% each`,
+                sub: `${overview.orderShareCount} released order(s) · ~${aniPlatformSharePercentOfTotal(100).toFixed(2)}% each`,
                 valueClass: "text-lg font-bold text-brand-800",
                 href: "/accountant/withdrawals",
               },

@@ -58,6 +58,7 @@ export const PERMISSIONS = {
   MANAGE_PUBLICATIONS: 'manage_publications',
   VIEW_PUBLICATIONS: 'view_publications',
   PURCHASE_PUBLICATION: 'purchase_publication',
+  MANAGE_ADS: 'manage_ads',
 } as const;
 
 export const FARMER_ROLES = [ROLES.CROP_FARMER, ROLES.LIVESTOCK_FARMER, ROLES.ORGANIZATION_FARMER];
@@ -113,6 +114,11 @@ export function isMarketplaceBuyerRole(roleId: number): boolean {
 /** Roles that browse other farmers' farms, pay access fees, and place product orders. */
 export function canPurchaseFromMarketplace(roleId: number): boolean {
   return isMarketplaceBuyerRole(roleId) || isFarmerRole(roleId);
+}
+
+/** Roles that may pay for and read paid research publications (not researchers). */
+export function canPurchasePublication(roleId: number): boolean {
+  return (RESEARCHER_CLIENT_ROLES as readonly number[]).includes(roleId);
 }
 
 /** Legacy student accounts are treated as clients (buyers). */

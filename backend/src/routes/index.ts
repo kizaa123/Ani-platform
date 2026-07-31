@@ -29,11 +29,13 @@ import { verifyUserSchema, assignVerificationTagSchema } from '../services/admin
 import { createStaffSchema, updateStaffSchema } from '../services/staff.service';
 import { createWithdrawalSchema, updateWithdrawalSchema } from '../services/accountant.service';
 import { distributeLineSchema } from '../services/orderDistribution.service';
+import { adController } from '../controllers/ad.controller';
+import { createAdSchema, updateAdSchema } from '../services/ad.service';
 import { uploadController } from '../controllers/upload.controller';
 import { farmerMediaController } from '../controllers/farmerMedia.controller';
 import { productMediaController } from '../controllers/productMedia.controller';
 import { researcherController } from '../controllers/researcher.controller';
-import { profileUpload, listingImagesUpload, publicationFileUpload, farmMediaUpload, productMediaUpload, MAX_IMAGE_FILE_SIZE, MAX_DOCUMENT_FILE_SIZE, MAX_FARM_MEDIA_FILE_SIZE } from '../middleware/upload.middleware';
+import { profileUpload, listingImagesUpload, adImagesUpload, publicationFileUpload, farmMediaUpload, productMediaUpload, MAX_IMAGE_FILE_SIZE, MAX_DOCUMENT_FILE_SIZE, MAX_FARM_MEDIA_FILE_SIZE } from '../middleware/upload.middleware';
 import { authRateLimiter } from '../middleware/rate-limit.middleware';
 import { PERMISSIONS } from '../constants/roles';
 
@@ -233,7 +235,6 @@ router.post('/research/:id/view', authenticate, researcherController.recordView)
 router.post(
   '/research/:id/purchase',
   authenticate,
-  requirePermission(PERMISSIONS.PURCHASE_PUBLICATION),
   validateBody(purchasePublicationSchema),
   researcherController.purchase
 );
@@ -326,6 +327,9 @@ router.get('/notifications/unread-count', authenticate, notificationController.u
 router.patch('/notifications/read-all', authenticate, notificationController.markAllRead);
 router.patch('/notifications/:id/read', authenticate, notificationController.markRead);
 
+// Internal ads (authenticated users)
+router.get('/ads', authenticate, adController.listForUser);
+
 // Admin (user verification & platform analytics)
 router.get(
   '/admin/stats',
@@ -352,6 +356,25 @@ router.get('/admin/audit-logs', authenticate, requirePermission(PERMISSIONS.VIEW
 router.get('/admin/staff', authenticate, requirePermission(PERMISSIONS.MANAGE_USERS), adminController.listStaff);
 router.post('/admin/staff', authenticate, requirePermission(PERMISSIONS.MANAGE_USERS), validateBody(createStaffSchema), adminController.createStaff);
 router.patch('/admin/staff/:id', authenticate, requirePermission(PERMISSIONS.MANAGE_USERS), validateBody(updateStaffSchema), adminController.updateStaff);
+
+// Admin ads management
+router.get('/admin/ads', authenticate, requirePermission(PERMISSIONS.MANAGE_ADS), adController.listAll);
+router.get('/admin/ads/:id', authenticate, requirePermission(PERMISSIONS.MANAGE_ADS), adController.getOne);
+router.post('/admin/ads', authenticate, requirePermission(PERMISSIONS.MANAGE_ADS), validateBody(createAdSchema), adController.create);
+router.put('/admin/ads/:id', authenticate, requirePermission(PERMISSIONS.MANAGE_ADS), validateBody(updateAdSchema), adController.update);
+router.delete('/admin/ads/:id', authenticate, requirePermission(PERMISSIONS.MANAGE_ADS), adController.remove);
+router.post(
+  '/upload/ad-image',
+  authenticate,
+  requirePermission(PERMISSIONS.MANAGE_ADS),
+  (req, res, next) => {
+    adImagesUpload(req, res, (err) => {
+      if (err) return res.status(400).json({ success: false, error: uploadErrorMessage(err) });
+      next();
+    });
+  },
+  uploadController.uploadAdImage
+);
 
 // Accountant (financial portal)
 router.get('/accountant/overview', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), requireApprovedAccountant, accountantController.overview);

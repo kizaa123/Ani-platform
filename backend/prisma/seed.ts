@@ -48,17 +48,18 @@ const PERMISSIONS = [
   'negotiate_as_buyer', 'represent_buyer', 'manage_packages', 'view_audit_logs',
   'manage_users', 'send_messages', 'purchase_access',
   'create_publication', 'manage_publications', 'view_publications', 'purchase_publication',
+  'manage_ads',
 ];
 
 const ROLE_PERMS: Record<number, string[]> = {
-  1: ['create_listing', 'manage_commodities', 'view_farmer_preview', 'send_messages', 'view_publications', 'purchase_access', 'request_connection'],
-  2: ['create_listing', 'manage_commodities', 'view_farmer_preview', 'send_messages', 'view_publications', 'purchase_access', 'request_connection'],
-  12: ['create_listing', 'manage_commodities', 'view_farmer_preview', 'send_messages', 'view_publications', 'purchase_access', 'request_connection'],
+  1: ['create_listing', 'manage_commodities', 'view_farmer_preview', 'send_messages', 'view_publications', 'purchase_access', 'purchase_publication', 'request_connection'],
+  2: ['create_listing', 'manage_commodities', 'view_farmer_preview', 'send_messages', 'view_publications', 'purchase_access', 'purchase_publication', 'request_connection'],
+  12: ['create_listing', 'manage_commodities', 'view_farmer_preview', 'send_messages', 'view_publications', 'purchase_access', 'purchase_publication', 'request_connection'],
   3: ['view_farmer_preview', 'view_full_farmer_data', 'manage_listings', 'negotiate_as_farmer', 'represent_farmer', 'send_messages', 'view_publications'],
   4: ['view_farmer_preview', 'view_full_farmer_data', 'request_connection', 'negotiate_as_buyer', 'represent_buyer', 'purchase_access', 'send_messages', 'view_publications', 'purchase_publication'],
   5: ['view_farmer_preview', 'view_full_farmer_data', 'request_connection', 'search_farmers', 'negotiate_as_buyer', 'represent_buyer', 'send_messages', 'view_publications'],
   6: ['manage_payments', 'manage_packages', 'approve_connection', 'view_publications'],
-  7: ['manage_payments', 'verify_users', 'manage_packages', 'view_audit_logs', 'manage_users', 'view_full_farmer_data', 'approve_connection', 'view_publications'],
+  7: ['manage_payments', 'verify_users', 'manage_packages', 'view_audit_logs', 'manage_users', 'view_full_farmer_data', 'approve_connection', 'view_publications', 'manage_ads'],
   8: ['create_publication', 'manage_publications', 'view_publications', 'send_messages', 'view_farmer_preview', 'view_full_farmer_data', 'request_connection', 'negotiate_as_buyer', 'represent_buyer', 'purchase_access'],
   9: ['view_publications', 'purchase_publication', 'send_messages'],
   10: ['view_audit_logs', 'view_publications', 'view_full_farmer_data', 'manage_packages'],
@@ -474,6 +475,37 @@ async function main() {
         },
       ],
     });
+  }
+
+  const adCount = await prisma.ad.count();
+  if (adCount === 0) {
+    await prisma.ad.createMany({
+      data: [
+        {
+          title: 'Grow with ANI Marketplace',
+          description: 'Connect with verified fellows and discover fresh produce across Ghana.',
+          imageUrl: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=1200&h=400&fit=crop',
+          linkUrl: 'https://ani-platform.example/marketplace',
+          ctaLabel: 'Explore',
+          placement: 'MARKETPLACE',
+          targetRoleIds: [],
+          active: true,
+          priority: 10,
+        },
+        {
+          title: 'Research Library — New Publications',
+          description: 'Browse the latest crop and livestock research from ANI fellows.',
+          imageUrl: 'https://images.unsplash.com/photo-1507842217343-583bb7270def?w=1200&h=400&fit=crop',
+          linkUrl: 'https://ani-platform.example/library',
+          ctaLabel: 'Browse library',
+          placement: 'LIBRARY',
+          targetRoleIds: [],
+          active: true,
+          priority: 5,
+        },
+      ],
+    });
+    console.log('↪ Seeded sample internal ads');
   }
 
   console.log('✅ Seed complete. Password for all demo accounts: Password123!');

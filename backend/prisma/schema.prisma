@@ -744,6 +744,35 @@ model OrderDistributionLine {
   @@map("order_distribution_lines")
 }
 
+// ─── Internal ads (admin-managed) ─────────────────────────────────────────────
+
+enum AdPlacement {
+  MARKETPLACE
+  LIBRARY
+  DASHBOARD
+  GLOBAL
+}
+
+model Ad {
+  id            String      @id @default(uuid())
+  title         String
+  description   String?
+  imageUrl      String      @map("image_url") @db.Text
+  linkUrl       String?     @map("link_url")
+  ctaLabel      String?     @map("cta_label")
+  placement     AdPlacement
+  targetRoleIds Json        @default("[]") @map("target_role_ids")
+  active        Boolean     @default(true)
+  priority      Int         @default(0)
+  startsAt      DateTime?   @map("starts_at")
+  endsAt        DateTime?   @map("ends_at")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+
+  @@index([placement, active])
+  @@map("ads")
+}
+
 // ─── Audit ─────────────────────────────────────────────────────────────────────
 
 model AuditLog {

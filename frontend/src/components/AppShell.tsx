@@ -28,7 +28,11 @@ import { isFarmer, isHandler, isBuyer, isStaff, isResearcher, isStudent } from "
 
 const PUBLIC_PATHS = ["/", "/login", "/register"];
 
+const REGISTRATION_PATHS = ["/complete-profile"];
 
+function isRegistrationFlow(pathname: string) {
+  return REGISTRATION_PATHS.includes(pathname) || pathname.startsWith("/auth/");
+}
 
 function PortalWrap({ children }: { children: React.ReactNode }) {
 
@@ -78,7 +82,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return <PageLoader />;
   }
 
-
+  if (isRegistrationFlow(pathname) || (user && user.profileComplete === false)) {
+    return <main className="flex-1">{children}</main>;
+  }
 
   if (user && isFarmer(user.roleId)) {
 

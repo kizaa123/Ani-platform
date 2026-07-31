@@ -11,6 +11,7 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { Icon, type IconName } from "@/components/icons";
 import { MobileBottomNav, MOBILE_BOTTOM_NAV_PADDING } from "@/components/MobileBottomNav";
 import { Logo } from "@/components/Logo";
+import { AdSlot } from "@/components/AdSlot";
 
 export type PortalNavLink = {
   href: string;
@@ -266,6 +267,9 @@ export function PortalSidebarLayout({
       </aside>
 
       <main className={`min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-white ${MOBILE_BOTTOM_NAV_PADDING}`}>
+        <div className="mx-auto max-w-6xl px-4 pt-3 lg:px-6">
+          <AdSlot placement="global" variant="strip" />
+        </div>
         {children}
       </main>
 

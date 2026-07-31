@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { AnimatedStat } from "@/components/AnimatedStat";
-import { DISTRIBUTION_SHARES } from "@/lib/handlerDisplayName";
+import { aniPlatformSharePercentOfTotal } from "@/lib/handlerDisplayName";
 import { formatGhc } from "@/lib/format";
 
 interface AdminPlatformIncomeCardProps {
@@ -63,8 +63,8 @@ export function AdminPlatformIncomeCard({
             <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Order share</p>
             <p className="mt-1 text-xl font-bold tabular-nums text-brand-900">{formatGhc(orderShareIncome)}</p>
             <p className="mt-1 text-xs text-gray-500">
-              {orderShareCount} released order{orderShareCount === 1 ? "" : "s"} ·{" "}
-              {DISTRIBUTION_SHARES.ANI.toFixed(2)}% each
+              {orderShareCount} released order{orderShareCount === 1 ? "" : "s"} · ~
+              {aniPlatformSharePercentOfTotal(100).toFixed(2)}% each
             </p>
           </div>
         </div>

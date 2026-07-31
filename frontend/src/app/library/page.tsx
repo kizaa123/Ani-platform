@@ -10,6 +10,7 @@ import { LibraryPublisherCard } from "@/components/LibraryPublisherCard";
 import { CardGridSkeleton, PageContentSkeleton } from "@/components/LoadingPrimitives";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
+import { AdSlot } from "@/components/AdSlot";
 
 export default function LibraryPage() {
   const { user, loading } = useAuth();
@@ -55,6 +56,8 @@ export default function LibraryPage() {
           Browse publishers and explore their research publications
         </p>
       </ScrollReveal>
+
+      <AdSlot placement="library" className="mb-8" />
 
       <ScrollReveal trigger="mount" delay={80} duration={450} direction="fade-up" className="mb-8">
         <form onSubmit={handleSearch} className="flex gap-3">

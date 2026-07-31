@@ -15,7 +15,7 @@ export const MAX_LISTING_IMAGES_PER_UPLOAD = 10;
 export const MAX_DOCUMENT_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
 export function ensureUploadDirs() {
-  for (const dir of ['profiles', 'listings', 'products', 'publications', 'farm-media', 'product-media']) {
+  for (const dir of ['profiles', 'listings', 'products', 'publications', 'farm-media', 'product-media', 'ads']) {
     const full = path.join(UPLOADS_ROOT, dir);
     if (!fs.existsSync(full)) fs.mkdirSync(full, { recursive: true });
   }
@@ -49,6 +49,12 @@ export const listingImagesUpload = multer({
   limits: { fileSize: MAX_IMAGE_FILE_SIZE },
   fileFilter: imageFilter,
 }).array('images', MAX_LISTING_IMAGES_PER_UPLOAD);
+
+export const adImagesUpload = multer({
+  storage: diskStorage('ads'),
+  limits: { fileSize: MAX_IMAGE_FILE_SIZE },
+  fileFilter: imageFilter,
+}).array('images', 1);
 
 const publicationFileFilter: multer.Options['fileFilter'] = (_req, file, cb) => {
   if (file.fieldname === 'cover') {
@@ -123,7 +129,7 @@ export function normalizePublicAssetUrl(path?: string | null): string | null {
   }
   if (trimmed.startsWith('/uploads/')) return trimmed;
   if (trimmed.startsWith('uploads/')) return `/${trimmed}`;
-  if (trimmed.startsWith('profiles/') || trimmed.startsWith('listings/') || trimmed.startsWith('publications/') || trimmed.startsWith('farm-media/') || trimmed.startsWith('product-media/')) {
+  if (trimmed.startsWith('profiles/') || trimmed.startsWith('listings/') || trimmed.startsWith('publications/') || trimmed.startsWith('farm-media/') || trimmed.startsWith('product-media/') || trimmed.startsWith('ads/')) {
     return publicUrl(trimmed);
   }
   return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;

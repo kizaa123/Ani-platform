@@ -5,13 +5,12 @@ import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
 
 /** Fellow share of order total. */
 export const FARMER_SHARE_PERCENT = 66.66;
-/** FLO share — 10 percentage points of order, taken from post-Fellow remainder. */
-export const FARMER_HANDLER_SHARE_PERCENT = 10;
-/** CLO share — 10 percentage points of order, taken from post-FLO remainder. */
-export const BUYER_HANDLER_SHARE_PERCENT = 10;
-/** ANI share — remainder after Fellow, FLO, and CLO (13.34% of order total). */
-export const ANI_PLATFORM_SHARE_PERCENT =
-  100 - FARMER_SHARE_PERCENT - FARMER_HANDLER_SHARE_PERCENT - BUYER_HANDLER_SHARE_PERCENT;
+/** Each assigned handler receives this share of the post-Fellow remainder. */
+export const HANDLER_REMAINDER_SHARE_PERCENT = 10;
+/** @deprecated Use HANDLER_REMAINDER_SHARE_PERCENT — kept for distribution line labels. */
+export const FARMER_HANDLER_SHARE_PERCENT = HANDLER_REMAINDER_SHARE_PERCENT;
+/** @deprecated Use HANDLER_REMAINDER_SHARE_PERCENT — kept for distribution line labels. */
+export const BUYER_HANDLER_SHARE_PERCENT = HANDLER_REMAINDER_SHARE_PERCENT;
 
 /** Buyer pays listed price X; ANI retains 10% of publication sales. */
 export const PUBLICATION_PLATFORM_SHARE_PERCENT = 10;
@@ -31,6 +30,13 @@ export type DistributionAmounts = {
   farmerHandler: number;
   buyerHandler: number;
   aniPlatform: number;
+  /** Post-Fellow pool before handler and ANI splits. */
+  remainder: number;
+};
+
+export type DistributionHandlerOptions = {
+  hasFarmerHandler?: boolean;
+  hasBuyerHandler?: boolean;
 };
 
 function roundGhc(amount: number): number {
@@ -42,20 +48,44 @@ export function distributionShareAmount(totalAmount: number, percentage: number)
 }
 
 /**
- * Cascading remainder split on released orders:
- * Fellow 66.66%, then FLO 10pp and CLO 10pp of order total (sequential from remainder pool),
- * ANI receives the rounded GHC remainder so shares always sum to the order total.
+ * Released-order split:
+ * 1. Fellow receives 66.66% of order total.
+ * 2. Each assigned handler receives 10% of the post-Fellow remainder.
+ * 3. ANI receives the rounded GHC remainder (includes unassigned handler shares).
  */
-export function calculateDistributionAmounts(totalAmount: number): DistributionAmounts {
+export function calculateDistributionAmounts(
+  totalAmount: number,
+  options: DistributionHandlerOptions = {}
+): DistributionAmounts {
+  const hasFarmerHandler = options.hasFarmerHandler ?? true;
+  const hasBuyerHandler = options.hasBuyerHandler ?? true;
+
   const farmer = distributionShareAmount(totalAmount, FARMER_SHARE_PERCENT);
-  const farmerHandler = distributionShareAmount(totalAmount, FARMER_HANDLER_SHARE_PERCENT);
-  const buyerHandler = distributionShareAmount(totalAmount, BUYER_HANDLER_SHARE_PERCENT);
+  const remainder = roundGhc(totalAmount - farmer);
+  const farmerHandler = hasFarmerHandler
+    ? distributionShareAmount(remainder, HANDLER_REMAINDER_SHARE_PERCENT)
+    : 0;
+  const buyerHandler = hasBuyerHandler
+    ? distributionShareAmount(remainder, HANDLER_REMAINDER_SHARE_PERCENT)
+    : 0;
   const aniPlatform = roundGhc(totalAmount - farmer - farmerHandler - buyerHandler);
-  return { farmer, farmerHandler, buyerHandler, aniPlatform };
+
+  return { farmer, farmerHandler, buyerHandler, aniPlatform, remainder };
 }
 
-export function aniPlatformShareAmount(totalAmount: number): number {
-  return calculateDistributionAmounts(totalAmount).aniPlatform;
+export function aniPlatformShareAmount(
+  totalAmount: number,
+  options?: DistributionHandlerOptions
+): number {
+  return calculateDistributionAmounts(totalAmount, options).aniPlatform;
+}
+
+export function aniPlatformSharePercentOfTotal(
+  totalAmount: number,
+  options?: DistributionHandlerOptions
+): number {
+  if (totalAmount <= 0) return 0;
+  return roundGhc((aniPlatformShareAmount(totalAmount, options) / totalAmount) * 100);
 }
 
 export function isReleasedProductOrder(order: {

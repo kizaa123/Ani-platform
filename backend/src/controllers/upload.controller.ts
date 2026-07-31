@@ -49,6 +49,20 @@ export class UploadController {
     }
   };
 
+  uploadAdImage = async (req: AuthRequest, res: Response) => {
+    try {
+      const files = req.files as Express.Multer.File[] | undefined;
+      if (!files?.length) {
+        return res.status(400).json({ success: false, error: 'No image file provided' });
+      }
+
+      const url = await persistUploadedFile(files[0], 'ads');
+      ApiResponse.success(res, { url });
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
   uploadPublicationFiles = async (req: AuthRequest, res: Response) => {
     try {
       await researcherService.ensurePublicationPolicyAccepted(req.user!.userId, req.user!.roleId);

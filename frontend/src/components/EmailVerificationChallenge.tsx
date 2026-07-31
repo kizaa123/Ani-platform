@@ -16,9 +16,7 @@ export function EmailVerificationChallenge({ email, onVerified }: EmailVerificat
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
-  const [devHint, setDevHint] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
-  const [emailSentToInbox, setEmailSentToInbox] = useState(false);
 
   const sendChallenge = async () => {
     setError("");
@@ -27,8 +25,6 @@ export function EmailVerificationChallenge({ email, onVerified }: EmailVerificat
       const result = await api.auth.sendEmailVerification(email);
       setChallengeId(result.challengeId);
       setSent(true);
-      setEmailSentToInbox(!result.devMode);
-      setDevHint(result.devHint ?? null);
       setCode("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not send verification email");
@@ -93,14 +89,10 @@ export function EmailVerificationChallenge({ email, onVerified }: EmailVerificat
         </button>
       ) : (
         <>
-          {emailSentToInbox ? (
-            <div className="auth-info-box text-brand-800" role="status">
-              Verification code sent. Check your inbox at{" "}
-              <EmailText email={email} className="inline font-semibold" /> and enter it below.
-            </div>
-          ) : devHint ? (
-            <div className="auth-info-box text-brand-800">{devHint}</div>
-          ) : null}
+          <div className="auth-info-box text-brand-800" role="status">
+            Verification code sent. Check your inbox at{" "}
+            <EmailText email={email} className="inline font-semibold" /> and enter it below.
+          </div>
 
           <div className="auth-field">
             <label htmlFor="email-verification-code" className="auth-label">

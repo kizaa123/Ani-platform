@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { ResearchPublication } from "@/lib/types";
-import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { Icon } from "@/components/icons";
 import { PublicationCoverImage } from "@/components/PublicationCoverImage";
 import { formatGhc } from "@/lib/format";
+import { PUBLICATION_CATEGORY_OPTIONS } from "@/lib/publicationCategories";
 import { api } from "@/lib/api";
 
 interface LibraryPublicationCardProps {
@@ -101,6 +101,11 @@ export function LibraryPublicationCard({
     }
   };
 
+  const hasAccess = pub.hasAccess || !pub.isLocked;
+  const categoryLabel =
+    PUBLICATION_CATEGORY_OPTIONS.find((option) => option.value === (pub.category ?? "OTHER"))?.label ??
+    "Others";
+
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm transition hover:border-brand-200 hover:shadow-md">
       <PublicationCoverImage
@@ -110,30 +115,36 @@ export function LibraryPublicationCard({
         aspectClass="aspect-[2/1]"
       />
 
-      <div className="flex flex-1 flex-col gap-2 p-4 sm:p-5">
-        <div className="flex items-start gap-3">
-          <AvatarWithVerification
-            src={pub.researcher.profilePicture}
-            name={pub.researcher.name}
-            size="md"
-            verificationStatus={pub.researcher.verificationStatus}
-            verificationTags={pub.researcher.verificationTags}
-          />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-gray-700">{pub.researcher.name}</p>
-          </div>
+      <div className="flex flex-1 flex-col gap-3 p-4 sm:p-5">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-full border border-brand-100 bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-800">
+            {categoryLabel}
+          </span>
+          {hasAccess ? (
+            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">
+              <Icon name="check" className="h-3 w-3 shrink-0" />
+              {pub.isFree ? "Free access" : "Unlocked"}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-900">
+              <Icon name="lock" className="h-3 w-3 shrink-0" />
+              Locked
+            </span>
+          )}
         </div>
 
-        <h3 className="line-clamp-2 font-bold leading-snug text-brand-900">{pub.title}</h3>
+        <div className="space-y-1.5">
+          <h3 className="line-clamp-2 font-bold leading-snug text-brand-900">{pub.title}</h3>
 
-        {pub.description && (
-          <p className="line-clamp-2 text-xs leading-snug text-gray-600">{pub.description}</p>
-        )}
+          {pub.description && (
+            <p className="line-clamp-2 text-sm leading-relaxed text-gray-600">{pub.description}</p>
+          )}
+        </div>
 
-        <div className="flex items-center justify-between border-t border-gray-100 pt-2 text-xs">
+        <div className="flex items-center justify-between border-t border-gray-100 pt-2.5 text-xs">
           <span className="flex items-center gap-1 font-medium text-gray-600">
             <Icon name="eye" className="h-3.5 w-3.5 text-gray-500" />
-            {viewCount}
+            {viewCount} view{viewCount === 1 ? "" : "s"}
           </span>
           <span className="text-sm font-bold text-brand-700">
             {pub.isFree ? "Free" : formatGhc(pub.price ?? 0)}

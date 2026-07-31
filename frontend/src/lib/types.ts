@@ -789,8 +789,9 @@ export function isStudent(roleId: number) {
   return roleId === ROLES.STUDENT;
 }
 
+/** Farmers, clients (buyers), and legacy students — not researchers or handlers. */
 export function canPurchasePublication(roleId: number) {
-  return roleId === ROLES.BUYER || roleId === ROLES.STUDENT;
+  return isFarmer(roleId) || isBuyer(roleId) || isStudent(roleId);
 }
 
 export function isHandler(roleId: number) {
@@ -985,7 +986,7 @@ export interface AdminStats {
   pendingAccountantApprovals?: number;
   /** Farm access, publication access, and legacy access fees. */
   accessIncome: number;
-  /** 13.34% ANI remainder from released order distributions. */
+  /** ANI remainder from released order distributions (post-Fellow, post-handler pool). */
   orderShareIncome: number;
   /** accessIncome + orderShareIncome. */
   totalPlatformIncome: number;
@@ -1289,3 +1290,43 @@ export interface StaffMember {
   verificationStatus: string;
   createdAt: string;
 }
+
+export type AdPlacement = "marketplace" | "library" | "dashboard" | "global";
+
+export interface PlatformAd {
+  id: string;
+  title: string;
+  description: string | null;
+  imageUrl: string;
+  linkUrl: string | null;
+  ctaLabel: string | null;
+  placement: AdPlacement;
+  targetRoleIds: number[];
+  active: boolean;
+  priority: number;
+  startsAt: string | null;
+  endsAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const AD_PLACEMENT_OPTIONS: { value: AdPlacement; label: string }[] = [
+  { value: "marketplace", label: "Marketplace" },
+  { value: "library", label: "Research Library" },
+  { value: "dashboard", label: "Dashboard" },
+  { value: "global", label: "Global strip (all portals)" },
+];
+
+export const AD_TARGET_ROLE_OPTIONS: { id: number; label: string }[] = [
+  { id: ROLES.CROP_FARMER, label: "Crop Farmer" },
+  { id: ROLES.LIVESTOCK_FARMER, label: "Livestock Farmer" },
+  { id: ROLES.ORGANIZATION_FARMER, label: "Organization Fellow" },
+  { id: ROLES.FARMER_HANDLER, label: "Farmer Handler" },
+  { id: ROLES.BUYER, label: "Buyer" },
+  { id: ROLES.BUYER_HANDLER, label: "Buyer Handler" },
+  { id: ROLES.RESEARCHER, label: "Researcher" },
+  { id: ROLES.ANI_ACCOUNTANT, label: "ANI Accountant" },
+  { id: ROLES.ADMIN, label: "Admin" },
+  { id: ROLES.CTO, label: "CTO" },
+  { id: ROLES.COMMUNICATION_OFFICER, label: "Communication Officer" },
+];

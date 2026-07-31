@@ -18,6 +18,7 @@ import { Icon } from "@/components/icons";
 import { CardGridSkeleton, PageContentSkeleton } from "@/components/LoadingPrimitives";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
+import { AdSlot } from "@/components/AdSlot";
 
 function isVerifiedFarmer(farmer: FarmerBrowseCard): boolean {
   if (farmer.verificationStatus === "VERIFIED") return true;
@@ -157,6 +158,8 @@ export default function MarketplacePage() {
           </p>
         )}
       </ScrollReveal>
+
+      <AdSlot placement="marketplace" className="mb-8" />
 
       <ScrollReveal trigger="mount" delay={80} duration={450} direction="fade-up" className="mb-8">
         <label htmlFor="marketplace-search" className="sr-only">

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import prisma from '../database/prisma';
 import { AppError, assertFound, assertAuthorized } from '../utils/errors';
-import { ROLES, isResearcherRole, RESEARCHER_CLIENT_ROLES } from '../constants/roles';
+import { ROLES, isResearcherRole, RESEARCHER_CLIENT_ROLES, canPurchasePublication } from '../constants/roles';
 import { getPaymentProvider } from './payment.provider';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import { formatVerificationTags, verificationTagSelect } from '../utils/verificationTags';
@@ -86,11 +86,11 @@ function formatPublication(
   },
   options: { includeFile?: boolean; hasAccess?: boolean; isOwner?: boolean; likedByMe?: boolean; commentsCount?: number } = {}
 ) {
-  const canAccess = options.isOwner || pub.isFree || options.hasAccess;
+  const canAccess = options.isOwner || pub.isFree || !!options.hasAccess;
   const exposeFileUrl =
     canAccess &&
     options.includeFile !== false &&
-    (options.isOwner || pub.isFree);
+    (options.isOwner || pub.isFree || !!options.hasAccess);
   return {
     id: pub.id,
     title: pub.title,
@@ -392,14 +392,16 @@ export class ResearcherService {
       this.getCommentCounts(pubIds),
     ]);
 
-    return publications.map((p) =>
-      formatPublication(p, {
-        hasAccess: purchasedIds.has(p.id),
-        isOwner: researcherProfile?.id === p.researcherId,
+    return publications.map((p) => {
+      const isOwner = researcherProfile?.id === p.researcherId;
+      const hasAccess = isOwner || p.isFree || purchasedIds.has(p.id);
+      return formatPublication(p, {
+        hasAccess,
+        isOwner,
         likedByMe: likedIds.has(p.id),
         commentsCount: commentCounts.get(p.id) ?? 0,
-      })
-    );
+      });
+    });
   }
 
   async browsePublishers(userId: string, query?: string) {
@@ -549,14 +551,15 @@ export class ResearcherService {
       this.getCommentCounts(pubIds),
     ]);
 
-    const formattedPublications = publications.map((p) =>
-      formatPublication(p, {
-        hasAccess: purchasedIds.has(p.id),
+    const formattedPublications = publications.map((p) => {
+      const hasAccess = isOwner || p.isFree || purchasedIds.has(p.id);
+      return formatPublication(p, {
+        hasAccess,
         isOwner,
         likedByMe: likedIds.has(p.id),
         commentsCount: commentCounts.get(p.id) ?? 0,
-      })
-    );
+      });
+    });
 
     const hasPaidPublications = formattedPublications.some((p) => !p.isFree);
     const unlockedCount = formattedPublications.filter((p) => p.hasAccess).length;
@@ -651,6 +654,10 @@ export class ResearcherService {
     if (isResearcherRole(roleId)) {
       throw new AppError(403, 'Researchers cannot purchase publications');
     }
+    assertAuthorized(
+      canPurchasePublication(roleId),
+      'Your account type cannot purchase publications'
+    );
 
     const pub = assertFound(
       await prisma.researchPublication.findFirst({
