@@ -75,7 +75,6 @@ export default function DashboardPage() {
     { href: "/accountant/transactions", title: "Access Ledger", desc: "Production & publication access payments", icon: "credit-card", show: isAccountant(user.roleId) && isAccountantApproved(user) },
     { href: "/accountant/withdrawals", title: "Order Shared & Withdrawals", desc: "Distribute orders & record withdrawals", icon: "coins", show: isAccountant(user.roleId) && isAccountantApproved(user) },
     { href: "/accountant/receipts", title: "Order Receipts", desc: "Released order statement PDFs", icon: "package", show: isAccountant(user.roleId) && isAccountantApproved(user) },
-    { href: "/accountant/farm-access", title: "Production Access", desc: "Review legacy paid connection requests", icon: "handshake", show: isAccountant(user.roleId) && isAccountantApproved(user) },
     { href: "/farm/settings", title: "Profile", desc: "Profile, liaison officer, production & commodities", icon: "user", show: isFarmer(user.roleId) },
     { href: "/settings", title: "Profile", desc: "Profile, location & liaison officer", icon: "user", show: isBuyer(user.roleId) },
     { href: "/agents/settings", title: "Profile", desc: "Profile photo & contact details", icon: "user", show: isHandler(user.roleId) },

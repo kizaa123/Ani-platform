@@ -8,34 +8,27 @@ import { formatGhc } from "@/lib/format";
 
 export interface DistributionSplitLine {
   label: string;
-  percentage: number;
+  percentage?: number;
   amount?: number;
   note?: string;
 }
 
-function buildDefaultSplitLines(orderAmount?: number): DistributionSplitLine[] {
-  const handlerNote = "10% of post-Fellow remainder";
+function formatSplitValue({ percentage, amount }: Pick<DistributionSplitLine, "percentage" | "amount">): string {
+  if (amount != null && percentage == null) return formatGhc(amount);
+  if (amount != null && percentage != null) return `${percentage.toFixed(2)}% · ${formatGhc(amount)}`;
+  if (percentage != null) return `${percentage.toFixed(2)}%`;
+  return "";
+}
 
+function buildDefaultSplitLines(orderAmount?: number): DistributionSplitLine[] {
   if (orderAmount != null && orderAmount > 0) {
     const amounts = calculateDistributionAmounts(orderAmount);
     const aniPercent = aniPlatformSharePercentOfTotal(orderAmount);
-    const handlerPercentOfTotal = (share: number) =>
-      Math.round((share / orderAmount) * 10000) / 100;
 
     return [
       { label: "Fellow", percentage: DISTRIBUTION_SHARES.FARMER, amount: amounts.farmer },
-      {
-        label: "Fellow Liaison Officer",
-        percentage: handlerPercentOfTotal(amounts.farmerHandler),
-        amount: amounts.farmerHandler,
-        note: handlerNote,
-      },
-      {
-        label: "Client Liaison Officer",
-        percentage: handlerPercentOfTotal(amounts.buyerHandler),
-        amount: amounts.buyerHandler,
-        note: handlerNote,
-      },
+      { label: "Fellow Liaison Officer", amount: amounts.farmerHandler },
+      { label: "Client Liaison Officer", amount: amounts.buyerHandler },
       {
         label: "ANI",
         percentage: aniPercent,
@@ -47,16 +40,8 @@ function buildDefaultSplitLines(orderAmount?: number): DistributionSplitLine[] {
 
   return [
     { label: "Fellow", percentage: DISTRIBUTION_SHARES.FARMER },
-    {
-      label: "Fellow Liaison Officer",
-      percentage: DISTRIBUTION_SHARES.FARMER_HANDLER,
-      note: handlerNote,
-    },
-    {
-      label: "Client Liaison Officer",
-      percentage: DISTRIBUTION_SHARES.BUYER_HANDLER,
-      note: handlerNote,
-    },
+    { label: "Fellow Liaison Officer" },
+    { label: "Client Liaison Officer" },
     {
       label: "ANI",
       percentage: aniPlatformSharePercentOfTotal(100),
@@ -66,6 +51,8 @@ function buildDefaultSplitLines(orderAmount?: number): DistributionSplitLine[] {
 }
 
 function SplitRow({ label, percentage, amount, note }: DistributionSplitLine) {
+  const valueText = formatSplitValue({ percentage, amount });
+
   return (
     <div className="text-xs text-gray-600">
       <div className="flex items-baseline gap-2">
@@ -74,10 +61,7 @@ function SplitRow({ label, percentage, amount, note }: DistributionSplitLine) {
           className="min-w-[1.5rem] flex-1 border-b border-dotted border-gray-300"
           aria-hidden="true"
         />
-        <span className="shrink-0 tabular-nums font-semibold text-brand-900">
-          {percentage.toFixed(2)}%
-          {amount != null ? ` · ${formatGhc(amount)}` : ""}
-        </span>
+        <span className="shrink-0 tabular-nums font-semibold text-brand-900">{valueText}</span>
       </div>
       {note ? <p className="mt-0.5 pl-0 text-[10px] text-gray-500">{note}</p> : null}
     </div>

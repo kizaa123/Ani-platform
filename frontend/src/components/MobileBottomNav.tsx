@@ -182,7 +182,7 @@ function accountantNav(): BottomNavItem[] {
       href: "/accountant/transactions",
       label: "Access",
       icon: "credit-card",
-      match: (p) => p.startsWith("/accountant/transactions") || p.startsWith("/accountant/farm-access"),
+      match: (p) => p.startsWith("/accountant/transactions"),
     },
     {
       href: "/accountant/withdrawals",

@@ -208,8 +208,6 @@ export const PORTAL_NAV_IMAGES_STAFF = {
 
   "/accountant/withdrawals": "/accountant-filing-invoice.webp",
 
-  "/accountant/farm-access": "/9846eee5-004a-42b1-8e4f-e5bac031dfbf-cover.png",
-
   /** Change image here: Staff Profile card */
 
   "/profile": "/staff on admin side.jpg",

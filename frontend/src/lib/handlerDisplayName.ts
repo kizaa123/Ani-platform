@@ -8,10 +8,17 @@ export function cloDisplayName(firstName: string): string {
 
 export const DISTRIBUTION_SHARES = {
   FARMER: 66.66,
-  /** Each assigned handler receives 10% of the post-Fellow remainder. */
+  /** Each assigned handler receives 10 percentage points of order total (cascading from post-Fellow pool). */
   FARMER_HANDLER: 10,
   BUYER_HANDLER: 10,
 } as const;
+
+/** ANI share of order total when both handlers are assigned. */
+export const ANI_PLATFORM_SHARE_PERCENT =
+  100 -
+  DISTRIBUTION_SHARES.FARMER -
+  DISTRIBUTION_SHARES.FARMER_HANDLER -
+  DISTRIBUTION_SHARES.BUYER_HANDLER;
 
 export type DistributionAmounts = {
   farmer: number;
@@ -62,10 +69,16 @@ export function aniPlatformShareAmount(
   return calculateDistributionAmounts(totalAmount, options).aniPlatform;
 }
 
+/** Policy rate of order total — not derived from rounded GHC amounts. */
 export function aniPlatformSharePercentOfTotal(
-  totalAmount: number,
-  options?: DistributionHandlerOptions
+  _totalAmount: number,
+  options: DistributionHandlerOptions = {}
 ): number {
-  if (totalAmount <= 0) return 0;
-  return roundGhc((aniPlatformShareAmount(totalAmount, options) / totalAmount) * 100);
+  const hasFarmerHandler = options.hasFarmerHandler ?? true;
+  const hasBuyerHandler = options.hasBuyerHandler ?? true;
+
+  let percent = 100 - DISTRIBUTION_SHARES.FARMER;
+  if (hasFarmerHandler) percent -= DISTRIBUTION_SHARES.FARMER_HANDLER;
+  if (hasBuyerHandler) percent -= DISTRIBUTION_SHARES.BUYER_HANDLER;
+  return roundGhc(percent);
 }

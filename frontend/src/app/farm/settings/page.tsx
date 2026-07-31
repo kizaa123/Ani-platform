@@ -23,7 +23,6 @@ import { DEFAULT_COUNTRY } from "@/lib/africanCountries";
 import { ProfileIdentityHeader, ProfileEditSection, ProfileEditActions } from "@/components/ProfileIdentityHeader";
 
 interface FarmProfileData {
-  farmSize?: string;
   experienceYears?: number;
   farmerCommodities: FarmerCommodity[];
 }
@@ -53,7 +52,6 @@ export default function FarmSettingsPage() {
   });
 
   const [farm, setFarm] = useState({
-    farmSize: "",
     experienceYears: 0,
   });
 
@@ -73,7 +71,6 @@ export default function FarmSettingsPage() {
     setRegistered(commodities);
     setCategories(cats);
     setFarm({
-      farmSize: profile.farmSize || "",
       experienceYears: profile.experienceYears ?? 0,
     });
   };
@@ -136,7 +133,6 @@ export default function FarmSettingsPage() {
       await Promise.all([
         api.auth.updateProfile({ ...personal, phone: normalizePhone(personal.phone) }),
         api.farm.update({
-          farmSize: farm.farmSize,
           experienceYears: farm.experienceYears,
         }),
       ]);
@@ -341,27 +337,16 @@ export default function FarmSettingsPage() {
       {/* Farm details */}
       <section className="mb-6 rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-lg font-bold text-brand-900">Farm Details</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className="mb-1 block text-sm font-medium">Farm size</label>
-            <input
-              value={farm.farmSize}
-              onChange={(e) => setFarm({ ...farm, farmSize: e.target.value })}
-              placeholder="e.g. 10 acres"
-              className="w-full rounded-lg border px-4 py-2"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium">Experience (years)</label>
-            <input
-              type="number"
-              min={0}
-              placeholder="e.g. 5"
-              value={farm.experienceYears || ""}
-              onChange={(e) => setFarm({ ...farm, experienceYears: parseInt(e.target.value, 10) || 0 })}
-              className="w-full rounded-lg border px-4 py-2"
-            />
-          </div>
+        <div>
+          <label className="mb-1 block text-sm font-medium">Experience (years)</label>
+          <input
+            type="number"
+            min={0}
+            placeholder="e.g. 5"
+            value={farm.experienceYears || ""}
+            onChange={(e) => setFarm({ ...farm, experienceYears: parseInt(e.target.value, 10) || 0 })}
+            className="w-full max-w-xs rounded-lg border px-4 py-2"
+          />
         </div>
       </section>
 

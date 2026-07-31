@@ -42,6 +42,13 @@ export const notifyClientSchema = z.object({
   message: z.string().min(1).max(500).optional(),
 });
 
+export const updateResearcherProfileSchema = z.object({
+  institution: z.string().optional(),
+  expertise: z.string().optional(),
+  bio: z.string().optional(),
+  qualifications: z.array(z.string()).optional(),
+});
+
 const publicationInclude = {
   researcher: {
     include: {
@@ -829,7 +836,7 @@ export class ResearcherService {
   async updateProfile(
     userId: string,
     roleId: number,
-    data: { institution?: string; expertise?: string; bio?: string; qualifications?: string[] }
+    data: z.infer<typeof updateResearcherProfileSchema>
   ) {
     assertAuthorized(isResearcherRole(roleId), 'Only researchers can update researcher profile');
     const updateData: {

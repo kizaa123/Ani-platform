@@ -21,7 +21,7 @@ import { updateFarmSchema, addCommoditySchema, updateOrderTrackSchema, notifyCli
 import { listingSchema, updateListingSchema } from '../services/marketplace.service';
 import { purchaseSchema, packageSchema, purchaseFarmAccessSchema } from '../services/payment.service';
 import { purchaseProductSchema, releaseOrderSchema } from '../services/order.service';
-import { publicationSchema, updatePublicationSchema, purchasePublicationSchema, commentSchema } from '../services/researcher.service';
+import { publicationSchema, updatePublicationSchema, purchasePublicationSchema, commentSchema, updateResearcherProfileSchema } from '../services/researcher.service';
 import { connectionSchema } from '../services/connection.service';
 import { assignmentSchema } from '../services/agent.service';
 import { messageSchema } from '../services/chat.service';
@@ -213,7 +213,7 @@ router.get('/research/publishers', authenticate, researcherController.browsePubl
 router.get('/research/publisher/:publisherId', authenticate, researcherController.getPublisherLibrary);
 router.get('/research/my', authenticate, requirePermission(PERMISSIONS.MANAGE_PUBLICATIONS), researcherController.myPublications);
 router.get('/research/financial-statement', authenticate, requirePermission(PERMISSIONS.MANAGE_PUBLICATIONS), researcherController.financialStatement);
-router.put('/research/profile', authenticate, requirePermission(PERMISSIONS.MANAGE_PUBLICATIONS), researcherController.updateProfile);
+router.put('/research/profile', authenticate, requirePermission(PERMISSIONS.MANAGE_PUBLICATIONS), validateBody(updateResearcherProfileSchema), researcherController.updateProfile);
 router.get(
   '/research/publication-policy',
   authenticate,

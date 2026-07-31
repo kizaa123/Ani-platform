@@ -38,10 +38,8 @@ function recipientDisplayLabel(line: OrderDistributionLine, farmerName: string):
   }
 }
 
-function recipientRoleHint(line: OrderDistributionLine): string | null {
-  if (line.role === "FARMER_HANDLER") return "Fellow Liaison Officer · 10% of remainder";
-  if (line.role === "BUYER_HANDLER") return "Client Liaison Officer · 10% of remainder";
-  return null;
+function isHandlerLine(line: OrderDistributionLine): boolean {
+  return line.role === "FARMER_HANDLER" || line.role === "BUYER_HANDLER";
 }
 
 type DistributionPaymentResult = {
@@ -237,19 +235,17 @@ export function OrderDistributionPanel({
                     {snapshot.lines
                       .filter((line) => line.role !== "ANI_PLATFORM")
                       .map((line) => {
-                      const roleHint = recipientRoleHint(line);
                       return (
                         <tr key={line.id} className="border-b border-brand-50">
                           <td className="py-2.5 pr-3">
                             <p className="font-semibold text-brand-900">
                               {recipientDisplayLabel(line, fellowFirstName)}
                             </p>
-                            {roleHint && (
-                              <p className="text-[10px] text-gray-500">{roleHint}</p>
-                            )}
                           </td>
                           <td className="px-3 py-2.5 text-right tabular-nums">
-                            {line.percentage > 0 ? `${line.percentage.toFixed(2)}%` : "—"}
+                            {isHandlerLine(line) || line.percentage <= 0
+                              ? "—"
+                              : `${line.percentage.toFixed(2)}%`}
                           </td>
                           <td className="px-3 py-2.5 text-right font-semibold tabular-nums text-brand-900">
                             {formatGhc(line.amount)}

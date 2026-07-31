@@ -43,13 +43,6 @@ export const ACCOUNTANT_NAV_LINKS: PortalNavLink[] = [
     section: "Access income",
   },
   {
-    href: "/accountant/farm-access",
-    label: "Farm Access Approvals",
-    icon: "handshake",
-    match: (p) => p.startsWith("/accountant/farm-access"),
-    section: "Access income",
-  },
-  {
     href: "/accountant/withdrawals",
     label: "Order share",
     icon: "coins",

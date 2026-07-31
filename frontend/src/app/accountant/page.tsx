@@ -17,7 +17,7 @@ function OverviewSkeleton() {
   return (
     <>
       <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
+        {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="rounded-2xl border border-brand-100 bg-white p-5 shadow-sm">
             <Skeleton className="h-3 w-24" />
             <Skeleton className="mt-3 h-8 w-28" />
@@ -152,13 +152,6 @@ export default function AccountantOverviewPage() {
                 sub: `${overview.withdrawalCount} withdrawal(s)`,
                 valueClass: "text-lg font-bold text-brand-800",
                 href: "/accountant/withdrawals",
-              },
-              {
-                label: "Pending farm access",
-                value: String(overview.pendingPaidConnections),
-                sub: "Legacy paid requests only",
-                valueClass: "text-lg font-bold text-amber-700",
-                href: "/accountant/farm-access",
               },
             ] as const
           ).map((kpi, i) => {
