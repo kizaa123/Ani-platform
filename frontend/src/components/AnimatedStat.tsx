@@ -54,13 +54,11 @@ function getReducedMotionSnapshot() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-const SCROLL_IDLE_MS = 120;
-
 export type AnimatedStatProps = {
   value: string;
   /** Prepended text (e.g. currency code). */
   prefix?: string;
-  /** Animation duration in ms. Default 1800. */
+  /** Animation duration in ms. Default 1500. */
   duration?: number;
   /** Delay before count starts (ms). */
   delay?: number;
@@ -73,7 +71,7 @@ export type AnimatedStatProps = {
 export function AnimatedStat({
   value,
   prefix = "",
-  duration = 1800,
+  duration = 1500,
   delay = 0,
   startFrom = 0,
   className = "",
@@ -87,8 +85,6 @@ export function AnimatedStat({
   );
   const hasAnimated = useRef(false);
   const rafRef = useRef(0);
-  const scrollIdleTimerRef = useRef(0);
-  const isScrollingRef = useRef(false);
 
   const finalDisplay =
     formatNumber(parsed.end, parsed.useCommas, parsed.decimals) + parsed.suffix;
@@ -105,16 +101,6 @@ export function AnimatedStat({
     }
 
     el.textContent = prefix + initialDisplay;
-
-    const onScroll = () => {
-      isScrollingRef.current = true;
-      window.clearTimeout(scrollIdleTimerRef.current);
-      scrollIdleTimerRef.current = window.setTimeout(() => {
-        isScrollingRef.current = false;
-      }, SCROLL_IDLE_MS);
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true, capture: true });
 
     const runAnimation = () => {
       const startAt = performance.now() + delay;
@@ -141,24 +127,13 @@ export function AnimatedStat({
       rafRef.current = requestAnimationFrame(tick);
     };
 
-    const startWhenScrollIdle = () => {
-      const wait = () => {
-        if (isScrollingRef.current) {
-          scrollIdleTimerRef.current = window.setTimeout(wait, 50);
-          return;
-        }
-        runAnimation();
-      };
-      wait();
-    };
-
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting || hasAnimated.current) return;
 
         hasAnimated.current = true;
         observer.disconnect();
-        startWhenScrollIdle();
+        runAnimation();
       },
       { threshold: 0.15, rootMargin: "0px 0px -24px 0px" }
     );
@@ -167,8 +142,6 @@ export function AnimatedStat({
 
     return () => {
       observer.disconnect();
-      window.removeEventListener("scroll", onScroll, { capture: true });
-      window.clearTimeout(scrollIdleTimerRef.current);
       cancelAnimationFrame(rafRef.current);
     };
   }, [
@@ -186,7 +159,11 @@ export function AnimatedStat({
   ]);
 
   return (
-    <span ref={ref} className={className}>
+    <span
+      ref={ref}
+      className={className}
+      style={reducedMotion ? undefined : { willChange: "contents" }}
+    >
       {prefix}
       {reducedMotion ? finalDisplay : initialDisplay}
     </span>
