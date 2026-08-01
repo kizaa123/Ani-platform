@@ -10,6 +10,7 @@ import {
 } from "@/components/HandlerAssignmentCards";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
+import { formatUserLocation } from "@/lib/formatUserLocation";
 
 const ORDER_NOTIFICATION_TYPES = new Set([
   "NEW_ORDER",
@@ -78,7 +79,7 @@ export function BuyerHandlerDashboardCards() {
           clientType="buyer"
           getSubtitle={(owner) => {
             const company = owner.buyerProfile?.company;
-            const location = [owner.city, owner.region].filter(Boolean).join(", ");
+            const location = formatUserLocation(owner);
             return [company, location].filter(Boolean).join(" · ");
           }}
         />

@@ -6,11 +6,13 @@ import { useAuth } from "@/context/AuthProvider";
 import { isFarmer, isBuyer, isHandler, isAdmin, isAccountant, isAccountantApproved, isAccountantAwaitingAccess, isBuyerHandler, isResearcher, isStudent, isFarmerHandler, canPurchaseFromMarketplace } from "@/lib/types";
 import { AccountantPendingApproval } from "@/components/AccountantPendingApproval";
 import { PortalNavCard, PortalNavCardSkeleton } from "@/components/PortalNavCard";
+import { PageContentSkeleton } from "@/components/LoadingPrimitives";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
 import { getPortalNavImage } from "@/lib/portalNavImages";
 import { FarmerHandlerDashboardCards, FarmerHandlerDashboardHint } from "@/components/FarmerHandlerDashboardCards";
 import { BuyerHandlerDashboardCards, BuyerHandlerDashboardHint } from "@/components/BuyerHandlerDashboardCards";
+import { HandlerPortalNavCards } from "@/components/HandlerPortalNavCards";
 import type { IconName } from "@/components/icons";
 import { AdSlot } from "@/components/AdSlot";
 
@@ -47,7 +49,12 @@ export default function DashboardPage() {
     );
   }
 
+  if (isAccountantApproved(user)) {
+    return <PageContentSkeleton maxWidth="max-w-6xl" />;
+  }
+
   const isFlo = isFarmerHandler(user.roleId);
+  const isHandlerUser = isHandler(user.roleId);
   const isClo = isBuyerHandler(user.roleId);
   const isLiaison = isFlo || isClo;
 
@@ -65,8 +72,6 @@ export default function DashboardPage() {
     { href: "/orders", title: "My Order", desc: "Track marketplace purchases", icon: "package", show: canPurchaseFromMarketplace(user.roleId) },
     { href: "/student/settings", title: "Profile", desc: "Account & contact details", icon: "user", show: isStudent(user.roleId) },
     { href: "/connections", title: "Connections", desc: "Manage client–fellow requests", icon: "handshake", show: !isResearcher(user.roleId) && !isLiaison },
-    { href: "/agents", title: "My Clients", desc: isClo ? "View orders, spending & connections" : "View assigned fellows/clients", icon: "users", show: isHandler(user.roleId) && !isLiaison },
-    { href: "/agents/financials", title: "Financial Statement", desc: isClo ? "Your liaison commission from client orders" : "Your 10% liaison commission from fellow orders", icon: "chart", show: isHandler(user.roleId) && !isLiaison },
     { href: "/admin", title: "Admin Panel", desc: "Analytics, verification & moderation", icon: "shield", show: isAdmin(user.roleId) },
     { href: "/admin/staff", title: "ANI Team", desc: "Manage staff accounts & roles", icon: "users", show: isAdmin(user.roleId) },
     { href: "/admin/ads", title: "Internal Ads", desc: "Manage banner promotions", icon: "leaf", show: isAdmin(user.roleId) },
@@ -77,10 +82,12 @@ export default function DashboardPage() {
     { href: "/accountant/receipts", title: "Order Receipts", desc: "Released order statement PDFs", icon: "package", show: isAccountant(user.roleId) && isAccountantApproved(user) },
     { href: "/farm/settings", title: "Profile", desc: "Profile, liaison officer, production & commodities", icon: "user", show: isFarmer(user.roleId) },
     { href: "/settings", title: "Profile", desc: "Profile, location & liaison officer", icon: "user", show: isBuyer(user.roleId) },
-    { href: "/agents/settings", title: "Profile", desc: "Profile photo & contact details", icon: "user", show: isHandler(user.roleId) },
     { href: "/profile", title: "Profile", desc: "Your account settings", icon: "user", show: isAdmin(user.roleId) || isAccountant(user.roleId) },
   ] satisfies (DashboardCard & { hideForLiaison?: boolean })[]).filter(
-    (c) => (c.all || c.show) && !(isLiaison && c.hideForLiaison)
+    (c) =>
+      (c.all || c.show) &&
+      !(isLiaison && c.hideForLiaison) &&
+      !(isHandlerUser && (c.href === "/library" || c.href.startsWith("/agents")))
   );
 
   return (
@@ -103,17 +110,26 @@ export default function DashboardPage() {
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {isFlo && <FarmerHandlerDashboardCards />}
         {isClo && <BuyerHandlerDashboardCards />}
-        {cards.map((c, i) => (
-          <ScrollReveal key={c.href} delay={scrollStagger(i, 90)} duration={500} direction="fade-up">
-            <PortalNavCard
-              href={c.href}
-              title={c.title}
-              desc={c.desc}
-              icon={c.icon}
-              image={getPortalNavImage(c.href, user.roleId)}
-            />
-          </ScrollReveal>
-        ))}
+        {isHandlerUser && (
+          <HandlerPortalNavCards
+            roleId={user.roleId}
+            startIndex={isLiaison ? 2 : 0}
+          />
+        )}
+        {cards.map((c, i) => {
+          const staggerIndex = isHandlerUser ? (isLiaison ? 2 : 0) + 4 + i : i;
+          return (
+            <ScrollReveal key={c.href} delay={scrollStagger(staggerIndex, 90)} duration={500} direction="fade-up">
+              <PortalNavCard
+                href={c.href}
+                title={c.title}
+                desc={c.desc}
+                icon={c.icon}
+                image={getPortalNavImage(c.href, user.roleId)}
+              />
+            </ScrollReveal>
+          );
+        })}
       </div>
       )}
     </div>

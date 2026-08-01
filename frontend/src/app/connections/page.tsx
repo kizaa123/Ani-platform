@@ -198,11 +198,9 @@ function ConnectionCard({
             <CountryBadge
               country={partner.country}
               region={partner.region}
+              city={partner.city}
               className="mt-1"
             />
-          )}
-          {partner?.city && (
-            <p className="mt-0.5 text-xs text-gray-500">{partner.city}</p>
           )}
 
           {c.accessPaid && showPendingConnectionUi && !isBuyerView && !canModerate && (

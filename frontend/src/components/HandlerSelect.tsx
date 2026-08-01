@@ -6,6 +6,7 @@ import { EmailText } from "@/components/EmailText";
 import { CountryBadge } from "@/components/CountrySelect";
 import { RolePrefixedName } from "@/components/RolePrefixedName";
 import { Icon } from "@/components/icons";
+import { formatUserLocation } from "@/lib/formatUserLocation";
 
 interface HandlerSelectProps {
   handlers: HandlerProfile[];
@@ -16,10 +17,6 @@ interface HandlerSelectProps {
   variant?: "default" | "compact";
   handlerRoleId?: number;
   invalid?: boolean;
-}
-
-function formatHandlerLocation(handler: HandlerProfile): string {
-  return [handler.city, handler.region, handler.country].filter(Boolean).join(", ");
 }
 
 export function HandlerSelect({
@@ -55,7 +52,7 @@ export function HandlerSelect({
         {handlers.map((handler) => {
           const selected = value === handler.id;
           const name = `${handler.firstName} ${handler.lastName}`;
-          const location = formatHandlerLocation(handler);
+          const location = formatUserLocation(handler);
           return (
             <button
               key={handler.id}
@@ -108,6 +105,7 @@ export function HandlerSelect({
                     <CountryBadge
                       country={handler.country}
                       region={handler.region}
+                      city={handler.city}
                       className="mt-1"
                     />
                   </>

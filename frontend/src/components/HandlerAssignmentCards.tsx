@@ -2,14 +2,11 @@
 
 import Link from "next/link";
 import { AgentAssignment, AgentClientOwner, fullName, isResearcher } from "@/lib/types";
+import { formatUserLocation } from "@/lib/formatUserLocation";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
 import { EmailText } from "@/components/EmailText";
 import { Icon, type IconName } from "@/components/icons";
-
-function formatLocation(owner: AgentClientOwner): string {
-  return [owner.city, owner.region, owner.country].filter(Boolean).join(", ");
-}
 
 /** Clickable phone link for handler client contact — logistics backchannel */
 export function HandlerPhoneLink({
@@ -236,7 +233,7 @@ export function HandlerOrderAlertsCard({
 export function HandlerFarmerClientCard({ assignment }: { assignment: AgentAssignment }) {
   const { owner } = assignment;
   const farmName = owner.farmerProfile?.farmName ?? "Farm";
-  const location = formatLocation(owner);
+  const location = formatUserLocation(owner);
 
   return (
     <article className="card-elevated flex flex-col overflow-hidden rounded-xl transition hover:shadow-md">
@@ -247,7 +244,7 @@ export function HandlerFarmerClientCard({ assignment }: { assignment: AgentAssig
           stat={owner.farmerProfile?.farmSize ?? undefined}
           avatarSize="md"
         />
-        <CountryBadge country={owner.country} region={owner.region} className="mt-2" />
+        <CountryBadge country={owner.country} region={owner.region} city={owner.city} className="mt-2" />
       </div>
 
       <div className="flex flex-1 flex-col p-3">
@@ -258,11 +255,6 @@ export function HandlerFarmerClientCard({ assignment }: { assignment: AgentAssig
           <DetailChip label="Email">
             <EmailText email={owner.email} className="text-gray-800" />
           </DetailChip>
-          {owner.city && (
-            <DetailChip label="City">
-              <span className="text-gray-800">{owner.city}</span>
-            </DetailChip>
-          )}
           {owner.farmerProfile?.farmSize && (
             <DetailChip label="Farm size">
               <span className="font-medium text-brand-900">{owner.farmerProfile.farmSize}</span>
@@ -317,7 +309,7 @@ function clientOrganization(owner: AgentClientOwner): string | undefined {
 export function HandlerBuyerClientCard({ assignment }: { assignment: AgentAssignment }) {
   const { owner } = assignment;
   const organization = clientOrganization(owner);
-  const location = formatLocation(owner);
+  const location = formatUserLocation(owner);
   const subtitle = [organization, location].filter(Boolean).join(" · ");
 
   return (
@@ -328,7 +320,7 @@ export function HandlerBuyerClientCard({ assignment }: { assignment: AgentAssign
           subtitle={subtitle || undefined}
           avatarSize="md"
         />
-        <CountryBadge country={owner.country} region={owner.region} className="mt-2" />
+        <CountryBadge country={owner.country} region={owner.region} city={owner.city} className="mt-2" />
       </div>
 
       <div className="flex flex-1 flex-col p-3">
@@ -339,11 +331,6 @@ export function HandlerBuyerClientCard({ assignment }: { assignment: AgentAssign
           <DetailChip label="Email">
             <EmailText email={owner.email} className="text-gray-800" />
           </DetailChip>
-          {owner.city && (
-            <DetailChip label="City">
-              <span className="text-gray-800">{owner.city}</span>
-            </DetailChip>
-          )}
         </div>
 
         <div className="mt-auto pt-3">

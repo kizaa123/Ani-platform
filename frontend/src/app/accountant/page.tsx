@@ -77,6 +77,8 @@ export default function AccountantOverviewPage() {
   const formatMoney = (value: number) =>
     value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+  const showOverview = !pageLoading || overview;
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
       <div className="mb-8">
@@ -99,9 +101,9 @@ export default function AccountantOverviewPage() {
         </div>
       )}
 
-      {pageLoading && !overview && <OverviewSkeleton />}
+      {!showOverview && <OverviewSkeleton />}
 
-      {overview && (
+      {showOverview && overview && (
         <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {(
             [

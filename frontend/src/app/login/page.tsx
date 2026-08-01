@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
+import { isAccountant, isAccountantApproved } from "@/lib/types";
 import { Icon } from "@/components/icons";
 import { LogoIcon } from "@/components/Logo";
 import { PlatformBrandTitle } from "@/components/PlatformBrandTitle";
@@ -28,7 +29,13 @@ function LoginForm() {
     setLoading(true);
     try {
       const profile = await login(email, password);
-      router.push(profile.profileComplete === false ? "/complete-profile" : "/dashboard");
+      if (profile.profileComplete === false) {
+        router.push("/complete-profile");
+      } else if (isAccountant(profile.roleId) && isAccountantApproved(profile)) {
+        router.push("/accountant");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {

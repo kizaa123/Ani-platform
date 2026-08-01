@@ -9,6 +9,7 @@ import {
   HandlerFarmerClientCard,
   HandlerBuyerClientCard,
 } from "@/components/HandlerAssignmentCards";
+import { HandlerPortalNavCards } from "@/components/HandlerPortalNavCards";
 
 export default function AgentsPage() {
   const { user, loading } = useAuth();
@@ -65,6 +66,10 @@ export default function AgentsPage() {
           {error}
         </p>
       )}
+
+      <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <HandlerPortalNavCards roleId={user.roleId} excludeHref="/agents" />
+      </div>
 
       {assignments.length > 0 && visibleTotal > 0 && (
         <div className="mb-6 grid gap-3 sm:grid-cols-3">

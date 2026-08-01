@@ -170,13 +170,17 @@ export const PORTAL_NAV_IMAGES_RESEARCHER = {
 
 export const PORTAL_NAV_IMAGES_HANDLER = {
 
-  /** Change image here: My Clients / My Buyers card */
+  /** Change image here: My Fellows / My Clients card */
 
   "/agents": "/farmer and her agent.webp",
 
   /** Change image here: Handler Financial Statement card */
 
   "/agents/financials": "/accountant-filing-invoice.webp",
+
+  /** Change image here: Research Library card (handler portal) */
+
+  "/library": "/Research Library.jpg",
 
   /** Change image here: Handler Profile card */
 
@@ -258,7 +262,9 @@ type RoleNavImages =
 
   | typeof PORTAL_NAV_IMAGES_LIVESTOCK_FARMER
 
-  | typeof PORTAL_NAV_IMAGES_BUYER;
+  | typeof PORTAL_NAV_IMAGES_BUYER
+
+  | typeof PORTAL_NAV_IMAGES_HANDLER;
 
 
 
@@ -305,6 +311,14 @@ export function getPortalNavImage(href: string, roleId?: number): string {
     const buyer = roleNavImage(PORTAL_NAV_IMAGES_BUYER, href);
 
     if (buyer) return buyer;
+
+  }
+
+  if (roleId === ROLES.FARMER_HANDLER || roleId === ROLES.BUYER_HANDLER) {
+
+    const handler = roleNavImage(PORTAL_NAV_IMAGES_HANDLER, href);
+
+    if (handler) return handler;
 
   }
 
