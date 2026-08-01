@@ -10,9 +10,9 @@ import { scrollStagger } from "@/lib/scrollStagger";
 import { HOW_IT_WORKS_IMAGES } from "@/lib/homepageImages";
 
 const STATS = [
-  { value: "Verified", label: "Profiles & Listings" },
-  { value: "Secure", label: "Escrow Payments" },
-  { value: "Direct", label: "Fellow–Client Trade" },
+  { value: "10,000+", label: "Verified Users" },
+  { value: "54+", label: "Districts Covered" },
+  { value: "100%", label: "Secure Transactions" },
 ];
 
 const HOW_IT_WORKS: { step: number; title: string; desc: string; image: string }[] = [
@@ -213,11 +213,7 @@ export default function HomePage() {
               <ScrollReveal key={s.label} delay={scrollStagger(i, 90)} duration={450} direction="fade-up">
                 <div className="text-center">
                   <p className="text-3xl font-black tabular-nums text-yellow-400">
-                    {/^\d/.test(s.value.trim()) ? (
-                      <AnimatedStat value={s.value} delay={scrollStagger(i, 90)} />
-                    ) : (
-                      s.value
-                    )}
+                    <AnimatedStat value={s.value} delay={scrollStagger(i, 90)} />
                   </p>
                   <p className="mt-1 text-sm font-medium text-brand-200">{s.label}</p>
                 </div>
