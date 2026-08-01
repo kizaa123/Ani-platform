@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 
 type ParsedStat = {
   end: number;
@@ -54,6 +54,8 @@ function getReducedMotionSnapshot() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+const SCROLL_IDLE_MS = 120;
+
 export type AnimatedStatProps = {
   value: string;
   /** Prepended text (e.g. currency code). */
@@ -83,14 +85,72 @@ export function AnimatedStat({
     getReducedMotionSnapshot,
     () => false
   );
-  const [current, setCurrent] = useState(startFrom);
   const hasAnimated = useRef(false);
+  const rafRef = useRef(0);
+  const scrollIdleTimerRef = useRef(0);
+  const isScrollingRef = useRef(false);
+
+  const finalDisplay =
+    formatNumber(parsed.end, parsed.useCommas, parsed.decimals) + parsed.suffix;
+  const initialDisplay =
+    formatNumber(startFrom, parsed.useCommas, parsed.decimals) + parsed.suffix;
 
   useEffect(() => {
-    if (reducedMotion) return;
-
     const el = ref.current;
     if (!el) return;
+
+    if (reducedMotion) {
+      el.textContent = prefix + finalDisplay;
+      return;
+    }
+
+    el.textContent = prefix + initialDisplay;
+
+    const onScroll = () => {
+      isScrollingRef.current = true;
+      window.clearTimeout(scrollIdleTimerRef.current);
+      scrollIdleTimerRef.current = window.setTimeout(() => {
+        isScrollingRef.current = false;
+      }, SCROLL_IDLE_MS);
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true, capture: true });
+
+    const runAnimation = () => {
+      const startAt = performance.now() + delay;
+
+      const tick = (now: number) => {
+        const elapsed = now - startAt;
+        if (elapsed < 0) {
+          rafRef.current = requestAnimationFrame(tick);
+          return;
+        }
+
+        const progress = Math.min(elapsed / duration, 1);
+        const next = startFrom + (parsed.end - startFrom) * easeOutCubic(progress);
+        el.textContent =
+          prefix + formatNumber(next, parsed.useCommas, parsed.decimals) + parsed.suffix;
+
+        if (progress < 1) {
+          rafRef.current = requestAnimationFrame(tick);
+        } else {
+          el.textContent = prefix + finalDisplay;
+        }
+      };
+
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    const startWhenScrollIdle = () => {
+      const wait = () => {
+        if (isScrollingRef.current) {
+          scrollIdleTimerRef.current = window.setTimeout(wait, 50);
+          return;
+        }
+        runAnimation();
+      };
+      wait();
+    };
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -98,42 +158,37 @@ export function AnimatedStat({
 
         hasAnimated.current = true;
         observer.disconnect();
-
-        const startAt = performance.now() + delay;
-
-        const tick = (now: number) => {
-          const elapsed = now - startAt;
-          if (elapsed < 0) {
-            requestAnimationFrame(tick);
-            return;
-          }
-
-          const progress = Math.min(elapsed / duration, 1);
-          const next = startFrom + (parsed.end - startFrom) * easeOutCubic(progress);
-          setCurrent(next);
-
-          if (progress < 1) {
-            requestAnimationFrame(tick);
-          }
-        };
-
-        requestAnimationFrame(tick);
+        startWhenScrollIdle();
       },
       { threshold: 0.15, rootMargin: "0px 0px -24px 0px" }
     );
 
     observer.observe(el);
-    return () => observer.disconnect();
-  }, [reducedMotion, duration, delay, startFrom, parsed.end]);
 
-  const displayValue = reducedMotion
-    ? formatNumber(parsed.end, parsed.useCommas, parsed.decimals) + parsed.suffix
-    : formatNumber(current, parsed.useCommas, parsed.decimals) + parsed.suffix;
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", onScroll, { capture: true });
+      window.clearTimeout(scrollIdleTimerRef.current);
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, [
+    reducedMotion,
+    duration,
+    delay,
+    startFrom,
+    parsed.end,
+    parsed.useCommas,
+    parsed.decimals,
+    parsed.suffix,
+    prefix,
+    finalDisplay,
+    initialDisplay,
+  ]);
 
   return (
     <span ref={ref} className={className}>
       {prefix}
-      {displayValue}
+      {reducedMotion ? finalDisplay : initialDisplay}
     </span>
   );
 }
