@@ -213,7 +213,7 @@ export function PortalSidebarLayout({
   const closeMobile = () => setMobileOpen(false);
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:flex-row">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:h-full lg:flex-row">
       <PortalMobileBar
         navLinks={navLinks}
         portalTitle={portalTitle}
@@ -257,7 +257,7 @@ export function PortalSidebarLayout({
         />
       </aside>
 
-      <aside className="hidden w-64 shrink-0 flex-col border-r border-brand-200 bg-white shadow-sm lg:flex">
+      <aside className="sticky top-0 hidden h-dvh max-h-dvh w-64 shrink-0 flex-col overflow-y-auto border-r border-brand-200 bg-white shadow-sm lg:flex">
         <SidebarContent
           navLinks={navLinks}
           portalTitle={portalTitle}
@@ -266,7 +266,7 @@ export function PortalSidebarLayout({
         />
       </aside>
 
-      <main className={`min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-white ${MOBILE_BOTTOM_NAV_PADDING}`}>
+      <main className={`min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-white ${MOBILE_BOTTOM_NAV_PADDING}`}>
         <div className="mx-auto max-w-6xl px-4 pt-3 lg:px-6">
           <AdSlot placement="global" variant="strip" />
         </div>

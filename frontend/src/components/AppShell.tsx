@@ -35,17 +35,11 @@ function isRegistrationFlow(pathname: string) {
 }
 
 function PortalWrap({ children }: { children: React.ReactNode }) {
-
   return (
-
-    <div className="flex min-h-0 w-full flex-1 flex-col">
-
+    <div className="flex h-dvh min-h-0 w-full flex-1 flex-col overflow-hidden">
       {children}
-
     </div>
-
   );
-
 }
 
 
