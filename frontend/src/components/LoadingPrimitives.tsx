@@ -269,7 +269,7 @@ export function PageContentSkeleton({
 
 export function PageLoader() {
   return (
-    <div className="flex min-h-screen flex-col bg-white" aria-busy="true" aria-label="Loading">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white" aria-busy="true" aria-label="Loading">
       {/* Fake top bar */}
       <div className="flex h-16 items-center border-b border-gray-100 px-6">
         <Skeleton className="h-8 w-28" />

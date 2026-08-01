@@ -29,7 +29,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="h-full" style={{ colorScheme: "light" }}>
-      <body className="min-h-full flex flex-col font-sans">
+      <body className="flex h-full flex-col overflow-hidden font-sans">
         <Providers>{children}</Providers>
       </body>
     </html>

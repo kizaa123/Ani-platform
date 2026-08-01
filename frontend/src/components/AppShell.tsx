@@ -36,7 +36,7 @@ function isRegistrationFlow(pathname: string) {
 
 function PortalWrap({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-dvh min-h-0 w-full flex-1 flex-col overflow-hidden">
+    <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
       {children}
     </div>
   );
@@ -60,7 +60,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         <Navbar />
 
-        <main className="flex-1">{children}</main>
+        <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
 
         <AppFooter />
 
@@ -77,7 +77,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   if (isRegistrationFlow(pathname) || (user && user.profileComplete === false)) {
-    return <main className="flex-1">{children}</main>;
+    return <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>;
   }
 
   if (user && isFarmer(user.roleId)) {
@@ -176,7 +176,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
 
 
-  return <main className="flex-1">{children}</main>;
+  return <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>;
 
 }
 
