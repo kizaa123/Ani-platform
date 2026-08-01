@@ -74,8 +74,8 @@ class ApiClient {
       const text = await res.text();
       throw new Error(
         text.includes("Internal Server Error")
-          ? "Backend unavailable. Make sure the API is running on port 3001."
-          : text || `Request failed (${res.status})`
+          ? "Service temporarily unavailable. Please try again later."
+          : text || "Something went wrong. Please try again."
       );
     }
 

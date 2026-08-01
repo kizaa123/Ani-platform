@@ -7,14 +7,14 @@ export function toAppError(error: unknown): AppError {
   if (error instanceof Prisma.PrismaClientInitializationError) {
     return new AppError(
       503,
-      'Database unavailable. Run: npm run db:setup',
+      'Service temporarily unavailable. Please try again later.',
       'DB_UNAVAILABLE'
     );
   }
 
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     if (error.code === 'P2021' || error.code === 'P2022') {
-      return new AppError(503, 'Database not set up. Run: npm run db:setup', 'DB_NOT_SETUP');
+      return new AppError(503, 'Service temporarily unavailable. Please try again later.', 'DB_NOT_SETUP');
     }
     if (error.code === 'P2002') {
       return new AppError(409, 'An account with this email already exists', 'DUPLICATE');
@@ -27,12 +27,12 @@ export function toAppError(error: unknown): AppError {
       );
     }
     if (error.code === 'P2010' || error.code === 'P2011') {
-      return new AppError(503, 'Database not set up. Run: npm run db:setup', 'DB_NOT_SETUP');
+      return new AppError(503, 'Service temporarily unavailable. Please try again later.', 'DB_NOT_SETUP');
     }
   }
 
   if (error instanceof Prisma.PrismaClientValidationError) {
-    return new AppError(503, 'Database schema out of date. Run: npm run db:push', 'DB_SCHEMA_OUTDATED');
+    return new AppError(503, 'Service temporarily unavailable. Please try again later.', 'DB_SCHEMA_OUTDATED');
   }
 
   return new AppError(500, 'Internal server error', 'INTERNAL_ERROR');

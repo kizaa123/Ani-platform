@@ -15,7 +15,7 @@ import {
   publicationPlatformShareAmount,
   publicationResearcherShareAmount,
 } from '../utils/distributionFinancials';
-import { filterValidQualifications } from '../constants/qualifications';
+import { normalizeQualifications } from '../constants/qualifications';
 
 export const publicationSchema = z.object({
   title: z.string().min(2),
@@ -65,6 +65,10 @@ const publicationInclude = {
     },
   },
 } as const;
+
+function publicationIsFreeAccess(pub: { isFree: boolean; price?: number | null }) {
+  return pub.isFree || pub.price == null || pub.price <= 0;
+}
 
 function formatPublication(
   pub: {
@@ -215,10 +219,13 @@ export class ResearcherService {
     );
   }
 
-  private async userHasPublicationAccess(userId: string, pub: { id: string; researcherId: string; isFree: boolean }) {
+  private async userHasPublicationAccess(
+    userId: string,
+    pub: { id: string; researcherId: string; isFree: boolean; price?: number | null }
+  ) {
     const researcherProfile = await prisma.researcherProfile.findUnique({ where: { userId } });
     if (researcherProfile?.id === pub.researcherId) return true;
-    if (pub.isFree) return true;
+    if (publicationIsFreeAccess(pub)) return true;
     const purchase = await prisma.researchPurchase.findFirst({
       where: { studentId: userId, publicationId: pub.id, status: 'COMPLETED' },
     });
@@ -402,7 +409,7 @@ export class ResearcherService {
 
     return publications.map((p) => {
       const isOwner = researcherProfile?.id === p.researcherId;
-      const hasAccess = isOwner || p.isFree || purchasedIds.has(p.id);
+      const hasAccess = isOwner || publicationIsFreeAccess(p) || purchasedIds.has(p.id);
       return formatPublication(p, {
         hasAccess,
         isOwner,
@@ -508,11 +515,7 @@ export class ResearcherService {
         verificationStatus: p.verificationStatus,
         verificationTags: p.verificationTags,
         publicationCount: p.publicationCount,
-        canViewFiles:
-          p.isOwner ||
-          !p.hasPaidPublications ||
-          p.unlockedCount > 0 ||
-          p.unlockedCount >= p.publicationCount,
+        canViewFiles: true,
       }))
       .sort((a, b) => a.name.localeCompare(b.name));
   }
@@ -564,7 +567,7 @@ export class ResearcherService {
     ]);
 
     const formattedPublications = publications.map((p) => {
-      const hasAccess = isOwner || p.isFree || purchasedIds.has(p.id);
+      const hasAccess = isOwner || publicationIsFreeAccess(p) || purchasedIds.has(p.id);
       return formatPublication(p, {
         hasAccess,
         isOwner,
@@ -572,9 +575,6 @@ export class ResearcherService {
         commentsCount: commentCounts.get(p.id) ?? 0,
       });
     });
-
-    const hasPaidPublications = formattedPublications.some((p) => !p.isFree);
-    const unlockedCount = formattedPublications.filter((p) => p.hasAccess).length;
 
     return {
       publisher: {
@@ -588,11 +588,7 @@ export class ResearcherService {
         verificationStatus: profile.user.verificationStatus,
         verificationTags: formatVerificationTags(profile.user.verificationTags ?? []),
         publicationCount: formattedPublications.length,
-        canViewFiles:
-          isOwner ||
-          !hasPaidPublications ||
-          unlockedCount > 0 ||
-          unlockedCount >= formattedPublications.length,
+        canViewFiles: true,
       },
       publications: formattedPublications,
     };
@@ -846,7 +842,7 @@ export class ResearcherService {
       qualifications?: string[];
     } = { ...data };
     if (data.qualifications !== undefined) {
-      updateData.qualifications = filterValidQualifications(data.qualifications);
+      updateData.qualifications = normalizeQualifications(data.qualifications);
     }
     return prisma.researcherProfile.update({
       where: { userId },

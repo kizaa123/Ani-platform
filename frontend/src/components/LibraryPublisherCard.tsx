@@ -3,7 +3,6 @@
 import { PublisherBrowseCard } from "@/lib/types";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { QualificationBadges } from "@/components/QualificationBadges";
-import { Icon } from "@/components/icons";
 
 interface LibraryPublisherCardProps {
   publisher: PublisherBrowseCard;
@@ -14,26 +13,13 @@ function PublisherActionButton({
   publisher,
   onViewFiles,
 }: LibraryPublisherCardProps) {
-  if (publisher.canViewFiles) {
-    return (
-      <button
-        type="button"
-        onClick={() => onViewFiles(publisher)}
-        className="btn-primary w-full py-2.5 text-sm"
-      >
-        View files
-      </button>
-    );
-  }
-
   return (
     <button
       type="button"
       onClick={() => onViewFiles(publisher)}
-      className="btn-gold inline-flex w-full items-center justify-center gap-2 py-2.5 text-sm"
+      className="btn-primary w-full py-2.5 text-sm"
     >
-      <Icon name="lock" className="h-4 w-4 shrink-0" />
-      Unlock files
+      View files
     </button>
   );
 }

@@ -23,7 +23,7 @@ function buildOAuthClient() {
   if (!config.enabled) {
     throw new AppError(
       503,
-      'Google sign-in is not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.',
+      'Google sign-in is currently unavailable.',
       'GOOGLE_NOT_CONFIGURED'
     );
   }
@@ -191,7 +191,7 @@ export class GoogleAuthService {
     if (!config.devMode) {
       throw new AppError(
         403,
-        'Google dev sign-in is disabled. Set GOOGLE_DEV_MODE=true in backend .env.',
+        'Google sign-in is currently unavailable.',
         'GOOGLE_DEV_DISABLED'
       );
     }
@@ -199,7 +199,7 @@ export class GoogleAuthService {
     const email = input.email?.trim().toLowerCase();
     const firstName = input.firstName?.trim();
     if (!email || !firstName) {
-      throw new AppError(400, 'Email and first name are required for dev sign-in', 'VALIDATION_ERROR');
+      throw new AppError(400, 'Email and first name are required', 'VALIDATION_ERROR');
     }
 
     const profile: GoogleProfile = {

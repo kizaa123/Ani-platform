@@ -20,7 +20,7 @@ import {
 import { categoryMatchesFarmerRole } from '../constants/commodities';
 import { formatVerificationTags, verificationTagSelect } from '../utils/verificationTags';
 import { defaultListingUnit } from '../constants/units';
-import { filterValidQualifications } from '../constants/qualifications';
+import { normalizeQualifications } from '../constants/qualifications';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import { normalizePhone, PHONE_VALIDATION_MESSAGE } from '../utils/phone';
 import {
@@ -425,7 +425,7 @@ export class AuthService {
             userId: created.id,
             institution: input.institution,
             expertise: input.expertise,
-            qualifications: filterValidQualifications(input.qualifications ?? []),
+            qualifications: normalizeQualifications(input.qualifications ?? []),
           },
         });
       }
@@ -920,7 +920,7 @@ export class AuthService {
             userId,
             institution: input.institution,
             expertise: input.expertise,
-            qualifications: filterValidQualifications(input.qualifications ?? []),
+            qualifications: normalizeQualifications(input.qualifications ?? []),
           },
         });
       }

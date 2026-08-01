@@ -46,7 +46,7 @@ export async function sendVerificationCodeEmail(to: string, code: number) {
     console.error('[email] Failed to send verification email:', err);
     throw new AppError(
       503,
-      'Could not send verification email. Check SMTP settings or try again later.'
+      'Could not send verification email. Please try again later.'
     );
   }
 }

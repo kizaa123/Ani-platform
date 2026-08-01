@@ -59,17 +59,11 @@ export default function PublisherLibraryPage() {
     setLibrary((prev) => {
       if (!prev) return prev;
       const publications = prev.publications.map((p) => (p.id === pubId ? { ...p, ...patch } : p));
-      const unlockedCount = publications.filter((p) => p.hasAccess || p.isFree).length;
-      const hasPaidPublications = publications.some((p) => !p.isFree);
       return {
         ...prev,
         publisher: {
           ...prev.publisher,
-          canViewFiles:
-            !hasPaidPublications ||
-            unlockedCount > 0 ||
-            unlockedCount >= publications.length ||
-            prev.publisher.canViewFiles,
+          canViewFiles: true,
         },
         publications,
       };

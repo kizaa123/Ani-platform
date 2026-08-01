@@ -10,9 +10,9 @@ import { scrollStagger } from "@/lib/scrollStagger";
 import { HOW_IT_WORKS_IMAGES } from "@/lib/homepageImages";
 
 const STATS = [
-  { value: "10,000+", label: "Verified Users" },
-  { value: "54+", label: "Districts Covered" },
-  { value: "100%", label: "Secure Transactions" },
+  { value: "Verified", label: "Profiles & Listings" },
+  { value: "Secure", label: "Escrow Payments" },
+  { value: "Direct", label: "Fellow–Client Trade" },
 ];
 
 const HOW_IT_WORKS: { step: number; title: string; desc: string; image: string }[] = [
@@ -101,7 +101,7 @@ const ROLE_CARDS: { icon: IconName; label: string; desc: string; image: string }
   {
     icon: "leaf",
     label: "Fish Fellow",
-    desc: "List aquaculture produce, manage pond yields and delivery windows, and connect with clients sourcing fresh fish across Ghana.",
+    desc: "List aquaculture produce, manage pond yields and delivery windows, and connect with clients sourcing fresh fish across the region.",
     image: ROLE_CARD_IMAGES.fishFarmer,
   },
   {
@@ -213,7 +213,11 @@ export default function HomePage() {
               <ScrollReveal key={s.label} delay={scrollStagger(i, 90)} duration={450} direction="fade-up">
                 <div className="text-center">
                   <p className="text-3xl font-black tabular-nums text-yellow-400">
-                    <AnimatedStat value={s.value} delay={scrollStagger(i, 90)} />
+                    {/^\d/.test(s.value.trim()) ? (
+                      <AnimatedStat value={s.value} delay={scrollStagger(i, 90)} />
+                    ) : (
+                      s.value
+                    )}
                   </p>
                   <p className="mt-1 text-sm font-medium text-brand-200">{s.label}</p>
                 </div>
@@ -370,7 +374,7 @@ export default function HomePage() {
             Ready to Transform How You Trade?
           </h2>
           <p className="mb-10 text-xl leading-relaxed text-brand-100">
-            Join thousands of fellows, clients, and liaison officers already using ANI to trade commodities safely and efficiently across Ghana.
+            Join fellows, clients, and liaison officers using ANI to trade commodities safely and efficiently across Africa and beyond.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link

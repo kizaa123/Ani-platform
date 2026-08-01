@@ -489,7 +489,7 @@ function RegisterForm() {
       await refreshUser();
       router.push("/complete-profile");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Google dev sign-in failed");
+      setError(err instanceof Error ? err.message : "Google sign-in failed");
     } finally {
       setDevLoading(false);
     }
@@ -521,13 +521,13 @@ function RegisterForm() {
             Connecting African Agriculture to Global Markets
           </h2>
           <p className="text-brand-100 text-lg leading-relaxed font-light">
-            Trade commodities securely, connect directly with verified buyers and crop farmers, and request support from expert handlers.
+            Trade commodities securely, connect directly with verified clients and fellows, and request support from expert liaison officers.
           </p>
 
           <div className="grid grid-cols-3 gap-6 pt-8 border-t border-white/10 backdrop-blur-[2px] rounded-xl p-4 bg-white/5">
             <div>
-              <p className="text-3xl font-extrabold text-gold tracking-tight">10k+</p>
-              <p className="text-[10px] text-brand-200 uppercase tracking-widest font-semibold mt-1">Verified Users</p>
+              <p className="text-3xl font-extrabold text-gold tracking-tight">Direct</p>
+              <p className="text-[10px] text-brand-200 uppercase tracking-widest font-semibold mt-1">Fellow–Client Trade</p>
             </div>
             <div>
               <p className="text-3xl font-extrabold text-gold tracking-tight">100%</p>

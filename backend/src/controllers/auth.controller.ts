@@ -104,7 +104,7 @@ export class AuthController {
       if (!config.enabled) {
         const base = getFrontendBaseUrl();
         const message =
-          'Google sign-in is not configured. Register with email or use the dev sign-in button.';
+          'Google sign-in is currently unavailable. Please register with email.';
         return res.redirect(`${base}/register?error=${encodeURIComponent(message)}`);
       }
       return res.redirect(googleAuthService.getAuthorizationUrl());
@@ -120,16 +120,18 @@ export class AuthController {
     try {
       const oauthError = typeof req.query.error === 'string' ? req.query.error : '';
       if (oauthError) {
-        throw new Error(
+        throw new AppError(
+          400,
           oauthError === 'access_denied'
             ? 'Google sign-in was cancelled'
-            : `Google sign-in failed (${oauthError})`
+            : 'Google sign-in could not be completed. Please try again.',
+          'GOOGLE_OAUTH_ERROR'
         );
       }
 
       const code = typeof req.query.code === 'string' ? req.query.code : '';
       if (!code) {
-        throw new Error('Missing Google authorization code');
+        throw new AppError(400, 'Google sign-in could not be completed. Please try again.', 'GOOGLE_OAUTH_ERROR');
       }
       const result = await googleAuthService.handleCallback(code);
       await createAuditLog(req, 'USER_GOOGLE_LOGIN', 'users', { userId: result.user.id });
@@ -163,7 +165,7 @@ export class AuthController {
       const profile = await authService.getProfile(req.user!.userId);
       const email = req.body.email?.trim().toLowerCase() || profile.email;
       if (email !== profile.email) {
-        throw new Error('Email must match your account email');
+        throw new AppError(400, 'Email must match your account email', 'VALIDATION_ERROR');
       }
       const result = await emailVerificationService.sendChallenge(email);
       ApiResponse.success(res, result);

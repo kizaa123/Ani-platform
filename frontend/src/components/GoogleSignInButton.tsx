@@ -53,7 +53,7 @@ export function GoogleSignInButton({
           disabled={disabled || devLoading}
           className="w-full rounded-xl border border-dashed border-brand-300 bg-brand-50/60 px-4 py-2.5 text-xs font-semibold text-brand-800 transition hover:bg-brand-100 disabled:opacity-50"
         >
-          {devLoading ? "Connecting..." : "Dev: simulate Google sign-in"}
+          {devLoading ? "Connecting..." : "Continue with Google (development only)"}
         </button>
       )}
     </div>

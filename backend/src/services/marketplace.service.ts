@@ -28,6 +28,7 @@ import { computeListedPrice } from '../utils/listingPrice';
 import { listingCommodityName } from '../utils/listingDisplay';
 import { productMediaService } from './productMedia.service';
 import { notifyNewProductListing } from './notification.service';
+import { FARM_ACCESS_PRICE_GHC, formatFarmAccessPriceLabel } from '../constants/pricing';
 
 export { LISTING_UNITS } from '../constants/units';
 
@@ -343,7 +344,7 @@ export class MarketplaceService {
     const farmAccessSet = isPurchaserRole ? await buyerFarmAccessSet(userId) : new Set<string>();
     const connectionMap = isPurchaserRole ? await this.buyerConnectionMap(userId) : new Map<string, string>();
 
-    const accessPackage = await prisma.accessPackage.findFirst({ orderBy: { price: 'asc' } });
+    const farmAccessPriceLabel = formatFarmAccessPriceLabel();
 
     const farmerProfiles = await prisma.farmerProfile.findMany({
       where: {
@@ -448,8 +449,8 @@ export class MarketplaceService {
         connectionStatus: access.connectionStatus,
         hasFarmAccess,
         canViewProducts: access.hasAccess,
-        farmAccessFee: accessPackage?.price ?? null,
-        farmAccessPriceLabel: accessPackage ? `GHC ${accessPackage.price}` : null,
+        farmAccessFee: FARM_ACCESS_PRICE_GHC,
+        farmAccessPriceLabel: farmAccessPriceLabel,
         products,
         searchTerms: [
           profile.farmName,
@@ -475,8 +476,8 @@ export class MarketplaceService {
       : farmers;
 
     return {
-      farmAccessFee: accessPackage?.price ?? null,
-      farmAccessPriceLabel: accessPackage ? `GHC ${accessPackage.price}` : null,
+      farmAccessFee: FARM_ACCESS_PRICE_GHC,
+      farmAccessPriceLabel: farmAccessPriceLabel,
       farmers: filtered,
     };
   }

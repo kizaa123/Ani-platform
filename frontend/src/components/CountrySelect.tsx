@@ -152,7 +152,6 @@ export function CountrySelect({ value, onChange, required, className = "", inval
         ) : (
           <span className="text-gray-500">Select country</span>
         )}
-        <span className="text-gray-400">{open ? "▲" : "▼"}</span>
       </button>
 
       {open && (

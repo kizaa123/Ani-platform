@@ -8,6 +8,8 @@ import { PaymentCheckout } from "@/components/PaymentCheckout";
 import { PaymentResultOverlay } from "@/components/PaymentResultOverlay";
 import { Icon } from "@/components/icons";
 import { api } from "@/lib/api";
+import { FARM_ACCESS_PRICE_GHC } from "@/lib/pricing";
+import { formatGhc } from "@/lib/format";
 
 interface FarmAccessPaymentModalProps {
   farmer: FarmerBrowseCard;
@@ -27,8 +29,8 @@ export function FarmAccessPaymentModal({
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<PaymentResult | null>(null);
 
-  const fee = farmer.farmAccessFee ?? 0;
-  const feeLabel = farmer.farmAccessPriceLabel ?? `GHC ${fee}`;
+  const fee = farmer.farmAccessFee ?? FARM_ACCESS_PRICE_GHC;
+  const feeLabel = farmer.farmAccessPriceLabel ?? formatGhc(fee);
 
   const handlePay = async (paymentMethod: string) => {
     setSubmitting(true);

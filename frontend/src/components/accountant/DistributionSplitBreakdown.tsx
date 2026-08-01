@@ -33,7 +33,6 @@ function buildDefaultSplitLines(orderAmount?: number): DistributionSplitLine[] {
         label: "ANI",
         percentage: aniPercent,
         amount: amounts.aniPlatform,
-        note: "Remainder after Fellow and handlers",
       },
     ];
   }
@@ -45,7 +44,6 @@ function buildDefaultSplitLines(orderAmount?: number): DistributionSplitLine[] {
     {
       label: "ANI",
       percentage: aniPlatformSharePercentOfTotal(100),
-      note: "Remainder after Fellow and handlers",
     },
   ];
 }

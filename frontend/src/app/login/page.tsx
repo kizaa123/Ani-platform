@@ -71,8 +71,8 @@ function LoginForm() {
 
           <div className="grid grid-cols-3 gap-6 pt-8 border-t border-white/10 backdrop-blur-[2px] rounded-xl p-4 bg-white/5">
             <div>
-              <p className="text-3xl font-extrabold text-gold tracking-tight">10k+</p>
-              <p className="text-[10px] text-brand-200 uppercase tracking-widest font-semibold mt-1">Verified Users</p>
+              <p className="text-3xl font-extrabold text-gold tracking-tight">Direct</p>
+              <p className="text-[10px] text-brand-200 uppercase tracking-widest font-semibold mt-1">Fellow–Client Trade</p>
             </div>
             <div>
               <p className="text-3xl font-extrabold text-gold tracking-tight">100%</p>
@@ -161,16 +161,6 @@ function LoginForm() {
               Create one
             </Link>
           </p>
-
-          <div className="auth-info-box mt-6">
-            <p className="mb-1 flex items-center gap-1.5 font-semibold text-brand-800">
-              <Icon name="shield" className="h-3.5 w-3.5" />
-              Demo accounts (Password123!)
-            </p>
-            <p className="font-mono text-[11px] tracking-tight">
-              kwame@farm.gh · ama@buyer.gh · akua@research.gh · admin@ani.gh
-            </p>
-          </div>
         </div>
         </ScrollReveal>
         </div>

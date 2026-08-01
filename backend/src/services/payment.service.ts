@@ -4,6 +4,7 @@ import { AppError, assertFound, assertAuthorized } from '../utils/errors';
 import { ROLES, isFarmerRole, isMarketplaceBuyerRole, canPurchaseFromMarketplace } from '../constants/roles';
 import { getPaymentProvider } from './payment.provider';
 import { notifyFarmAccessPaid } from './notification.service';
+import { FARM_ACCESS_PRICE_GHC } from '../constants/pricing';
 
 export const purchaseSchema = z.object({
   packageId: z.string().uuid(),
@@ -133,15 +134,12 @@ export class PaymentService {
       throw new AppError(409, 'You already have access to this farm');
     }
 
-    const accessPackage = assertFound(
-      await prisma.accessPackage.findFirst({ orderBy: { price: 'asc' } }),
-      'Farm access pricing not configured'
-    );
+    const farmAccessPrice = FARM_ACCESS_PRICE_GHC;
 
     const provider = getPaymentProvider();
     const result = await provider.initiatePayment({
       userId: buyerId,
-      amount: accessPackage.price,
+      amount: farmAccessPrice,
       paymentMethod: data.paymentMethod,
       referenceId: data.farmerId,
       type: 'PRODUCT_ORDER',
@@ -160,13 +158,13 @@ export class PaymentService {
         create: {
           buyerId,
           farmerId: data.farmerId,
-          amount: accessPackage.price,
+          amount: farmAccessPrice,
           paymentMethod: data.paymentMethod,
           transactionId: result.transactionId,
           status: paymentCompleted ? 'COMPLETED' : 'PENDING',
         },
         update: {
-          amount: accessPackage.price,
+          amount: farmAccessPrice,
           paymentMethod: data.paymentMethod,
           transactionId: result.transactionId,
           status: paymentCompleted ? 'COMPLETED' : 'PENDING',
@@ -184,7 +182,7 @@ export class PaymentService {
         message: paymentCompleted
           ? `Access granted — you can now view ${farmer.firstName}'s farm and products`
           : `Payment received — farm access will activate once payment is confirmed`,
-        amountPaid: accessPackage.price,
+        amountPaid: farmAccessPrice,
         farmerName: `${farmer.firstName} ${farmer.lastName}`,
         pendingApproval: !paymentCompleted,
         accessGranted: paymentCompleted,
@@ -201,7 +199,7 @@ export class PaymentService {
       data.farmerId,
       buyerName,
       `${farmer.firstName} ${farmer.lastName}`,
-      accessPackage.price,
+      farmAccessPrice,
       paymentCompleted
     );
 

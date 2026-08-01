@@ -263,13 +263,24 @@ async function main() {
 
   await prisma.accessPackage.upsert({
     where: { id: '00000000-0000-0000-0000-000000000001' },
-    update: {},
+    update: { price: 50 },
     create: { id: '00000000-0000-0000-0000-000000000001', name: 'Basic Buyer Access', price: 50, durationDays: 30 },
   });
   await prisma.accessPackage.upsert({
     where: { id: '00000000-0000-0000-0000-000000000002' },
-    update: {},
+    update: { price: 120 },
     create: { id: '00000000-0000-0000-0000-000000000002', name: 'Premium Buyer Access', price: 120, durationDays: 90 },
+  });
+  /** Reference record for farm/production access fee — charged via purchaseFarmAccess at fixed price. */
+  await prisma.accessPackage.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000003' },
+    update: { price: 1, name: 'Farm Access' },
+    create: {
+      id: '00000000-0000-0000-0000-000000000003',
+      name: 'Farm Access',
+      price: 1,
+      durationDays: 36500,
+    },
   });
 
   const hash = await bcrypt.hash('Password123!', 12);

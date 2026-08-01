@@ -401,7 +401,7 @@ export default function FarmPage() {
                       customUnit: "",
                     });
                   }}
-                  className="w-full rounded-xl border border-brand-200 bg-white px-4 py-2.5 text-sm shadow-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                  className="select-field w-full rounded-xl border border-brand-200 bg-white px-4 py-2.5 text-sm shadow-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
                 >
                   <option value={0}>Choose a commodity</option>
                   {registeredCommodities.map((fc) => (
@@ -494,7 +494,7 @@ export default function FarmPage() {
                         customUnit: e.target.value === CUSTOM_UNIT_VALUE ? form.customUnit : "",
                       })
                     }
-                    className="w-full rounded-xl border border-brand-200 bg-white px-4 py-2 text-sm shadow-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                    className="select-field w-full rounded-xl border border-brand-200 bg-white px-4 py-2 text-sm shadow-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
                   >
                     {listingUnitsForRole(user?.roleId ?? ROLES.CROP_FARMER).map((u) => (
                       <option key={u} value={u}>
@@ -549,7 +549,7 @@ export default function FarmPage() {
                   Location / Region <span className="text-red-500">*</span>
                 </label>
                 <input
-                  placeholder="e.g. Central Region, Mankessim"
+                  placeholder="e.g. Region, city, or district"
                   value={form.location}
                   onChange={(e) => setForm({ ...form, location: e.target.value })}
                   className="w-full rounded-xl border border-brand-200 bg-white px-4 py-2.5 text-sm shadow-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"

@@ -175,7 +175,6 @@ export function CommodityPicker({
           >
             {triggerText}
           </span>
-          <span className="text-gray-400">{open ? "▲" : "▼"}</span>
         </button>
 
         {open && (

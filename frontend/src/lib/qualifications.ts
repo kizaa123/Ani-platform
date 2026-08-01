@@ -89,6 +89,14 @@ export const RESEARCHER_QUALIFICATIONS = RESEARCHER_QUALIFICATION_GROUPS.flatMap
   (group) => group.options
 );
 
+const qualificationKeys = new Set(
+  RESEARCHER_QUALIFICATIONS.map((qualification) => qualification.toLowerCase())
+);
+
+export function isCatalogQualification(value: string): boolean {
+  return qualificationKeys.has(value.toLowerCase());
+}
+
 export function formatQualifications(qualifications?: string[] | null): string {
   if (!qualifications?.length) return '';
   return qualifications.join(', ');

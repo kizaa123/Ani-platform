@@ -9,10 +9,10 @@ export type UploadFolder = 'profiles' | 'listings' | 'publications' | 'farm-medi
 let cloudinaryConfigured = false;
 
 const STORAGE_NOT_CONFIGURED_MESSAGE =
-  'Persistent file storage is not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET on the server.';
+  'File uploads are temporarily unavailable. Please try again later.';
 
 const EPHEMERAL_FILE_MISSING_MESSAGE =
-  'Publication file is no longer available on the server. Re-upload the PDF after Cloudinary is configured.';
+  'This file is no longer available. Please contact support if you need assistance.';
 
 export function isCloudStorageEnabled(): boolean {
   return !!(
@@ -140,7 +140,7 @@ function localFileMissingMessage(): string {
   if (process.env.NODE_ENV === 'production') {
     return EPHEMERAL_FILE_MISSING_MESSAGE;
   }
-  return 'Publication file not found on disk';
+  return 'Publication file is not available.';
 }
 
 /** Fetch an uploaded file as a buffer for authenticated streaming (local disk or remote URL). */

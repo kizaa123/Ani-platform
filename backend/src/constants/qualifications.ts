@@ -98,3 +98,23 @@ export function isValidQualification(value: string): boolean {
 export function filterValidQualifications(values: string[]): string[] {
   return values.filter(isValidQualification);
 }
+
+/** Normalize catalog + custom qualifications (dedupe, trim, length bounds). */
+export function normalizeQualifications(values: unknown): string[] {
+  if (!Array.isArray(values)) return [];
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const item of values) {
+    if (typeof item !== 'string') continue;
+    const trimmed = item.trim();
+    if (trimmed.length < 2 || trimmed.length > 100) continue;
+    const key = trimmed.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const catalogMatch = RESEARCHER_QUALIFICATIONS.find(
+      (qualification) => qualification.toLowerCase() === key
+    );
+    result.push(catalogMatch ?? trimmed);
+  }
+  return result;
+}
