@@ -10,8 +10,8 @@ import { scrollStagger } from "@/lib/scrollStagger";
 import { HOW_IT_WORKS_IMAGES } from "@/lib/homepageImages";
 
 const STATS = [
-  { value: "10,000+", label: "Verified Users" },
-  { value: "54+", label: "Districts Covered" },
+  { value: "1,000+", label: "Verified Users" },
+  { value: "50+", label: "Districts Covered" },
   { value: "100%", label: "Secure Transactions" },
 ];
 
