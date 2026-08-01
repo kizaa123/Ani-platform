@@ -100,7 +100,7 @@ export function MarketplaceFarmerCard({
           verificationTags={farmer.verificationTags}
         />
         <div className="min-w-0 flex-1 pt-0.5">
-          <h3 className="truncate text-base font-bold text-brand-900 sm:text-lg">
+          <h3 className="line-clamp-2 break-words text-sm font-bold leading-snug text-brand-900 sm:text-base">
             {farmer.farmerName}
           </h3>
           <p className="truncate text-sm font-medium text-brand-700">

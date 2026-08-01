@@ -90,7 +90,7 @@ export function HandlerSelect({
                     nameClassName="text-brand-900"
                   />
                 ) : (
-                  <p className="truncate font-semibold text-brand-900">{name}</p>
+                  <p className="line-clamp-2 break-words text-sm font-semibold leading-snug text-brand-900">{name}</p>
                 )}
                 {compact ? (
                   location ? (

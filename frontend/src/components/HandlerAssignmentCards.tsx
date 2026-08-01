@@ -44,7 +44,7 @@ export function HandlerAssignmentIdentity({
   showPhone?: boolean;
 }) {
   return (
-    <div className="flex min-w-0 items-center gap-2.5">
+    <div className="flex min-w-0 items-start gap-2.5">
       <AvatarWithVerification
         src={owner.profilePicture}
         name={owner.firstName}
@@ -54,7 +54,7 @@ export function HandlerAssignmentIdentity({
         verificationTags={owner.verificationTags}
       />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold leading-tight text-brand-900">
+        <p className="line-clamp-2 break-words text-sm font-semibold leading-snug text-brand-900">
           {fullName(owner)}
         </p>
         {subtitle && (

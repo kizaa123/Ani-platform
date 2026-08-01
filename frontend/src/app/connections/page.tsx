@@ -159,7 +159,9 @@ function ConnectionCard({
           <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-600">
             Fellow client
           </p>
-          <p className="text-sm font-bold text-brand-900">{fullName(farmerClient)}</p>
+          <p className="line-clamp-2 break-words text-sm font-bold leading-snug text-brand-900">
+            {fullName(farmerClient)}
+          </p>
           {farmerClient.farmName && (
             <p className="text-xs font-medium text-brand-700">{farmerClient.farmName}</p>
           )}
@@ -171,7 +173,9 @@ function ConnectionCard({
           <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-600">
             Client
           </p>
-          <p className="text-sm font-bold text-brand-900">{fullName(buyerClient)}</p>
+          <p className="line-clamp-2 break-words text-sm font-bold leading-snug text-brand-900">
+            {fullName(buyerClient)}
+          </p>
         </div>
       )}
 
@@ -187,7 +191,7 @@ function ConnectionCard({
           <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
             {isBuyerHandlerView ? "Fellow" : partnerRoleLabel(isBuyerView)}
           </p>
-          <p className="truncate font-bold text-brand-900">
+          <p className="line-clamp-2 break-words text-sm font-bold leading-snug text-brand-900">
             {partner ? fullName(partner) : "Unknown"}
           </p>
 

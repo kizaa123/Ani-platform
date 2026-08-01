@@ -49,7 +49,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (isAccountantApproved(user)) {
+  if (isAccountant(user.roleId) && isAccountantApproved(user)) {
     return <PageContentSkeleton maxWidth="max-w-6xl" />;
   }
 

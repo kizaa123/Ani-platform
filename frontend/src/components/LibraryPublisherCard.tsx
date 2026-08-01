@@ -36,7 +36,9 @@ export function LibraryPublisherCard({ publisher, onViewFiles }: LibraryPublishe
           verificationTags={publisher.verificationTags}
         />
         <div className="min-w-0 flex-1">
-          <h3 className="truncate font-bold text-brand-900">{publisher.name}</h3>
+          <h3 className="line-clamp-2 break-words text-sm font-bold leading-snug text-brand-900">
+            {publisher.name}
+          </h3>
           {publisher.institution && (
             <p className="truncate text-sm text-brand-700">{publisher.institution}</p>
           )}

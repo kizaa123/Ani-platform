@@ -23,7 +23,7 @@ function ClientCard({ client, onNotify }: { client: FarmClient; onNotify: () => 
       onClick={onNotify}
       className="flex w-full rounded-xl border border-brand-100 bg-white p-3 text-left shadow-sm transition hover:border-brand-300 hover:shadow-md"
     >
-      <div className="flex min-w-0 items-center gap-3">
+      <div className="flex min-w-0 items-start gap-3">
         <AvatarWithVerification
           src={client.profilePicture}
           name={client.firstName}
@@ -32,7 +32,7 @@ function ClientCard({ client, onNotify }: { client: FarmClient; onNotify: () => 
           verificationTags={client.verificationTags}
         />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold leading-tight text-brand-900">
+          <p className="line-clamp-2 break-words text-sm font-semibold leading-snug text-brand-900">
             {fullName(client)}
           </p>
           {subtitle && (
