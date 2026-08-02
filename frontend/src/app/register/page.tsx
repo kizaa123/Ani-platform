@@ -18,6 +18,7 @@ import { CommodityPicker } from "@/components/CommodityPicker";
 import { CustomProductInput } from "@/components/CustomProductInput";
 import { QualificationSelector } from "@/components/QualificationSelector";
 import { Icon } from "@/components/icons";
+import { PasswordInput } from "@/components/PasswordInput";
 import { AuthDivider, GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { AuthHeroPanel } from "@/components/AuthHeroPanel";
@@ -679,9 +680,8 @@ function RegisterForm() {
               <label htmlFor="reg-password" className="auth-label">
                 Password
               </label>
-              <input
+              <PasswordInput
                 id="reg-password"
-                type="password"
                 required
                 minLength={8}
                 autoComplete="new-password"

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { isAccountant, isAccountantApproved } from "@/lib/types";
 import { Icon } from "@/components/icons";
+import { PasswordInput } from "@/components/PasswordInput";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { AuthHeroPanel } from "@/components/AuthHeroPanel";
 
@@ -80,15 +81,13 @@ function LoginForm() {
               <label htmlFor="login-password" className="auth-label">
                 Password
               </label>
-              <input
+              <PasswordInput
                 id="login-password"
-                type="password"
                 required
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
-                className="auth-input"
               />
             </div>
 

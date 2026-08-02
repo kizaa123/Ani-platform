@@ -21,6 +21,7 @@ import { QualificationSelector } from "@/components/QualificationSelector";
 import { EmailVerificationChallenge } from "@/components/EmailVerificationChallenge";
 import { EmailText } from "@/components/EmailText";
 import { Icon } from "@/components/icons";
+import { PasswordInput } from "@/components/PasswordInput";
 import { PlatformBrandTitle } from "@/components/PlatformBrandTitle";
 import { ScrollReveal } from "@/components/ScrollReveal";
 
@@ -322,14 +323,12 @@ export default function CompleteProfilePage() {
                     <label htmlFor="complete-password" className="auth-label">
                       Platform password <span className="font-normal text-gray-500">(optional)</span>
                     </label>
-                    <input
+                    <PasswordInput
                       id="complete-password"
-                      type="password"
                       minLength={8}
                       autoComplete="new-password"
                       value={form.password}
                       onChange={(e) => setForm({ ...form, password: e.target.value })}
-                      className="auth-input"
                       placeholder="Set a password to also sign in with email"
                     />
                     <p className="auth-hint">Optional - leave blank if you only use email/password login elsewhere</p>
