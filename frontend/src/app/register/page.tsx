@@ -20,12 +20,8 @@ import { Icon } from "@/components/icons";
 import { AuthDivider, GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { PlatformBrandTitle } from "@/components/PlatformBrandTitle";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { AuthHeroPanel } from "@/components/AuthHeroPanel";
 import { scrollStagger } from "@/lib/scrollStagger";
-import {
-  authPanelBackgroundStyle,
-  REGISTER_PANEL_BACKGROUND,
-  REGISTER_PANEL_BACKGROUND_POSITION,
-} from "@/lib/authImages";
 import {
   blockingMessages,
   canProceedStep1,
@@ -497,51 +493,7 @@ function RegisterForm() {
 
   return (
     <div className="flex-1 w-full grid lg:grid-cols-12 bg-brand-50">
-      {/* Left Column: Platform Overview & Sprout Image */}
-      <div className="hidden lg:col-span-6 lg:flex relative overflow-hidden bg-brand-900 flex-col justify-start gap-8 p-12 lg:p-16 text-white min-h-[500px]">
-        {/* Background sprout image */}
-        <div
-          className="absolute inset-0 z-0"
-          style={authPanelBackgroundStyle(
-            REGISTER_PANEL_BACKGROUND,
-            REGISTER_PANEL_BACKGROUND_POSITION,
-          )}
-        />
-        {/* Dark gradient overlay for readability */}
-        <div className="absolute inset-0 z-10 bg-gradient-to-tr from-brand-950/95 via-brand-900/80 to-brand-800/40" />
-
-        {/* Brand */}
-        <ScrollReveal trigger="mount" delay={scrollStagger(0, 80)} duration={500} direction="fade-up" className="relative z-20">
-          <PlatformBrandTitle theme="light" size="panel" />
-        </ScrollReveal>
-
-        {/* Marketing text & stats */}
-        <ScrollReveal trigger="mount" delay={scrollStagger(1, 80)} duration={500} direction="fade-up" className="relative z-20 max-w-xl space-y-6">
-          <h2 className="text-2xl font-bold leading-snug tracking-tight text-white/95 lg:text-3xl">
-            Connecting African Agriculture to Global Markets
-          </h2>
-          <p className="text-brand-100 text-lg leading-relaxed font-light">
-            Trade commodities securely, connect directly with verified clients and fellows, and request support from expert liaison officers.
-          </p>
-
-          <div className="grid grid-cols-3 gap-6 pt-8 border-t border-white/10 backdrop-blur-[2px] rounded-xl p-4 bg-white/5">
-            <div>
-              <p className="text-3xl font-extrabold text-gold tracking-tight">Direct</p>
-              <p className="text-[10px] text-brand-200 uppercase tracking-widest font-semibold mt-1">Fellow–Client Trade</p>
-            </div>
-            <div>
-              <p className="text-3xl font-extrabold text-gold tracking-tight">100%</p>
-              <p className="text-[10px] text-brand-200 uppercase tracking-widest font-semibold mt-1">Secure Escrow</p>
-            </div>
-            <div>
-              <p className="text-3xl font-extrabold text-gold tracking-tight">24/7</p>
-              <p className="text-[10px] text-brand-200 uppercase tracking-widest font-semibold mt-1">Handler Support</p>
-            </div>
-          </div>
-        </ScrollReveal>
-
-
-      </div>
+      <AuthHeroPanel className="hidden lg:col-span-6 lg:flex" />
 
       {/* Right Column: Form Container */}
       <div

@@ -63,6 +63,16 @@ export const PERMISSIONS = {
 
 export const FARMER_ROLES = [ROLES.CROP_FARMER, ROLES.LIVESTOCK_FARMER, ROLES.ORGANIZATION_FARMER];
 
+/** All user types shown on portal client directory pages (fellow & researcher). */
+export const PORTAL_DIRECTORY_ROLES = [
+  ...FARMER_ROLES,
+  ROLES.BUYER,
+  ROLES.FARMER_HANDLER,
+  ROLES.BUYER_HANDLER,
+  ROLES.RESEARCHER,
+  ROLES.STUDENT,
+] as const;
+
 /** Farmers, buyers, and students — platform users researchers can notify about publications. */
 export const RESEARCHER_CLIENT_ROLES = [...FARMER_ROLES, ROLES.BUYER, ROLES.STUDENT] as const;
 
@@ -149,4 +159,27 @@ export function isBuyerHandler(roleId: number): boolean {
 
 export function getFullName(firstName: string, lastName: string): string {
   return `${firstName} ${lastName}`.trim();
+}
+
+/** Display label for users listed on portal client directory pages. */
+export function portalDirectoryRoleLabel(roleId: number): string {
+  switch (roleId) {
+    case ROLES.CROP_FARMER:
+      return 'Crop Fellow';
+    case ROLES.LIVESTOCK_FARMER:
+      return 'Livestock Fellow';
+    case ROLES.ORGANIZATION_FARMER:
+      return 'Organization Fellow';
+    case ROLES.BUYER:
+    case ROLES.STUDENT:
+      return 'Client';
+    case ROLES.FARMER_HANDLER:
+      return 'Fellow Liaison Officer';
+    case ROLES.BUYER_HANDLER:
+      return 'Client Liaison Officer';
+    case ROLES.RESEARCHER:
+      return 'Researcher';
+    default:
+      return ROLE_NAMES[roleId] ?? 'User';
+  }
 }

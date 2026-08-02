@@ -60,7 +60,7 @@ export function createApp() {
       success: true,
       data: {
         status: 'ok',
-        platform: 'ANI Agricultural Exchange Platform',
+        platform: 'ANI Commodity Exchange Platform',
         features: ['research-library'],
       },
     });

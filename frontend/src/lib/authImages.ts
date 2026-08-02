@@ -4,25 +4,24 @@
  * Use with inline `backgroundImage` style — do not use Tailwind arbitrary
  * background-url classes; they fail for public assets with spaces in filenames.
  *
- * To change the login panel image, update `LOGIN_PANEL_BACKGROUND` below
- * (file must live under `frontend/public/`).
- *
- * To change the register panel image, update `REGISTER_PANEL_BACKGROUND` below.
- *
  * Filenames with spaces are encoded via `authPanelBackgroundUrl`.
  */
 
-/** Login side panel — `frontend/public/login_cover.png` */
-export const LOGIN_PANEL_BACKGROUND = "/login_cover.png";
+/** Home page hero image — shared by login and register side panels. */
+export const AUTH_HERO_BACKGROUND =
+  "/comprehensive-world-flags-collection-stunning-national-flag-images-every-project-showcase-beauty-diversity-global-360726791.webp";
 
-/** Register side panel — `frontend/public/images (4).jpg` */
-export const REGISTER_PANEL_BACKGROUND = "/images (4).jpg";
+/** Focal point aligned with the home page hero (`object-[center_25%]`). */
+export const AUTH_HERO_BACKGROUND_POSITION = "center 25%";
 
-/**
- * Register panel focal point — seedling sits slightly above the image center;
- * nudge vertical position so it stays visible in the tall side panel.
- */
-export const REGISTER_PANEL_BACKGROUND_POSITION = "center 42%";
+/** @deprecated Use AUTH_HERO_BACKGROUND */
+export const LOGIN_PANEL_BACKGROUND = AUTH_HERO_BACKGROUND;
+
+/** @deprecated Use AUTH_HERO_BACKGROUND */
+export const REGISTER_PANEL_BACKGROUND = AUTH_HERO_BACKGROUND;
+
+/** @deprecated Use AUTH_HERO_BACKGROUND_POSITION */
+export const REGISTER_PANEL_BACKGROUND_POSITION = AUTH_HERO_BACKGROUND_POSITION;
 
 /** CSS `url(...)` value safe for public paths that may contain spaces. */
 export function authPanelBackgroundUrl(path: string): string {

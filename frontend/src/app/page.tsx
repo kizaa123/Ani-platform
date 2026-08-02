@@ -232,7 +232,7 @@ export default function HomePage() {
             </span>
             <h2 className="text-4xl font-black text-brand-900">One Platform, Many Roles</h2>
             <p className="mx-auto mt-4 max-w-xl text-gray-500">
-              Whether you grow it, buy it, or broker it — ANI has a tailored experience designed for your role.
+              Whether you produce it, buy it, or broker it — ANI has a tailored experience designed for your role.
             </p>
           </ScrollReveal>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -314,7 +314,7 @@ export default function HomePage() {
             </h2>
             <div className="mx-auto mt-4 h-1 w-16 rounded-full bg-gradient-to-r from-yellow-400/0 via-yellow-400 to-yellow-400/0" />
             <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-brand-300">
-              A passionate team of agricultural and technology experts dedicated to transforming African commodity trading.
+              A passionate team of industry and technology experts dedicated to transforming trading across African and beyond.
             </p>
           </ScrollReveal>
 

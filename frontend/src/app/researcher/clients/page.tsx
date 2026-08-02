@@ -108,7 +108,7 @@ export default function ResearcherClientsPage() {
     <div className="mx-auto max-w-4xl px-4 py-8">
       <h1 className="mb-2 text-2xl font-bold text-brand-900">Clients</h1>
       <p className="mb-6 text-sm text-gray-500">
-        All fellows, clients, and students on the platform — tap a client to notify them when your research publications are available.
+        All fellows, clients, liaison officers, and researchers on the platform — tap a user to notify them when your research publications are available.
       </p>
 
       <div className="mb-5">
@@ -125,12 +125,12 @@ export default function ResearcherClientsPage() {
         <PageContentSkeleton />
       ) : filtered.length === 0 ? (
         <p className="rounded-xl border border-dashed border-brand-200 px-4 py-12 text-center text-sm text-gray-500">
-          {search.trim() ? "No clients match your search." : "No clients registered yet."}
+          {search.trim() ? "No users match your search." : "No users registered yet."}
         </p>
       ) : (
         <>
           <p className="mb-3 text-xs text-gray-500">
-            {filtered.length} client{filtered.length !== 1 ? "s" : ""}
+            {filtered.length} user{filtered.length !== 1 ? "s" : ""}
           </p>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((client) => (

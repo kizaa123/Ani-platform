@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import prisma from '../database/prisma';
 import { assertFound, assertAuthorized, AppError } from '../utils/errors';
-import { isFarmerRole, CLIENT_ROLES, ROLES } from '../constants/roles';
+import { isFarmerRole, PORTAL_DIRECTORY_ROLES, portalDirectoryRoleLabel, ROLES } from '../constants/roles';
 import { categoryMatchesFarmerRole } from '../constants/commodities';
 import {
   LISTING_UNITS,
@@ -316,7 +316,7 @@ export class FarmService {
     assertAuthorized(isFarmerRole(roleId), 'Only farmers can list clients');
     const clients = await prisma.user.findMany({
       where: {
-        roleId: { in: [...CLIENT_ROLES] },
+        roleId: { in: [...PORTAL_DIRECTORY_ROLES] },
         id: { not: userId },
       },
       select: {
@@ -343,12 +343,7 @@ export class FarmService {
       region: c.region,
       country: c.country,
       roleId: c.roleId,
-      roleLabel:
-        c.roleId === ROLES.RESEARCHER
-          ? 'Researcher'
-          : c.roleId === ROLES.STUDENT
-            ? 'Student'
-            : 'Buyer',
+      roleLabel: portalDirectoryRoleLabel(c.roleId),
       verificationStatus: c.verificationStatus,
       verificationTags: formatVerificationTags(c.verificationTags),
     }));
@@ -362,7 +357,7 @@ export class FarmService {
     assertAuthorized(isFarmerRole(roleId), 'Only farmers can notify clients');
     const client = assertFound(
       await prisma.user.findFirst({
-        where: { id: data.clientId, roleId: { in: [...CLIENT_ROLES] } },
+        where: { id: data.clientId, roleId: { in: [...PORTAL_DIRECTORY_ROLES] } },
         select: { id: true },
       }),
       'Client not found'

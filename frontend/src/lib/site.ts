@@ -1,4 +1,4 @@
-export const SITE_NAME = "ANI Agricultural Exchange Platform";
+export const SITE_NAME = "ANI Commodity Exchange Platform";
 export const SITE_SHORT_NAME = "ANI";
 export const SITE_DESCRIPTION =
   "Connect fellows, clients, and liaison officers across Africa and beyond";

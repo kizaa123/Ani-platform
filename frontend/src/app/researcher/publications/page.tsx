@@ -10,7 +10,6 @@ import {
   hasAcceptedPublicationPolicy,
   isResearcher,
 } from "@/lib/types";
-import { PUBLICATION_CATEGORY_OPTIONS } from "@/lib/publicationCategories";
 import { Icon } from "@/components/icons";
 import { FileUploadZone } from "@/components/FileUploadZone";
 import { PublicationCoverImage } from "@/components/PublicationCoverImage";
@@ -152,10 +151,6 @@ export default function ResearcherPublicationsPage() {
       setError("Title and PDF file are required");
       return;
     }
-    if (!form.category) {
-      setError("Publisher type is required");
-      return;
-    }
     const price = parseFloat(form.priceInput);
     if (!form.isFree && (!Number.isFinite(price) || price <= 0)) {
       setError("Paid publications need a price greater than 0");
@@ -237,26 +232,6 @@ export default function ResearcherPublicationsPage() {
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
               />
-            </div>
-
-            <div>
-              <label className="auth-label">Publisher type</label>
-              <select
-                className="auth-input"
-                value={form.category}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    category: e.target.value as typeof form.category,
-                  })
-                }
-              >
-                {PUBLICATION_CATEGORY_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
             </div>
 
             <div className="grid gap-5 md:grid-cols-[11rem_minmax(0,1fr)]">

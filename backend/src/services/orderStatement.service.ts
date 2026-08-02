@@ -299,11 +299,9 @@ function drawPaymentStatus(
   y: number
 ): number {
   const message = paymentStatusMessage(perspective);
-  const checkmark = '\u2713';
-  const statusText = `${checkmark}  ${message}`;
 
   doc.font('Helvetica-Bold').fontSize(10).fillColor(COLORS.accent);
-  doc.text(statusText, PAGE_MARGIN, y, { width: CONTENT_WIDTH });
+  doc.text(message, PAGE_MARGIN, y, { width: CONTENT_WIDTH });
 
   return y + KEY_VALUE_ROW_HEIGHT + 4;
 }
