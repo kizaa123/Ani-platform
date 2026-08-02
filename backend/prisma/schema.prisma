@@ -140,7 +140,8 @@ model FarmerProfile {
   customProducts     String[]           @default([]) @map("custom_products")
   verificationStatus VerificationStatus @default(PENDING) @map("verification_status")
   /// Rotates when a fellow posts a new available product; invalidates prior client farm access.
-  farmAccessCycleId  String             @default(uuid()) @map("farm_access_cycle_id")
+  /// Optional for legacy rows; app coalesces null via resolveFarmAccessCycleId (SQL backfill recommended).
+  farmAccessCycleId  String?            @default(uuid()) @map("farm_access_cycle_id")
 
   user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   farmerCommodities FarmerCommodity[]

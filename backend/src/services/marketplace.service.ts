@@ -34,6 +34,7 @@ import {
   hasPaidFarmAccessRecord,
   isFarmAccessRecordValid,
   isListingOrderable,
+  resolveFarmAccessCycleId,
 } from './farmAccess.service';
 
 export { LISTING_UNITS } from '../constants/units';
@@ -442,7 +443,7 @@ export class MarketplaceService {
         : isPurchaserRole
           ? isFarmAccessRecordValid(
               accessRecord,
-              profile.farmAccessCycleId,
+              resolveFarmAccessCycleId(profile.farmAccessCycleId, profile.id),
               fallbackExpiry,
               newestListingCreatedAt
             )

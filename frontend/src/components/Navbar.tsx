@@ -181,7 +181,7 @@ export function Navbar() {
             <div className="hidden h-8 w-px bg-brand-200 sm:block" aria-hidden />
             <Link
               href={profileHref}
-              className="flex max-w-[12rem] items-center gap-3 rounded-xl border border-brand-100 bg-brand-50/40 px-3 py-1.5 transition hover:border-brand-200 hover:bg-brand-50 sm:max-w-[14rem]"
+              className="flex max-w-[12rem] items-center gap-2 rounded-xl border border-brand-100 bg-brand-50/40 px-3 py-1.5 transition hover:border-brand-200 hover:bg-brand-50 sm:max-w-[14rem]"
             >
               <AvatarWithVerification
                 src={user.profilePicture}
@@ -259,7 +259,7 @@ export function Navbar() {
           </button>
         </div>
 
-        <div className="flex items-center gap-3 border-b border-brand-100 px-4 py-4">
+        <div className="flex items-center gap-2 border-b border-brand-100 px-4 py-4">
           <AvatarWithVerification
             src={user.profilePicture}
             name={user.firstName}

@@ -6,6 +6,7 @@ import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
 import { PaymentCheckout } from "@/components/PaymentCheckout";
 import { PaymentResultOverlay } from "@/components/PaymentResultOverlay";
+import { InlineNameWithVerificationTags } from "@/components/VerificationTagBadge";
 import { Icon } from "@/components/icons";
 import { api } from "@/lib/api";
 import { FARM_ACCESS_PRICE_GHC } from "@/lib/pricing";
@@ -95,9 +96,15 @@ export function FarmAccessPaymentModal({
                   size="md"
                   verificationStatus={farmer.verificationStatus}
                   verificationTags={farmer.verificationTags}
+                  tagPlacement="none"
                 />
                 <div className="min-w-0 text-left">
-                  <h2 className="text-lg font-bold text-brand-900">{farmer.farmerName}</h2>
+                  <InlineNameWithVerificationTags
+                    name={farmer.farmerName}
+                    verificationTags={farmer.verificationTags}
+                    verificationStatus={farmer.verificationStatus}
+                    nameClassName="text-lg font-bold text-brand-900"
+                  />
                   <p className="text-sm text-brand-700">{farmer.farmName}</p>
                   <CountryBadge country={farmer.country} region={farmer.region} />
                 </div>

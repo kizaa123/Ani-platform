@@ -111,7 +111,7 @@ export function AvatarWithVerification({
   }
 
   return (
-    <div className={`inline-flex shrink-0 flex-col items-center gap-1.5 ${className}`}>
+    <div className={`inline-flex shrink-0 flex-col items-center gap-1 ${className}`}>
       <ProfilePhoto
         src={src}
         name={name}

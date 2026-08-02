@@ -60,7 +60,7 @@ function SidebarContent({
         {showNotificationBell && <NotificationBell />}
       </div>
 
-      <div className="flex items-center gap-3 border-b border-brand-100 px-5 py-4">
+      <div className="flex items-center gap-2 border-b border-brand-100 px-5 py-4">
         <AvatarWithVerification
           src={user.profilePicture}
           name={user.firstName}
@@ -152,7 +152,13 @@ function PortalMobileBar({
     getSubtitle ? (
       getSubtitle(user)
     ) : (
-      <RolePrefixedName user={user} className="text-xs" nameClassName="text-brand-600 font-medium" />
+      <RolePrefixedName
+        user={user}
+        verificationTags={user.verificationTags}
+        className="text-xs"
+        nameClassName="text-brand-600 font-medium"
+        tagSize="xs"
+      />
     )
   ) : (
     portalTitle
@@ -184,6 +190,7 @@ function PortalMobileBar({
             cacheBust={photoCacheBust}
             verificationStatus={user.verificationStatus}
             verificationTags={user.verificationTags}
+            tagPlacement="none"
           />
         </>
       )}

@@ -205,6 +205,9 @@ export default function AdminPage() {
     try {
       await api.admin.removeVerificationTag(userId, tagType);
       loadUsers();
+      if (tagType === "STANDARD") {
+        loadDashboard();
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -497,7 +500,13 @@ export default function AdminPage() {
                                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                                   <span className="font-semibold text-brand-900">{fullName(u)}</span>
                                   {u.verificationStatus === "VERIFIED" && (
-                                    <VerificationTagBadge tagType="STANDARD" showLabel size="sm" />
+                                    <VerificationTagBadge
+                                      tagType="STANDARD"
+                                      showLabel
+                                      size="sm"
+                                      removing={tagBusy === `${u.id}:STANDARD`}
+                                      onRemove={() => void removeTag(u.id, "STANDARD")}
+                                    />
                                   )}
                                   {intlTags.map((tag) => (
                                     <VerificationTagBadge

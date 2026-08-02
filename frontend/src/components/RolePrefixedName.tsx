@@ -23,7 +23,13 @@ export function getRoleNamePrefix(roleId: number): RolePrefixConfig | null {
 }
 
 interface RolePrefixedNameProps {
-  user: { roleId: number; firstName: string; lastName: string; verificationStatus?: string };
+  user: {
+    roleId: number;
+    firstName: string;
+    lastName: string;
+    verificationStatus?: string;
+    verificationTags?: UserVerificationTag[];
+  };
   verificationTags?: UserVerificationTag[];
   className?: string;
   prefixClassName?: string;
@@ -72,6 +78,7 @@ export function RolePrefixedName({
   tagSize = "sm",
   showTagLabels = false,
 }: RolePrefixedNameProps) {
+  const resolvedTags = verificationTags ?? user.verificationTags;
   const config = getRoleNamePrefix(user.roleId);
   const name =
     config &&
@@ -84,7 +91,7 @@ export function RolePrefixedName({
   const isVerified = user.verificationStatus === "VERIFIED";
   const inlineTags = (
     <InlineVerificationTags
-      verificationTags={verificationTags}
+      verificationTags={resolvedTags}
       verificationStatus={user.verificationStatus}
       tagSize={tagSize}
       showTagLabels={showTagLabels}
@@ -95,7 +102,7 @@ export function RolePrefixedName({
     return (
       <span
         className={[
-          "inline-flex max-w-full flex-wrap items-center gap-x-1.5 gap-y-0.5",
+          "inline-flex max-w-full flex-wrap items-center gap-x-1 gap-y-0.5",
           className,
         ]
           .filter(Boolean)
@@ -103,7 +110,7 @@ export function RolePrefixedName({
       >
         <span className={nameClassName}>{name}</span>
         {inlineTags}
-        {showVerifiedBadge && isVerified && !verificationTags?.length && (
+        {showVerifiedBadge && isVerified && !resolvedTags?.length && (
           <span title="Verified User">
             <VerifiedBadgeIcon className="h-4 w-4 shrink-0" />
           </span>
@@ -129,7 +136,7 @@ export function RolePrefixedName({
       )}
       <span className={nameClassName}>{name}</span>
       {inlineTags}
-      {showVerifiedBadge && isVerified && !verificationTags?.length && (
+      {showVerifiedBadge && isVerified && !resolvedTags?.length && (
         <span title="Verified User">
           <VerifiedBadgeIcon className="h-4 w-4 shrink-0" />
         </span>

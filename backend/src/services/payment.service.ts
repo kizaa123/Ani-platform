@@ -9,6 +9,7 @@ import {
   computeFarmAccessExpiry,
   getFarmerOrderableListings,
   isFarmAccessRecordValid,
+  resolveFarmAccessCycleId,
 } from './farmAccess.service';
 
 export const purchaseSchema = z.object({
@@ -140,6 +141,12 @@ export class PaymentService {
       );
     }
 
+    const farmerProfile = farmer.farmerProfile!;
+    const farmerAccessCycleId = resolveFarmAccessCycleId(
+      farmerProfile.farmAccessCycleId,
+      farmerProfile.id
+    );
+
     const existing = await prisma.buyerFarmerAccess.findUnique({
       where: { buyerId_farmerId: { buyerId, farmerId: data.farmerId } },
     });
@@ -155,7 +162,7 @@ export class PaymentService {
       existing?.status === 'COMPLETED' &&
       isFarmAccessRecordValid(
         existing,
-        farmer.farmerProfile!.farmAccessCycleId,
+        farmerAccessCycleId,
         computeFarmAccessExpiry(orderableListings),
         newestListing?.createdAt ?? null
       )
@@ -165,7 +172,7 @@ export class PaymentService {
 
     const farmAccessPrice = FARM_ACCESS_PRICE_GHC;
     const accessExpiresAt = computeFarmAccessExpiry(orderableListings);
-    const accessCycleId = farmer.farmerProfile!.farmAccessCycleId;
+    const accessCycleId = farmerAccessCycleId;
 
     const provider = getPaymentProvider();
     const result = await provider.initiatePayment({

@@ -7,6 +7,7 @@ import {
   computeFarmAccessExpiry,
   getFarmerAccessContext,
   isFarmAccessRecordValid,
+  resolveFarmAccessCycleId,
 } from '../services/farmAccess.service';
 
 type AccessRecord = {
@@ -61,6 +62,7 @@ export async function buyerFarmAccessSet(buyerId: string): Promise<Set<string>> 
         select: {
           farmerProfile: {
             select: {
+              id: true,
               farmAccessCycleId: true,
               listings: {
                 where: { status: { in: ['ACTIVE', 'SOLD'] } },
@@ -77,9 +79,9 @@ export async function buyerFarmAccessSet(buyerId: string): Promise<Set<string>> 
 
   const valid = rows.filter((row) => {
     const profile = row.farmer.farmerProfile;
-    const cycleId = profile?.farmAccessCycleId;
-    if (!cycleId) return false;
-    const newestListingCreatedAt = profile?.listings[0]?.createdAt ?? null;
+    if (!profile) return false;
+    const cycleId = resolveFarmAccessCycleId(profile.farmAccessCycleId, profile.id);
+    const newestListingCreatedAt = profile.listings[0]?.createdAt ?? null;
     return isFarmAccessRecordValid(
       row,
       cycleId,

@@ -593,12 +593,41 @@ export class AdminService {
     userId: string,
     tagType: 'STANDARD' | 'INTERNATIONAL_FARMER' | 'INTERNATIONAL_BUYER'
   ) {
-    assertFound(
-      await prisma.userVerificationTag.findUnique({
-        where: { userId_tagType: { userId, tagType } },
-      }),
-      'Verification tag not found'
-    );
+    assertFound(await prisma.user.findUnique({ where: { id: userId } }), 'User not found');
+
+    const tag = await prisma.userVerificationTag.findUnique({
+      where: { userId_tagType: { userId, tagType } },
+    });
+
+    if (tagType === 'STANDARD') {
+      if (tag) {
+        await prisma.userVerificationTag.delete({
+          where: { userId_tagType: { userId, tagType } },
+        });
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        include: { farmerProfile: { select: { id: true } } },
+      });
+
+      if (user?.verificationStatus === 'VERIFIED') {
+        await prisma.user.update({
+          where: { id: userId },
+          data: { verificationStatus: 'PENDING' },
+        });
+        if (user.farmerProfile) {
+          await prisma.farmerProfile.update({
+            where: { userId },
+            data: { verificationStatus: 'PENDING' },
+          });
+        }
+      }
+
+      return { removed: true };
+    }
+
+    assertFound(tag, 'Verification tag not found');
 
     await prisma.userVerificationTag.delete({
       where: { userId_tagType: { userId, tagType } },

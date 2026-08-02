@@ -14,6 +14,14 @@ export type FarmAccessRecord = {
   createdAt?: Date;
 };
 
+/** Stable cycle id for legacy rows where farm_access_cycle_id is still null in the DB. */
+export function resolveFarmAccessCycleId(
+  farmAccessCycleId: string | null | undefined,
+  farmerProfileId: string
+): string {
+  return farmAccessCycleId ?? farmerProfileId;
+}
+
 /** Last instant (UTC) of a harvest calendar day — access remains valid through this day. */
 export function endOfHarvestDayUtc(date: Date): Date {
   const d = new Date(date);
@@ -134,7 +142,10 @@ export async function getFarmerAccessContext(farmerUserId: string) {
   const newestListingCreatedAt = listings[0]?.createdAt ?? null;
 
   return {
-    profile,
+    profile: {
+      ...profile,
+      farmAccessCycleId: resolveFarmAccessCycleId(profile.farmAccessCycleId, profile.id),
+    },
     listings,
     orderableListings,
     hasAvailableProduct,

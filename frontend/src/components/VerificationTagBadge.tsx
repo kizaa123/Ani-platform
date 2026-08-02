@@ -173,7 +173,7 @@ export function VerificationTags({
     <span
       className={`inline-flex max-w-full ${
         layout === "row" ? "flex-row flex-wrap" : "flex-col"
-      } items-center ${labelVisible ? "gap-1.5" : "gap-1"} ${className}`}
+      } items-center ${labelVisible ? "gap-1" : "gap-0.5"} ${className}`}
     >
       {badges.map((tagType) => (
         <VerificationTagBadge
@@ -208,7 +208,7 @@ export function InlineNameWithVerificationTags({
 }) {
   return (
     <span
-      className={`inline-flex max-w-full flex-wrap items-center gap-x-1.5 gap-y-0.5 ${className}`}
+      className={`inline-flex max-w-full flex-wrap items-center gap-x-1 gap-y-0.5 ${className}`}
     >
       <span className={`min-w-0 ${nameClassName}`}>{name}</span>
       <VerificationTags

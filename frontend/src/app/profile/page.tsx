@@ -165,7 +165,7 @@ export default function ProfilePage() {
               </div>
             </div>
             <p className="mt-3 text-sm text-brand-700">
-              <RolePrefixedName user={user} nameClassName="text-brand-700" /> ·{" "}
+              <RolePrefixedName user={user} verificationTags={user.verificationTags} nameClassName="text-brand-700" /> ·{" "}
               <EmailText email={user.email} className="text-brand-700" />
             </p>
           </section>
