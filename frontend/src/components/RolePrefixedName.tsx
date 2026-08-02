@@ -34,7 +34,7 @@ interface RolePrefixedNameProps {
     roleId: number;
     firstName: string;
     lastName: string;
-    verificationStatus?: string;
+    verificationStatus?: string | null;
     verificationTags?: UserVerificationTag[];
   };
   verificationTags?: UserVerificationTag[];
@@ -57,7 +57,7 @@ function InlineVerificationTags({
   showTagLabels,
 }: {
   verificationTags?: UserVerificationTag[];
-  verificationStatus?: string;
+  verificationStatus?: string | null;
   tagSize: "xs" | "sm" | "md";
   showTagLabels?: boolean;
 }) {
