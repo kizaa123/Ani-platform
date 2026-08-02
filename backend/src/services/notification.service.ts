@@ -1013,6 +1013,9 @@ function internationalVerificationClosing(roleId: number): string {
   if (isFarmerRole(roleId)) {
     return 'We look forward to your continued quality production on the platform.';
   }
+  if (isFarmerHandler(roleId) || isBuyerHandler(roleId)) {
+    return 'We look forward to your continued support for fellows and clients on the platform.';
+  }
   return 'We look forward to your continued contributions and quality products on the platform.';
 }
 
@@ -1041,13 +1044,17 @@ export async function notifyInternationalVerification(params: {
   userId: string;
   firstName: string;
   roleId: number;
-  tagType: 'INTERNATIONAL_FARMER' | 'INTERNATIONAL_BUYER';
+  tagType:
+    | 'INTERNATIONAL_FARMER'
+    | 'INTERNATIONAL_BUYER'
+    | 'INTERNATIONAL_FARMER_HANDLER'
+    | 'INTERNATIONAL_BUYER_HANDLER';
 }) {
   const link = profileSettingsPath(params.roleId);
   const intlRoleLabel =
-    params.tagType === 'INTERNATIONAL_FARMER'
-      ? portalDirectoryRoleLabel(params.roleId)
-      : 'Client';
+    params.tagType === 'INTERNATIONAL_BUYER'
+      ? 'Client'
+      : portalDirectoryRoleLabel(params.roleId);
 
   await createNotification({
     userId: params.userId,

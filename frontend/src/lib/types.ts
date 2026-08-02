@@ -1175,7 +1175,12 @@ export interface PlatformWithdrawal {
   };
 }
 
-export type VerificationTagType = "STANDARD" | "INTERNATIONAL_FARMER" | "INTERNATIONAL_BUYER";
+export type VerificationTagType =
+  | "STANDARD"
+  | "INTERNATIONAL_FARMER"
+  | "INTERNATIONAL_BUYER"
+  | "INTERNATIONAL_FARMER_HANDLER"
+  | "INTERNATIONAL_BUYER_HANDLER";
 
 export interface UserVerificationTag {
   id: string;

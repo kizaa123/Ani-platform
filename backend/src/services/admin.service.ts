@@ -8,6 +8,8 @@ import {
   FARMER_ROLES,
   STAFF_ROLES,
   VERIFIABLE_ROLE_IDS,
+  isFarmerHandler,
+  isBuyerHandler,
 } from '../constants/roles';
 import {
   notifyInternationalVerification,
@@ -91,8 +93,40 @@ export const verifyUserSchema = z.object({
 });
 
 export const assignVerificationTagSchema = z.object({
-  tagType: z.enum(['STANDARD', 'INTERNATIONAL_FARMER', 'INTERNATIONAL_BUYER']),
+  tagType: z.enum([
+    'STANDARD',
+    'INTERNATIONAL_FARMER',
+    'INTERNATIONAL_BUYER',
+    'INTERNATIONAL_FARMER_HANDLER',
+    'INTERNATIONAL_BUYER_HANDLER',
+  ]),
 });
+
+const INTERNATIONAL_TAG_TYPES = [
+  'INTERNATIONAL_FARMER',
+  'INTERNATIONAL_BUYER',
+  'INTERNATIONAL_FARMER_HANDLER',
+  'INTERNATIONAL_BUYER_HANDLER',
+] as const;
+
+type VerificationTagTypeValue =
+  | 'STANDARD'
+  | (typeof INTERNATIONAL_TAG_TYPES)[number];
+
+function isInternationalTagType(
+  tagType: VerificationTagTypeValue
+): tagType is (typeof INTERNATIONAL_TAG_TYPES)[number] {
+  return (INTERNATIONAL_TAG_TYPES as readonly string[]).includes(tagType);
+}
+
+function assertInternationalTagAllowed(roleId: number, tagType: VerificationTagTypeValue): void {
+  if (tagType === 'INTERNATIONAL_FARMER_HANDLER' && !isFarmerHandler(roleId)) {
+    throw new AppError(400, 'International FLO tag is only for Fellow Liaison Officers');
+  }
+  if (tagType === 'INTERNATIONAL_BUYER_HANDLER' && !isBuyerHandler(roleId)) {
+    throw new AppError(400, 'International CLO tag is only for Client Liaison Officers');
+  }
+}
 
 const verifiableUserInclude = {
   role: true,
@@ -540,7 +574,7 @@ export class AdminService {
 
   async assignVerificationTag(
     userId: string,
-    tagType: 'STANDARD' | 'INTERNATIONAL_FARMER' | 'INTERNATIONAL_BUYER',
+    tagType: VerificationTagTypeValue,
     assignedBy: string
   ) {
     const user = assertFound(
@@ -557,6 +591,10 @@ export class AdminService {
 
     if (!(VERIFIABLE_ROLE_IDS as readonly number[]).includes(user.roleId)) {
       throw new AppError(400, 'Only buyers, farmers, and handlers can receive verification tags');
+    }
+
+    if ((INTERNATIONAL_TAG_TYPES as readonly string[]).includes(tagType)) {
+      assertInternationalTagAllowed(user.roleId, tagType);
     }
 
     const wasVerified = user.verificationStatus === 'VERIFIED';
@@ -589,10 +627,7 @@ export class AdminService {
         firstName: user.firstName,
         roleId: user.roleId,
       });
-    } else if (
-      !existingTag &&
-      (tagType === 'INTERNATIONAL_FARMER' || tagType === 'INTERNATIONAL_BUYER')
-    ) {
+    } else if (!existingTag && isInternationalTagType(tagType)) {
       await notifyInternationalVerification({
         userId: user.id,
         firstName: user.firstName,
@@ -604,10 +639,7 @@ export class AdminService {
     return tag;
   }
 
-  async removeVerificationTag(
-    userId: string,
-    tagType: 'STANDARD' | 'INTERNATIONAL_FARMER' | 'INTERNATIONAL_BUYER'
-  ) {
+  async removeVerificationTag(userId: string, tagType: VerificationTagTypeValue) {
     assertFound(await prisma.user.findUnique({ where: { id: userId } }), 'User not found');
 
     const tag = await prisma.userVerificationTag.findUnique({

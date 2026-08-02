@@ -21,12 +21,24 @@ const TAG_PILL_STYLES: Record<
     shortLabel: "Intl. Client",
     className: "border-red-200 bg-red-100 text-red-800",
   },
+  INTERNATIONAL_FARMER_HANDLER: {
+    label: "International FLO",
+    shortLabel: "Intl. FLO",
+    className: "border-red-200 bg-red-100 text-red-800",
+  },
+  INTERNATIONAL_BUYER_HANDLER: {
+    label: "International CLO",
+    shortLabel: "Intl. CLO",
+    className: "border-red-200 bg-red-100 text-red-800",
+  },
 };
 
 const TAG_ICON_FILLS: Record<VerificationTagType, string> = {
   STANDARD: "#10B981",
   INTERNATIONAL_FARMER: "#EF4444",
   INTERNATIONAL_BUYER: "#EF4444",
+  INTERNATIONAL_FARMER_HANDLER: "#EF4444",
+  INTERNATIONAL_BUYER_HANDLER: "#EF4444",
 };
 
 export function getAvatarVerificationBadges(
@@ -41,6 +53,8 @@ export function getAvatarVerificationBadges(
   }
   if (tagTypes.has("INTERNATIONAL_FARMER")) badges.push("INTERNATIONAL_FARMER");
   if (tagTypes.has("INTERNATIONAL_BUYER")) badges.push("INTERNATIONAL_BUYER");
+  if (tagTypes.has("INTERNATIONAL_FARMER_HANDLER")) badges.push("INTERNATIONAL_FARMER_HANDLER");
+  if (tagTypes.has("INTERNATIONAL_BUYER_HANDLER")) badges.push("INTERNATIONAL_BUYER_HANDLER");
 
   return badges;
 }

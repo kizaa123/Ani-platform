@@ -10,6 +10,8 @@ import {
   isFarmer,
   isHandler,
   isBuyer,
+  isFarmerHandler,
+  isBuyerHandler,
   fullName,
   type AdminStats,
   type AdminDashboardCharts,
@@ -115,8 +117,21 @@ function assignableTagsForUser(user: AdminVerificationUser): VerificationTagType
   ) {
     options.push("INTERNATIONAL_BUYER");
   }
+  if (isFarmerHandler(user.roleId) && !hasVerificationTag(user, "INTERNATIONAL_FARMER_HANDLER")) {
+    options.push("INTERNATIONAL_FARMER_HANDLER");
+  }
+  if (isBuyerHandler(user.roleId) && !hasVerificationTag(user, "INTERNATIONAL_BUYER_HANDLER")) {
+    options.push("INTERNATIONAL_BUYER_HANDLER");
+  }
   return options;
 }
+
+const ASSIGN_INTERNATIONAL_TAG_LABELS: Partial<Record<VerificationTagType, string>> = {
+  INTERNATIONAL_FARMER: "International Fellow",
+  INTERNATIONAL_BUYER: "International Client",
+  INTERNATIONAL_FARMER_HANDLER: "International FLO",
+  INTERNATIONAL_BUYER_HANDLER: "International CLO",
+};
 
 export default function AdminPage() {
   const { user, loading } = useAuth();
@@ -204,7 +219,7 @@ export default function AdminPage() {
     (user.verificationTags ?? []).filter((tag) => tag.tagType !== "STANDARD");
 
   const assignTagLabel = (tagType: VerificationTagType) =>
-    tagType === "INTERNATIONAL_FARMER" ? "International Fellow" : "International Client";
+    ASSIGN_INTERNATIONAL_TAG_LABELS[tagType] ?? tagType;
 
   const assignTag = async (userId: string, tagType: VerificationTagType) => {
     setTagBusy(`${userId}:${tagType}`);

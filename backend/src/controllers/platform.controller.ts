@@ -352,7 +352,12 @@ export class AdminController {
     try {
       const result = await adminService.removeVerificationTag(
         req.params.id as string,
-        req.params.tagType as 'STANDARD' | 'INTERNATIONAL_FARMER' | 'INTERNATIONAL_BUYER'
+        req.params.tagType as
+          | 'STANDARD'
+          | 'INTERNATIONAL_FARMER'
+          | 'INTERNATIONAL_BUYER'
+          | 'INTERNATIONAL_FARMER_HANDLER'
+          | 'INTERNATIONAL_BUYER_HANDLER'
       );
       await createAuditLog(req, 'VERIFICATION_TAG_REMOVED', 'users', {
         userId: req.params.id,

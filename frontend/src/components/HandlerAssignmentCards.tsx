@@ -351,7 +351,7 @@ export function HandlerFarmerClientCard({ assignment }: { assignment: AgentAssig
       <div className="border-b border-brand-50 bg-brand-50/40 px-3 py-2.5">
         <HandlerAssignmentIdentity
           owner={owner}
-          subtitle={[location, farmName].filter(Boolean)}
+          subtitle={[location, farmName].filter((s): s is string => Boolean(s))}
           stat={owner.farmerProfile?.farmSize ?? undefined}
           avatarSize="md"
         />
@@ -421,7 +421,7 @@ export function HandlerBuyerClientCard({ assignment }: { assignment: AgentAssign
   const { owner } = assignment;
   const organization = clientOrganization(owner);
   const location = formatUserLocation(owner);
-  const subtitle = [location, organization].filter(Boolean);
+  const subtitle = [location, organization].filter((s): s is string => Boolean(s));
 
   return (
     <article className="card-elevated flex flex-col overflow-hidden rounded-xl transition hover:shadow-md">
