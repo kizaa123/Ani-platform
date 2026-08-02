@@ -198,91 +198,25 @@ html {
     @apply flex w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 hover:shadow;
   }
 
-  /* Form integrated on auth hero (login/register desktop) */
-  @media (min-width: 1024px) {
-    .auth-hero-form h1 {
-      @apply text-white;
-    }
+  /* White form card on auth hero (login/register desktop) */
+  .auth-hero-form-card {
+    scrollbar-gutter: stable;
+  }
 
-    .auth-hero-form .auth-label {
-      @apply text-white/90;
-    }
+  .auth-hero-form-card::-webkit-scrollbar {
+    width: 6px;
+  }
 
-    .auth-hero-form .auth-hint,
-    .auth-hero-form .text-gray-500,
-    .auth-hero-form .text-gray-400,
-    .auth-hero-form .text-gray-600 {
-      @apply text-brand-100/80;
-    }
+  .auth-hero-form-card::-webkit-scrollbar-track {
+    @apply rounded-full bg-transparent;
+  }
 
-    .auth-hero-form .text-brand-700 {
-      @apply text-brand-100;
-    }
+  .auth-hero-form-card::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-brand-200/80;
+  }
 
-    .auth-hero-form .text-brand-900 {
-      @apply text-white;
-    }
-
-    .auth-hero-form .auth-switch {
-      @apply border-white/20 text-brand-100;
-    }
-
-    .auth-hero-form .auth-switch-link {
-      @apply text-yellow-300 hover:text-yellow-200;
-    }
-
-    .auth-hero-form .auth-step-bar {
-      @apply bg-white/25;
-    }
-
-    .auth-hero-form .auth-step-bar-active {
-      @apply bg-yellow-400;
-    }
-
-    .auth-hero-form .auth-step-labels {
-      @apply text-white/55;
-    }
-
-    .auth-hero-form .auth-step-label-active {
-      @apply text-white;
-    }
-
-    .auth-hero-form .auth-step-label-error {
-      @apply text-red-300;
-    }
-
-    .auth-hero-form .auth-section {
-      @apply border-white/20 bg-white/10;
-    }
-
-    .auth-hero-form .auth-section-title {
-      @apply text-white;
-    }
-
-    .auth-hero-form .auth-divider::before,
-    .auth-hero-form .auth-divider::after {
-      @apply bg-white/25;
-    }
-
-    .auth-hero-form .auth-divider span {
-      @apply text-white/60;
-    }
-
-    .auth-hero-form .auth-error {
-      @apply border-red-300/40 bg-red-950/40 text-red-100 backdrop-blur-sm;
-    }
-
-    .auth-hero-form .auth-validation-summary {
-      @apply border-amber-300/30 bg-amber-950/35 text-amber-50 backdrop-blur-sm;
-    }
-
-    .auth-hero-form .auth-validation-summary-title {
-      @apply text-amber-100;
-    }
-
-    .auth-hero-form .auth-validation-summary-list {
-      @apply text-amber-50/90;
-    }
+  .auth-hero-form-card::-webkit-scrollbar-thumb:hover {
+    @apply bg-brand-300;
   }
 
   /* Subtle elevation for white-surface cards (homepage roles, portal nav, panels). */

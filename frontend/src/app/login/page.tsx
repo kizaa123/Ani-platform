@@ -43,13 +43,13 @@ function LoginForm() {
   return (
     <AuthHeroPanel className="flex-1">
       <ScrollReveal trigger="mount" delay={120} duration={500} direction="fade-up">
-        <div className="space-y-8 lg:space-y-6">
+        <div className="space-y-6">
           <header className="text-center lg:text-left">
-            <div className="mb-4 hidden lg:inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 text-white backdrop-blur-sm">
+            <div className="auth-icon-wrap mx-auto mb-4 lg:mx-0">
               <Icon name="lock" className="h-6 w-6" />
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-brand-900 lg:text-white">Sign In</h1>
-            <p className="mt-2 text-sm text-gray-500 lg:text-brand-100">Welcome back — sign in to your ANI account</p>
+            <h1 className="auth-title">Sign In</h1>
+            <p className="auth-subtitle">Welcome back — sign in to your ANI account</p>
           </header>
 
           {(error || queryError) && (
@@ -101,7 +101,7 @@ function LoginForm() {
             </button>
           </form>
 
-          <p className="auth-switch !mt-6 lg:!mt-4">
+          <p className="auth-switch !mt-6">
             No account?{" "}
             <Link href="/register" className="auth-switch-link">
               Create one

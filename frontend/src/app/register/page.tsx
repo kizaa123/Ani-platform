@@ -380,8 +380,6 @@ function RegisterForm() {
       skipInitialStepScrollRef.current = false;
       return;
     }
-    if (!window.matchMedia("(max-width: 1023px)").matches) return;
-
     requestAnimationFrame(() => {
       window.scrollTo({ top: 0, behavior: "smooth" });
       formColumnRef.current?.scrollTo({ top: 0, behavior: "smooth" });
@@ -490,20 +488,20 @@ function RegisterForm() {
   };
 
   return (
-    <AuthHeroPanel ref={formColumnRef} className="flex-1">
+    <AuthHeroPanel ref={formColumnRef} className="flex-1" formWidth="wide">
       <ScrollReveal trigger="mount" delay={120} duration={500} direction="fade-up">
-        <div className="space-y-8 lg:space-y-6">
+        <div className="space-y-6">
           <header className="text-center lg:text-left">
-            <div className="mb-4 hidden lg:inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 text-white backdrop-blur-sm">
+            <div className="auth-icon-wrap mx-auto mb-4 lg:mx-0">
               <Icon name="user" className="h-6 w-6" />
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-brand-900 lg:text-white">Create Account</h1>
-            <p className="mt-2 text-sm text-gray-500 lg:text-brand-100">
+            <h1 className="auth-title">Create Account</h1>
+            <p className="auth-subtitle">
               Step {step} of {totalSteps} — {stepLabels[step - 1]}
             </p>
           </header>
 
-        <div className="auth-step-indicator">
+        <div className="auth-step-indicator !mb-6">
           <div className="auth-step-track">
             {Array.from({ length: totalSteps }, (_, i) => i + 1).map((s) => (
               <div
@@ -1119,7 +1117,7 @@ function RegisterForm() {
           </div>
         )}
 
-          <p className="auth-switch !mt-6 lg:!mt-4">
+          <p className="auth-switch !mt-6">
             Have an account?{" "}
             <Link href="/login" className="auth-switch-link">
               Sign in
