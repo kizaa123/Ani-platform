@@ -3,6 +3,7 @@ import prisma from '../database/prisma';
 import { AppError, assertFound, assertAuthorized } from '../utils/errors';
 import { ROLES, canPurchaseFromMarketplace } from '../constants/roles';
 import { buyerHasApprovedFarmAccess } from '../middleware/access.middleware';
+import { isListingOrderable } from './farmAccess.service';
 import { getPaymentProvider } from './payment.provider';
 import { notifyNewOrder, notifyProductPurchase } from './notification.service';
 import { generateReleaseOtp } from '../utils/orderOtp';
@@ -39,6 +40,13 @@ export class OrderService {
       throw new AppError(400, 'This product is sold out');
     }
 
+    if (!isListingOrderable(listing)) {
+      throw new AppError(
+        400,
+        'This product is no longer available — the harvest period has ended'
+      );
+    }
+
     const farmerUserId = listing.farmer.userId;
 
     if (farmerUserId === buyerId) {
@@ -48,7 +56,8 @@ export class OrderService {
     if (!(await buyerHasApprovedFarmAccess(buyerId, farmerUserId))) {
       throw new AppError(
         403,
-        'Farm access required - pay the access fee to unlock this farm and place orders'
+        'Farm access required — pay the access fee to unlock this farm and place orders',
+        'FARM_ACCESS_REQUIRED'
       );
     }
 

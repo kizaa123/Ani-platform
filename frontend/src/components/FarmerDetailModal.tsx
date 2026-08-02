@@ -117,7 +117,7 @@ export function FarmerDetailModal({
           )}
 
           <div className="mt-6 space-y-2">
-            {farmer.hasFarmAccess && farmer.connectionStatus === "ACCEPTED" ? (
+            {farmer.hasFarmAccess && farmer.connectionStatus === "ACCEPTED" && !farmer.farmAccessExpired ? (
               <>
                 <span className="block w-full rounded-xl bg-green-100 py-2.5 text-center text-sm font-semibold text-green-800">
                   ✓ Farm access approved
@@ -142,6 +142,19 @@ export function FarmerDetailModal({
                 >
                   {user && isResearcher(user.roleId) ? "View farm access status" : "View connection status"}
                 </Link>
+              </>
+            ) : farmer.farmAccessExpired && onAccessFarm ? (
+              <>
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-center">
+                  <p className="text-sm font-semibold text-amber-900">Farm access expired</p>
+                  <p className="mt-1 text-xs text-amber-800">
+                    The harvest period ended or a new product was listed. Pay again to access this
+                    farm.
+                  </p>
+                </div>
+                <button type="button" onClick={onAccessFarm} className="btn-gold w-full py-3">
+                  Renew access ({accessLabel})
+                </button>
               </>
             ) : onAccessFarm ? (
               <>

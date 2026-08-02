@@ -31,6 +31,14 @@ function FarmActionButton({
     );
   }
 
+  if (farmer.hasAvailableProduct === false) {
+    return (
+      <span className="block w-full rounded-xl bg-gray-100 py-2.5 text-center text-sm font-semibold text-gray-600">
+        Product not available
+      </span>
+    );
+  }
+
   if (farmer.hasFarmAccess && farmer.connectionStatus === "PENDING") {
     return (
       <span className="block w-full rounded-xl bg-amber-100 py-2.5 text-center text-sm font-semibold text-amber-900">
@@ -40,6 +48,8 @@ function FarmActionButton({
   }
 
   const label = farmer.farmAccessPriceLabel ?? accessPriceLabel;
+  const payLabel = farmer.farmAccessExpired ? "Renew access" : "Pay to access";
+
   return (
     <button
       type="button"
@@ -47,7 +57,8 @@ function FarmActionButton({
       className="btn-gold inline-flex w-full items-center justify-center gap-2 py-2.5 text-sm"
     >
       <Icon name="lock" className="h-4 w-4 shrink-0" />
-      Pay to access{label ? ` (${label})` : ""}
+      {payLabel}
+      {label ? ` (${label})` : ""}
     </button>
   );
 }
@@ -88,6 +99,7 @@ export function MarketplaceFarmerCard({
     productCount === 0
       ? "No products listed"
       : `${productCount} product${productCount === 1 ? "" : "s"} listed`;
+  const showUnavailableBadge = farmer.hasAvailableProduct === false;
 
   return (
     <article className="card-elevated card-elevated-hover flex h-full flex-col overflow-hidden rounded-2xl p-5">
@@ -115,6 +127,24 @@ export function MarketplaceFarmerCard({
           />
         </div>
       </div>
+
+      {showUnavailableBadge && (
+        <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-center">
+          <p className="text-sm font-semibold text-gray-700">Product not available</p>
+          <p className="mt-0.5 text-xs text-gray-500">
+            No active harvest or products are currently listed
+          </p>
+        </div>
+      )}
+
+      {farmer.farmAccessExpired && farmer.hasAvailableProduct && (
+        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-center">
+          <p className="text-sm font-semibold text-amber-900">Access expired</p>
+          <p className="mt-0.5 text-xs text-amber-800">
+            Harvest period ended or a new product was listed — pay again to access
+          </p>
+        </div>
+      )}
 
       <div className="mt-4 min-h-[4.5rem]">
         <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Commodities</p>

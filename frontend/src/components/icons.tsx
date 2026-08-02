@@ -297,4 +297,6 @@ export const NOTIFICATION_ICONS: Record<string, IconName> = {
   ORDER_PAYMENT_RELEASED: "coins",
   MONEY_DISTRIBUTED: "coins",
   HANDLER_DROPPED: "users",
+  USER_VERIFIED: "check-circle",
+  INTERNATIONAL_VERIFICATION: "check-circle",
 };

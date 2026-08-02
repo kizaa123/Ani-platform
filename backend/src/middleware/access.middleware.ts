@@ -3,20 +3,92 @@ import prisma from '../database/prisma';
 import { AuthRequest } from './auth.middleware';
 import { ROLES, isFarmerRole, isStaffRole, isMarketplaceBuyerRole } from '../constants/roles';
 import { normalizeImages, normalizePublicAssetUrl } from './upload.middleware';
+import {
+  computeFarmAccessExpiry,
+  getFarmerAccessContext,
+  isFarmAccessRecordValid,
+} from '../services/farmAccess.service';
 
-export async function buyerHasFarmerFarmAccess(buyerId: string, farmerUserId: string): Promise<boolean> {
+type AccessRecord = {
+  status: string;
+  expiresAt: Date | null;
+  accessCycleId: string | null;
+  createdAt: Date;
+};
+
+async function loadBuyerFarmerAccess(
+  buyerId: string,
+  farmerUserId: string
+): Promise<AccessRecord | null> {
   const record = await prisma.buyerFarmerAccess.findUnique({
     where: { buyerId_farmerId: { buyerId, farmerId: farmerUserId } },
+    select: { status: true, expiresAt: true, accessCycleId: true, createdAt: true },
   });
-  return record?.status === 'COMPLETED';
+  return record;
+}
+
+async function resolveValidFarmAccess(
+  buyerId: string,
+  farmerUserId: string
+): Promise<boolean> {
+  const [record, ctx] = await Promise.all([
+    loadBuyerFarmerAccess(buyerId, farmerUserId),
+    getFarmerAccessContext(farmerUserId),
+  ]);
+  if (!ctx) return false;
+  return isFarmAccessRecordValid(
+    record,
+    ctx.profile.farmAccessCycleId,
+    ctx.fallbackExpiry,
+    ctx.newestListingCreatedAt
+  );
+}
+
+export async function buyerHasFarmerFarmAccess(buyerId: string, farmerUserId: string): Promise<boolean> {
+  return resolveValidFarmAccess(buyerId, farmerUserId);
 }
 
 export async function buyerFarmAccessSet(buyerId: string): Promise<Set<string>> {
   const rows = await prisma.buyerFarmerAccess.findMany({
     where: { buyerId, status: 'COMPLETED' },
-    select: { farmerId: true },
+    select: {
+      farmerId: true,
+      status: true,
+      expiresAt: true,
+      accessCycleId: true,
+      createdAt: true,
+      farmer: {
+        select: {
+          farmerProfile: {
+            select: {
+              farmAccessCycleId: true,
+              listings: {
+                where: { status: { in: ['ACTIVE', 'SOLD'] } },
+                select: { createdAt: true },
+                orderBy: { createdAt: 'desc' },
+                take: 1,
+              },
+            },
+          },
+        },
+      },
+    },
   });
-  return new Set(rows.map((r) => r.farmerId));
+
+  const valid = rows.filter((row) => {
+    const profile = row.farmer.farmerProfile;
+    const cycleId = profile?.farmAccessCycleId;
+    if (!cycleId) return false;
+    const newestListingCreatedAt = profile?.listings[0]?.createdAt ?? null;
+    return isFarmAccessRecordValid(
+      row,
+      cycleId,
+      row.expiresAt,
+      newestListingCreatedAt
+    );
+  });
+
+  return new Set(valid.map((r) => r.farmerId));
 }
 
 export async function buyerConnectionApproved(
@@ -200,3 +272,5 @@ export function fullListing(
     _locked: false,
   };
 }
+
+export { computeFarmAccessExpiry };

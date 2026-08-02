@@ -151,6 +151,9 @@ export interface FarmerBrowseCard {
   customProducts?: string[];
   connectionStatus: string;
   hasFarmAccess: boolean;
+  hasAvailableProduct?: boolean;
+  farmAccessExpired?: boolean;
+  requiresFarmAccessPayment?: boolean;
   canViewProducts: boolean;
   verificationStatus?: string;
   verificationTags?: UserVerificationTag[];

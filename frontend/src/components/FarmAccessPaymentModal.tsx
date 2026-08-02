@@ -113,9 +113,17 @@ export function FarmAccessPaymentModal({
             </div>
 
             <div className="p-5">
-              <p className="text-sm text-gray-600">
-                One-time fee to view products, prices, and purchase from this farm.
-              </p>
+              {farmer.farmAccessExpired ? (
+                <p className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                  Your previous access has expired because the harvest period ended or this fellow
+                  listed a new product. Pay again to view products and place orders.
+                </p>
+              ) : (
+                <p className="text-sm text-gray-600">
+                  One-time fee to view products, prices, and purchase from this farm for the current
+                  harvest period.
+                </p>
+              )}
 
               <PaymentCheckout
                 totalLabel="Farm access"

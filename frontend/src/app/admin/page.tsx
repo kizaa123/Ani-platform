@@ -488,7 +488,10 @@ export default function AdminPage() {
                         const busy = verifyingId === u.id;
                         const tagOptions = assignableTagsForUser(u);
                         const intlTags = internationalTagsForUser(u);
-                        const hasTagRow = tagOptions.length > 0 || intlTags.length > 0;
+                        const hasTagRow =
+                          tagOptions.length > 0 ||
+                          intlTags.length > 0 ||
+                          u.verificationStatus === "VERIFIED";
 
                         return (
                           <Fragment key={u.id}>
@@ -496,7 +499,9 @@ export default function AdminPage() {
                               <td className="py-3 pr-4">
                                 <div className="flex flex-wrap items-center gap-2">
                                   <span className="font-semibold text-brand-900">{fullName(u)}</span>
-                                  <VerificationBadge adminView status={u.verificationStatus} />
+                                  {u.verificationStatus !== "VERIFIED" && (
+                                    <VerificationBadge adminView status={u.verificationStatus} />
+                                  )}
                                 </div>
                               </td>
                               <td className="py-3 pr-4 text-gray-700">
@@ -558,6 +563,9 @@ export default function AdminPage() {
                               <tr className="bg-brand-50/30">
                                 <td colSpan={6} className="px-0 pb-3 pt-0">
                                   <div className="flex flex-wrap items-center gap-2 px-0 py-2">
+                                    {u.verificationStatus === "VERIFIED" && (
+                                      <VerificationTagBadge tagType="STANDARD" showLabel />
+                                    )}
                                     {intlTags.map((tag) => (
                                       <VerificationTagBadge
                                         key={tag.id}

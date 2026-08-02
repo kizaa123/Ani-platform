@@ -161,6 +161,16 @@ export function getFullName(firstName: string, lastName: string): string {
   return `${firstName} ${lastName}`.trim();
 }
 
+/** Profile/settings route for verification and account notifications. */
+export function profileSettingsPath(roleId: number): string {
+  if (isFarmerRole(roleId)) return '/farm/settings';
+  if (roleId === ROLES.BUYER) return '/settings';
+  if (isResearcherRole(roleId)) return '/researcher/settings';
+  if (isStudentRole(roleId)) return '/student/settings';
+  if (isFarmerHandler(roleId) || isBuyerHandler(roleId)) return '/agents/settings';
+  return '/profile';
+}
+
 /** Display label for users listed on portal client directory pages. */
 export function portalDirectoryRoleLabel(roleId: number): string {
   switch (roleId) {

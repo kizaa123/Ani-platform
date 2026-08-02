@@ -13,6 +13,8 @@ import {
   isFarmerHandler,
   isFarmerRole,
   isResearcherRole,
+  portalDirectoryRoleLabel,
+  profileSettingsPath,
 } from '../constants/roles';
 
 export type NotificationMetadata = {
@@ -50,7 +52,9 @@ export type NotificationTypeValue =
   | 'NEW_PUBLICATION'
   | 'HANDLER_DROPPED'
   | 'FARM_PRODUCTS_AVAILABLE'
-  | 'NEW_ACCOUNTANT_REGISTRATION';
+  | 'NEW_ACCOUNTANT_REGISTRATION'
+  | 'USER_VERIFIED'
+  | 'INTERNATIONAL_VERIFICATION';
 
 export type CreateNotificationInput = {
   userId: string;
@@ -917,6 +921,52 @@ export async function getUserDisplayName(userId: string) {
     select: { firstName: true, lastName: true },
   });
   return user ? formatName(user.firstName, user.lastName) : 'Someone';
+}
+
+export async function notifyUserVerified(params: {
+  userId: string;
+  firstName: string;
+  roleId: number;
+}) {
+  const roleLabel = portalDirectoryRoleLabel(params.roleId);
+  const link = profileSettingsPath(params.roleId);
+
+  await createNotification({
+    userId: params.userId,
+    type: 'USER_VERIFIED',
+    title: 'Account verified',
+    body: `Congratulations ${params.firstName}, you have been verified as a ${roleLabel} on the ANI platform. We look forward to your continued contribution and quality products.`,
+    link,
+    metadata: {
+      actionUrl: link,
+      actionLabel: 'View profile',
+    },
+  }).catch(() => undefined);
+}
+
+export async function notifyInternationalVerification(params: {
+  userId: string;
+  firstName: string;
+  roleId: number;
+  tagType: 'INTERNATIONAL_FARMER' | 'INTERNATIONAL_BUYER';
+}) {
+  const link = profileSettingsPath(params.roleId);
+  const intlRoleLabel =
+    params.tagType === 'INTERNATIONAL_FARMER'
+      ? portalDirectoryRoleLabel(params.roleId)
+      : 'Client';
+
+  await createNotification({
+    userId: params.userId,
+    type: 'INTERNATIONAL_VERIFICATION',
+    title: 'International verification granted',
+    body: `Hello ${params.firstName}, congratulations! You have been verified for international ${intlRoleLabel} status and may serve clients outside your country. We look forward to your continued quality production.`,
+    link,
+    metadata: {
+      actionUrl: link,
+      actionLabel: 'View profile',
+    },
+  }).catch(() => undefined);
 }
 
 export async function notifyAdminsPendingAccountant(params: {

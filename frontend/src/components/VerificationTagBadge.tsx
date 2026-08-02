@@ -35,11 +35,11 @@ export function getAvatarVerificationBadges(
   const tagTypes = new Set(verificationTags?.map((tag) => tag.tagType) ?? []);
   const badges: VerificationTagType[] = [];
 
-  if (tagTypes.has("INTERNATIONAL_FARMER")) badges.push("INTERNATIONAL_FARMER");
-  if (tagTypes.has("INTERNATIONAL_BUYER")) badges.push("INTERNATIONAL_BUYER");
   if (tagTypes.has("STANDARD") || verificationStatus === "VERIFIED") {
     badges.push("STANDARD");
   }
+  if (tagTypes.has("INTERNATIONAL_FARMER")) badges.push("INTERNATIONAL_FARMER");
+  if (tagTypes.has("INTERNATIONAL_BUYER")) badges.push("INTERNATIONAL_BUYER");
 
   return badges;
 }
@@ -106,11 +106,11 @@ export function VerificationTagBadge({
         role="img"
         aria-label={style.label}
         title={style.label}
-        className={`inline-flex shrink-0 items-center justify-center rounded-full ${className}`}
+        className={`inline-flex shrink-0 items-center justify-center ${BADGE_CIRCLE_SIZE[size]} ${className}`}
       >
         <VerificationTagIcon
           tagType={tagType}
-          className={BADGE_CIRCLE_SIZE[size]}
+          className={BADGE_ICON_SIZE[size]}
           decorative
         />
       </span>

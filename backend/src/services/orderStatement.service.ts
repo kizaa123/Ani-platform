@@ -309,7 +309,7 @@ function drawPaymentStatus(
 function drawFooter(doc: PDFKit.PDFDocument): void {
   doc.font('Helvetica').fontSize(8).fillColor(COLORS.muted);
   doc.text(
-    `This document is an official ${PLATFORM_SHORT_NAME} financial record. Funds are held in escrow until the buyer confirms delivery.`,
+    `This document is an official ${PLATFORM_SHORT_NAME} financial record. Funds are held in escrow until the client confirms delivery.`,
     PAGE_MARGIN,
     doc.page.height - PAGE_MARGIN - 14,
     { width: CONTENT_WIDTH, align: 'center' }
@@ -366,12 +366,12 @@ export function buildOrderStatementPdf(
     y = drawKeyValue(doc, 'Payment method', formatPaymentMethod(order.paymentMethod), y);
     y += 10;
 
-    y = drawSectionTitle(doc, 'From (Buyer)', y);
+    y = drawSectionTitle(doc, 'From (Client)', y);
     y = drawKeyValue(doc, 'Name', `${order.buyer.firstName} ${order.buyer.lastName}`, y);
     y = drawKeyValue(doc, 'Location', formatLocation(order.buyer), y);
     y += 10;
 
-    y = drawSectionTitle(doc, 'To (Farmer)', y);
+    y = drawSectionTitle(doc, 'To (Fellow)', y);
     y = drawKeyValue(doc, 'Name', formatFarmerDisplayName(order), y);
     y = drawKeyValue(doc, 'Location', formatLocation(order.farmer), y);
     y += 10;
@@ -403,7 +403,7 @@ export async function generateOrderStatementPdf(
   if (!order.otpVerifiedAt || order.escrowStatus !== 'RELEASED') {
     throw new AppError(
       400,
-      'Financial statement (PDF) is locked until the buyer confirms the delivery release OTP.'
+      'Financial statement (PDF) is locked until the client confirms the delivery release OTP.'
     );
   }
 

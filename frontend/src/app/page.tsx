@@ -314,7 +314,7 @@ export default function HomePage() {
             </h2>
             <div className="mx-auto mt-4 h-1 w-16 rounded-full bg-gradient-to-r from-yellow-400/0 via-yellow-400 to-yellow-400/0" />
             <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-brand-300">
-              A passionate team of industry and technology experts dedicated to transforming trading across African and beyond.
+              A passionate team of industry and technology experts committed to transforming trade across Africa and beyond.
             </p>
           </ScrollReveal>
 

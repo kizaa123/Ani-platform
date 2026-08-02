@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { randomUUID } from 'crypto';
 import prisma from '../database/prisma';
 import { assertFound, AppError } from '../utils/errors';
 import {
@@ -9,7 +10,6 @@ import {
   canPurchaseFromMarketplace,
 } from '../constants/roles';
 import {
-  buyerHasFarmerFarmAccess,
   buyerFarmAccessSet,
   buyerHasActiveAccess,
   maskListing,
@@ -29,6 +29,12 @@ import { listingCommodityName } from '../utils/listingDisplay';
 import { productMediaService } from './productMedia.service';
 import { notifyNewProductListing } from './notification.service';
 import { FARM_ACCESS_PRICE_GHC, formatFarmAccessPriceLabel } from '../constants/pricing';
+import {
+  computeFarmAccessExpiry,
+  hasPaidFarmAccessRecord,
+  isFarmAccessRecordValid,
+  isListingOrderable,
+} from './farmAccess.service';
 
 export { LISTING_UNITS } from '../constants/units';
 
@@ -278,8 +284,22 @@ export class MarketplaceService {
     };
 
     return access.hasAccess
-      ? fullListing(base as Record<string, unknown>, ctx, extras)
-      : maskListing(base as Record<string, unknown>, ctx, extras);
+      ? {
+          ...fullListing(base as Record<string, unknown>, ctx, extras),
+          available: isListingOrderable({
+            status: listing.status,
+            quantity: listing.quantity,
+            harvestEndDate: listing.harvestEndDate,
+          }),
+        }
+      : {
+          ...maskListing(base as Record<string, unknown>, ctx, extras),
+          available: isListingOrderable({
+            status: listing.status,
+            quantity: listing.quantity,
+            harvestEndDate: listing.harvestEndDate,
+          }),
+        };
   }
 
   async createListing(userId: string, roleId: number, data: z.infer<typeof listingSchema>) {
@@ -294,24 +314,31 @@ export class MarketplaceService {
     const customCommodityName = data.customCommodityName?.trim() || null;
     const commodityId = customCommodityName ? null : (data.commodityId ?? null);
 
-    const listing = await prisma.commodityListing.create({
-      data: {
-        farmerId: profile.id,
-        commodityId,
-        customCommodityName,
-        title: data.title,
-        description: data.description,
-        quantity: data.quantity,
-        price: computeListedPrice(data.price),
-        unit,
-        images: data.images ?? [],
-        location: data.location,
-        ...listingHarvestFields(data),
-      },
-      include: {
-        commodity: { include: { category: true } },
-        farmer: { include: { user: { select: { id: true, firstName: true, lastName: true } } } },
-      },
+    const listing = await prisma.$transaction(async (tx) => {
+      await tx.farmerProfile.update({
+        where: { id: profile.id },
+        data: { farmAccessCycleId: randomUUID() },
+      });
+
+      return tx.commodityListing.create({
+        data: {
+          farmerId: profile.id,
+          commodityId,
+          customCommodityName,
+          title: data.title,
+          description: data.description,
+          quantity: data.quantity,
+          price: computeListedPrice(data.price),
+          unit,
+          images: data.images ?? [],
+          location: data.location,
+          ...listingHarvestFields(data),
+        },
+        include: {
+          commodity: { include: { category: true } },
+          farmer: { include: { user: { select: { id: true, firstName: true, lastName: true } } } },
+        },
+      });
     });
 
     const farmerName = `${listing.farmer.user.firstName} ${listing.farmer.user.lastName}`.trim();
@@ -341,8 +368,20 @@ export class MarketplaceService {
     }
 
     const isPurchaserRole = canPurchaseFromMarketplace(roleId);
-    const farmAccessSet = isPurchaserRole ? await buyerFarmAccessSet(userId) : new Set<string>();
     const connectionMap = isPurchaserRole ? await this.buyerConnectionMap(userId) : new Map<string, string>();
+    const accessRecords = isPurchaserRole
+      ? await prisma.buyerFarmerAccess.findMany({
+          where: { buyerId: userId },
+          select: {
+            farmerId: true,
+            status: true,
+            expiresAt: true,
+            accessCycleId: true,
+            createdAt: true,
+          },
+        })
+      : [];
+    const accessRecordMap = new Map(accessRecords.map((r) => [r.farmerId, r]));
 
     const farmAccessPriceLabel = formatFarmAccessPriceLabel();
 
@@ -386,11 +425,35 @@ export class MarketplaceService {
 
     const farmers = farmerProfiles.map((profile) => {
       const farmerUserId = profile.user.id;
-      const hasFarmAccess = isStaffRole(roleId)
+      const orderableListings = profile.listings.filter((l) => isListingOrderable(l));
+      const hasAvailableProduct = orderableListings.length > 0;
+      const fallbackExpiry = computeFarmAccessExpiry(profile.listings);
+      const newestListingCreatedAt =
+        profile.listings.length > 0
+          ? profile.listings.reduce(
+              (max, l) => (l.createdAt > max ? l.createdAt : max),
+              profile.listings[0].createdAt
+            )
+          : null;
+      const accessRecord = accessRecordMap.get(farmerUserId);
+
+      const hasValidFarmAccess = isStaffRole(roleId)
         ? true
         : isPurchaserRole
-          ? farmAccessSet.has(farmerUserId)
+          ? isFarmAccessRecordValid(
+              accessRecord,
+              profile.farmAccessCycleId,
+              fallbackExpiry,
+              newestListingCreatedAt
+            )
           : false;
+
+      const farmAccessExpired =
+        isPurchaserRole &&
+        hasPaidFarmAccessRecord(accessRecord) &&
+        !hasValidFarmAccess;
+
+      const hasFarmAccess = hasValidFarmAccess;
 
       const connectionStatus = isPurchaserRole
         ? connectionMap.get(farmerUserId) ?? 'NONE'
@@ -398,9 +461,13 @@ export class MarketplaceService {
           ? 'ACCEPTED'
           : 'NONE';
 
+      const canViewFarm = isStaffRole(roleId)
+        ? true
+        : hasValidFarmAccess && connectionStatus === 'ACCEPTED';
+
       const hasAccess = isStaffRole(roleId)
         ? true
-        : hasFarmAccess && connectionStatus === 'ACCEPTED';
+        : canViewFarm && hasAvailableProduct;
 
       const access = {
         hasAccess,
@@ -410,7 +477,7 @@ export class MarketplaceService {
 
       const registeredCommodities = this.buildRegisteredCommodities(profile.farmerCommodities);
 
-      const products = hasFarmAccess
+      const products = hasValidFarmAccess
         ? profile.listings.map((listing) =>
             this.formatListing(
               {
@@ -428,6 +495,9 @@ export class MarketplaceService {
             )
           )
         : [];
+
+      const requiresFarmAccessPayment =
+        isPurchaserRole && hasAvailableProduct && !hasValidFarmAccess;
 
       return {
         farmerId: farmerUserId,
@@ -448,7 +518,10 @@ export class MarketplaceService {
         customProducts: profile.customProducts ?? [],
         connectionStatus: access.connectionStatus,
         hasFarmAccess,
-        canViewProducts: access.hasAccess,
+        hasAvailableProduct,
+        farmAccessExpired,
+        requiresFarmAccessPayment,
+        canViewProducts: canViewFarm,
         farmAccessFee: FARM_ACCESS_PRICE_GHC,
         farmAccessPriceLabel: farmAccessPriceLabel,
         products,

@@ -60,7 +60,6 @@ export default function MarketplacePage() {
   const [activeListingId, setActiveListingId] = useState<string | null>(null);
   const [payFarmer, setPayFarmer] = useState<FarmerBrowseCard | null>(null);
   const [orderPlacedMessage, setOrderPlacedMessage] = useState("");
-  const [farmAccessMessage, setFarmAccessMessage] = useState("");
   const router = useRouter();
 
   const [browseLoading, setBrowseLoading] = useState(true);
@@ -90,23 +89,19 @@ export default function MarketplacePage() {
     [browse?.farmers, search]
   );
 
-  const openPurchase = (farmer: FarmerBrowseCard, product: Listing) => {
-    setPurchaseFarmer(farmer);
-    setActiveListingId(product.id);
-  };
-
   const closePurchase = () => {
     setPurchaseFarmer(null);
     setActiveListingId(null);
   };
 
   const handleViewFarm = (farmer: FarmerBrowseCard) => {
-    const product = firstOrderableProduct(farmer);
-    if (!product) {
-      setFarmAccessMessage(`${farmer.farmName || farmer.farmerName} has no products listed yet.`);
+    if (farmer.farmAccessExpired || farmer.requiresFarmAccessPayment) {
+      setPayFarmer(farmer);
       return;
     }
-    openPurchase(farmer, product);
+    const product = firstOrderableProduct(farmer);
+    setPurchaseFarmer(farmer);
+    setActiveListingId(product?.id ?? null);
   };
 
   const handleOrderSuccess = useCallback(() => {
@@ -126,15 +121,14 @@ export default function MarketplacePage() {
     return () => window.clearTimeout(timer);
   }, [orderPlacedMessage]);
 
-  useEffect(() => {
-    if (!farmAccessMessage) return;
-    const timer = window.setTimeout(() => setFarmAccessMessage(""), 6000);
-    return () => window.clearTimeout(timer);
-  }, [farmAccessMessage]);
-
   const activeListing = useMemo(() => {
-    if (!purchaseFarmer || !activeListingId) return null;
-    return purchaseFarmer.products.find((p) => p.id === activeListingId) ?? null;
+    if (!purchaseFarmer) return null;
+    if (purchaseFarmer.products.length === 0) return null;
+    if (activeListingId) {
+      const selected = purchaseFarmer.products.find((p) => p.id === activeListingId);
+      if (selected) return selected;
+    }
+    return firstOrderableProduct(purchaseFarmer);
   }, [purchaseFarmer, activeListingId]);
 
   useEffect(() => {
@@ -196,15 +190,6 @@ export default function MarketplacePage() {
         </div>
       )}
 
-      {farmAccessMessage && (
-        <div
-          role="status"
-          className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-900"
-        >
-          {farmAccessMessage}
-        </div>
-      )}
-
       {browseLoading ? (
         <CardGridSkeleton count={6} columns="sm:grid-cols-2 lg:grid-cols-3" />
       ) : filteredFarmers.length === 0 ? (
@@ -240,13 +225,14 @@ export default function MarketplacePage() {
         />
       )}
 
-      {purchaseFarmer && activeListing && (
+      {purchaseFarmer && (
         <PurchaseModal
           listing={activeListing}
           relatedProducts={purchaseFarmer.products}
           farmerId={purchaseFarmer.farmerId}
           farmerName={purchaseFarmer.farmerName}
           farmerPhoto={purchaseFarmer.profilePicture}
+          farmName={purchaseFarmer.farmName}
           farmerVerificationStatus={purchaseFarmer.verificationStatus}
           farmerVerificationTags={purchaseFarmer.verificationTags}
           country={purchaseFarmer.country}

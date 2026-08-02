@@ -5,6 +5,11 @@ import { ROLES, isFarmerRole, isMarketplaceBuyerRole, canPurchaseFromMarketplace
 import { getPaymentProvider } from './payment.provider';
 import { notifyFarmAccessPaid } from './notification.service';
 import { FARM_ACCESS_PRICE_GHC } from '../constants/pricing';
+import {
+  computeFarmAccessExpiry,
+  getFarmerOrderableListings,
+  isFarmAccessRecordValid,
+} from './farmAccess.service';
 
 export const purchaseSchema = z.object({
   packageId: z.string().uuid(),
@@ -127,14 +132,40 @@ export class PaymentService {
     assertAuthorized(isFarmerRole(farmer.roleId), 'Target user is not a farmer');
     assertAuthorized(!!farmer.farmerProfile, 'Farmer profile not found');
 
+    const orderableListings = await getFarmerOrderableListings(data.farmerId);
+    if (orderableListings.length === 0) {
+      throw new AppError(
+        400,
+        'This farm has no products available right now. Access can only be purchased during an active harvest period.'
+      );
+    }
+
     const existing = await prisma.buyerFarmerAccess.findUnique({
       where: { buyerId_farmerId: { buyerId, farmerId: data.farmerId } },
     });
-    if (existing?.status === 'COMPLETED') {
+    const newestListing = await prisma.commodityListing.findFirst({
+      where: {
+        farmer: { userId: data.farmerId },
+        status: { in: ['ACTIVE', 'SOLD'] },
+      },
+      orderBy: { createdAt: 'desc' },
+      select: { createdAt: true },
+    });
+    if (
+      existing?.status === 'COMPLETED' &&
+      isFarmAccessRecordValid(
+        existing,
+        farmer.farmerProfile!.farmAccessCycleId,
+        computeFarmAccessExpiry(orderableListings),
+        newestListing?.createdAt ?? null
+      )
+    ) {
       throw new AppError(409, 'You already have access to this farm');
     }
 
     const farmAccessPrice = FARM_ACCESS_PRICE_GHC;
+    const accessExpiresAt = computeFarmAccessExpiry(orderableListings);
+    const accessCycleId = farmer.farmerProfile!.farmAccessCycleId;
 
     const provider = getPaymentProvider();
     const result = await provider.initiatePayment({
@@ -162,12 +193,17 @@ export class PaymentService {
           paymentMethod: data.paymentMethod,
           transactionId: result.transactionId,
           status: paymentCompleted ? 'COMPLETED' : 'PENDING',
+          expiresAt: accessExpiresAt,
+          accessCycleId,
         },
         update: {
           amount: farmAccessPrice,
           paymentMethod: data.paymentMethod,
           transactionId: result.transactionId,
           status: paymentCompleted ? 'COMPLETED' : 'PENDING',
+          expiresAt: accessExpiresAt,
+          accessCycleId,
+          createdAt: new Date(),
         },
       });
 

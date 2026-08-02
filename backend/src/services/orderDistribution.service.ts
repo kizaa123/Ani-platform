@@ -189,7 +189,7 @@ function buildDistributionMessagePdf(input: DistributionMessagePdfInput): Promis
 
     y = drawSectionTitle(doc, 'Order', y);
     y = drawKeyValue(doc, 'Order name', input.orderName, y);
-    y = drawKeyValue(doc, 'Buyer', input.buyerName, y);
+    y = drawKeyValue(doc, 'Client', input.buyerName, y);
     y += 10;
 
     y = drawSectionTitle(doc, 'Notification message', y);

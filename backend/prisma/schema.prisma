@@ -139,6 +139,8 @@ model FarmerProfile {
   experienceYears    Int?               @map("experience_years")
   customProducts     String[]           @default([]) @map("custom_products")
   verificationStatus VerificationStatus @default(PENDING) @map("verification_status")
+  /// Rotates when a fellow posts a new available product; invalidates prior client farm access.
+  farmAccessCycleId  String             @default(uuid()) @map("farm_access_cycle_id")
 
   user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   farmerCommodities FarmerCommodity[]
@@ -399,6 +401,10 @@ model BuyerFarmerAccess {
   paymentMethod String        @map("payment_method")
   transactionId String?       @unique @map("transaction_id")
   status        PaymentStatus @default(COMPLETED)
+  /// End of the harvest window this payment covers (inclusive, end-of-day UTC).
+  expiresAt     DateTime?     @map("expires_at")
+  /// Snapshot of the farmer's access cycle at payment time.
+  accessCycleId String?       @map("access_cycle_id")
   createdAt     DateTime      @default(now()) @map("created_at")
 
   buyer  User @relation("BuyerFarmAccess", fields: [buyerId], references: [id])
@@ -463,6 +469,8 @@ enum NotificationType {
   HANDLER_DROPPED
   FARM_PRODUCTS_AVAILABLE
   NEW_ACCOUNTANT_REGISTRATION
+  USER_VERIFIED
+  INTERNATIONAL_VERIFICATION
 }
 
 enum VerificationTagType {

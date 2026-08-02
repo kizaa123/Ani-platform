@@ -10,12 +10,13 @@ import { ProductMediaGallery } from "@/components/ProductMediaGallery";
 import { PaymentCheckout } from "@/components/PaymentCheckout";
 import { PaymentResultOverlay } from "@/components/PaymentResultOverlay";
 import { HarvestCalendarTrigger } from "@/components/HarvestCalendarTrigger";
+import { Icon } from "@/components/icons";
 import type { UserVerificationTag } from "@/lib/types";
 
 const EMPTY_MEDIA: never[] = [];
 
 interface PurchaseViewProps {
-  listing: Listing;
+  listing: Listing | null;
   relatedProducts: Listing[];
   farmerId: string;
   farmerName: string;
@@ -24,9 +25,56 @@ interface PurchaseViewProps {
   farmerVerificationTags?: UserVerificationTag[];
   country?: string;
   region?: string;
+  farmName?: string | null;
   onSelectProduct: (product: Listing) => void;
   onClose: () => void;
   onSuccess: () => void;
+}
+
+function FarmViewHeader({
+  farmerName,
+  farmerPhoto,
+  farmerVerificationStatus,
+  farmerVerificationTags,
+  country,
+  region,
+  onClose,
+}: Pick<
+  PurchaseViewProps,
+  | "farmerName"
+  | "farmerPhoto"
+  | "farmerVerificationStatus"
+  | "farmerVerificationTags"
+  | "country"
+  | "region"
+  | "onClose"
+>) {
+  return (
+    <header className="shrink-0 border-b border-brand-100 bg-white/95 backdrop-blur">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-xl px-3 py-2 text-sm font-semibold text-brand-900 hover:bg-brand-50"
+        >
+          Back
+        </button>
+        <div className="flex items-center gap-2">
+          <AvatarWithVerification
+            src={farmerPhoto}
+            name={farmerName}
+            size="sm"
+            verificationStatus={farmerVerificationStatus}
+            verificationTags={farmerVerificationTags}
+          />
+          <div className="hidden text-right sm:block">
+            <p className="text-sm font-semibold text-brand-900">{farmerName}</p>
+            <CountryBadge country={country} region={region} />
+          </div>
+        </div>
+      </div>
+    </header>
+  );
 }
 
 export function PurchaseModal({
@@ -39,10 +87,77 @@ export function PurchaseModal({
   farmerVerificationTags,
   country,
   region,
+  farmName,
   onSelectProduct,
   onClose,
   onSuccess,
 }: PurchaseViewProps) {
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
+  if (!listing && relatedProducts.length === 0) {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col bg-white">
+        <FarmViewHeader
+          farmerName={farmerName}
+          farmerPhoto={farmerPhoto}
+          farmerVerificationStatus={farmerVerificationStatus}
+          farmerVerificationTags={farmerVerificationTags}
+          country={country}
+          region={region}
+          onClose={onClose}
+        />
+        <div className="flex flex-1 flex-col items-center justify-center px-4 py-12 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-50 text-brand-600">
+            <Icon name="package" className="h-8 w-8" />
+          </div>
+          <h1 className="mt-6 text-xl font-bold text-brand-900 sm:text-2xl">No product listed</h1>
+          <p className="mt-2 max-w-md text-sm leading-relaxed text-gray-500">
+            {farmName || farmerName} has not listed any products for order right now. Check back
+            when a new listing is posted.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const resolvedListing = listing ?? relatedProducts[0];
+  if (!resolvedListing) return null;
+
+  return (
+    <PurchaseModalContent
+      listing={resolvedListing}
+      relatedProducts={relatedProducts}
+      farmerName={farmerName}
+      farmerPhoto={farmerPhoto}
+      farmerVerificationStatus={farmerVerificationStatus}
+      farmerVerificationTags={farmerVerificationTags}
+      country={country}
+      region={region}
+      onSelectProduct={onSelectProduct}
+      onClose={onClose}
+      onSuccess={onSuccess}
+    />
+  );
+}
+
+function PurchaseModalContent({
+  listing,
+  relatedProducts,
+  farmerName,
+  farmerPhoto,
+  farmerVerificationStatus,
+  farmerVerificationTags,
+  country,
+  region,
+  onSelectProduct,
+  onClose,
+  onSuccess,
+}: Omit<PurchaseViewProps, "listing" | "farmName" | "farmerId"> & { listing: Listing }) {
   const maxQty = listing.quantity ?? 0;
   const unitPrice = listing.price ?? 0;
   const unit = listing.unit ?? "bags";
@@ -58,18 +173,12 @@ export function PurchaseModal({
   const total = Math.round(quantity * unitPrice * 100) / 100;
   const canPurchase = listing.available !== false && maxQty > 0;
   const orderPlaced = result?.variant === "success";
-
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, []);
+  const otherFarmProducts = relatedProducts.filter((product) => product.id !== listing.id);
 
   useEffect(() => {
     setQuantity(Math.min(1, maxQty) || 1);
     setResult(null);
-  }, [listing.id]);
+  }, [listing.id, maxQty]);
 
   useEffect(() => {
     setQuantity((prev) => {
@@ -106,30 +215,15 @@ export function PurchaseModal({
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-white">
-      <header className="shrink-0 border-b border-brand-100 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-xl px-3 py-2 text-sm font-semibold text-brand-900 hover:bg-brand-50"
-          >
-            Back
-          </button>
-          <div className="flex items-center gap-2">
-            <AvatarWithVerification
-              src={farmerPhoto}
-              name={farmerName}
-              size="sm"
-              verificationStatus={farmerVerificationStatus}
-              verificationTags={farmerVerificationTags}
-            />
-            <div className="hidden text-right sm:block">
-              <p className="text-sm font-semibold text-brand-900">{farmerName}</p>
-              <CountryBadge country={country} region={region} />
-            </div>
-          </div>
-        </div>
-      </header>
+      <FarmViewHeader
+        farmerName={farmerName}
+        farmerPhoto={farmerPhoto}
+        farmerVerificationStatus={farmerVerificationStatus}
+        farmerVerificationTags={farmerVerificationTags}
+        country={country}
+        region={region}
+        onClose={onClose}
+      />
 
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-lg px-4 py-6 sm:max-w-6xl sm:py-8">
@@ -253,15 +347,14 @@ export function PurchaseModal({
             </div>
           </div>
 
-          {relatedProducts.length > 0 && (
+          {otherFarmProducts.length > 0 && (
             <section className="mt-8 border-t border-brand-100 pt-6">
               <h2 className="text-base font-bold text-brand-900">More from this farm</h2>
               <div className="mt-4 grid auto-rows-fr gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {relatedProducts.map((product) => (
+                {otherFarmProducts.map((product) => (
                   <FarmerProductCard
                     key={product.id}
                     product={product}
-                    active={product.id === listing.id}
                     compact
                     onClick={() => onSelectProduct(product)}
                   />

@@ -76,7 +76,7 @@ export default function AccountantReceiptsPage() {
         </Link>
         <h1 className="mt-2 text-xl font-bold text-brand-900">Order Receipts</h1>
         <p className="text-xs text-gray-500">
-          Order-share section - view buyer release / order financial statement PDFs
+          Order-share section - view client release / order financial statement PDFs
         </p>
       </div>
 

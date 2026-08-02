@@ -9,6 +9,10 @@ import {
   STAFF_ROLES,
   VERIFIABLE_ROLE_IDS,
 } from '../constants/roles';
+import {
+  notifyInternationalVerification,
+  notifyUserVerified,
+} from './notification.service';
 import { publicationPlatformShareAmount } from '../utils/distributionFinancials';
 
 const CHART_MONTHS = 6;
@@ -500,6 +504,14 @@ export class AdminService {
       });
     }
 
+    if (status === 'VERIFIED' && existing.verificationStatus !== 'VERIFIED') {
+      await notifyUserVerified({
+        userId: user.id,
+        firstName: user.firstName,
+        roleId: user.roleId,
+      });
+    }
+
     return user;
   }
 
@@ -532,7 +544,12 @@ export class AdminService {
       throw new AppError(400, 'Only buyers, farmers, and handlers can receive verification tags');
     }
 
-    if (tagType === 'STANDARD' && user.verificationStatus !== 'VERIFIED') {
+    const wasVerified = user.verificationStatus === 'VERIFIED';
+    const existingTag = await prisma.userVerificationTag.findUnique({
+      where: { userId_tagType: { userId, tagType } },
+    });
+
+    if (tagType === 'STANDARD' && !wasVerified) {
       await prisma.user.update({
         where: { id: userId },
         data: { verificationStatus: 'VERIFIED' },
@@ -545,11 +562,31 @@ export class AdminService {
       }
     }
 
-    return prisma.userVerificationTag.upsert({
+    const tag = await prisma.userVerificationTag.upsert({
       where: { userId_tagType: { userId, tagType } },
       create: { userId, tagType, assignedBy },
       update: { assignedBy },
     });
+
+    if (tagType === 'STANDARD' && !wasVerified) {
+      await notifyUserVerified({
+        userId: user.id,
+        firstName: user.firstName,
+        roleId: user.roleId,
+      });
+    } else if (
+      !existingTag &&
+      (tagType === 'INTERNATIONAL_FARMER' || tagType === 'INTERNATIONAL_BUYER')
+    ) {
+      await notifyInternationalVerification({
+        userId: user.id,
+        firstName: user.firstName,
+        roleId: user.roleId,
+        tagType,
+      });
+    }
+
+    return tag;
   }
 
   async removeVerificationTag(
