@@ -1,6 +1,9 @@
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
+
+/** Neon/large DBs need longer interactive tx windows; batches keep each tx short. */
+const TX_OPTIONS = { timeout: 120_000, maxWait: 30_000 } satisfies Prisma.TransactionOptions;
 
 /** Demo accounts from seed.ts — keep these users and their profiles. */
 export const DEMO_EMAILS = [
@@ -21,6 +24,13 @@ async function deleteMany(label: string, fn: () => Promise<{ count: number }>): 
   const { count } = await fn();
   console.log(`  ${label}: ${count}`);
   return count;
+}
+
+type Tx = Prisma.TransactionClient;
+
+async function runBatch(label: string, fn: (tx: Tx) => Promise<void>): Promise<void> {
+  console.log(`\n  — ${label} —`);
+  await prisma.$transaction(fn, TX_OPTIONS);
 }
 
 async function clearActivities(options: { dryRun: boolean }): Promise<DeleteCounts> {
@@ -85,9 +95,10 @@ async function clearActivities(options: { dryRun: boolean }): Promise<DeleteCoun
     return counts;
   }
 
-  console.log('\nDeleting transactional and activity data...\n');
+  console.log('\nDeleting transactional and activity data...');
+  console.log('(Idempotent — safe to re-run if a batch fails partway through.)\n');
 
-  await prisma.$transaction(async (tx) => {
+  await runBatch('orders', async (tx) => {
     counts.orderDistributionLines = await deleteMany(
       'order_distribution_lines',
       () => tx.orderDistributionLine.deleteMany(),
@@ -97,7 +108,9 @@ async function clearActivities(options: { dryRun: boolean }): Promise<DeleteCoun
       () => tx.orderMoneyDistribution.deleteMany(),
     );
     counts.productOrders = await deleteMany('product_orders', () => tx.productOrder.deleteMany());
+  });
 
+  await runBatch('research', async (tx) => {
     counts.researchComments = await deleteMany('research_comments', () => tx.researchComment.deleteMany());
     counts.researchPublicationLikes = await deleteMany(
       'research_publication_likes',
@@ -105,17 +118,28 @@ async function clearActivities(options: { dryRun: boolean }): Promise<DeleteCoun
     );
     counts.researchViews = await deleteMany('research_views', () => tx.researchView.deleteMany());
     counts.researchPurchases = await deleteMany('research_purchases', () => tx.researchPurchase.deleteMany());
+    counts.researchPublications = await deleteMany(
+      'research_publications',
+      () => tx.researchPublication.deleteMany(),
+    );
+  });
 
+  await runBatch('media', async (tx) => {
     counts.productMediaLikes = await deleteMany('product_media_likes', () => tx.productMediaLike.deleteMany());
     counts.productMedia = await deleteMany('product_media', () => tx.productMedia.deleteMany());
     counts.farmerMediaLikes = await deleteMany('farmer_media_likes', () => tx.farmerMediaLike.deleteMany());
     counts.farmerMedia = await deleteMany('farmer_media', () => tx.farmerMedia.deleteMany());
+  });
 
+  await runBatch('comms & access', async (tx) => {
     counts.notifications = await deleteMany('notifications', () => tx.notification.deleteMany());
     counts.messages = await deleteMany('messages', () => tx.message.deleteMany());
     counts.connectionRequests = await deleteMany('connection_requests', () => tx.connectionRequest.deleteMany());
     counts.buyerFarmerAccess = await deleteMany('buyer_farmer_access', () => tx.buyerFarmerAccess.deleteMany());
     counts.buyerAccess = await deleteMany('buyer_access', () => tx.buyerAccess.deleteMany());
+  });
+
+  await runBatch('payments, audit & auth', async (tx) => {
     counts.payments = await deleteMany('payments', () => tx.payment.deleteMany());
     counts.platformWithdrawals = await deleteMany('platform_withdrawals', () => tx.platformWithdrawal.deleteMany());
     counts.auditLogs = await deleteMany('audit_logs', () => tx.auditLog.deleteMany());
@@ -124,18 +148,20 @@ async function clearActivities(options: { dryRun: boolean }): Promise<DeleteCoun
       'email_verification_challenges',
       () => tx.emailVerificationChallenge.deleteMany(),
     );
-
     // Remove tags on non-demo users; keep demo user verification tags.
     counts.userVerificationTags = await deleteMany('user_verification_tags (non-demo)', () =>
       tx.userVerificationTag.deleteMany({
         where: demoIds.length ? { userId: { notIn: demoIds } } : {},
       }),
     );
+  });
 
+  await runBatch('listings & ads', async (tx) => {
     counts.commodityListings = await deleteMany('commodity_listings', () => tx.commodityListing.deleteMany());
-    counts.researchPublications = await deleteMany('research_publications', () => tx.researchPublication.deleteMany());
     counts.ads = await deleteMany('ads', () => tx.ad.deleteMany());
+  });
 
+  await runBatch('users (non-demo)', async (tx) => {
     if (demoIds.length) {
       counts.nonDemoAgentAssignments = await deleteMany('agent_assignments (non-demo)', () =>
         tx.agentAssignment.deleteMany({
@@ -144,18 +170,12 @@ async function clearActivities(options: { dryRun: boolean }): Promise<DeleteCoun
           },
         }),
       );
-    } else {
-      counts.nonDemoAgentAssignments = await deleteMany('agent_assignments', () =>
-        tx.agentAssignment.deleteMany(),
-      );
-    }
-
-    if (demoIds.length) {
       counts.nonDemoUsers = await deleteMany('users (non-demo)', () =>
         tx.user.deleteMany({ where: nonDemoFilter }),
       );
     } else {
       console.warn('  ⚠ No demo users found — skipping user deletion to avoid wiping all accounts.');
+      counts.nonDemoAgentAssignments = 0;
       counts.nonDemoUsers = 0;
     }
   });
@@ -214,6 +234,11 @@ if (require.main === module) {
       console.error('❌ Clear failed:', error.message || error);
       if (error.code === 'P1001') {
         console.error('\nPostgreSQL is not reachable. Check DATABASE_URL and start the database.');
+      }
+      if (/transaction.*(closed|expired|timeout)/i.test(String(error.message))) {
+        console.error(
+          '\nTransaction timed out. Completed batches were committed; re-run the same command to finish.',
+        );
       }
       process.exit(1);
     })
