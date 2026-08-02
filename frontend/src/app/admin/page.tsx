@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
@@ -25,6 +25,7 @@ import { AnimatedStat } from "@/components/AnimatedStat";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { EmailText } from "@/components/EmailText";
 import { formatDate } from "@/lib/format";
+import { roleSummaryLabel } from "@/lib/registerValidation";
 import { scrollStagger } from "@/lib/scrollStagger";
 import { Skeleton, PageContentSkeleton } from "@/components/LoadingPrimitives";
 
@@ -81,12 +82,10 @@ function matchesRoleFilter(user: AdminVerificationUser, roleFilter: RoleFilter) 
   return true;
 }
 
-function userSubtitle(user: AdminVerificationUser) {
+function instituteName(user: AdminVerificationUser): string | null {
   if (user.farmerProfile?.farmName) return user.farmerProfile.farmName;
   if (user.buyerProfile?.company) return user.buyerProfile.company;
-  if (user.agentProfile?.agentType) {
-    return user.agentProfile.agentType.replace(/_/g, " ");
-  }
+  if (user.researcherProfile?.institution) return user.researcherProfile.institution;
   return null;
 }
 
@@ -101,14 +100,17 @@ export default function AdminPage() {
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const [tagBusy, setTagBusy] = useState<string | null>(null);
   const [dashboardLoading, setDashboardLoading] = useState(true);
+  const [usersLoading, setUsersLoading] = useState(true);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
 
   const loadUsers = useCallback(() => {
     const params = statusFilter === "all" ? undefined : { status: statusFilter };
+    setUsersLoading(true);
     api.admin
       .users(params)
       .then((rows) => setUsers(rows))
-      .catch(console.error);
+      .catch(console.error)
+      .finally(() => setUsersLoading(false));
   }, [statusFilter]);
 
   const loadDashboard = useCallback(() => {
@@ -149,7 +151,10 @@ export default function AdminPage() {
           err instanceof Error ? err.message : "Could not load dashboard analytics."
         );
       })
-      .finally(() => setDashboardLoading(false));
+      .finally(() => {
+        setDashboardLoading(false);
+        setUsersLoading(false);
+      });
   }, [user, loading, router, statusFilter]);
 
   const verify = async (id: string, status: string) => {
@@ -436,7 +441,10 @@ export default function AdminPage() {
                   <button
                     key={value}
                     type="button"
-                    onClick={() => setStatusFilter(value)}
+                    onClick={() => {
+                      setUsersLoading(true);
+                      setStatusFilter(value);
+                    }}
                     className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
                       statusFilter === value
                         ? "bg-brand-100 text-brand-900"
@@ -448,98 +456,137 @@ export default function AdminPage() {
                 ))}
               </div>
 
-              {filteredUsers.length === 0 ? (
-                <p className="text-gray-500">No users match the selected filters.</p>
-              ) : (
+              {usersLoading ? (
                 <div className="space-y-3">
-                  {filteredUsers.map((u) => {
-                    const subtitle = userSubtitle(u);
-                    const busy = verifyingId === u.id;
-                    return (
-                      <div
-                        key={u.id}
-                        className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-brand-100 bg-white p-4"
-                      >
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <p className="font-bold text-brand-900">{fullName(u)}</p>
-                            <VerificationBadge adminView status={u.verificationStatus} />
-                            {internationalTagsForUser(u).map((tag) => (
-                              <VerificationTagBadge
-                                key={tag.id}
-                                tagType={tag.tagType}
-                                showLabel
-                                removing={tagBusy === `${u.id}:${tag.tagType}`}
-                                onRemove={() => void removeTag(u.id, tag.tagType)}
-                              />
-                            ))}
-                          </div>
-                          <p className="text-sm text-gray-500">
-                            <EmailText email={u.email} className="inline" /> · {u.role.roleName}
-                            {subtitle ? ` · ${subtitle}` : ""}
-                          </p>
-                          {assignableTagsForUser(u).length > 0 && (
-                            <div className="mt-2 flex flex-wrap gap-2">
-                              {assignableTagsForUser(u).map((tagType) => (
-                                <button
-                                  key={tagType}
-                                  type="button"
-                                  disabled={tagBusy === `${u.id}:${tagType}`}
-                                  onClick={() => void assignTag(u.id, tagType)}
-                                  className="rounded-lg border border-brand-200 px-2.5 py-1 text-[10px] font-semibold text-brand-700 hover:bg-brand-50 disabled:opacity-50"
-                                >
-                                  + {assignTagLabel(tagType)}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                          <p className="text-xs text-gray-400">Joined {formatDate(u.createdAt)}</p>
-                        </div>
-                        <div className="flex shrink-0 flex-wrap gap-2">
-                          {u.verificationStatus !== "VERIFIED" && (
-                            <button
-                              type="button"
-                              disabled={busy}
-                              onClick={() => verify(u.id, "VERIFIED")}
-                              className="rounded-lg bg-green-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-                            >
-                              Verify
-                            </button>
-                          )}
-                          {u.verificationStatus === "VERIFIED" && (
-                            <button
-                              type="button"
-                              disabled={busy}
-                              onClick={() => verify(u.id, "PENDING")}
-                              className="rounded-lg border border-yellow-300 px-4 py-2 text-sm font-semibold text-yellow-800 disabled:opacity-50"
-                            >
-                              Unverify
-                            </button>
-                          )}
-                          {u.verificationStatus !== "REJECTED" && (
-                            <button
-                              type="button"
-                              disabled={busy}
-                              onClick={() => verify(u.id, "REJECTED")}
-                              className="rounded-lg border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 disabled:opacity-50"
-                            >
-                              Reject
-                            </button>
-                          )}
-                          {u.verificationStatus === "REJECTED" && (
-                            <button
-                              type="button"
-                              disabled={busy}
-                              onClick={() => verify(u.id, "PENDING")}
-                              className="rounded-lg border border-brand-200 px-4 py-2 text-sm font-semibold text-brand-700 disabled:opacity-50"
-                            >
-                              Reset to Pending
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <Skeleton key={i} className="h-12 w-full rounded-lg" />
+                  ))}
+                </div>
+              ) : filteredUsers.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-brand-200 bg-brand-50/30 px-6 py-10 text-center">
+                  <p className="font-semibold text-brand-900">No users match the selected filters</p>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Try changing the role or status filter to see more accounts.
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto -mx-4 sm:mx-0">
+                  <table className="w-full min-w-[880px] text-left text-sm">
+                    <thead>
+                      <tr className="border-b border-brand-100 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                        <th className="pb-3 pr-4">Name</th>
+                        <th className="pb-3 pr-4">Email</th>
+                        <th className="pb-3 pr-4">Role</th>
+                        <th className="pb-3 pr-4">Institute name</th>
+                        <th className="pb-3 pr-4">Date joined</th>
+                        <th className="pb-3">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-brand-50">
+                      {filteredUsers.map((u) => {
+                        const institute = instituteName(u);
+                        const busy = verifyingId === u.id;
+                        const tagOptions = assignableTagsForUser(u);
+                        const intlTags = internationalTagsForUser(u);
+                        const hasTagRow = tagOptions.length > 0 || intlTags.length > 0;
+
+                        return (
+                          <Fragment key={u.id}>
+                            <tr className="align-top">
+                              <td className="py-3 pr-4">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="font-semibold text-brand-900">{fullName(u)}</span>
+                                  <VerificationBadge adminView status={u.verificationStatus} />
+                                </div>
+                              </td>
+                              <td className="py-3 pr-4 text-gray-700">
+                                <EmailText email={u.email} />
+                              </td>
+                              <td className="py-3 pr-4 text-gray-700">{roleSummaryLabel(u.roleId)}</td>
+                              <td className="py-3 pr-4 text-gray-700">
+                                {institute ?? <span className="text-gray-400">—</span>}
+                              </td>
+                              <td className="py-3 pr-4 whitespace-nowrap text-gray-500">
+                                {formatDate(u.createdAt)}
+                              </td>
+                              <td className="py-3">
+                                <div className="flex flex-wrap gap-2">
+                                  {u.verificationStatus !== "VERIFIED" && (
+                                    <button
+                                      type="button"
+                                      disabled={busy}
+                                      onClick={() => verify(u.id, "VERIFIED")}
+                                      className="rounded-lg bg-green-700 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                                    >
+                                      Verify
+                                    </button>
+                                  )}
+                                  {u.verificationStatus === "VERIFIED" && (
+                                    <button
+                                      type="button"
+                                      disabled={busy}
+                                      onClick={() => verify(u.id, "PENDING")}
+                                      className="rounded-lg border border-yellow-300 px-3 py-1.5 text-xs font-semibold text-yellow-800 disabled:opacity-50"
+                                    >
+                                      Unverify
+                                    </button>
+                                  )}
+                                  {u.verificationStatus !== "REJECTED" && (
+                                    <button
+                                      type="button"
+                                      disabled={busy}
+                                      onClick={() => verify(u.id, "REJECTED")}
+                                      className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 disabled:opacity-50"
+                                    >
+                                      Reject
+                                    </button>
+                                  )}
+                                  {u.verificationStatus === "REJECTED" && (
+                                    <button
+                                      type="button"
+                                      disabled={busy}
+                                      onClick={() => verify(u.id, "PENDING")}
+                                      className="rounded-lg border border-brand-200 px-3 py-1.5 text-xs font-semibold text-brand-700 disabled:opacity-50"
+                                    >
+                                      Reset
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                            {hasTagRow && (
+                              <tr className="bg-brand-50/30">
+                                <td colSpan={6} className="px-0 pb-3 pt-0">
+                                  <div className="flex flex-wrap items-center gap-2 px-0 py-2">
+                                    {intlTags.map((tag) => (
+                                      <VerificationTagBadge
+                                        key={tag.id}
+                                        tagType={tag.tagType}
+                                        showLabel
+                                        removing={tagBusy === `${u.id}:${tag.tagType}`}
+                                        onRemove={() => void removeTag(u.id, tag.tagType)}
+                                      />
+                                    ))}
+                                    {tagOptions.map((tagType) => (
+                                      <button
+                                        key={tagType}
+                                        type="button"
+                                        disabled={tagBusy === `${u.id}:${tagType}`}
+                                        onClick={() => void assignTag(u.id, tagType)}
+                                        className="rounded-lg border border-brand-200 bg-white px-2.5 py-1 text-[10px] font-semibold text-brand-700 hover:bg-brand-50 disabled:opacity-50"
+                                      >
+                                        + {assignTagLabel(tagType)}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </Fragment>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               )}
           </div>

@@ -1282,6 +1282,7 @@ export interface AdminVerificationUser {
   farmerProfile?: { farmName: string; verificationStatus: string } | null;
   buyerProfile?: { company: string | null } | null;
   agentProfile?: { agentType: string } | null;
+  researcherProfile?: { institution: string | null; expertise: string | null } | null;
   verificationTags?: UserVerificationTag[];
 }
 
