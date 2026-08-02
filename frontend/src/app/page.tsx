@@ -107,13 +107,13 @@ const ROLE_CARDS: { icon: IconName; label: string; desc: string; image: string }
   {
     icon: "cart",
     label: "Client",
-    desc: "Browse verified farms, preview listings for free, unlock full fellow details, purchase research publications, and source commodities securely.",
+    desc: "Browse verified products, preview listings for free, unlock full fellow details, purchase research publications, and source commodities securely.",
     image: ROLE_CARD_IMAGES.client,
   },
   {
     icon: "book",
     label: "Student",
-    desc: "Access the Research Library, purchase and read agricultural publications, and learn from verified field research published by ANI researchers.",
+    desc: "Access the Research Library, purchase and read publications, and learn from verified field research published by ANI researchers.",
     image: ROLE_CARD_IMAGES.student,
   },
   {
@@ -125,7 +125,7 @@ const ROLE_CARDS: { icon: IconName; label: string; desc: string; image: string }
   {
     icon: "book",
     label: "Researcher",
-    desc: "Access agricultural data, publish field research, and connect with fellows and clients to support evidence-based farming across the region.",
+    desc: "Access researchs data, publish field research, and connect with fellows and clients to support evidence-based farming across the region.",
     image: ROLE_CARD_IMAGES.researcher,
   },
   {
