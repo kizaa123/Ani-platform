@@ -236,12 +236,13 @@ async function loadReleasedOrder(orderId: string) {
     await prisma.productOrder.findUnique({
       where: { id: orderId },
       include: {
-        buyer: { select: { id: true, firstName: true, lastName: true } },
+        buyer: { select: { id: true, firstName: true, lastName: true, country: true } },
         farmer: {
           select: {
             id: true,
             firstName: true,
             lastName: true,
+            country: true,
             farmerProfile: { select: { farmName: true } },
           },
         },
@@ -531,6 +532,8 @@ export class OrderDistributionService {
         unit: order.unit,
         imageUrl,
         listingId: order.listing.id,
+        buyerCountry: order.buyer.country ?? 'Ghana',
+        farmerCountry: order.farmer.country ?? 'Ghana',
       }
     );
 

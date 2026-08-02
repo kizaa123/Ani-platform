@@ -17,6 +17,7 @@ import {
   type CounterpartHandlerContact,
 } from '../utils/counterpartHandler';
 import { listingCommodityName, listingCommodityCategory } from '../utils/listingDisplay';
+import { formatOrderAmountForStatement } from '../utils/currency';
 
 type OrderForStatement = NonNullable<Awaited<ReturnType<typeof loadOrderForStatement>>>;
 
@@ -332,7 +333,20 @@ export function buildOrderStatementPdf(
     drawPageWatermark(doc, logoPath);
     doc.on('pageAdded', () => drawPageWatermark(doc, logoPath));
 
-    const totalFormatted = `GHC ${order.totalAmount.toFixed(2)}`;
+    const buyerCountry = order.buyer.country ?? 'Ghana';
+    const farmerCountry = order.farmer.country ?? 'Ghana';
+    const totalFormatted = formatOrderAmountForStatement(
+      order.totalAmount,
+      buyerCountry,
+      farmerCountry,
+      perspective
+    );
+    const unitPriceFormatted = formatOrderAmountForStatement(
+      order.unitPrice,
+      buyerCountry,
+      farmerCountry,
+      perspective
+    );
     const transactionRef = resolveTransactionRef(order);
 
     let y = drawHeaderLogo(doc, logoPath, 36);
@@ -361,7 +375,7 @@ export function buildOrderStatementPdf(
     y = drawKeyValue(doc, 'Product', order.listing.title, y);
     y = drawKeyValue(doc, 'Commodity', formatCommodityLabel(order), y);
     y = drawKeyValue(doc, 'Quantity', `${order.quantity} ${order.unit}`, y);
-    y = drawKeyValue(doc, 'Unit price', `GHC ${order.unitPrice.toFixed(2)}`, y);
+    y = drawKeyValue(doc, 'Unit price', unitPriceFormatted, y);
     y = drawKeyValue(doc, 'Total amount', totalFormatted, y, { valueBold: true });
     y = drawKeyValue(doc, 'Payment method', formatPaymentMethod(order.paymentMethod), y);
     y += 10;
@@ -506,8 +520,8 @@ export async function releaseOrderPayment(
           media: { where: { type: 'IMAGE' }, orderBy: { orderIndex: 'asc' }, take: 1 },
         },
       },
-      buyer: { select: { firstName: true, lastName: true } },
-      farmer: { select: { firstName: true, lastName: true } },
+      buyer: { select: { firstName: true, lastName: true, country: true } },
+      farmer: { select: { firstName: true, lastName: true, country: true } },
     },
   });
 

@@ -22,17 +22,14 @@ import { formatVerificationTags, verificationTagSelect } from '../utils/verifica
 import { defaultListingUnit } from '../constants/units';
 import { normalizeQualifications } from '../constants/qualifications';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
-import { normalizePhone, PHONE_VALIDATION_MESSAGE } from '../utils/phone';
+import { normalizePhone, normalizePhoneForStorage, isValidPhoneNumber, PHONE_VALIDATION_MESSAGE } from '../utils/phone';
 import {
   notifyHandlerDropped,
   notifyNewFarmerJoined,
   notifyAdminsPendingAccountant,
 } from './notification.service';
 
-const phoneSchema = z.preprocess(
-  normalizePhone,
-  z.string().regex(/^\d{10}$/, PHONE_VALIDATION_MESSAGE)
-);
+const phoneInputSchema = z.preprocess(normalizePhone, z.string().min(1, 'Enter your phone number'));
 
 const emptyToUndefined = (val: unknown) => {
   if (val === '' || val === null || val === undefined) return undefined;
@@ -85,7 +82,7 @@ export const registerSchema = z
     (val) => (typeof val === 'string' ? val.trim().toLowerCase() : val),
     z.string().email()
   ),
-  phone: phoneSchema,
+  phone: phoneInputSchema,
   password: z.string().min(8),
   profilePicture: optionalString(),
   country: z.preprocess(
@@ -138,6 +135,13 @@ export const registerSchema = z
   ),
 })
   .superRefine((data, ctx) => {
+    if (!isValidPhoneNumber(data.phone, data.country)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: PHONE_VALIDATION_MESSAGE,
+        path: ['phone'],
+      });
+    }
     const needsHandler =
       FARMER_ROLES.includes(data.roleId as typeof ROLES.CROP_FARMER) ||
       data.roleId === ROLES.BUYER ||
@@ -149,7 +153,11 @@ export const registerSchema = z
         path: ['handlerId'],
       });
     }
-  });
+  })
+  .transform((data) => ({
+    ...data,
+    phone: normalizePhoneForStorage(data.phone, data.country),
+  }));
 
 export const loginSchema = z.object({
   email: z.preprocess(
@@ -165,7 +173,7 @@ export const updateHandlerSchema = z.object({
 
 export const completeProfileSchema = z
   .object({
-    phone: phoneSchema,
+    phone: phoneInputSchema,
     password: z.preprocess(emptyToUndefined, z.string().min(8).optional()),
     profilePicture: optionalString(),
     country: z.preprocess(
@@ -218,6 +226,13 @@ export const completeProfileSchema = z
     ),
   })
   .superRefine((data, ctx) => {
+    if (!isValidPhoneNumber(data.phone, data.country)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: PHONE_VALIDATION_MESSAGE,
+        path: ['phone'],
+      });
+    }
     const needsHandler =
       FARMER_ROLES.includes(data.roleId as typeof ROLES.CROP_FARMER) ||
       data.roleId === ROLES.BUYER ||
@@ -229,7 +244,11 @@ export const completeProfileSchema = z
         path: ['handlerId'],
       });
     }
-  });
+  })
+  .transform((data) => ({
+    ...data,
+    phone: normalizePhoneForStorage(data.phone, data.country),
+  }));
 
 export const emailVerificationSendSchema = z.object({
   email: z.preprocess(
@@ -253,7 +272,7 @@ export const emailVerificationVerifySchema = z.object({
 export const updateUserProfileSchema = z.object({
   firstName: z.string().min(2).optional(),
   lastName: z.string().min(2).optional(),
-  phone: z.preprocess(normalizePhone, z.string().regex(/^\d{10}$/, PHONE_VALIDATION_MESSAGE).optional()),
+  phone: z.preprocess(normalizePhone, z.string().optional()),
   country: z.string().min(2).optional(),
   region: z.string().min(2).optional(),
   city: z.string().min(2).optional(),
@@ -736,9 +755,27 @@ export class AuthService {
   }
 
   async updateUserProfile(userId: string, data: z.infer<typeof updateUserProfileSchema>) {
+    const existing = assertFound(
+      await prisma.user.findUnique({
+        where: { id: userId },
+        select: { country: true },
+      }),
+      'User not found'
+    );
+
+    const country = data.country ?? existing.country;
+    const updateData = { ...data };
+
+    if (data.phone !== undefined) {
+      if (!isValidPhoneNumber(data.phone, country)) {
+        throw new AppError(400, PHONE_VALIDATION_MESSAGE);
+      }
+      updateData.phone = normalizePhoneForStorage(data.phone, country);
+    }
+
     await prisma.user.update({
       where: { id: userId },
-      data,
+      data: updateData,
     });
     return this.getProfile(userId);
   }

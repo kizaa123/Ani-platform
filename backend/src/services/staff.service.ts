@@ -2,17 +2,14 @@ import { z } from 'zod';
 import prisma from '../database/prisma';
 import { AppError, assertFound } from '../utils/errors';
 import { hashPassword } from '../utils/password';
-import { normalizePhone, PHONE_VALIDATION_MESSAGE } from '../utils/phone';
+import { normalizePhone, normalizePhoneForStorage, isValidPhoneNumber, PHONE_VALIDATION_MESSAGE } from '../utils/phone';
 import {
   ROLES,
   MANAGEABLE_STAFF_ROLE_IDS,
   STAFF_ROLES,
 } from '../constants/roles';
 
-const phoneSchema = z.preprocess(
-  normalizePhone,
-  z.string().regex(/^\d{10}$/, PHONE_VALIDATION_MESSAGE)
-);
+const phoneInputSchema = z.preprocess(normalizePhone, z.string().min(1, 'Enter your phone number'));
 
 const manageableRoleSchema = z.coerce
   .number()
@@ -23,7 +20,8 @@ const manageableRoleSchema = z.coerce
     { message: 'Invalid staff role' }
   );
 
-export const createStaffSchema = z.object({
+export const createStaffSchema = z
+  .object({
   firstName: z.preprocess(
     (val) => (typeof val === 'string' ? val.trim() : val),
     z.string().min(2)
@@ -36,10 +34,23 @@ export const createStaffSchema = z.object({
     (val) => (typeof val === 'string' ? val.trim().toLowerCase() : val),
     z.string().email()
   ),
-  phone: phoneSchema,
+  phone: phoneInputSchema,
   password: z.string().min(8),
   roleId: manageableRoleSchema,
-});
+})
+  .superRefine((data, ctx) => {
+    if (!isValidPhoneNumber(data.phone)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: PHONE_VALIDATION_MESSAGE,
+        path: ['phone'],
+      });
+    }
+  })
+  .transform((data) => ({
+    ...data,
+    phone: normalizePhoneForStorage(data.phone),
+  }));
 
 export const updateStaffSchema = z
   .object({

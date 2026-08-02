@@ -9,6 +9,7 @@ import {
   isFarmAccessRecordValid,
   resolveFarmAccessCycleId,
 } from '../services/farmAccess.service';
+import { formatPricePerUnit } from '../utils/currency';
 
 type AccessRecord = {
   status: string;
@@ -214,7 +215,8 @@ export function maskListing(
 export function fullListing(
   listing: Record<string, unknown>,
   ctx: ListingViewContext,
-  extras?: { connectionStatus?: string; farmerAccess?: boolean; hasFarmAccess?: boolean }
+  extras?: { connectionStatus?: string; farmerAccess?: boolean; hasFarmAccess?: boolean },
+  viewerCountry?: string | null
 ) {
   const { farmerUser, farmerProfile, registeredCommodities } = ctx;
   const images = normalizeImages(listing.images).map(
@@ -231,7 +233,11 @@ export function fullListing(
     quantity: listing.quantity,
     price: listing.price,
     unit: listing.unit,
-    priceLabel: `GHC ${listing.price}/${listing.unit}`,
+    priceLabel: formatPricePerUnit(
+      listing.price as number,
+      listing.unit as string,
+      viewerCountry ?? ctx.farmerUser.country
+    ),
     quantityLabel: `${listing.quantity} ${listing.unit}`,
     images,
     media: listing.media ?? [],

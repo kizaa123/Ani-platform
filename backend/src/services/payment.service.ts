@@ -234,7 +234,7 @@ export class PaymentService {
 
     const buyer = await prisma.user.findUnique({
       where: { id: buyerId },
-      select: { firstName: true, lastName: true },
+      select: { firstName: true, lastName: true, country: true },
     });
     const buyerName = buyer ? `${buyer.firstName} ${buyer.lastName}` : 'A buyer';
     await notifyFarmAccessPaid(
@@ -243,7 +243,8 @@ export class PaymentService {
       buyerName,
       `${farmer.firstName} ${farmer.lastName}`,
       farmAccessPrice,
-      paymentCompleted
+      paymentCompleted,
+      buyer?.country
     );
 
     return txResult;

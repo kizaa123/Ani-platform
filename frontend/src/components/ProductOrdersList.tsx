@@ -11,11 +11,13 @@ import { api } from "@/lib/api";
 import {
   formatDate,
   formatDateTime,
-  formatGhc,
   escrowStatusLabel,
   escrowStatusStyle,
   orderStatusStyle,
 } from "@/lib/format";
+import { formatOrderAmountForRecipient } from "@/lib/currency";
+import { useMoneyFormat } from "@/hooks/useMoneyFormat";
+import { useAuth } from "@/context/AuthProvider";
 import { OrderTrackStage } from "@/lib/orderTrack";
 import { BuyerOrderLineItem, CounterpartHandlerContact, formatListingUnit, ProductOrderLineItem, ROLES } from "@/lib/types";
 import { Icon } from "@/components/icons";
@@ -28,6 +30,25 @@ type OrderListItem = ProductOrderLineItem | BuyerOrderLineItem;
 
 function isBuyerOrder(order: OrderListItem): order is BuyerOrderLineItem {
   return "farmerName" in order;
+}
+
+type OrderMoneyFormatter = (amountGhc: number, order: OrderListItem) => string;
+
+function createOrderMoneyFormatter(
+  perspective: OrderListPerspective,
+  viewerCountry: string,
+  formatLocal: (amountGhc: number) => string
+): OrderMoneyFormatter {
+  return (amountGhc, order) => {
+    if (perspective === "buyer") {
+      return formatLocal(amountGhc);
+    }
+    const buyerCountry = isBuyerOrder(order) ? viewerCountry : (order.buyerCountry ?? "Ghana");
+    const farmerCountry = isBuyerOrder(order)
+      ? (order.farmerCountry ?? "Ghana")
+      : viewerCountry;
+    return formatOrderAmountForRecipient(amountGhc, buyerCountry, farmerCountry);
+  };
 }
 
 function orderStatementId(order: OrderListItem): string | null {
@@ -272,6 +293,13 @@ export function ProductOrdersList({
   emptyMessage?: string;
   emptyAction?: React.ReactNode;
 }) {
+  const { user } = useAuth();
+  const { format } = useMoneyFormat();
+  const formatOrderMoney = createOrderMoneyFormatter(
+    perspective,
+    user?.country ?? "Ghana",
+    format
+  );
   const [orders, setOrders] = useState(initialOrders);
   const [selected, setSelected] = useState<OrderListItem | null>(null);
 
@@ -292,7 +320,12 @@ export function ProductOrdersList({
     <>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {orders.map((order) => (
-          <CompactOrderCard key={order.id} order={order} onView={() => setSelected(order)} />
+          <CompactOrderCard
+            key={order.id}
+            order={order}
+            onView={() => setSelected(order)}
+            formatOrderMoney={formatOrderMoney}
+          />
         ))}
       </div>
 
@@ -302,6 +335,7 @@ export function ProductOrdersList({
           perspective={perspective}
           trackEditable={trackEditable}
           handlerOwnerId={handlerOwnerId}
+          formatOrderMoney={formatOrderMoney}
           onClose={() => setSelected(null)}
           onTrackUpdated={(updated) => {
             setOrders((prev) =>
@@ -318,9 +352,11 @@ export function ProductOrdersList({
 function CompactOrderCard({
   order,
   onView,
+  formatOrderMoney,
 }: {
   order: OrderListItem;
   onView: () => void;
+  formatOrderMoney: OrderMoneyFormatter;
 }) {
   const isServed = order.trackStage === "DELIVERED" || order.escrowStatus === "RELEASED";
 
@@ -361,7 +397,9 @@ function CompactOrderCard({
           <p className="mt-1 text-sm text-gray-600">
             {order.quantity} {formatListingUnit(order.unit)}
           </p>
-          <p className="mt-1.5 text-base font-bold text-green-700">{formatGhc(order.totalAmount)}</p>
+          <p className="mt-1.5 text-base font-bold text-green-700">
+            {formatOrderMoney(order.totalAmount, order)}
+          </p>
         </div>
       </div>
 
@@ -379,6 +417,7 @@ export function OrderDetailModal({
   perspective,
   trackEditable,
   handlerOwnerId,
+  formatOrderMoney: formatOrderMoneyProp,
   onClose,
   onTrackUpdated,
 }: {
@@ -386,9 +425,15 @@ export function OrderDetailModal({
   perspective: OrderListPerspective;
   trackEditable?: boolean;
   handlerOwnerId?: string;
+  formatOrderMoney?: OrderMoneyFormatter;
   onClose: () => void;
   onTrackUpdated?: (updated: OrderListItem) => void;
 }) {
+  const { user } = useAuth();
+  const { format } = useMoneyFormat();
+  const formatOrderMoney =
+    formatOrderMoneyProp ??
+    createOrderMoneyFormatter(perspective, user?.country ?? "Ghana", format);
   const [updatingTrack, setUpdatingTrack] = useState(false);
   const [trackError, setTrackError] = useState("");
 
@@ -524,11 +569,11 @@ export function OrderDetailModal({
             </div>
             <div>
               <p className="text-[10px] font-semibold uppercase text-gray-500">Total price</p>
-              <p className="font-bold text-green-700">{formatGhc(order.totalAmount)}</p>
+              <p className="font-bold text-green-700">{formatOrderMoney(order.totalAmount, order)}</p>
             </div>
             <div>
               <p className="text-[10px] font-semibold uppercase text-gray-500">Unit price</p>
-              <p className="font-semibold text-brand-900">{formatGhc(order.unitPrice)}</p>
+              <p className="font-semibold text-brand-900">{formatOrderMoney(order.unitPrice, order)}</p>
             </div>
             <div>
               <p className="text-[10px] font-semibold uppercase text-gray-500">Payment</p>
@@ -644,6 +689,10 @@ export function OrderDetailModal({
 }
 
 export function BuyerOrdersTable({ items }: { items: BuyerOrderLineItem[] }) {
+  const { user } = useAuth();
+  const { format } = useMoneyFormat();
+  const formatOrderMoney = createOrderMoneyFormatter("buyer", user?.country ?? "Ghana", format);
+
   if (items.length === 0) return null;
 
   return (
@@ -686,7 +735,7 @@ export function BuyerOrdersTable({ items }: { items: BuyerOrderLineItem[] }) {
                 {item.quantity} {formatListingUnit(item.unit)}
               </td>
               <td className="px-4 py-3 text-right font-semibold text-green-700">
-                {formatGhc(item.totalAmount)}
+                {formatOrderMoney(item.totalAmount, item)}
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-gray-600">
                 {formatDateTime(item.date)}
@@ -705,6 +754,10 @@ export function BuyerOrdersTable({ items }: { items: BuyerOrderLineItem[] }) {
 }
 
 export function SalesOrdersTable({ items }: { items: ProductOrderLineItem[] }) {
+  const { user } = useAuth();
+  const { format } = useMoneyFormat();
+  const formatOrderMoney = createOrderMoneyFormatter("farmer", user?.country ?? "Ghana", format);
+
   if (items.length === 0) return null;
 
   return (
@@ -749,7 +802,7 @@ export function SalesOrdersTable({ items }: { items: ProductOrderLineItem[] }) {
                 {item.quantity} {formatListingUnit(item.unit)}
               </td>
               <td className="px-4 py-3 text-right font-semibold text-green-700">
-                {formatGhc(item.totalAmount)}
+                {formatOrderMoney(item.totalAmount, item)}
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-gray-600">
                 {formatDate(item.date)}

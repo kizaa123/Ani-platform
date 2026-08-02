@@ -11,23 +11,29 @@ import { CountryBadge } from "@/components/CountrySelect";
 import { EmailText } from "@/components/EmailText";
 import { Icon, type IconName } from "@/components/icons";
 
+import { formatPhoneDisplay, phoneToTelHref } from "@/lib/phone";
+
 /** Clickable phone link for handler client contact - logistics backchannel */
 export function HandlerPhoneLink({
   phone,
+  country,
   className,
 }: {
   phone?: string | null;
+  country?: string | null;
   className?: string;
 }) {
   if (!phone) {
     return <span className="text-gray-400">Not provided</span>;
   }
+  const display = formatPhoneDisplay(phone, country);
+  const tel = phoneToTelHref(phone, country);
   return (
     <a
-      href={`tel:${phone}`}
+      href={`tel:${tel}`}
       className={className ?? "font-semibold text-brand-800 hover:underline"}
     >
-      {phone}
+      {display}
     </a>
   );
 }
@@ -91,7 +97,7 @@ export function HandlerAssignmentIdentity({
         {subtitle && renderSubtitleLines(subtitle)}
         {showPhone && !compact && (
           <p className="mt-0.5 text-xs">
-            <HandlerPhoneLink phone={owner.phone} />
+            <HandlerPhoneLink phone={owner.phone} country={owner.country} />
           </p>
         )}
       </div>
@@ -386,7 +392,7 @@ export function HandlerFarmerClientCard({ assignment }: { assignment: AgentAssig
       <div className="flex flex-1 flex-col p-3">
         <div className="grid grid-cols-2 gap-2">
           <DetailChip label="Phone" highlight>
-            <HandlerPhoneLink phone={owner.phone} />
+            <HandlerPhoneLink phone={owner.phone} country={owner.country} />
           </DetailChip>
           <DetailChip label="Email">
             <EmailText email={owner.email} className="text-gray-800" />
@@ -462,7 +468,7 @@ export function HandlerBuyerClientCard({ assignment }: { assignment: AgentAssign
       <div className="flex flex-1 flex-col p-3">
         <div className="grid grid-cols-2 gap-2">
           <DetailChip label="Phone" highlight>
-            <HandlerPhoneLink phone={owner.phone} />
+            <HandlerPhoneLink phone={owner.phone} country={owner.country} />
           </DetailChip>
           <DetailChip label="Email">
             <EmailText email={owner.email} className="text-gray-800" />

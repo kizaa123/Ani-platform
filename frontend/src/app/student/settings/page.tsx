@@ -14,7 +14,14 @@ import {
   ProfileInfoSection,
 } from "@/components/ProfileIdentityHeader";
 import { DEFAULT_COUNTRY } from "@/lib/africanCountries";
-import { isValidPhone, normalizePhone, PHONE_VALIDATION_MESSAGE } from "@/lib/phone";
+import {
+  isValidPhone,
+  normalizePhoneForStorage,
+  onCountryChangePhone,
+  PHONE_VALIDATION_MESSAGE,
+  phoneToFormValue,
+} from "@/lib/phone";
+import { PhoneInput } from "@/components/PhoneInput";
 
 export default function StudentSettingsPage() {
   const { user, loading, refreshUser } = useAuth();
@@ -37,7 +44,7 @@ export default function StudentSettingsPage() {
     if (user && !isStudent(user.roleId)) router.push("/dashboard");
     if (user) {
       setForm({
-        phone: user.phone || "",
+        phone: phoneToFormValue(user.phone || "", user.country || DEFAULT_COUNTRY),
         country: user.country || DEFAULT_COUNTRY,
         region: user.region || "",
         city: user.city || "",
@@ -48,7 +55,7 @@ export default function StudentSettingsPage() {
   const resetForm = () => {
     if (!user) return;
     setForm({
-      phone: user.phone || "",
+      phone: phoneToFormValue(user.phone || "", user.country || DEFAULT_COUNTRY),
       country: user.country || DEFAULT_COUNTRY,
       region: user.region || "",
       city: user.city || "",
@@ -73,7 +80,7 @@ export default function StudentSettingsPage() {
   };
 
   const save = async () => {
-    if (!isValidPhone(form.phone)) {
+    if (!isValidPhone(form.phone, form.country)) {
       setError(PHONE_VALIDATION_MESSAGE);
       return;
     }
@@ -82,7 +89,7 @@ export default function StudentSettingsPage() {
     setError("");
     try {
       await api.auth.updateProfile({
-        phone: normalizePhone(form.phone),
+        phone: normalizePhoneForStorage(form.phone, form.country),
         country: form.country.trim(),
         region: form.region.trim(),
         city: form.city.trim(),
@@ -149,18 +156,23 @@ export default function StudentSettingsPage() {
             <h2 className="text-lg font-bold text-brand-900">Contact & location</h2>
             <div>
               <label className="auth-label">Phone</label>
-              <input
-                className="auth-input"
+              <PhoneInput
                 value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                placeholder="10-digit phone number"
+                country={form.country}
+                onChange={(phone) => setForm({ ...form, phone })}
               />
             </div>
             <div>
               <label className="auth-label">Country</label>
               <CountrySelect
                 value={form.country}
-                onChange={(country) => setForm({ ...form, country })}
+                onChange={(country) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    country,
+                    phone: onCountryChangePhone(prev.phone, prev.country, country),
+                  }))
+                }
               />
             </div>
             <div>

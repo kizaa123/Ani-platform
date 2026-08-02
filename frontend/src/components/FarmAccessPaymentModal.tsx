@@ -10,7 +10,7 @@ import { RolePrefixedName, splitDisplayName } from "@/components/RolePrefixedNam
 import { Icon } from "@/components/icons";
 import { api } from "@/lib/api";
 import { FARM_ACCESS_PRICE_GHC } from "@/lib/pricing";
-import { formatGhc } from "@/lib/format";
+import { useMoneyFormat } from "@/hooks/useMoneyFormat";
 
 interface FarmAccessPaymentModalProps {
   farmer: FarmerBrowseCard;
@@ -29,10 +29,11 @@ export function FarmAccessPaymentModal({
 }: FarmAccessPaymentModalProps) {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<PaymentResult | null>(null);
+  const { formatFarmAccessFee } = useMoneyFormat();
   const { firstName, lastName } = splitDisplayName(farmer.farmerName);
 
   const fee = farmer.farmAccessFee ?? FARM_ACCESS_PRICE_GHC;
-  const feeLabel = farmer.farmAccessPriceLabel ?? formatGhc(fee);
+  const feeLabel = farmer.farmAccessPriceLabel ?? formatFarmAccessFee(fee);
 
   const handlePay = async (paymentMethod: string) => {
     setSubmitting(true);

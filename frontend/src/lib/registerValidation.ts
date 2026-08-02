@@ -76,7 +76,7 @@ export function validateStep1(form: RegisterFormSlice): FieldErrors {
 
   if (!form.phone.trim()) {
     errors.phone = "Enter your phone number";
-  } else if (!isValidPhone(form.phone)) {
+  } else if (!isValidPhone(form.phone, form.country)) {
     errors.phone = PHONE_VALIDATION_MESSAGE;
   }
 
@@ -234,7 +234,7 @@ function mapKnownBackendMessage(message: string, fieldErrors: FieldErrors): void
     }
   }
 
-  if (/phone must be exactly 10 digits/i.test(message)) {
+  if (/phone must be exactly 10 digits|valid mobile number/i.test(message)) {
     fieldErrors.phone = PHONE_VALIDATION_MESSAGE;
   } else if (/select a handler/i.test(message)) {
     fieldErrors.handlerId = "Please select a liaison officer";

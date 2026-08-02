@@ -8,8 +8,9 @@ import { api } from "@/lib/api";
 import { CommodityCategory, HandlerProfile, ROLES, farmerCategoryFilter, isFarmer, isOrganizationFarmer } from "@/lib/types";
 import {
   getDialCodeForCountryName,
-  normalizePhone,
-  stripDialCode,
+  normalizePhoneForStorage,
+  onCountryChangePhone,
+  parsePhoneInput,
 } from "@/lib/phone";
 import { CountrySelect } from "@/components/CountrySelect";
 import { HandlerSelect } from "@/components/HandlerSelect";
@@ -86,7 +87,7 @@ function buildRegisterPayload(
     firstName: form.firstName.trim(),
     lastName: form.lastName.trim(),
     email: form.email.trim(),
-    phone: normalizePhone(form.phone),
+    phone: normalizePhoneForStorage(form.phone, form.country),
     password: form.password,
     country: form.country.trim(),
     region: form.region.trim(),
@@ -349,16 +350,15 @@ function RegisterForm() {
   );
 
   const handleCountryChange = (country: string) => {
-    const previousDialCode = form.country ? getDialCodeForCountryName(form.country) : undefined;
     setForm((prev) => ({
       ...prev,
       country,
-      phone: stripDialCode(prev.phone, previousDialCode).slice(0, 10),
+      phone: onCountryChangePhone(prev.phone, prev.country, country),
     }));
   };
 
   const handlePhoneChange = (raw: string) => {
-    const local = stripDialCode(raw, phoneDialCode || undefined).slice(0, 10);
+    const local = parsePhoneInput(raw, form.country);
     setForm((prev) => ({ ...prev, phone: local }));
   };
 
@@ -671,7 +671,7 @@ function RegisterForm() {
               </div>
               <FieldErrorMessage message={fieldError("phone")} />
               {!fieldError("phone") && (
-                <p className="auth-hint">Local number only - country code updates when you select a country</p>
+                <p className="auth-hint">Accepts local (0241234567) or international (+233…) · country code shown above</p>
               )}
             </div>
 

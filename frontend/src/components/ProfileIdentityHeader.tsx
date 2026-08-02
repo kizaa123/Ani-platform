@@ -16,6 +16,7 @@ import {
   hasAssignedHandlerRole,
   type UserProfile,
 } from "@/lib/types";
+import { formatPhoneDisplay } from "@/lib/phone";
 
 interface ProfileIdentityHeaderProps {
   user: UserProfile;
@@ -216,7 +217,7 @@ export function ProfileInfoSection({
 
       {user.phone && (
         <ProfileInfoField label="Phone">
-          <span>{user.phone}</span>
+          <span>{formatPhoneDisplay(user.phone, user.country)}</span>
         </ProfileInfoField>
       )}
 

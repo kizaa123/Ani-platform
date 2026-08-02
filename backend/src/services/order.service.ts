@@ -27,7 +27,13 @@ export class OrderService {
         where: { id: listingId },
         include: {
           commodity: { include: { category: true } },
-          farmer: { include: { user: { select: { id: true, firstName: true, lastName: true } } } },
+          farmer: {
+            include: {
+              user: {
+                select: { id: true, firstName: true, lastName: true, country: true },
+              },
+            },
+          },
           media: { where: { type: 'IMAGE' }, orderBy: { orderIndex: 'asc' }, take: 1 },
         },
       }),
@@ -104,7 +110,7 @@ export class OrderService {
         },
         include: {
           listing: { include: { commodity: true } },
-          buyer: { select: { firstName: true, lastName: true, email: true } },
+          buyer: { select: { firstName: true, lastName: true, email: true, country: true } },
         },
       });
 
@@ -135,11 +141,15 @@ export class OrderService {
       : normalized[0]
         ? normalizePublicAssetUrl(normalized[0])
         : null;
+    const buyerCountry = txResult.order.buyer.country ?? 'Ghana';
+    const farmerCountry = listing.farmer.user.country ?? 'Ghana';
     await notifyNewOrder(farmerUserId, buyerId, buyerName, listing.title, totalAmount, {
       quantity: data.quantity,
       unit: listing.unit,
       imageUrl,
       listingId: listing.id,
+      buyerCountry,
+      farmerCountry,
     });
     await notifyProductPurchase(
       buyerId,
@@ -147,7 +157,8 @@ export class OrderService {
       farmerName,
       listing.title,
       totalAmount,
-      txResult.order.id
+      txResult.order.id,
+      buyerCountry
     );
 
     return txResult;

@@ -5,7 +5,14 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import { HandlerProfile, isResearcher, ROLES } from "@/lib/types";
-import { isValidPhone, normalizePhone, PHONE_VALIDATION_MESSAGE } from "@/lib/phone";
+import {
+  isValidPhone,
+  normalizePhoneForStorage,
+  onCountryChangePhone,
+  PHONE_VALIDATION_MESSAGE,
+  phoneToFormValue,
+} from "@/lib/phone";
+import { PhoneInput } from "@/components/PhoneInput";
 import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { CountrySelect } from "@/components/CountrySelect";
 import { HandlerSelect } from "@/components/HandlerSelect";
@@ -64,7 +71,7 @@ export default function ResearcherSettingsPage() {
     setPersonal({
       firstName: user.firstName,
       lastName: user.lastName,
-      phone: user.phone || "",
+      phone: phoneToFormValue(user.phone || "", user.country || DEFAULT_COUNTRY),
       country: user.country || DEFAULT_COUNTRY,
       region: user.region || "",
       city: user.city || "",
@@ -107,7 +114,7 @@ export default function ResearcherSettingsPage() {
   };
 
   const save = async () => {
-    if (!isValidPhone(personal.phone)) {
+    if (!isValidPhone(personal.phone, personal.country)) {
       setError(PHONE_VALIDATION_MESSAGE);
       return;
     }
@@ -116,7 +123,10 @@ export default function ResearcherSettingsPage() {
     setError("");
     try {
       await Promise.all([
-        api.auth.updateProfile({ ...personal, phone: normalizePhone(personal.phone) }),
+        api.auth.updateProfile({
+          ...personal,
+          phone: normalizePhoneForStorage(personal.phone, personal.country),
+        }),
         api.research.updateProfile({ institution, expertise, qualifications, bio }),
       ]);
       if (handlerId && handlerId !== user?.assignedHandler?.id) {
@@ -211,12 +221,12 @@ export default function ResearcherSettingsPage() {
                   onChange={(e) => setPersonal({ ...personal, lastName: e.target.value })}
                 />
               </div>
-              <div>
+              <div className="sm:col-span-2">
                 <label className="auth-label">Phone</label>
-                <input
-                  className="auth-input"
+                <PhoneInput
                   value={personal.phone}
-                  onChange={(e) => setPersonal({ ...personal, phone: e.target.value })}
+                  country={personal.country}
+                  onChange={(phone) => setPersonal({ ...personal, phone })}
                 />
               </div>
               <div>
@@ -231,7 +241,13 @@ export default function ResearcherSettingsPage() {
                 <label className="auth-label">Country</label>
                 <CountrySelect
                   value={personal.country}
-                  onChange={(country) => setPersonal({ ...personal, country })}
+                  onChange={(country) =>
+                    setPersonal((prev) => ({
+                      ...prev,
+                      country,
+                      phone: onCountryChangePhone(prev.phone, prev.country, country),
+                    }))
+                  }
                 />
               </div>
               <div>

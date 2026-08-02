@@ -6,7 +6,14 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import { isHandler } from "@/lib/types";
-import { isValidPhone, normalizePhone, PHONE_VALIDATION_MESSAGE } from "@/lib/phone";
+import {
+  isValidPhone,
+  normalizePhoneForStorage,
+  onCountryChangePhone,
+  PHONE_VALIDATION_MESSAGE,
+  phoneToFormValue,
+} from "@/lib/phone";
+import { PhoneInput } from "@/components/PhoneInput";
 import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { CountrySelect } from "@/components/CountrySelect";
 import { RolePrefixedName } from "@/components/RolePrefixedName";
@@ -42,7 +49,7 @@ export default function HandlerSettingsPage() {
     }
     if (user) {
       setForm({
-        phone: user.phone || "",
+        phone: phoneToFormValue(user.phone || "", user.country || DEFAULT_COUNTRY),
         country: user.country || DEFAULT_COUNTRY,
         region: user.region || "",
         city: user.city || "",
@@ -55,7 +62,7 @@ export default function HandlerSettingsPage() {
   const resetForm = () => {
     if (!user) return;
     setForm({
-      phone: user.phone || "",
+      phone: phoneToFormValue(user.phone || "", user.country || DEFAULT_COUNTRY),
       country: user.country || DEFAULT_COUNTRY,
       region: user.region || "",
       city: user.city || "",
@@ -82,7 +89,7 @@ export default function HandlerSettingsPage() {
   };
 
   const saveSettings = async () => {
-    if (!isValidPhone(form.phone)) {
+    if (!isValidPhone(form.phone, form.country)) {
       setError(PHONE_VALIDATION_MESSAGE);
       return;
     }
@@ -90,7 +97,10 @@ export default function HandlerSettingsPage() {
     setMessage("");
     setError("");
     try {
-      await api.auth.updateProfile({ ...form, phone: normalizePhone(form.phone) });
+      await api.auth.updateProfile({
+        ...form,
+        phone: normalizePhoneForStorage(form.phone, form.country),
+      });
       await refreshUser();
       setPhotoCacheBust(Date.now());
       setMessage("Profile saved successfully.");
@@ -171,17 +181,23 @@ export default function HandlerSettingsPage() {
           <div className="space-y-4">
             <div>
               <label className="mb-1 block text-sm font-medium">Phone number</label>
-              <input
+              <PhoneInput
                 value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="w-full rounded-lg border px-4 py-3 focus:border-brand-500 focus:outline-none"
+                country={form.country}
+                onChange={(phone) => setForm({ ...form, phone })}
               />
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium">Country</label>
               <CountrySelect
                 value={form.country}
-                onChange={(country) => setForm({ ...form, country })}
+                onChange={(country) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    country,
+                    phone: onCountryChangePhone(prev.phone, prev.country, country),
+                  }))
+                }
                 required
               />
             </div>

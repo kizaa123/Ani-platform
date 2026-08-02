@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
+import { useMoneyFormat } from "@/hooks/useMoneyFormat";
 import { Listing, formatListingUnit, listingCommodityName, ROLES } from "@/lib/types";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
@@ -172,6 +173,7 @@ function PurchaseModalContent({
   onClose,
   onSuccess,
 }: Omit<PurchaseViewProps, "listing" | "farmName" | "farmerId"> & { listing: Listing }) {
+  const { format, formatUnitPrice } = useMoneyFormat();
   const maxQty = listing.quantity ?? 0;
   const unitPrice = listing.price ?? 0;
   const unit = listing.unit ?? "bags";
@@ -188,11 +190,21 @@ function PurchaseModalContent({
   const canPurchase = listing.available !== false && maxQty > 0;
   const orderPlaced = result?.variant === "success";
   const otherFarmProducts = relatedProducts.filter((product) => product.id !== listing.id);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setQuantity(Math.min(1, maxQty) || 1);
     setResult(null);
   }, [listing.id, maxQty]);
+
+  useEffect(() => {
+    scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, [listing.id]);
+
+  const handleSelectProduct = (product: Listing) => {
+    onSelectProduct(product);
+    scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   useEffect(() => {
     setQuantity((prev) => {
@@ -214,7 +226,7 @@ function PurchaseModalContent({
     setResult(null);
     try {
       const purchaseResult = await api.marketplace.purchase(listing.id, { quantity, paymentMethod });
-      const message = `${quantity} ${unitLabel} - GHC ${total.toFixed(2)} held in escrow until you confirm delivery.`;
+      const message = `${quantity} ${unitLabel} - ${format(total)} held in escrow until you confirm delivery.`;
       setResult({ variant: "success", message, releaseOtp: purchaseResult.releaseOtp });
       onSuccess();
     } catch (e) {
@@ -239,7 +251,7 @@ function PurchaseModalContent({
         onClose={onClose}
       />
 
-      <div className="flex-1 overflow-y-auto">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-lg px-4 py-6 sm:max-w-6xl sm:py-8">
           <div className="grid gap-6 lg:grid-cols-2 lg:gap-10 lg:items-start">
             <div className="flex flex-col gap-3">
@@ -273,7 +285,7 @@ function PurchaseModalContent({
 
               <div className="space-y-2.5 rounded-xl border border-brand-100 bg-brand-50/60 px-4 py-4">
                 <p className="text-sm text-brand-900">
-                  <span className="font-semibold">Price:</span> GHC {unitPrice}
+                  <span className="font-semibold">Price:</span> {formatUnitPrice(unitPrice, unit)}
                 </p>
                 <p className="text-sm text-brand-900">
                   <span className="font-semibold">Quantity:</span> {maxQty}
@@ -350,9 +362,9 @@ function PurchaseModalContent({
                   </div>
 
                   <PaymentCheckout
-                    totalLabel={`${quantity} × GHC ${unitPrice}`}
-                    totalAmount={`GHC ${total.toFixed(2)}`}
-                    payLabel={`Pay GHC ${total.toFixed(2)}`}
+                    totalLabel={`${quantity} × ${format(unitPrice)}`}
+                    totalAmount={format(total)}
+                    payLabel={`Pay ${format(total)}`}
                     onPay={handlePurchase}
                     submitting={submitting}
                   />
@@ -370,7 +382,7 @@ function PurchaseModalContent({
                     key={product.id}
                     product={product}
                     compact
-                    onClick={() => onSelectProduct(product)}
+                    onClick={() => handleSelectProduct(product)}
                   />
                 ))}
               </div>

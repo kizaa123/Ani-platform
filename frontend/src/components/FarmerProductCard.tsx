@@ -1,6 +1,7 @@
 "use client";
 
 import { Listing, formatListingUnit, listingCommodityName } from "@/lib/types";
+import { useMoneyFormat } from "@/hooks/useMoneyFormat";
 import { ProductImage } from "@/components/FarmerAvatar";
 import { productMediaIsVideo, productMediaThumbnail } from "@/components/ProductMediaGallery";
 import { assetUrl } from "@/lib/assetUrl";
@@ -24,6 +25,7 @@ export function FarmerProductCard({
   imageClassName,
   contentClassName,
 }: FarmerProductCardProps) {
+  const { formatUnitPrice } = useMoneyFormat();
   const thumb = productMediaThumbnail(product);
   const isVideo = productMediaIsVideo(product);
 
@@ -54,7 +56,8 @@ export function FarmerProductCard({
     </span>
   );
 
-  const priceDisplay = `GHC ${product.price ?? 0}`;
+  const priceDisplay =
+    product.priceLabel ?? formatUnitPrice(product.price ?? 0, product.unit ?? "unit");
 
   const renderMedia = () => {
     if (thumb) {

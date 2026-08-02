@@ -13,6 +13,14 @@ import {
   type StaffMember,
 } from "@/lib/types";
 import { VerificationBadge } from "@/components/VerificationBadge";
+import { DEFAULT_COUNTRY } from "@/lib/africanCountries";
+import {
+  isValidPhone,
+  normalizePhoneForStorage,
+  PHONE_VALIDATION_MESSAGE,
+  phoneToFormValue,
+} from "@/lib/phone";
+import { PhoneInput } from "@/components/PhoneInput";
 import { formatDate } from "@/lib/format";
 import { PageContentSkeleton } from "@/components/LoadingPrimitives";
 import { EmailText } from "@/components/EmailText";
@@ -96,7 +104,7 @@ export default function AdminStaffPage() {
       firstName: member.firstName,
       lastName: member.lastName,
       email: member.email,
-      phone: member.phone,
+      phone: phoneToFormValue(member.phone, DEFAULT_COUNTRY),
       password: "",
       roleId: member.roleId,
     });
@@ -112,6 +120,10 @@ export default function AdminStaffPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (!editing && !isValidPhone(form.phone, DEFAULT_COUNTRY)) {
+      setError(PHONE_VALIDATION_MESSAGE);
+      return;
+    }
     setSubmitting(true);
     setError("");
     try {
@@ -126,7 +138,7 @@ export default function AdminStaffPage() {
           firstName: form.firstName,
           lastName: form.lastName,
           email: form.email,
-          phone: form.phone,
+          phone: normalizePhoneForStorage(form.phone, DEFAULT_COUNTRY),
           password: form.password,
           roleId: form.roleId,
         });
@@ -320,12 +332,12 @@ export default function AdminStaffPage() {
                 </label>
                 <label className="block text-sm">
                   <span className="font-semibold text-brand-800">Phone</span>
-                  <input
-                    required
-                    placeholder="0241234567"
+                  <PhoneInput
+                    className="mt-1"
                     value={form.phone}
-                    onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                    className="mt-1 w-full rounded-lg border border-brand-200 px-3 py-2"
+                    country={DEFAULT_COUNTRY}
+                    onChange={(phone) => setForm((f) => ({ ...f, phone }))}
+                    required
                   />
                 </label>
                 <label className="block text-sm sm:col-span-2">

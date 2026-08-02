@@ -29,6 +29,7 @@ import { listingCommodityName } from '../utils/listingDisplay';
 import { productMediaService } from './productMedia.service';
 import { notifyNewProductListing } from './notification.service';
 import { FARM_ACCESS_PRICE_GHC, formatFarmAccessPriceLabel } from '../constants/pricing';
+import { formatPricePerUnit } from '../utils/currency';
 import {
   computeFarmAccessExpiry,
   hasPaidFarmAccessRecord,
@@ -169,6 +170,14 @@ const farmerInclude = {
 } as const;
 
 export class MarketplaceService {
+  private async viewerCountry(userId: string): Promise<string> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { country: true },
+    });
+    return user?.country?.trim() || 'Ghana';
+  }
+
   private async buyerConnectionMap(buyerId: string) {
     const rows = await prisma.connectionRequest.findMany({ where: { buyerId } });
     return new Map(rows.map((r) => [r.farmerId, r.status]));
@@ -257,7 +266,8 @@ export class MarketplaceService {
       farmer: Parameters<MarketplaceService['buildContext']>[0];
     },
     access: { hasAccess: boolean; connectionStatus: string; hasFarmAccess?: boolean },
-    media: ReturnType<typeof productMediaService.listByListing> extends Promise<infer T> ? T : never = []
+    media: ReturnType<typeof productMediaService.listByListing> extends Promise<infer T> ? T : never = [],
+    viewerCountry?: string | null
   ) {
     const ctx = this.buildContext(listing.farmer);
     const base = {
@@ -286,7 +296,7 @@ export class MarketplaceService {
 
     return access.hasAccess
       ? {
-          ...fullListing(base as Record<string, unknown>, ctx, extras),
+          ...fullListing(base as Record<string, unknown>, ctx, extras, viewerCountry),
           available: isListingOrderable({
             status: listing.status,
             quantity: listing.quantity,
@@ -384,7 +394,8 @@ export class MarketplaceService {
       : [];
     const accessRecordMap = new Map(accessRecords.map((r) => [r.farmerId, r]));
 
-    const farmAccessPriceLabel = formatFarmAccessPriceLabel();
+    const viewerCountry = await this.viewerCountry(userId);
+    const farmAccessPriceLabel = formatFarmAccessPriceLabel(viewerCountry);
 
     const farmerProfiles = await prisma.farmerProfile.findMany({
       where: {
@@ -492,7 +503,8 @@ export class MarketplaceService {
                 },
               },
               access,
-              mediaMap.get(listing.id) ?? []
+              mediaMap.get(listing.id) ?? [],
+              viewerCountry
             )
           )
         : [];
@@ -557,6 +569,7 @@ export class MarketplaceService {
   }
 
   async listPublic(userId: string, roleId: number) {
+    const viewerCountry = await this.viewerCountry(userId);
     const listings = await prisma.commodityListing.findMany({
       where: { status: { in: ['ACTIVE', 'SOLD'] } },
       include: {
@@ -577,7 +590,7 @@ export class MarketplaceService {
       listings.map(async (l) => {
         const access = await this.listingAccess(userId, roleId, l.farmer.user.id, farmAccessSet);
         const media = mediaMap.get(l.id) ?? [];
-        return this.formatListing(l, access, media);
+        return this.formatListing(l, access, media, viewerCountry);
       })
     );
   }
@@ -604,7 +617,8 @@ export class MarketplaceService {
       farmAccessSet
     );
     const media = await productMediaService.listByListing(id, userId);
-    return this.formatListing(listing, access, media);
+    const viewerCountry = await this.viewerCountry(userId);
+    return this.formatListing(listing, access, media, viewerCountry);
   }
 
   async updateListing(
@@ -709,9 +723,13 @@ export class MarketplaceService {
 
   async myListings(userId: string) {
     const profile = assertFound(
-      await prisma.farmerProfile.findUnique({ where: { userId } }),
+      await prisma.farmerProfile.findUnique({
+        where: { userId },
+        include: { user: { select: { country: true } } },
+      }),
       'Farmer profile not found'
     );
+    const farmerCountry = profile.user.country;
     const listings = await prisma.commodityListing.findMany({
       where: { farmerId: profile.id, status: { not: 'ARCHIVED' } },
       include: { commodity: { include: { category: true } } },
@@ -727,7 +745,7 @@ export class MarketplaceService {
         (img) => normalizePublicAssetUrl(img) ?? img
       ),
       media: mediaMap.get(l.id) ?? [],
-      priceLabel: `GHC ${l.price}/${l.unit}`,
+      priceLabel: formatPricePerUnit(l.price, l.unit, farmerCountry),
       quantityLabel: `${l.quantity} ${l.unit}`,
       ...harvestPayload(l),
     }));

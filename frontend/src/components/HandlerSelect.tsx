@@ -8,6 +8,7 @@ import { RolePrefixedName } from "@/components/RolePrefixedName";
 import { InlineNameWithVerificationTags } from "@/components/VerificationTagBadge";
 import { Icon } from "@/components/icons";
 import { formatUserLocation } from "@/lib/formatUserLocation";
+import { formatPhoneDisplay } from "@/lib/phone";
 
 interface HandlerSelectProps {
   handlers: HandlerProfile[];
@@ -110,7 +111,9 @@ export function HandlerSelect({
                   <>
                     <EmailText email={handler.email} truncate className="text-gray-500" as="p" />
                     {handler.phone && (
-                      <p className="truncate text-xs text-gray-500">{handler.phone}</p>
+                      <p className="truncate text-xs text-gray-500">
+                        {formatPhoneDisplay(handler.phone, handler.country)}
+                      </p>
                     )}
                     <CountryBadge
                       country={handler.country}

@@ -1,5 +1,7 @@
-export function formatGhc(amount: number) {
-  return `GHC ${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+import { formatForViewer } from "./currency";
+
+export function formatGhc(amount: number, viewerCountry?: string | null) {
+  return formatForViewer(amount, viewerCountry ?? "Ghana");
 }
 
 /** Compact axis label for currency charts - no prefix, abbreviated at scale. */

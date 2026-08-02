@@ -214,6 +214,10 @@ export class FarmService {
       },
     });
     const latestOrder = orders[0];
+    const farmerUser = await prisma.user.findUnique({
+      where: { id: farmerUserId },
+      select: { country: true },
+    });
     const farmerName = await getUserDisplayName(farmerUserId);
     const normalized = normalizeImages(listing?.images);
     const imageFromMedia = listing?.media[0]?.url;
@@ -235,6 +239,8 @@ export class FarmService {
             unit: latestOrder.unit,
             imageUrl,
             listingId: listing?.id,
+            buyerCountry: latestOrder.buyer.country ?? 'Ghana',
+            farmerCountry: farmerUser?.country ?? 'Ghana',
           }
         : { imageUrl, listingId: listing?.id }
     );

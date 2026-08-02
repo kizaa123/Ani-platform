@@ -8,9 +8,10 @@ import { CommodityCategory, HandlerProfile, ROLES, farmerCategoryFilter, isFarme
 import {
   getDialCodeForCountryName,
   isValidPhone,
-  normalizePhone,
+  normalizePhoneForStorage,
+  onCountryChangePhone,
+  parsePhoneInput,
   PHONE_VALIDATION_MESSAGE,
-  stripDialCode,
 } from "@/lib/phone";
 import { CountrySelect } from "@/components/CountrySelect";
 import { HandlerSelect } from "@/components/HandlerSelect";
@@ -64,7 +65,7 @@ function buildCompletePayload(
   hasGoogleAuth: boolean
 ) {
   const payload: Record<string, unknown> = {
-    phone: normalizePhone(form.phone),
+    phone: normalizePhoneForStorage(form.phone, form.country),
     country: form.country.trim(),
     region: form.region.trim(),
     city: form.city.trim(),
@@ -154,23 +155,22 @@ export default function CompleteProfilePage() {
   const phoneDialCode = getDialCodeForCountryName(form.country);
 
   const handleCountryChange = (country: string) => {
-    const previousDialCode = form.country ? getDialCodeForCountryName(form.country) : undefined;
     setForm((prev) => ({
       ...prev,
       country,
-      phone: stripDialCode(prev.phone, previousDialCode).slice(0, 10),
+      phone: onCountryChangePhone(prev.phone, prev.country, country),
     }));
   };
 
   const handlePhoneChange = (raw: string) => {
-    const local = stripDialCode(raw, phoneDialCode || undefined).slice(0, 10);
+    const local = parsePhoneInput(raw, form.country);
     setForm((prev) => ({ ...prev, phone: local }));
   };
 
   const hasGoogleAuth = Boolean(user?.hasGoogleAuth);
 
   const canContinueAccount =
-    isValidPhone(form.phone) &&
+    isValidPhone(form.phone, form.country) &&
     form.country.trim() &&
     (hasGoogleAuth || !form.password || form.password.length >= 8);
 
@@ -315,7 +315,7 @@ export default function CompleteProfilePage() {
                       className="min-w-0 flex-1 border-0 bg-transparent px-4 py-3 text-sm focus:outline-none focus:ring-0"
                     />
                   </div>
-                  <p className="auth-hint">Must be a valid mobile money number · {PHONE_VALIDATION_MESSAGE.toLowerCase()}</p>
+                  <p className="auth-hint">Accepts local (0241234567) or international (+233…) · {PHONE_VALIDATION_MESSAGE.toLowerCase()}</p>
                 </div>
                 {!hasGoogleAuth && (
                   <div className="auth-field">

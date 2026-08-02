@@ -125,7 +125,7 @@ const ROLE_CARDS: { icon: IconName; label: string; desc: string; image: string }
   {
     icon: "book",
     label: "Researcher",
-    desc: "Access researchs data, publish field research, and connect with fellows and clients to support evidence-based farming across the region.",
+    desc: "Access research data, publish field research, and connect with fellows and clients to support evidence-based farming across the region.",
     image: ROLE_CARD_IMAGES.researcher,
   },
   {

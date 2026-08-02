@@ -5,6 +5,11 @@ import { normalizeImages, normalizePublicAssetUrl } from '../middleware/upload.m
 import { buyerFarmAccessSet } from '../middleware/access.middleware';
 import { formatVerificationTags, verificationTagSelect } from '../utils/verificationTags';
 import {
+  formatAmountForCountry,
+  formatOrderAmountForRecipient,
+  formatPricePerUnit,
+} from '../utils/currency';
+import {
   FARMER_ROLES,
   MARKETPLACE_BUYER_ROLES,
   ROLES,
@@ -263,8 +268,26 @@ function buildOrderNotificationMetadata(params: {
   imageUrl?: string | null;
   listingId?: string;
   actionUrl?: string;
+  buyerCountry?: string;
+  farmerCountry?: string;
+  recipientCountry?: string;
 }): NotificationMetadata {
-  const { productName, totalAmount, quantity, unit, imageUrl, listingId, actionUrl } = params;
+  const {
+    productName,
+    totalAmount,
+    quantity,
+    unit,
+    imageUrl,
+    listingId,
+    actionUrl,
+    buyerCountry = 'Ghana',
+    farmerCountry = 'Ghana',
+    recipientCountry = farmerCountry,
+  } = params;
+  const priceLabel =
+    totalAmount != null
+      ? formatOrderAmountForRecipient(totalAmount, buyerCountry, recipientCountry)
+      : null;
   return {
     orderName: productName,
     actionLabel: productName,
@@ -273,7 +296,7 @@ function buildOrderNotificationMetadata(params: {
     quantity: quantity ?? null,
     unit: unit ?? null,
     price: totalAmount ?? null,
-    priceLabel: totalAmount != null ? `GHC ${totalAmount.toFixed(2)}` : null,
+    priceLabel,
     actionUrl: actionUrl ?? null,
   };
 }
@@ -292,11 +315,10 @@ export async function notifyNewProductListing(params: {
 }) {
   const { farmerUserId, farmerName, listing, media } = params;
   const imageUrl = firstListingImage(listing.images, media);
-  const priceLabel = `GHC ${listing.price.toFixed(2)}/${listing.unit}`;
 
   const buyers = await prisma.user.findMany({
     where: { roleId: { in: [...MARKETPLACE_BUYER_ROLES] } },
-    select: { id: true },
+    select: { id: true, country: true },
   });
 
   await Promise.all(
@@ -307,6 +329,7 @@ export async function notifyNewProductListing(params: {
         const hasAccess = accessSet.has(farmerUserId);
         const link = '/marketplace';
         const actionLabel = hasAccess ? 'View product' : 'Pay to access';
+        const priceLabel = formatPricePerUnit(listing.price, listing.unit, buyer.country);
 
         await createNotification({
           userId: buyer.id,
@@ -441,9 +464,18 @@ export async function notifyNewOrder(
     unit?: string;
     imageUrl?: string | null;
     listingId?: string;
+    buyerCountry?: string;
+    farmerCountry?: string;
   }
 ) {
-  const body = `${buyerName} ordered ${productName} - GHC ${totalAmount.toFixed(2)} held in escrow until buyer confirms delivery. Download the order statement from Buyer Orders.`;
+  const buyerCountry = orderDetails?.buyerCountry ?? 'Ghana';
+  const farmerCountry = orderDetails?.farmerCountry ?? 'Ghana';
+  const farmerAmountLabel = formatOrderAmountForRecipient(
+    totalAmount,
+    buyerCountry,
+    farmerCountry
+  );
+  const body = `${buyerName} ordered ${productName} - ${farmerAmountLabel} held in escrow until buyer confirms delivery. Download the order statement from Buyer Orders.`;
   const orderMeta = buildOrderNotificationMetadata({
     productName,
     totalAmount,
@@ -451,6 +483,9 @@ export async function notifyNewOrder(
     unit: orderDetails?.unit,
     imageUrl: orderDetails?.imageUrl,
     listingId: orderDetails?.listingId,
+    buyerCountry,
+    farmerCountry,
+    recipientCountry: farmerCountry,
   });
 
   await createNotification({
@@ -468,6 +503,22 @@ export async function notifyNewOrder(
     select: { agentId: true },
   });
   if (farmerHandler) {
+    const handler = await prisma.user.findUnique({
+      where: { id: farmerHandler.agentId },
+      select: { country: true },
+    });
+    const handlerCountry = handler?.country ?? farmerCountry;
+    const handlerMeta = buildOrderNotificationMetadata({
+      productName,
+      totalAmount,
+      quantity: orderDetails?.quantity,
+      unit: orderDetails?.unit,
+      imageUrl: orderDetails?.imageUrl,
+      listingId: orderDetails?.listingId,
+      buyerCountry,
+      farmerCountry,
+      recipientCountry: handlerCountry,
+    });
     const link = `/agents/farm/${farmerId}/orders`;
     await createNotification({
       userId: farmerHandler.agentId,
@@ -476,7 +527,7 @@ export async function notifyNewOrder(
       title: 'New order for your farmer',
       body,
       link,
-      metadata: { ...orderMeta, actionUrl: link },
+      metadata: { ...handlerMeta, actionUrl: link },
     }).catch(() => undefined);
   }
 
@@ -485,15 +536,36 @@ export async function notifyNewOrder(
     select: { agentId: true },
   });
   if (buyerHandler) {
+    const handler = await prisma.user.findUnique({
+      where: { id: buyerHandler.agentId },
+      select: { country: true },
+    });
+    const handlerCountry = handler?.country ?? buyerCountry;
+    const buyerAmountLabel = formatOrderAmountForRecipient(
+      totalAmount,
+      buyerCountry,
+      handlerCountry
+    );
+    const handlerMeta = buildOrderNotificationMetadata({
+      productName,
+      totalAmount,
+      quantity: orderDetails?.quantity,
+      unit: orderDetails?.unit,
+      imageUrl: orderDetails?.imageUrl,
+      listingId: orderDetails?.listingId,
+      buyerCountry,
+      farmerCountry,
+      recipientCountry: handlerCountry,
+    });
     const link = `/agents/buyer/${buyerId}/orders`;
     await createNotification({
       userId: buyerHandler.agentId,
       actorId: buyerId,
       type: 'NEW_ORDER',
       title: 'New order from your client',
-      body: `Your client ${buyerName} ordered ${productName} - GHC ${totalAmount.toFixed(2)} held in escrow until buyer confirms delivery.`,
+      body: `Your client ${buyerName} ordered ${productName} - ${buyerAmountLabel} held in escrow until buyer confirms delivery.`,
       link,
-      metadata: { ...orderMeta, actionUrl: link },
+      metadata: { ...handlerMeta, actionUrl: link },
     }).catch(() => undefined);
   }
 }
@@ -504,20 +576,25 @@ export async function notifyProductPurchase(
   farmerName: string,
   productName: string,
   totalAmount: number,
-  orderId?: string
+  orderId?: string,
+  buyerCountry?: string
 ) {
+  const country = buyerCountry ?? 'Ghana';
+  const amountLabel = formatAmountForCountry(totalAmount, country);
   const link = orderId ? `/orders?order=${orderId}` : '/orders';
   await createNotification({
     userId: buyerId,
     actorId: farmerId,
     type: 'PRODUCT_PURCHASE',
     title: 'Order placed - save your release code',
-    body: `You purchased ${productName} from ${farmerName} for GHC ${totalAmount.toFixed(2)}. Check My Orders for your 4-digit release code and financial statement PDF.`,
+    body: `You purchased ${productName} from ${farmerName} for ${amountLabel}. Check My Orders for your 4-digit release code and financial statement PDF.`,
     link,
     metadata: {
       actionUrl: link,
       actionLabel: 'View order',
       orderName: productName,
+      price: totalAmount,
+      priceLabel: amountLabel,
     },
   }).catch(() => undefined);
 }
@@ -535,20 +612,49 @@ export async function notifyOrderPaymentReleased(order: {
     images?: unknown;
     media?: { type: string; url: string }[];
   };
-  buyer: { firstName: string; lastName: string };
-  farmer: { firstName: string; lastName: string };
+  buyer: { firstName: string; lastName: string; country?: string };
+  farmer: { firstName: string; lastName: string; country?: string };
 }) {
   const buyerName = `${order.buyer.firstName} ${order.buyer.lastName}`;
   const orderName = order.listing.title;
-  const body = `${buyerName} confirmed delivery for "${orderName}" - GHC ${order.totalAmount.toFixed(2)} released to ANI Accountant.`;
-  const orderMeta = buildOrderNotificationMetadata({
-    productName: orderName,
-    totalAmount: order.totalAmount,
-    quantity: order.quantity,
-    unit: order.unit,
-    imageUrl: firstListingImage(order.listing.images, order.listing.media),
-    listingId: order.listing.id,
-  });
+  const buyerCountry = order.buyer.country ?? 'Ghana';
+  const farmerCountry = order.farmer.country ?? 'Ghana';
+  const imageUrl = firstListingImage(order.listing.images, order.listing.media);
+  const listingId = order.listing.id;
+
+  const notifyReleased = async (userId: string, link: string) => {
+    const recipient = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { country: true },
+    });
+    const recipientCountry = recipient?.country ?? farmerCountry;
+    const amountLabel = formatOrderAmountForRecipient(
+      order.totalAmount,
+      buyerCountry,
+      recipientCountry
+    );
+    const body = `${buyerName} confirmed delivery for "${orderName}" - ${amountLabel} released to ANI Accountant.`;
+    const orderMeta = buildOrderNotificationMetadata({
+      productName: orderName,
+      totalAmount: order.totalAmount,
+      quantity: order.quantity,
+      unit: order.unit,
+      imageUrl,
+      listingId,
+      buyerCountry,
+      farmerCountry,
+      recipientCountry,
+    });
+    await createNotification({
+      actorId: order.buyerId,
+      type: 'ORDER_PAYMENT_RELEASED',
+      title: 'Order payment released',
+      body,
+      userId,
+      link,
+      metadata: { ...orderMeta, actionUrl: link },
+    }).catch(() => undefined);
+  };
 
   const buyerHandlers = await prisma.agentAssignment.findMany({
     where: { ownerId: order.buyerId, relationshipType: 'BUYER_REPRESENTATIVE' },
@@ -562,22 +668,6 @@ export async function notifyOrderPaymentReleased(order: {
     where: { roleId: { in: [...STAFF_ROLES] } },
     select: { id: true },
   });
-
-  const baseInput = {
-    actorId: order.buyerId,
-    type: 'ORDER_PAYMENT_RELEASED' as const,
-    title: 'Order payment released',
-    body,
-    metadata: orderMeta,
-  };
-
-  const notifyReleased = (userId: string, link: string) =>
-    createNotification({
-      ...baseInput,
-      userId,
-      link,
-      metadata: { ...baseInput.metadata, actionUrl: link },
-    }).catch(() => undefined);
 
   await notifyReleased(order.buyerId, '/orders');
   await notifyReleased(order.farmerId, '/farm/orders');
@@ -604,8 +694,12 @@ export async function notifyOrderTracked(
     unit?: string;
     imageUrl?: string | null;
     listingId?: string;
+    buyerCountry?: string;
+    farmerCountry?: string;
   }
 ) {
+  const buyerCountry = orderDetails?.buyerCountry ?? 'Ghana';
+  const farmerCountry = orderDetails?.farmerCountry ?? 'Ghana';
   const body = `${farmerName} updated your order for ${productName} - now at "${stageLabel}".`;
   const orderMeta = buildOrderNotificationMetadata({
     productName,
@@ -614,6 +708,9 @@ export async function notifyOrderTracked(
     unit: orderDetails?.unit,
     imageUrl: orderDetails?.imageUrl,
     listingId: orderDetails?.listingId,
+    buyerCountry,
+    farmerCountry,
+    recipientCountry: buyerCountry,
   });
   const baseInput = {
     actorId: farmerId,
@@ -756,8 +853,11 @@ export async function notifyFarmAccessPaid(
   buyerName: string,
   farmerName: string,
   amount: number,
-  autoApproved = false
+  autoApproved = false,
+  buyerCountry?: string
 ) {
+  const country = buyerCountry ?? 'Ghana';
+  const amountLabel = formatAmountForCountry(amount, country);
   const statementLink = await financialStatementLink(buyerId);
   const link = autoApproved ? '/marketplace' : statementLink;
   await createNotification({
@@ -766,14 +866,14 @@ export async function notifyFarmAccessPaid(
     type: autoApproved ? 'CONNECTION_APPROVED' : 'FARM_ACCESS_PAID',
     title: autoApproved ? 'Farm access granted' : 'Farm access payment',
     body: autoApproved
-      ? `You paid GHC ${amount.toFixed(2)} for access to ${farmerName}. You can now browse products and place orders.`
-      : `You paid GHC ${amount.toFixed(2)} for access to ${farmerName}. Recorded on your financial statement - access will activate once payment is confirmed.`,
+      ? `You paid ${amountLabel} for access to ${farmerName}. You can now browse products and place orders.`
+      : `You paid ${amountLabel} for access to ${farmerName}. Recorded on your financial statement - access will activate once payment is confirmed.`,
     link,
     metadata: {
       farmerUserId: farmerId,
       farmerName,
       price: amount,
-      priceLabel: `GHC ${amount.toFixed(2)}`,
+      priceLabel: amountLabel,
       actionUrl: link,
       actionLabel: autoApproved ? 'Browse farm' : 'View statement',
     },
@@ -845,13 +945,18 @@ export async function notifyMoneyDistributed(
     imageUrl?: string | null;
     listingId?: string;
     totalAmount?: number;
+    buyerCountry?: string;
+    farmerCountry?: string;
   }
 ) {
-  const formatted = amount.toFixed(2);
   const recipient = await prisma.user.findUnique({
     where: { id: recipientId },
-    select: { roleId: true },
+    select: { roleId: true, country: true },
   });
+  const buyerCountry = orderDetails?.buyerCountry ?? 'Ghana';
+  const farmerCountry = orderDetails?.farmerCountry ?? 'Ghana';
+  const recipientCountry = recipient?.country ?? farmerCountry;
+  const formatted = formatOrderAmountForRecipient(amount, buyerCountry, recipientCountry);
   const link = recipient
     ? isFarmerRole(recipient.roleId)
       ? '/farm/financials'
@@ -868,18 +973,21 @@ export async function notifyMoneyDistributed(
     imageUrl: orderDetails?.imageUrl,
     listingId: orderDetails?.listingId,
     actionUrl: link,
+    buyerCountry,
+    farmerCountry,
+    recipientCountry,
   });
 
   await createNotification({
     userId: recipientId,
     type: 'MONEY_DISTRIBUTED',
     title: 'Payment received from ANI',
-    body: `Dear ${recipientFirstName}, you have received GHC ${formatted} from ANI for the successful delivery of "${orderName}" (${buyerName} order).`,
+    body: `Dear ${recipientFirstName}, you have received ${formatted} from ANI for the successful delivery of "${orderName}" (${buyerName} order).`,
     link,
     metadata: {
       ...orderMeta,
       price: amount,
-      priceLabel: `GHC ${formatted}`,
+      priceLabel: formatted,
     },
   }).catch(() => undefined);
 }

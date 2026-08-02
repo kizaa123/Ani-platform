@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import { BuyerOrderLineItem, canPurchaseFromMarketplace } from "@/lib/types";
 import { ProductOrdersList } from "@/components/ProductOrdersList";
-import { formatGhc } from "@/lib/format";
+import { useMoneyFormat } from "@/hooks/useMoneyFormat";
 import { Icon } from "@/components/icons";
 
 export default function BuyerOrdersPage() {
@@ -34,6 +34,7 @@ export default function BuyerOrdersPage() {
     }
   }, [user?.id, loading, router]);
 
+  const { format } = useMoneyFormat();
   const paidTotal = useMemo(
     () =>
       orders
@@ -107,7 +108,7 @@ export default function BuyerOrdersPage() {
 
         <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase text-gray-500">Total product spend</p>
-          <p className="mt-1 text-2xl font-bold text-brand-900">{formatGhc(paidTotal)}</p>
+          <p className="mt-1 text-2xl font-bold text-brand-900">{format(paidTotal)}</p>
           <Link href="/financials" className="mt-1 inline-block text-xs font-semibold text-brand-700 hover:underline">
             View financial statement
           </Link>
