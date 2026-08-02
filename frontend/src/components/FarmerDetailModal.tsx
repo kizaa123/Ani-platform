@@ -3,10 +3,10 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
-import { FarmerBrowseCard, isResearcher } from "@/lib/types";
+import { FarmerBrowseCard, isResearcher, ROLES } from "@/lib/types";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
-import { InlineNameWithVerificationTags } from "@/components/VerificationTagBadge";
+import { RolePrefixedName, splitDisplayName } from "@/components/RolePrefixedName";
 import { Icon } from "@/components/icons";
 
 interface FarmerDetailModalProps {
@@ -32,6 +32,7 @@ export function FarmerDetailModal({
   farmAccessPriceLabel,
 }: FarmerDetailModalProps) {
   const { user } = useAuth();
+  const { firstName, lastName } = splitDisplayName(farmer.farmerName);
   const pendingStatusHref = "/connections";
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -65,11 +66,16 @@ export function FarmerDetailModal({
               />
               <div className="min-w-0">
                 <h2 className="text-xl font-bold text-brand-900">
-                  <InlineNameWithVerificationTags
-                    name={farmer.farmerName}
+                  <RolePrefixedName
+                    user={{
+                      roleId: ROLES.CROP_FARMER,
+                      firstName,
+                      lastName,
+                      verificationStatus: farmer.verificationStatus,
+                    }}
                     verificationTags={farmer.verificationTags}
-                    verificationStatus={farmer.verificationStatus}
                     nameClassName="font-bold text-brand-900"
+                    prefixClassName="font-bold text-brand-900"
                     tagSize="md"
                   />
                 </h2>

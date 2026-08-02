@@ -303,6 +303,12 @@ router.patch('/connections/:id/status', authenticate, requirePermission(PERMISSI
 router.get('/agents/profile', authenticate, agentController.profile);
 router.get('/agents/assignments', authenticate, agentController.assignments);
 router.get('/agents/clients', authenticate, agentController.listClients);
+router.post(
+  '/agents/notify-client',
+  authenticate,
+  validateBody(notifyClientSchema),
+  agentController.notifyClient
+);
 router.get('/agents/clients/:ownerId/farm', authenticate, agentController.clientFarm);
 router.get('/agents/clients/:ownerId/farm/products', authenticate, agentController.clientFarmProducts);
 router.get('/agents/clients/:ownerId/orders', authenticate, agentController.clientOrders);

@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { FarmerBrowseCard } from "@/lib/types";
+import { FarmerBrowseCard, ROLES } from "@/lib/types";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
 import { PaymentCheckout } from "@/components/PaymentCheckout";
 import { PaymentResultOverlay } from "@/components/PaymentResultOverlay";
-import { InlineNameWithVerificationTags } from "@/components/VerificationTagBadge";
+import { RolePrefixedName, splitDisplayName } from "@/components/RolePrefixedName";
 import { Icon } from "@/components/icons";
 import { api } from "@/lib/api";
 import { FARM_ACCESS_PRICE_GHC } from "@/lib/pricing";
@@ -29,6 +29,7 @@ export function FarmAccessPaymentModal({
 }: FarmAccessPaymentModalProps) {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<PaymentResult | null>(null);
+  const { firstName, lastName } = splitDisplayName(farmer.farmerName);
 
   const fee = farmer.farmAccessFee ?? FARM_ACCESS_PRICE_GHC;
   const feeLabel = farmer.farmAccessPriceLabel ?? formatGhc(fee);
@@ -99,11 +100,16 @@ export function FarmAccessPaymentModal({
                   tagPlacement="none"
                 />
                 <div className="min-w-0 text-left">
-                  <InlineNameWithVerificationTags
-                    name={farmer.farmerName}
+                  <RolePrefixedName
+                    user={{
+                      roleId: ROLES.CROP_FARMER,
+                      firstName,
+                      lastName,
+                      verificationStatus: farmer.verificationStatus,
+                    }}
                     verificationTags={farmer.verificationTags}
-                    verificationStatus={farmer.verificationStatus}
                     nameClassName="text-lg font-bold text-brand-900"
+                    prefixClassName="text-lg font-bold text-brand-900"
                   />
                   <p className="text-sm text-brand-700">{farmer.farmName}</p>
                   <CountryBadge country={farmer.country} region={farmer.region} />

@@ -13,7 +13,11 @@ import {
 } from '../constants/roles';
 import { AppError } from '../utils/errors';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
-import { farmService } from './farm.service';
+import { farmService, notifyClientSchema } from './farm.service';
+import {
+  notifyFarmProductsAvailable,
+  notifyHandlerFarmProductsAvailable,
+} from './notification.service';
 import { buyerService } from './buyer.service';
 import { connectionService } from './connection.service';
 import { buyerHasActiveAccess } from '../middleware/access.middleware';
@@ -118,6 +122,48 @@ export class AgentService {
       verificationStatus: c.verificationStatus,
       verificationTags: formatVerificationTags(c.verificationTags),
     }));
+  }
+
+  async notifyClient(
+    agentId: string,
+    roleId: number,
+    data: z.infer<typeof notifyClientSchema>
+  ) {
+    assertAuthorized(
+      isFarmerHandler(roleId) || isBuyerHandler(roleId),
+      'Only liaison officers can notify clients'
+    );
+    const client = assertFound(
+      await prisma.user.findFirst({
+        where: { id: data.clientId, roleId: { in: [...PORTAL_DIRECTORY_ROLES] } },
+        select: { id: true },
+      }),
+      'Client not found'
+    );
+
+    if (isFarmerHandler(roleId)) {
+      const assignment = await prisma.agentAssignment.findFirst({
+        where: { agentId, relationshipType: 'FARMER_REPRESENTATIVE' },
+        select: { ownerId: true },
+        orderBy: { createdAt: 'asc' },
+      });
+      if (!assignment) {
+        throw new AppError(400, 'Assign a fellow farmer before notifying clients');
+      }
+      await notifyFarmProductsAvailable({
+        farmerUserId: assignment.ownerId,
+        clientId: client.id,
+        customMessage: data.message,
+      });
+    } else {
+      await notifyHandlerFarmProductsAvailable({
+        handlerUserId: agentId,
+        clientId: client.id,
+        customMessage: data.message,
+      });
+    }
+
+    return { success: true };
   }
 
   async getAssignments(agentId: string, roleId: number) {

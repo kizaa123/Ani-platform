@@ -90,7 +90,7 @@ export function HandlerSelect({
                       verificationStatus: handler.verificationStatus,
                     }}
                     verificationTags={handler.verificationTags}
-                    className="block max-w-full truncate text-sm font-semibold"
+                    className="max-w-full text-sm font-semibold"
                     nameClassName="text-brand-900"
                   />
                 ) : (

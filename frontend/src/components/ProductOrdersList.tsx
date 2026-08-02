@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { ProductImage } from "@/components/FarmerAvatar";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
-import { InlineNameWithVerificationTags } from "@/components/VerificationTagBadge";
+import { RolePrefixedName, splitDisplayName } from "@/components/RolePrefixedName";
+import { VerificationTags } from "@/components/VerificationTagBadge";
 import { OrderTrackControls, OrderTrackTimeline } from "@/components/OrderTrackTimeline";
 import { api } from "@/lib/api";
 import {
@@ -16,7 +17,7 @@ import {
   orderStatusStyle,
 } from "@/lib/format";
 import { OrderTrackStage } from "@/lib/orderTrack";
-import { BuyerOrderLineItem, CounterpartHandlerContact, formatListingUnit, ProductOrderLineItem } from "@/lib/types";
+import { BuyerOrderLineItem, CounterpartHandlerContact, formatListingUnit, ProductOrderLineItem, ROLES } from "@/lib/types";
 import { Icon } from "@/components/icons";
 import { HandlerPhoneLink } from "@/components/HandlerAssignmentCards";
 import { EmailText } from "@/components/EmailText";
@@ -561,11 +562,15 @@ export function OrderDetailModal({
                 <div className="min-w-0 flex-1">
                   <p className="font-bold text-brand-900">
                     {!isBuyerOrder(order) ? (
-                      <InlineNameWithVerificationTags
-                        name={order.buyerName ?? "Client"}
+                      <RolePrefixedName
+                        user={{
+                          roleId: ROLES.BUYER,
+                          ...splitDisplayName(order.buyerName ?? "Client"),
+                          verificationStatus: order.buyerVerificationStatus,
+                        }}
                         verificationTags={order.buyerVerificationTags}
-                        verificationStatus={order.buyerVerificationStatus}
                         nameClassName="font-bold text-brand-900"
+                        prefixClassName="font-bold text-brand-900"
                       />
                     ) : (
                       "Client"
@@ -592,12 +597,27 @@ export function OrderDetailModal({
                 <div className="min-w-0 flex-1">
                   <p className="font-bold text-brand-900">
                     {isBuyerOrder(order) ? (
-                      <InlineNameWithVerificationTags
-                        name={`${order.farmerName}${order.farmName ? ` (${order.farmName})` : ""}`}
-                        verificationTags={order.farmerVerificationTags}
-                        verificationStatus={order.farmerVerificationStatus}
-                        nameClassName="font-bold text-brand-900"
-                      />
+                      <span className="inline-flex max-w-full flex-wrap items-center gap-x-0.5 gap-y-0.5">
+                        <RolePrefixedName
+                          user={{
+                            roleId: ROLES.CROP_FARMER,
+                            ...splitDisplayName(order.farmerName),
+                            verificationStatus: order.farmerVerificationStatus,
+                          }}
+                          hideVerificationTags
+                          nameClassName="font-bold text-brand-900"
+                          prefixClassName="font-bold text-brand-900"
+                        />
+                        {order.farmName && (
+                          <span className="font-bold text-brand-900"> ({order.farmName})</span>
+                        )}
+                        <VerificationTags
+                          verificationTags={order.farmerVerificationTags}
+                          verificationStatus={order.farmerVerificationStatus}
+                          size="sm"
+                          className="inline-flex shrink-0"
+                        />
+                      </span>
                     ) : (
                       "Fellow / My Production"
                     )}

@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { Listing, formatListingUnit, listingCommodityName } from "@/lib/types";
+import { Listing, formatListingUnit, listingCommodityName, ROLES } from "@/lib/types";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
-import { InlineNameWithVerificationTags } from "@/components/VerificationTagBadge";
+import { RolePrefixedName, splitDisplayName } from "@/components/RolePrefixedName";
 import { FarmerProductCard } from "@/components/FarmerProductCard";
 import { ProductMediaGallery } from "@/components/ProductMediaGallery";
 import { PaymentCheckout } from "@/components/PaymentCheckout";
@@ -50,6 +50,8 @@ function FarmViewHeader({
   | "region"
   | "onClose"
 >) {
+  const { firstName, lastName } = splitDisplayName(farmerName);
+
   return (
     <header className="shrink-0 border-b border-brand-100 bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
@@ -70,11 +72,16 @@ function FarmViewHeader({
             tagPlacement="none"
           />
           <div className="hidden text-right sm:block">
-            <InlineNameWithVerificationTags
-              name={farmerName}
+            <RolePrefixedName
+              user={{
+                roleId: ROLES.CROP_FARMER,
+                firstName,
+                lastName,
+                verificationStatus: farmerVerificationStatus,
+              }}
               verificationTags={farmerVerificationTags}
-              verificationStatus={farmerVerificationStatus}
               nameClassName="text-sm font-semibold text-brand-900"
+              prefixClassName="text-sm font-semibold text-brand-900"
             />
             <CountryBadge country={country} region={region} />
           </div>

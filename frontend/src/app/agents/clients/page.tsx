@@ -4,48 +4,25 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import {
-  FarmClient,
-  fullName,
-  isHandler,
-  isFarmer,
-  isBuyer,
-  isResearcher,
-  ROLES,
-} from "@/lib/types";
+import { FarmClient, fullName, isHandler } from "@/lib/types";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
+import { NotifyClientModal } from "@/components/NotifyClientModal";
 import { PageContentSkeleton } from "@/components/LoadingPrimitives";
-
-type RoleFilter = "all" | "fellows" | "clients" | "flo" | "clo" | "researchers";
-
-const ROLE_FILTERS: { value: RoleFilter; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "fellows", label: "Fellows" },
-  { value: "clients", label: "Clients" },
-  { value: "flo", label: "FLO" },
-  { value: "clo", label: "CLO" },
-  { value: "researchers", label: "Researchers" },
-];
 
 function formatLocation(client: FarmClient): string {
   return [client.city, client.region, client.country].filter(Boolean).join(", ");
 }
 
-function matchesRoleFilter(client: FarmClient, filter: RoleFilter): boolean {
-  if (filter === "all") return true;
-  if (filter === "fellows") return isFarmer(client.roleId);
-  if (filter === "clients") return isBuyer(client.roleId) || client.roleId === ROLES.STUDENT;
-  if (filter === "flo") return client.roleId === ROLES.FARMER_HANDLER;
-  if (filter === "clo") return client.roleId === ROLES.BUYER_HANDLER;
-  if (filter === "researchers") return isResearcher(client.roleId);
-  return true;
-}
-
-function ClientCard({ client }: { client: FarmClient }) {
+function ClientCard({ client, onNotify }: { client: FarmClient; onNotify: () => void }) {
   const location = formatLocation(client);
+  const subtitle = location || client.roleLabel;
 
   return (
-    <div className="flex w-full rounded-xl border border-brand-100 bg-white p-3 text-left shadow-sm">
+    <button
+      type="button"
+      onClick={onNotify}
+      className="flex w-full rounded-xl border border-brand-100 bg-white p-3 text-left shadow-sm transition hover:border-brand-300 hover:shadow-md"
+    >
       <div className="flex min-w-0 items-start gap-3">
         <AvatarWithVerification
           src={client.profilePicture}
@@ -58,13 +35,16 @@ function ClientCard({ client }: { client: FarmClient }) {
           <p className="line-clamp-2 break-words text-sm font-semibold leading-snug text-brand-900">
             {fullName(client)}
           </p>
-          <p className="mt-0.5 truncate text-xs text-brand-700">{client.roleLabel}</p>
-          {location && (
-            <p className="mt-0.5 truncate text-xs text-gray-500">{location}</p>
+          {subtitle && (
+            <p
+              className={`mt-0.5 truncate text-xs ${location ? "text-gray-500" : "text-gray-400"}`}
+            >
+              {subtitle}
+            </p>
           )}
         </div>
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -73,7 +53,7 @@ export default function AgentClientsPage() {
   const router = useRouter();
   const [clients, setClients] = useState<FarmClient[] | null>(null);
   const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
+  const [selectedClient, setSelectedClient] = useState<FarmClient | null>(null);
 
   useEffect(() => {
     if (loading) return;
@@ -113,7 +93,6 @@ export default function AgentClientsPage() {
     const list = clients ?? [];
     const term = search.trim().toLowerCase();
     return list.filter((c) => {
-      if (!matchesRoleFilter(c, roleFilter)) return false;
       if (!term) return true;
       const haystack = [
         fullName(c),
@@ -127,7 +106,12 @@ export default function AgentClientsPage() {
         .toLowerCase();
       return haystack.includes(term);
     });
-  }, [clients, search, roleFilter]);
+  }, [clients, search]);
+
+  const handleNotify = async (message: string) => {
+    if (!selectedClient) return;
+    await api.agents.notifyClient({ clientId: selectedClient.id, message });
+  };
 
   if (loading || !user) {
     return <PageContentSkeleton />;
@@ -137,43 +121,24 @@ export default function AgentClientsPage() {
     <div className="mx-auto max-w-4xl px-4 py-8">
       <h1 className="mb-2 text-2xl font-bold text-brand-900">Clients</h1>
       <p className="mb-6 text-sm text-gray-500">
-        All fellows, clients, liaison officers, and researchers on the platform.
+        All fellows, clients, liaison officers, and researchers on the platform - tap a user to notify them when your farm products are available.
       </p>
 
-      <div className="mb-4">
+      <div className="mb-5">
         <input
           type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name, role, or location..."
+          placeholder="Search by name or location..."
           className="w-full rounded-xl border border-brand-200 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
         />
-      </div>
-
-      <div className="mb-5 flex flex-wrap gap-2">
-        {ROLE_FILTERS.map(({ value, label }) => (
-          <button
-            key={value}
-            type="button"
-            onClick={() => setRoleFilter(value)}
-            className={`rounded-full px-3 py-1 text-xs font-medium transition ${
-              roleFilter === value
-                ? "bg-brand-800 text-white"
-                : "bg-brand-50 text-brand-800 hover:bg-brand-100"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
       </div>
 
       {loadingClients ? (
         <PageContentSkeleton />
       ) : filtered.length === 0 ? (
         <p className="rounded-xl border border-dashed border-brand-200 px-4 py-12 text-center text-sm text-gray-500">
-          {search.trim() || roleFilter !== "all"
-            ? "No users match your search or filter."
-            : "No users registered yet."}
+          {search.trim() ? "No users match your search." : "No users registered yet."}
         </p>
       ) : (
         <>
@@ -182,10 +147,22 @@ export default function AgentClientsPage() {
           </p>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((client) => (
-              <ClientCard key={client.id} client={client} />
+              <ClientCard
+                key={client.id}
+                client={client}
+                onNotify={() => setSelectedClient(client)}
+              />
             ))}
           </div>
         </>
+      )}
+
+      {selectedClient && (
+        <NotifyClientModal
+          client={selectedClient}
+          onClose={() => setSelectedClient(null)}
+          onSend={handleNotify}
+        />
       )}
     </div>
   );

@@ -178,7 +178,7 @@ function PortalMobileBar({
       </button>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-bold text-brand-900">{currentPage}</p>
-        <p className="truncate text-xs text-brand-600">{mobileSubtitle}</p>
+        <p className="text-xs text-brand-600">{mobileSubtitle}</p>
       </div>
       {user && (
         <>

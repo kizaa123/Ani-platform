@@ -91,6 +91,19 @@ export class AgentController {
     }
   };
 
+  notifyClient = async (req: AuthRequest, res: Response) => {
+    try {
+      const result = await agentService.notifyClient(
+        req.user!.userId,
+        req.user!.roleId,
+        req.body
+      );
+      ApiResponse.success(res, result);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
   clientFarm = async (req: AuthRequest, res: Response) => {
     try {
       ApiResponse.success(

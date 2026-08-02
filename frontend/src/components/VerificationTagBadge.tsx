@@ -222,16 +222,16 @@ export function InlineNameWithVerificationTags({
 }) {
   return (
     <span
-      className={`inline-flex max-w-full flex-wrap items-center gap-x-1 gap-y-0.5 ${className}`}
+      className={`inline-flex max-w-full flex-wrap items-center gap-x-0.5 gap-y-0.5 ${className}`}
     >
-      <span className={`min-w-0 ${nameClassName}`}>{name}</span>
+      <span className={`inline min-w-0 ${nameClassName}`}>{name}</span>
       <VerificationTags
         verificationTags={verificationTags}
         verificationStatus={verificationStatus}
         size={tagSize}
         showLabels={showLabels}
         layout="row"
-        className="shrink-0"
+        className="inline-flex shrink-0"
       />
     </span>
   );

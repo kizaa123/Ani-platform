@@ -945,6 +945,37 @@ export async function notifyFarmProductsAvailable(params: {
   }).catch(() => undefined);
 }
 
+export async function notifyHandlerFarmProductsAvailable(params: {
+  handlerUserId: string;
+  clientId: string;
+  customMessage?: string;
+}) {
+  const { handlerUserId, clientId, customMessage } = params;
+  const handler = await prisma.user.findUnique({
+    where: { id: handlerUserId },
+    select: { firstName: true, lastName: true },
+  });
+  if (!handler) return;
+
+  const handlerName = formatName(handler.firstName, handler.lastName);
+  const defaultMessage = 'Farm products are available, please access my farm';
+  const body = customMessage?.trim() || defaultMessage;
+  const link = '/marketplace';
+
+  await createNotification({
+    userId: clientId,
+    actorId: handlerUserId,
+    type: 'FARM_PRODUCTS_AVAILABLE',
+    title: `${handlerName} - farm products available`,
+    body,
+    link,
+    metadata: {
+      actionUrl: link,
+      actionLabel: 'Browse marketplace',
+    },
+  }).catch(() => undefined);
+}
+
 export async function notifyResearchPublicationsAvailable(params: {
   researcherUserId: string;
   clientId: string;

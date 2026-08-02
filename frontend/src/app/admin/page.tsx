@@ -12,7 +12,6 @@ import {
   isBuyer,
   isFarmerHandler,
   isBuyerHandler,
-  fullName,
   type AdminStats,
   type AdminDashboardCharts,
   type AdminVerificationUser,
@@ -20,6 +19,7 @@ import {
 } from "@/lib/types";
 import { VerificationBadge } from "@/components/VerificationBadge";
 import { VerificationTagBadge } from "@/components/VerificationTagBadge";
+import { RolePrefixedName } from "@/components/RolePrefixedName";
 import { AdminStatCard } from "@/components/admin/AdminStatCard";
 import { AdminPlatformIncomeCard } from "@/components/admin/AdminPlatformIncomeCard";
 import { AdminDashboardChartsPanel } from "@/components/admin/AdminDashboardCharts";
@@ -533,8 +533,13 @@ export default function AdminPage() {
                         return (
                           <tr key={u.id} className="align-top">
                               <td className="py-3 pr-4">
-                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                  <span className="font-semibold text-brand-900">{fullName(u)}</span>
+                                <span className="inline-flex max-w-full flex-wrap items-center gap-x-0.5 gap-y-1">
+                                  <RolePrefixedName
+                                    user={u}
+                                    hideVerificationTags
+                                    nameClassName="font-semibold text-brand-900"
+                                    prefixClassName="font-semibold text-brand-900"
+                                  />
                                   {showStandardBadge && (
                                     <VerificationTagBadge
                                       tagType="STANDARD"
@@ -557,7 +562,7 @@ export default function AdminPage() {
                                   {!showStandardBadge && (
                                     <VerificationBadge adminView status={u.verificationStatus} />
                                   )}
-                                </div>
+                                </span>
                               </td>
                               <td className="py-3 pr-4 text-gray-700">
                                 <EmailText email={u.email} />

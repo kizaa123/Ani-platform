@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AgentAssignment, AgentClientOwner, AppNotification, fullName, isResearcher } from "@/lib/types";
+import { AgentAssignment, AgentClientOwner, AppNotification, isResearcher, ROLES } from "@/lib/types";
 import { formatUserLocation } from "@/lib/formatUserLocation";
 import { assetUrl, assetUrlFallback } from "@/lib/assetUrl";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
-import { InlineNameWithVerificationTags } from "@/components/VerificationTagBadge";
+import { RolePrefixedName } from "@/components/RolePrefixedName";
 import { CountryBadge } from "@/components/CountrySelect";
 import { EmailText } from "@/components/EmailText";
 import { Icon, type IconName } from "@/components/icons";
@@ -77,10 +77,14 @@ export function HandlerAssignmentIdentity({
         tagPlacement="none"
       />
       <div className="min-w-0 flex-1">
-        <InlineNameWithVerificationTags
-          name={fullName(owner)}
+        <RolePrefixedName
+          user={{
+            roleId: owner.roleId ?? (owner.isFarmer ? ROLES.CROP_FARMER : ROLES.BUYER),
+            firstName: owner.firstName,
+            lastName: owner.lastName,
+            verificationStatus: owner.verificationStatus,
+          }}
           verificationTags={owner.verificationTags}
-          verificationStatus={owner.verificationStatus}
           nameClassName={nameClass}
           className="max-w-full"
         />

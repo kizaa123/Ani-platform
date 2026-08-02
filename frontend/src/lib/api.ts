@@ -465,6 +465,11 @@ class ApiClient {
   agents = {
     assignments: () => this.request<import("./types").AgentAssignment[]>("/agents/assignments"),
     clients: () => this.request<import("./types").FarmClient[]>("/agents/clients"),
+    notifyClient: (body: { clientId: string; message?: string }) =>
+      this.request<{ success: boolean }>("/agents/notify-client", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
     clientFarm: (ownerId: string) =>
       this.request<import("./types").HandlerClientFarm>(`/agents/clients/${ownerId}/farm`),
     clientOrders: (ownerId: string) =>

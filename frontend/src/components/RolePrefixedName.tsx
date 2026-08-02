@@ -11,15 +11,22 @@ import {
 
 export type RolePrefixConfig = {
   prefix: string;
-  separator: "_" | " ";
 };
 
 export function getRoleNamePrefix(roleId: number): RolePrefixConfig | null {
-  if (isFarmer(roleId)) return { prefix: "Fellow", separator: "_" };
-  if (isBuyer(roleId)) return { prefix: "Client", separator: "_" };
-  if (isBuyerHandler(roleId)) return { prefix: "CLO", separator: "_" };
-  if (isFarmerHandler(roleId)) return { prefix: "FLO", separator: "_" };
+  if (isFarmer(roleId)) return { prefix: "Fellow" };
+  if (isBuyer(roleId)) return { prefix: "Client" };
+  if (isBuyerHandler(roleId)) return { prefix: "CLO" };
+  if (isFarmerHandler(roleId)) return { prefix: "FLO" };
   return null;
+}
+
+export function splitDisplayName(displayName: string): { firstName: string; lastName: string } {
+  const parts = displayName.trim().split(/\s+/).filter(Boolean);
+  return {
+    firstName: parts[0] ?? displayName,
+    lastName: parts.slice(1).join(" "),
+  };
 }
 
 interface RolePrefixedNameProps {
@@ -33,6 +40,7 @@ interface RolePrefixedNameProps {
   verificationTags?: UserVerificationTag[];
   className?: string;
   prefixClassName?: string;
+  /** @deprecated Separator is always a space between prefix and name. */
   separatorClassName?: string;
   nameClassName?: string;
   /** @deprecated Prefer verificationTags for inline badge display. */
@@ -73,7 +81,6 @@ export function RolePrefixedName({
   verificationTags,
   className = "",
   prefixClassName = "text-brand-600",
-  separatorClassName = "text-brand-400",
   nameClassName = "text-brand-900",
   showVerifiedBadge = false,
   tagSize = "sm",
@@ -100,43 +107,26 @@ export function RolePrefixedName({
     />
   );
 
-  if (!config) {
-    return (
-      <span
-        className={[
-          "inline-flex max-w-full flex-wrap items-center gap-x-1 gap-y-0.5",
-          className,
-        ]
-          .filter(Boolean)
-          .join(" ")}
-      >
-        <span className={nameClassName}>{name}</span>
-        {inlineTags}
-        {showVerifiedBadge && !hideVerificationTags && isVerified && !resolvedTags?.length && (
-          <span title="Verified User">
-            <VerifiedBadgeIcon className="h-4 w-4 shrink-0" />
-          </span>
-        )}
-      </span>
-    );
-  }
+  const nameLabel = config ? (
+    <span className="inline-flex min-w-0 items-baseline">
+      <span className={prefixClassName}>{config.prefix}</span>
+      <span aria-hidden="true">&nbsp;</span>
+      <span className={nameClassName}>{name}</span>
+    </span>
+  ) : (
+    <span className={`min-w-0 ${nameClassName}`}>{name}</span>
+  );
 
   return (
     <span
       className={[
-        "inline-flex max-w-full flex-wrap items-center gap-x-1 gap-y-0.5",
+        "inline-flex max-w-full flex-wrap items-center gap-x-0.5 gap-y-0.5",
         className,
       ]
         .filter(Boolean)
         .join(" ")}
     >
-      <span className={prefixClassName}>{config.prefix}</span>
-      {config.separator === "_" ? (
-        <span className={separatorClassName}>_</span>
-      ) : (
-        <span aria-hidden="true"> </span>
-      )}
-      <span className={nameClassName}>{name}</span>
+      {nameLabel}
       {inlineTags}
       {showVerifiedBadge && !hideVerificationTags && isVerified && !resolvedTags?.length && (
         <span title="Verified User">

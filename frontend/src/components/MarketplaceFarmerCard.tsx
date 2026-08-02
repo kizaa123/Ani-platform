@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FarmerBrowseCard } from "@/lib/types";
+import { FarmerBrowseCard, ROLES } from "@/lib/types";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
-import { InlineNameWithVerificationTags } from "@/components/VerificationTagBadge";
+import { RolePrefixedName, splitDisplayName } from "@/components/RolePrefixedName";
 import { Icon } from "@/components/icons";
 
 interface MarketplaceFarmerCardProps {
@@ -101,6 +101,7 @@ export function MarketplaceFarmerCard({
       ? "No products listed"
       : `${productCount} product${productCount === 1 ? "" : "s"} listed`;
   const showUnavailableBadge = farmer.hasAvailableProduct === false;
+  const { firstName, lastName } = splitDisplayName(farmer.farmerName);
 
   return (
     <article className="card-elevated card-elevated-hover flex h-full flex-col overflow-hidden rounded-2xl p-5">
@@ -115,11 +116,16 @@ export function MarketplaceFarmerCard({
         />
         <div className="min-w-0 flex-1 pt-0.5">
           <h3 className="line-clamp-2 break-words text-sm font-bold leading-snug text-brand-900 sm:text-base">
-            <InlineNameWithVerificationTags
-              name={farmer.farmerName}
+            <RolePrefixedName
+              user={{
+                roleId: ROLES.CROP_FARMER,
+                firstName,
+                lastName,
+                verificationStatus: farmer.verificationStatus,
+              }}
               verificationTags={farmer.verificationTags}
-              verificationStatus={farmer.verificationStatus}
               nameClassName="font-bold text-brand-900"
+              prefixClassName="font-bold text-brand-900"
             />
           </h3>
           <p className="truncate text-sm font-medium text-brand-700">
