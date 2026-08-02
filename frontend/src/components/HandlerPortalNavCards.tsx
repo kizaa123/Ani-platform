@@ -20,10 +20,8 @@ function handlerNavCards(roleId: number): HandlerNavCard[] {
   return [
     {
       href: "/agents/clients",
-      title: isClo ? "My Clients" : "My Fellows",
-      desc: isClo
-        ? "View assigned clients, orders & connections"
-        : "View assigned fellows, orders & profiles",
+      title: "Clients",
+      desc: "Browse all platform users — fellows, clients, liaison officers, and researchers",
       icon: "users",
     },
     {

@@ -302,6 +302,7 @@ router.patch('/connections/:id/status', authenticate, requirePermission(PERMISSI
 // Agents
 router.get('/agents/profile', authenticate, agentController.profile);
 router.get('/agents/assignments', authenticate, agentController.assignments);
+router.get('/agents/clients', authenticate, agentController.listClients);
 router.get('/agents/clients/:ownerId/farm', authenticate, agentController.clientFarm);
 router.get('/agents/clients/:ownerId/farm/products', authenticate, agentController.clientFarmProducts);
 router.get('/agents/clients/:ownerId/orders', authenticate, agentController.clientOrders);

@@ -7,7 +7,7 @@ import { isListingOrderable } from './farmAccess.service';
 import { getPaymentProvider } from './payment.provider';
 import { notifyNewOrder, notifyProductPurchase } from './notification.service';
 import { generateReleaseOtp } from '../utils/orderOtp';
-import { normalizeImages } from '../middleware/upload.middleware';
+import { normalizeImages, normalizePublicAssetUrl } from '../middleware/upload.middleware';
 
 export const purchaseProductSchema = z.object({
   quantity: z.number().positive(),
@@ -28,6 +28,7 @@ export class OrderService {
         include: {
           commodity: { include: { category: true } },
           farmer: { include: { user: { select: { id: true, firstName: true, lastName: true } } } },
+          media: { where: { type: 'IMAGE' }, orderBy: { orderIndex: 'asc' }, take: 1 },
         },
       }),
       'Product not found'
@@ -128,7 +129,12 @@ export class OrderService {
     const buyerName = `${txResult.order.buyer.firstName} ${txResult.order.buyer.lastName}`;
     const farmerName = `${listing.farmer.user.firstName} ${listing.farmer.user.lastName}`;
     const normalized = normalizeImages(listing.images);
-    const imageUrl = normalized[0] ?? null;
+    const imageFromMedia = listing.media[0]?.url;
+    const imageUrl = imageFromMedia
+      ? normalizePublicAssetUrl(imageFromMedia)
+      : normalized[0]
+        ? normalizePublicAssetUrl(normalized[0])
+        : null;
     await notifyNewOrder(farmerUserId, buyerId, buyerName, listing.title, totalAmount, {
       quantity: data.quantity,
       unit: listing.unit,

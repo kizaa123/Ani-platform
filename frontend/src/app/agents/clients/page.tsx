@@ -1,196 +1,192 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import {
-  AgentAssignment,
-  isFarmerAssignment,
-  isBuyerAssignment,
+  FarmClient,
+  fullName,
   isHandler,
-  isBuyerHandler,
-  isFarmerHandler,
+  isFarmer,
+  isBuyer,
+  isResearcher,
+  ROLES,
 } from "@/lib/types";
-import {
-  HandlerFarmerClientCard,
-  HandlerBuyerClientCard,
-} from "@/components/HandlerAssignmentCards";
+import { AvatarWithVerification } from "@/components/AvatarWithVerification";
+import { PageContentSkeleton } from "@/components/LoadingPrimitives";
+
+type RoleFilter = "all" | "fellows" | "clients" | "flo" | "clo" | "researchers";
+
+const ROLE_FILTERS: { value: RoleFilter; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "fellows", label: "Fellows" },
+  { value: "clients", label: "Clients" },
+  { value: "flo", label: "FLO" },
+  { value: "clo", label: "CLO" },
+  { value: "researchers", label: "Researchers" },
+];
+
+function formatLocation(client: FarmClient): string {
+  return [client.city, client.region, client.country].filter(Boolean).join(", ");
+}
+
+function matchesRoleFilter(client: FarmClient, filter: RoleFilter): boolean {
+  if (filter === "all") return true;
+  if (filter === "fellows") return isFarmer(client.roleId);
+  if (filter === "clients") return isBuyer(client.roleId) || client.roleId === ROLES.STUDENT;
+  if (filter === "flo") return client.roleId === ROLES.FARMER_HANDLER;
+  if (filter === "clo") return client.roleId === ROLES.BUYER_HANDLER;
+  if (filter === "researchers") return isResearcher(client.roleId);
+  return true;
+}
+
+function ClientCard({ client }: { client: FarmClient }) {
+  const location = formatLocation(client);
+
+  return (
+    <div className="flex w-full rounded-xl border border-brand-100 bg-white p-3 text-left shadow-sm">
+      <div className="flex min-w-0 items-start gap-3">
+        <AvatarWithVerification
+          src={client.profilePicture}
+          name={client.firstName}
+          size={72}
+          verificationStatus={client.verificationStatus}
+          verificationTags={client.verificationTags}
+        />
+        <div className="min-w-0 flex-1">
+          <p className="line-clamp-2 break-words text-sm font-semibold leading-snug text-brand-900">
+            {fullName(client)}
+          </p>
+          <p className="mt-0.5 truncate text-xs text-brand-700">{client.roleLabel}</p>
+          {location && (
+            <p className="mt-0.5 truncate text-xs text-gray-500">{location}</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function AgentClientsPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const [assignments, setAssignments] = useState<AgentAssignment[]>([]);
-  const [error, setError] = useState("");
+  const [clients, setClients] = useState<FarmClient[] | null>(null);
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
 
   useEffect(() => {
-    if (!loading && !user) router.push("/login");
-    if (user && !isHandler(user.roleId)) {
-      router.push("/dashboard");
+    if (loading) return;
+    if (!user) {
+      router.push("/login");
       return;
     }
-    if (user) {
-      api.agents
-        .assignments()
-        .then(setAssignments)
-        .catch((e) => setError(e instanceof Error ? e.message : "Failed to load clients"));
+    if (!isHandler(user.roleId)) {
+      router.push("/dashboard");
     }
-  }, [user?.id, loading, router]);
+  }, [user, loading, router]);
+
+  useEffect(() => {
+    if (!user || !isHandler(user.roleId)) return;
+
+    let cancelled = false;
+    api.agents
+      .clients()
+      .then((list) => {
+        if (!cancelled) setClients(list);
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          console.error(e);
+          setClients([]);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  const loadingClients = clients === null;
+
+  const filtered = useMemo(() => {
+    const list = clients ?? [];
+    const term = search.trim().toLowerCase();
+    return list.filter((c) => {
+      if (!matchesRoleFilter(c, roleFilter)) return false;
+      if (!term) return true;
+      const haystack = [
+        fullName(c),
+        c.roleLabel,
+        c.city,
+        c.region,
+        c.country,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(term);
+    });
+  }, [clients, search, roleFilter]);
 
   if (loading || !user) {
-    return <div className="p-12 text-center text-gray-500">Loading...</div>;
+    return <PageContentSkeleton />;
   }
 
-  const farmerClients = assignments.filter(isFarmerAssignment);
-  const buyerClients = assignments.filter(isBuyerAssignment);
-
-  const isBuyerHandlerUser = isBuyerHandler(user.roleId);
-  const isFarmerHandlerUser = isFarmerHandler(user.roleId);
-  const visibleFarmerClients = isBuyerHandlerUser ? [] : farmerClients;
-  const visibleBuyerClients = isFarmerHandlerUser ? [] : buyerClients;
-  const visibleTotal = visibleFarmerClients.length + visibleBuyerClients.length;
-  const pageTitle = isBuyerHandlerUser
-    ? "Assigned Clients"
-    : isFarmerHandlerUser
-      ? "Assigned Fellows"
-      : "My Clients";
-  const pageSubtitle = isBuyerHandlerUser
-    ? "Clients and researchers who assigned you as their liaison officer"
-    : isFarmerHandlerUser
-      ? "Fellows who assigned you as their liaison officer"
-      : "Fellows and clients who assigned you as their liaison officer";
-
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-brand-900">{pageTitle}</h1>
-        <p className="mt-1 text-sm text-gray-500">{pageSubtitle}</p>
+    <div className="mx-auto max-w-4xl px-4 py-8">
+      <h1 className="mb-2 text-2xl font-bold text-brand-900">Clients</h1>
+      <p className="mb-6 text-sm text-gray-500">
+        All fellows, clients, liaison officers, and researchers on the platform.
+      </p>
+
+      <div className="mb-4">
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by name, role, or location..."
+          className="w-full rounded-xl border border-brand-200 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+        />
       </div>
 
-      {error && (
-        <p className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {error}
+      <div className="mb-5 flex flex-wrap gap-2">
+        {ROLE_FILTERS.map(({ value, label }) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => setRoleFilter(value)}
+            className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+              roleFilter === value
+                ? "bg-brand-800 text-white"
+                : "bg-brand-50 text-brand-800 hover:bg-brand-100"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {loadingClients ? (
+        <PageContentSkeleton />
+      ) : filtered.length === 0 ? (
+        <p className="rounded-xl border border-dashed border-brand-200 px-4 py-12 text-center text-sm text-gray-500">
+          {search.trim() || roleFilter !== "all"
+            ? "No users match your search or filter."
+            : "No users registered yet."}
         </p>
-      )}
-
-      {assignments.length > 0 && visibleTotal > 0 && (
-        <div className="mb-6 grid gap-3 sm:grid-cols-3">
-          <StatCard
-            label={
-              isBuyerHandlerUser
-                ? "Assigned clients"
-                : isFarmerHandlerUser
-                  ? "Assigned fellows"
-                  : "Total clients"
-            }
-            value={visibleTotal}
-          />
-          {!isBuyerHandlerUser && (
-            <StatCard label="Fellows" value={visibleFarmerClients.length} accent="brand" />
-          )}
-          {!isFarmerHandlerUser && (
-            <StatCard label="Clients" value={visibleBuyerClients.length} accent="muted" />
-          )}
-        </div>
-      )}
-
-      {visibleTotal === 0 ? (
-        <div className="rounded-xl border border-dashed border-brand-200 bg-brand-50/30 p-10 text-center">
-          <p className="text-3xl">👥</p>
-          <p className="mt-2 font-semibold text-brand-900">
-            {isBuyerHandlerUser
-              ? "No clients yet"
-              : isFarmerHandlerUser
-                ? "No fellows yet"
-                : "No clients yet"}
-          </p>
-          <p className="mt-1 text-sm text-gray-500">
-            {isBuyerHandlerUser
-              ? "Clients and researchers choose you as their liaison officer when they register on the platform."
-              : isFarmerHandlerUser
-                ? "Fellows choose you as their liaison officer when they register on the platform."
-                : "Clients choose you as their handler when they register on the platform."}
-          </p>
-        </div>
       ) : (
-        <div className="space-y-8">
-          {visibleFarmerClients.length > 0 && (
-            <section>
-              <SectionHeader
-                title="Fellow clients"
-                subtitle="View profiles and manage client orders"
-                count={visibleFarmerClients.length}
-              />
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {visibleFarmerClients.map((a) => (
-                  <HandlerFarmerClientCard key={a.id} assignment={a} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {visibleBuyerClients.length > 0 && (
-            <section>
-              <SectionHeader
-                title="Assigned clients"
-                subtitle="View profiles and track orders placed"
-                count={visibleBuyerClients.length}
-              />
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {visibleBuyerClients.map((a) => (
-                  <HandlerBuyerClientCard key={a.id} assignment={a} />
-                ))}
-              </div>
-            </section>
-          )}
-        </div>
+        <>
+          <p className="mb-3 text-xs text-gray-500">
+            {filtered.length} user{filtered.length !== 1 ? "s" : ""}
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {filtered.map((client) => (
+              <ClientCard key={client.id} client={client} />
+            ))}
+          </div>
+        </>
       )}
-    </div>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  accent = "default",
-}: {
-  label: string;
-  value: number;
-  accent?: "default" | "brand" | "muted";
-}) {
-  const bg =
-    accent === "brand"
-      ? "bg-brand-50 border-brand-100"
-      : accent === "muted"
-        ? "bg-gray-50 border-gray-100"
-        : "bg-white border-brand-100";
-
-  return (
-    <div className={`rounded-xl border p-3 shadow-sm ${bg}`}>
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">{label}</p>
-      <p className="mt-0.5 text-2xl font-bold tabular-nums text-brand-900">{value}</p>
-    </div>
-  );
-}
-
-function SectionHeader({
-  title,
-  subtitle,
-  count,
-}: {
-  title: string;
-  subtitle: string;
-  count: number;
-}) {
-  return (
-    <div className="mb-4 flex flex-wrap items-end justify-between gap-2 border-b border-brand-100 pb-2.5">
-      <div>
-        <h2 className="text-lg font-bold text-brand-900">{title}</h2>
-        <p className="text-xs text-gray-500">{subtitle}</p>
-      </div>
-      <span className="rounded-full bg-brand-100 px-2.5 py-0.5 text-[10px] font-semibold text-brand-900">
-        {count} assigned
-      </span>
     </div>
   );
 }

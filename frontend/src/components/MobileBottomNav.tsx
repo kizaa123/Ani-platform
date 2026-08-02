@@ -91,7 +91,7 @@ function farmerHandlerNav(): BottomNavItem[] {
     { href: "/library", label: "Library", icon: "book", match: (p) => p.startsWith("/library") },
     {
       href: "/agents/clients",
-      label: "Fellows",
+      label: "Clients",
       icon: "users",
       match: (p) =>
         (p === "/agents/clients" ||

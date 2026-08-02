@@ -80,6 +80,17 @@ export class AgentController {
     }
   };
 
+  listClients = async (req: AuthRequest, res: Response) => {
+    try {
+      ApiResponse.success(
+        res,
+        await agentService.listClients(req.user!.userId, req.user!.roleId)
+      );
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
   clientFarm = async (req: AuthRequest, res: Response) => {
     try {
       ApiResponse.success(

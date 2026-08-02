@@ -12,7 +12,7 @@ const clientMatch = (p: string) =>
 
 export const FLO_NAV_LINKS: PortalNavLink[] = [
   { href: "/dashboard", label: "Dashboard", icon: "home", match: (p) => p === "/dashboard" },
-  { href: "/agents/clients", label: "My Fellows", icon: "users", match: clientMatch },
+  { href: "/agents/clients", label: "Clients", icon: "users", match: clientMatch },
   {
     href: "/agents/financials",
     label: "Financials",
@@ -30,7 +30,7 @@ export const FLO_NAV_LINKS: PortalNavLink[] = [
 
 export const CLO_NAV_LINKS: PortalNavLink[] = [
   { href: "/dashboard", label: "Dashboard", icon: "home", match: (p) => p === "/dashboard" },
-  { href: "/agents/clients", label: "My Clients", icon: "users", match: clientMatch },
+  { href: "/agents/clients", label: "Clients", icon: "users", match: clientMatch },
   {
     href: "/agents/financials",
     label: "Financials",
@@ -50,13 +50,9 @@ export const HANDLER_NAV_LINKS: PortalNavLink[] = [
   { href: "/dashboard", label: "Dashboard", icon: "home", match: (p) => p === "/dashboard" },
   {
     href: "/agents/clients",
-    label: "My Clients",
+    label: "Clients",
     icon: "users",
-    match: (p) =>
-      (p === "/agents/clients" ||
-        p.startsWith("/agents/farm/") ||
-        p.startsWith("/agents/buyer/")) &&
-      !p.startsWith("/agents/settings"),
+    match: clientMatch,
   },
   {
     href: "/agents/financials",

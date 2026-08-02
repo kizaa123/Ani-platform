@@ -1,7 +1,16 @@
 import { z } from 'zod';
 import prisma from '../database/prisma';
 import { assertFound, assertAuthorized } from '../utils/errors';
-import { ROLES, isFarmerHandler, isBuyerHandler, isFarmerRole, FARMER_ROLES, CLIENT_ROLES } from '../constants/roles';
+import {
+  ROLES,
+  isFarmerHandler,
+  isBuyerHandler,
+  isFarmerRole,
+  FARMER_ROLES,
+  CLIENT_ROLES,
+  PORTAL_DIRECTORY_ROLES,
+  portalDirectoryRoleLabel,
+} from '../constants/roles';
 import { AppError } from '../utils/errors';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import { farmService } from './farm.service';
@@ -69,6 +78,46 @@ export class AgentService {
       }),
       'Agent profile not found'
     );
+  }
+
+  async listClients(userId: string, roleId: number) {
+    assertAuthorized(
+      isFarmerHandler(roleId) || isBuyerHandler(roleId),
+      'Only liaison officers can list clients'
+    );
+    const clients = await prisma.user.findMany({
+      where: {
+        roleId: { in: [...PORTAL_DIRECTORY_ROLES] },
+        id: { not: userId },
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        profilePicture: true,
+        city: true,
+        region: true,
+        country: true,
+        roleId: true,
+        verificationStatus: true,
+        verificationTags: { select: verificationTagSelect },
+      },
+      orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
+    });
+
+    return clients.map((c) => ({
+      id: c.id,
+      firstName: c.firstName,
+      lastName: c.lastName,
+      profilePicture: normalizePublicAssetUrl(c.profilePicture),
+      city: c.city,
+      region: c.region,
+      country: c.country,
+      roleId: c.roleId,
+      roleLabel: portalDirectoryRoleLabel(c.roleId),
+      verificationStatus: c.verificationStatus,
+      verificationTags: formatVerificationTags(c.verificationTags),
+    }));
   }
 
   async getAssignments(agentId: string, roleId: number) {

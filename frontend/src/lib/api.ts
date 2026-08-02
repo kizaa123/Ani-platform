@@ -464,6 +464,7 @@ class ApiClient {
 
   agents = {
     assignments: () => this.request<import("./types").AgentAssignment[]>("/agents/assignments"),
+    clients: () => this.request<import("./types").FarmClient[]>("/agents/clients"),
     clientFarm: (ownerId: string) =>
       this.request<import("./types").HandlerClientFarm>(`/agents/clients/${ownerId}/farm`),
     clientOrders: (ownerId: string) =>
