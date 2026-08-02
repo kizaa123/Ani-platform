@@ -49,7 +49,7 @@ function handlerNavCards(roleId: number): HandlerNavCard[] {
   ];
 }
 
-/** Image-backed nav cards for handler portal sections — matches fellow/client dashboard style. */
+/** Image-backed nav cards for handler portal sections - matches fellow/client dashboard style. */
 export function HandlerPortalNavCards({
   roleId,
   excludeHref,

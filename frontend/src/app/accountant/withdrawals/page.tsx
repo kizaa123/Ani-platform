@@ -277,7 +277,7 @@ export default function AccountantWithdrawalsPage() {
                       {fullName(row.creator)}
                     </td>
                     <td className="max-w-[12rem] truncate px-4 py-2.5 text-gray-500">
-                      {row.notes || "—"}
+                      {row.notes || "-"}
                     </td>
                     <td className="px-5 py-2.5">
                       {row.status === "PENDING" ? (
@@ -300,7 +300,7 @@ export default function AccountantWithdrawalsPage() {
                           </button>
                         </div>
                       ) : (
-                        <span className="text-gray-400">—</span>
+                        <span className="text-gray-400">-</span>
                       )}
                     </td>
                   </tr>

@@ -62,7 +62,7 @@ export function FarmerPortalLayout({ children }: { children: React.ReactNode }) 
   );
 }
 
-/** @deprecated Use FarmerPortalLayout — kept for imports that expect FarmerSidebar */
+/** @deprecated Use FarmerPortalLayout - kept for imports that expect FarmerSidebar */
 export function FarmerSidebar() {
   return null;
 }

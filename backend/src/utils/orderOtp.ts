@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 
-/** Generate a random 4-digit release code (1000–9999). */
+/** Generate a random 4-digit release code (1000-9999). */
 export function generateReleaseOtp(): string {
   return String(crypto.randomInt(1000, 10000));
 }

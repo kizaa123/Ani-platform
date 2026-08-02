@@ -54,7 +54,7 @@ function MediaSlide({
         <img src={src} alt="" className="h-full w-full object-cover" />
       ) : null}
 
-      {/* Like & Share — stacked vertically on the right */}
+      {/* Like & Share - stacked vertically on the right */}
       <div className="absolute bottom-3 right-3 flex flex-col items-center gap-2">
         <button
           type="button"
@@ -189,7 +189,7 @@ export function FarmerMediaCarousel({ farmerUserId, farmerName }: FarmerMediaCar
           ))}
         </div>
 
-        {/* Prev / Next arrows — desktop only (hidden on mobile) */}
+        {/* Prev / Next arrows - desktop only (hidden on mobile) */}
         {items.length > 1 && (
           <>
             <button
@@ -217,7 +217,7 @@ export function FarmerMediaCarousel({ farmerUserId, farmerName }: FarmerMediaCar
           </>
         )}
 
-        {/* Dot indicators — always visible */}
+        {/* Dot indicators - always visible */}
         {items.length > 1 && (
           <div className="flex items-center justify-center gap-2 border-t border-brand-100 bg-white px-4 py-3">
             {items.map((item, i) => (

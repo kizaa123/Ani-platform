@@ -283,7 +283,7 @@ export interface OrderEscrowFields {
   releaseOtp?: string | null;
 }
 
-/** Assigned liaison officer on the other side of an order — handler portals only. */
+/** Assigned liaison officer on the other side of an order - handler portals only. */
 export interface CounterpartHandlerContact {
   id: string;
   firstName: string;
@@ -354,7 +354,7 @@ export interface ProductOrderLineItem extends OrderEscrowFields {
   purchaseCount?: number;
   orderName?: string;
   orderDescription?: string;
-  /** Buyer's assigned CLO — included on handler-scoped order endpoints only. */
+  /** Buyer's assigned CLO - included on handler-scoped order endpoints only. */
   counterpartHandler?: CounterpartHandlerContact | null;
 }
 
@@ -457,7 +457,7 @@ export interface BuyerOrderLineItem extends OrderEscrowFields {
   title?: string;
   /** @deprecated use farmerLocation */
   farmerRegion?: string;
-  /** Farmer's assigned FLO — included on handler-scoped order endpoints only. */
+  /** Farmer's assigned FLO - included on handler-scoped order endpoints only. */
   counterpartHandler?: CounterpartHandlerContact | null;
 }
 
@@ -797,7 +797,7 @@ export function isStudent(roleId: number) {
   return roleId === ROLES.STUDENT;
 }
 
-/** Farmers, clients (buyers), and legacy students — not researchers or handlers. */
+/** Farmers, clients (buyers), and legacy students - not researchers or handlers. */
 export function canPurchasePublication(roleId: number) {
   return isFarmer(roleId) || isBuyer(roleId) || isStudent(roleId);
 }

@@ -5,9 +5,9 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 export type ScrollDirection = "fade-up" | "fade-in" | "fade-down" | "fade-left" | "fade-right";
 
 export type UseScrollAnimationOptions = {
-  /** Delay before animation starts (ms). Use multiples of 80–120 for stagger. */
+  /** Delay before animation starts (ms). Use multiples of 80-120 for stagger. */
   delay?: number;
-  /** Animation duration (ms). Recommended 400–600. */
+  /** Animation duration (ms). Recommended 400-600. */
   duration?: number;
   direction?: ScrollDirection;
   /** `scroll` triggers on viewport entry; `mount` plays on first paint (hero/auth panels). */

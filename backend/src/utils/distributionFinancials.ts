@@ -10,9 +10,9 @@ export const HANDLER_REMAINDER_SHARE_PERCENT = 10;
 /** ANI share of order total when both handlers are assigned (100 − Fellow − FLO − CLO). */
 export const ANI_PLATFORM_SHARE_PERCENT =
   100 - FARMER_SHARE_PERCENT - HANDLER_REMAINDER_SHARE_PERCENT - HANDLER_REMAINDER_SHARE_PERCENT;
-/** @deprecated Use HANDLER_REMAINDER_SHARE_PERCENT — kept for distribution line labels. */
+/** @deprecated Use HANDLER_REMAINDER_SHARE_PERCENT - kept for distribution line labels. */
 export const FARMER_HANDLER_SHARE_PERCENT = HANDLER_REMAINDER_SHARE_PERCENT;
-/** @deprecated Use HANDLER_REMAINDER_SHARE_PERCENT — kept for distribution line labels. */
+/** @deprecated Use HANDLER_REMAINDER_SHARE_PERCENT - kept for distribution line labels. */
 export const BUYER_HANDLER_SHARE_PERCENT = HANDLER_REMAINDER_SHARE_PERCENT;
 
 /** Buyer pays listed price X; ANI retains 10% of publication sales. */
@@ -83,7 +83,7 @@ export function aniPlatformShareAmount(
   return calculateDistributionAmounts(totalAmount, options).aniPlatform;
 }
 
-/** Policy rate of order total — not derived from rounded GHC amounts. */
+/** Policy rate of order total - not derived from rounded GHC amounts. */
 export function aniPlatformSharePercentOfTotal(
   _totalAmount: number,
   options: DistributionHandlerOptions = {}

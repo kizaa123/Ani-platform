@@ -27,7 +27,7 @@ export function assertUnitForRole(roleId: number, unit: string): void {
           : 'crop';
     throw new AppError(
       400,
-      `${label} farmers must use ${allowed.join(' or ')} — not "${unit}"`
+      `${label} farmers must use ${allowed.join(' or ')} - not "${unit}"`
     );
   }
 }

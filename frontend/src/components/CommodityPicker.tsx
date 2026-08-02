@@ -141,7 +141,7 @@ export function CommodityPicker({
 
   const triggerText =
     mode === "multi" && selectedCommodities.length > 0
-      ? `${selectedCommodities.length} selected — click to add more`
+      ? `${selectedCommodities.length} selected - click to add more`
       : mode === "select-add"
         ? "Search and add a commodity…"
         : "Search and select commodities…";
@@ -245,7 +245,7 @@ export function CommodityPicker({
                 <span aria-hidden>{getCommodityEmoji(c.name)}</span>
                 <span className="whitespace-nowrap">{c.name}</span>
                 <span className="text-xs font-normal text-gray-500 whitespace-nowrap">
-                  ({c.category?.name ?? "—"})
+                  ({c.category?.name ?? "-"})
                 </span>
                 <button
                   type="button"

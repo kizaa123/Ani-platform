@@ -404,7 +404,7 @@ export async function notifyNewOrder(
   productName: string,
   totalAmount: number
 ) {
-  const body = `${buyerName} ordered ${productName} — GHC ${totalAmount.toFixed(2)} held in escrow until buyer confirms delivery. Download the order statement from Buyer Orders.`;
+  const body = `${buyerName} ordered ${productName} - GHC ${totalAmount.toFixed(2)} held in escrow until buyer confirms delivery. Download the order statement from Buyer Orders.`;
   await createNotification({
     userId: farmerId,
     actorId: buyerId,
@@ -447,7 +447,7 @@ export async function notifyNewOrder(
       actorId: buyerId,
       type: 'NEW_ORDER',
       title: 'New order from your client',
-      body: `Your client ${buyerName} ordered ${productName} — GHC ${totalAmount.toFixed(2)} held in escrow until buyer confirms delivery.`,
+      body: `Your client ${buyerName} ordered ${productName} - GHC ${totalAmount.toFixed(2)} held in escrow until buyer confirms delivery.`,
       link: `/agents/buyer/${buyerId}/orders`,
       metadata: {
         actionLabel: productName,
@@ -470,7 +470,7 @@ export async function notifyProductPurchase(
     userId: buyerId,
     actorId: farmerId,
     type: 'PRODUCT_PURCHASE',
-    title: 'Order placed — save your release code',
+    title: 'Order placed - save your release code',
     body: `You purchased ${productName} from ${farmerName} for GHC ${totalAmount.toFixed(2)}. Check My Orders for your 4-digit release code and financial statement PDF.`,
     link,
     metadata: {
@@ -493,7 +493,7 @@ export async function notifyOrderPaymentReleased(order: {
   const buyerName = `${order.buyer.firstName} ${order.buyer.lastName}`;
   const farmerName = `${order.farmer.firstName} ${order.farmer.lastName}`;
   const orderName = order.listing.title;
-  const body = `${buyerName} confirmed delivery for "${orderName}" — GHC ${order.totalAmount.toFixed(2)} released to ANI Accountant.`;
+  const body = `${buyerName} confirmed delivery for "${orderName}" - GHC ${order.totalAmount.toFixed(2)} released to ANI Accountant.`;
 
   const buyerHandlers = await prisma.agentAssignment.findMany({
     where: { ownerId: order.buyerId, relationshipType: 'BUYER_REPRESENTATIVE' },
@@ -547,7 +547,7 @@ export async function notifyOrderTracked(
   productName: string,
   stageLabel: string
 ) {
-  const body = `${farmerName} updated your order for ${productName} — now at "${stageLabel}".`;
+  const body = `${farmerName} updated your order for ${productName} - now at "${stageLabel}".`;
   const baseInput = {
     actorId: farmerId,
     type: 'ORDER_TRACKED' as const,
@@ -608,7 +608,7 @@ export async function notifyConnectionRequest(
     actorId: buyerId,
     type: 'CONNECTION_REQUEST',
     title: 'New farm access request',
-    body: `${buyerName} requested access to your farm. ANI admin will review the request — no action needed from you.`,
+    body: `${buyerName} requested access to your farm. ANI admin will review the request - no action needed from you.`,
     link: '/connections',
     metadata: {
       actionUrl: '/connections',
@@ -702,7 +702,7 @@ export async function notifyFarmAccessPaid(
     title: autoApproved ? 'Farm access granted' : 'Farm access payment',
     body: autoApproved
       ? `You paid GHC ${amount.toFixed(2)} for access to ${farmerName}. You can now browse products and place orders.`
-      : `You paid GHC ${amount.toFixed(2)} for access to ${farmerName}. Recorded on your financial statement — access will activate once payment is confirmed.`,
+      : `You paid GHC ${amount.toFixed(2)} for access to ${farmerName}. Recorded on your financial statement - access will activate once payment is confirmed.`,
     link,
     metadata: {
       farmerUserId: farmerId,
@@ -853,7 +853,7 @@ export async function notifyFarmProductsAvailable(params: {
     userId: clientId,
     actorId: farmerUserId,
     type: 'FARM_PRODUCTS_AVAILABLE',
-    title: `${farmName} — products available`,
+    title: `${farmName} - products available`,
     body,
     link,
     metadata: {
@@ -901,7 +901,7 @@ export async function notifyResearchPublicationsAvailable(params: {
     userId: clientId,
     actorId: researcherUserId,
     type: 'NEW_PUBLICATION',
-    title: `${displayName} — publications available`,
+    title: `${displayName} - publications available`,
     body,
     link,
     metadata: {

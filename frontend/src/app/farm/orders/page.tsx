@@ -77,7 +77,7 @@ export default function FarmerOrdersPage() {
         </Link>
         <h1 className="mt-2 text-3xl font-bold text-brand-900">Client Orders</h1>
         <p className="text-gray-500">
-          Products clients ordered from your farm — manage fulfillment, track deliveries, and view contact details.
+          Products clients ordered from your farm - manage fulfillment, track deliveries, and view contact details.
         </p>
       </div>
 

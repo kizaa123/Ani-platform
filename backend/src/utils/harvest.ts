@@ -1,4 +1,4 @@
-/** Format harvest window for display (e.g. "15 Jan 2026 – 30 Mar 2026"). */
+/** Format harvest window for display (e.g. "15 Jan 2026 - 30 Mar 2026"). */
 export function formatHarvestLabel(
   start: Date | string | null | undefined,
   end: Date | string | null | undefined
@@ -12,7 +12,7 @@ export function formatHarvestLabel(
 
   if (s && e) {
     if (s.toDateString() === e.toDateString()) return fmt(s);
-    return `${fmt(s)} – ${fmt(e)}`;
+    return `${fmt(s)} - ${fmt(e)}`;
   }
   if (s) return `From ${fmt(s)}`;
   return `Until ${fmt(e!)}`;

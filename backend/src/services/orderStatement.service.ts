@@ -20,7 +20,7 @@ import { listingCommodityName, listingCommodityCategory } from '../utils/listing
 
 type OrderForStatement = NonNullable<Awaited<ReturnType<typeof loadOrderForStatement>>>;
 
-/** Who is viewing the receipt — drives payment status wording. */
+/** Who is viewing the receipt - drives payment status wording. */
 export type StatementViewerPerspective = 'sender' | 'receiver' | 'admin';
 
 const PAGE_MARGIN = 45;
@@ -196,7 +196,7 @@ function formatLocation(user: {
   region?: string | null;
   country?: string | null;
 }): string {
-  return [user.city, user.region, user.country].filter(Boolean).join(', ') || '—';
+  return [user.city, user.region, user.country].filter(Boolean).join(', ') || '-';
 }
 
 function formatDateTime(date: Date): string {

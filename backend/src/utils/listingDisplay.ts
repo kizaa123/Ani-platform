@@ -14,5 +14,5 @@ export function listingCommodityCategory(listing: {
   customCommodityName?: string | null;
 }): string {
   if (listing.customCommodityName?.trim()) return 'Custom';
-  return listing.commodity?.category?.name ?? '—';
+  return listing.commodity?.category?.name ?? '-';
 }

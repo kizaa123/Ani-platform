@@ -11,7 +11,7 @@ export type BottomNavItem = {
   label: string;
   icon: IconName;
   match: (pathname: string) => boolean;
-  /** Center create/upload action — larger circular button */
+  /** Center create/upload action - larger circular button */
   create?: boolean;
 };
 

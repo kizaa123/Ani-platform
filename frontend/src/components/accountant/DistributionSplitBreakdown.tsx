@@ -69,9 +69,9 @@ function SplitRow({ label, percentage, amount, note }: DistributionSplitLine) {
 interface DistributionSplitBreakdownProps {
   lines?: DistributionSplitLine[];
   fellowName?: string;
-  /** Example order amount — shows GHC amounts alongside percentages. */
+  /** Example order amount - shows GHC amounts alongside percentages. */
   orderAmount?: number;
-  /** Hide ANI platform row — use AniPlatformShareCard for consolidated platform totals. */
+  /** Hide ANI platform row - use AniPlatformShareCard for consolidated platform totals. */
   hidePlatformShare?: boolean;
   className?: string;
 }

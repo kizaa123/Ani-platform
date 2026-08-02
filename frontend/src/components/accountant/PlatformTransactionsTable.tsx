@@ -103,7 +103,7 @@ export function PlatformTransactionsTable({
           <h3 className="text-sm font-semibold text-brand-900">{filterLabel(activeFilter)}</h3>
           <p className="text-xs text-gray-500">
             {filteredLineItems.length} transaction(s)
-            {activeFilter !== "ALL" ? " — click card again to show all" : ""}
+            {activeFilter !== "ALL" ? " - click card again to show all" : ""}
           </p>
         </div>
 
@@ -171,7 +171,7 @@ export function PlatformTransactionsTable({
                             </span>
                           )
                         ) : (
-                          <span className="text-gray-400">—</span>
+                          <span className="text-gray-400">-</span>
                         )}
                       </td>
                     )}
@@ -242,7 +242,7 @@ export function OrderReceiptsTable({
     <div className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
       <div className="border-b border-brand-100 bg-brand-50/40 px-5 py-3">
         <h3 className="text-sm font-semibold text-brand-900">Order receipts</h3>
-        <p className="text-xs text-gray-500">Paid product orders — view or download financial statement PDFs</p>
+        <p className="text-xs text-gray-500">Paid product orders - view or download financial statement PDFs</p>
       </div>
 
       {productOrders.length === 0 ? (

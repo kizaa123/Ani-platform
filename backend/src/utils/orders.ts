@@ -78,7 +78,7 @@ export function formatUserLocation(user: {
 }): string {
   const parts = [user.city, user.region, user.country].filter(Boolean);
   if (parts.length) return parts.join(', ');
-  return user.address?.trim() || '—';
+  return user.address?.trim() || '-';
 }
 
 function productImage(listing: ListingFields): string | null {

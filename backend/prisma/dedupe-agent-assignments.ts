@@ -17,7 +17,7 @@ export async function dedupeAgentAssignments(): Promise<number> {
   `;
 
   if (!tableExists[0]?.exists) {
-    console.log('agent_assignment table not found — skipping dedupe');
+    console.log('agent_assignment table not found - skipping dedupe');
     return 0;
   }
 

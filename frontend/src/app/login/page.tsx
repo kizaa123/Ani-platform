@@ -49,7 +49,7 @@ function LoginForm() {
               <Icon name="lock" className="h-6 w-6" />
             </div>
             <h1 className="auth-title">Sign In</h1>
-            <p className="auth-subtitle">Welcome back — sign in to your ANI account</p>
+            <p className="auth-subtitle">Welcome back - sign in to your ANI account</p>
           </header>
 
           {(error || queryError) && (

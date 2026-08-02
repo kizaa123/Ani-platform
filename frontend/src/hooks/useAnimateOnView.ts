@@ -20,7 +20,7 @@ function getReducedMotionSnapshot() {
 export type UseAnimateOnViewOptions = {
   /** Delay before animation starts (ms). */
   delay?: number;
-  /** Animation duration (ms). Default 1200 — matches chart draw timing. */
+  /** Animation duration (ms). Default 1200 - matches chart draw timing. */
   duration?: number;
   threshold?: number;
   rootMargin?: string;

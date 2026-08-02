@@ -190,7 +190,7 @@ export function ProductMediaGallery({
   const dragStartX = useRef<number | null>(null);
   const isDragging = useRef(false);
 
-  // Reset slide only when switching products — not on every parent re-render
+  // Reset slide only when switching products - not on every parent re-render
   // (listing.media ?? [] creates a new [] reference each render and was resetting activeIndex)
   useEffect(() => {
     setItems(initialMedia);
@@ -323,7 +323,7 @@ export function ProductMediaGallery({
         />
       </div>
 
-        {/* ── Prev / Next arrows — desktop only (md+) ── */}
+        {/* ── Prev / Next arrows - desktop only (md+) ── */}
         {totalSlides > 1 && (
           <>
             <button
@@ -412,7 +412,7 @@ export function ProductMediaGallery({
 
   return (
     <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-      {/* ── Main viewer — fixed square, swipeable / draggable ── */}
+      {/* ── Main viewer - fixed square, swipeable / draggable ── */}
       <div
         className={viewerClassName}
         onTouchStart={handleTouchStart}
@@ -425,7 +425,7 @@ export function ProductMediaGallery({
         {viewerShell}
       </div>
 
-      {/* ── Dot indicators — manual slide picker ── */}
+      {/* ── Dot indicators - manual slide picker ── */}
       {totalSlides > 1 && (
         <div
           className="flex items-center justify-center gap-2 border-t border-gray-100 bg-white px-3 py-3"

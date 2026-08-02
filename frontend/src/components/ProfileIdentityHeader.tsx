@@ -57,8 +57,8 @@ export function ProfileIdentityHeader({ user, photoCacheBust, onEditClick }: Pro
           {isHandler(user.roleId) && (
             <p className="mt-2 text-sm text-brand-700">
               {isBuyerHandler(user.roleId)
-                ? "Client liaison — full visibility into your clients"
-                : "Fellow liaison — manage your assigned fellows"}
+                ? "Client liaison - full visibility into your clients"
+                : "Fellow liaison - manage your assigned fellows"}
             </p>
           )}
           {hasAssignedHandlerRole(user.roleId) && user.assignedHandler && (

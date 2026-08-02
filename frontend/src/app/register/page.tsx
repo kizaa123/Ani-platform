@@ -39,9 +39,9 @@ const GOOGLE_DEV_MODE = process.env.NEXT_PUBLIC_GOOGLE_DEV_MODE === "true";
 
 /** Flat list of all roles for the <select> dropdown */
 const ALL_ROLES = [
-  { group: "Fellow",                  id: ROLES.CROP_FARMER,         label: "Fellow — Crop" },
-  { group: "Fellow",                  id: ROLES.LIVESTOCK_FARMER,    label: "Fellow — Livestock" },
-  { group: "Fellow",                  id: ROLES.ORGANIZATION_FARMER, label: "Fellow — Organization" },
+  { group: "Fellow",                  id: ROLES.CROP_FARMER,         label: "Fellow - Crop" },
+  { group: "Fellow",                  id: ROLES.LIVESTOCK_FARMER,    label: "Fellow - Livestock" },
+  { group: "Fellow",                  id: ROLES.ORGANIZATION_FARMER, label: "Fellow - Organization" },
   { group: "Research & Commerce",      id: ROLES.RESEARCHER,       label: "Researcher" },
   { group: "Research & Commerce",      id: ROLES.BUYER,            label: "Client" },
   { group: "Support & Operations",     id: ROLES.FARMER_HANDLER,   label: "Fellow Liaison Officer" },
@@ -448,7 +448,7 @@ function RegisterForm() {
           await api.upload.profilePicture(profileFile);
           await refreshUser();
         } catch {
-          // Account created — photo can be added on My Production
+          // Account created - photo can be added on My Production
         }
       }
 
@@ -497,7 +497,7 @@ function RegisterForm() {
             </div>
             <h1 className="auth-title">Create Account</h1>
             <p className="auth-subtitle">
-              Step {step} of {totalSteps} — {stepLabels[step - 1]}
+              Step {step} of {totalSteps} - {stepLabels[step - 1]}
             </p>
           </header>
 
@@ -652,7 +652,7 @@ function RegisterForm() {
                 }`}
               >
                 <span className="flex shrink-0 items-center border-r border-brand-200 bg-brand-50/80 px-3 text-sm font-semibold text-brand-800">
-                  {phoneDialCode || "—"}
+                  {phoneDialCode || "-"}
                 </span>
                 <input
                   id="reg-phone"
@@ -671,7 +671,7 @@ function RegisterForm() {
               </div>
               <FieldErrorMessage message={fieldError("phone")} />
               {!fieldError("phone") && (
-                <p className="auth-hint">Local number only — country code updates when you select a country</p>
+                <p className="auth-hint">Local number only - country code updates when you select a country</p>
               )}
             </div>
 

@@ -63,7 +63,7 @@ type AfricanCountry = (typeof AFRICAN_COUNTRIES)[number];
 const byName = new Map(AFRICAN_COUNTRIES.map((c) => [c.name, c]));
 const byCode = new Map<string, AfricanCountry>(AFRICAN_COUNTRIES.map((c) => [c.code, c]));
 
-/** PNG flag URL (works on Windows — emoji flags often do not) */
+/** PNG flag URL (works on Windows - emoji flags often do not) */
 export function getCountryFlagUrl(code: string, width = 40): string {
   return `https://flagcdn.com/w${width}/${code.toLowerCase()}.png`;
 }
@@ -97,7 +97,7 @@ export function getCountryFlagEmoji(nameOrCode?: string | null): string {
     .replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
 }
 
-/** @deprecated Use getCountryFlagEmoji — PNG flags removed in favour of emoji */
+/** @deprecated Use getCountryFlagEmoji - PNG flags removed in favour of emoji */
 export function getCountryFlag(name?: string | null): string {
   return getCountryFlagEmoji(name);
 }

@@ -244,7 +244,7 @@ export function OrderDistributionPanel({
                           </td>
                           <td className="px-3 py-2.5 text-right tabular-nums">
                             {isHandlerLine(line) || line.percentage <= 0
-                              ? "—"
+                              ? "-"
                               : `${line.percentage.toFixed(2)}%`}
                           </td>
                           <td className="px-3 py-2.5 text-right font-semibold tabular-nums text-brand-900">
@@ -292,7 +292,7 @@ export function OrderDistributionPanel({
       <PdfViewerModal
         title={
           pdfLine
-            ? `Distribution message — ${recipientDisplayLabel(pdfLine, fellowFirstName)}`
+            ? `Distribution message - ${recipientDisplayLabel(pdfLine, fellowFirstName)}`
             : "Distribution message"
         }
         open={pdfLine !== null}

@@ -1,13 +1,13 @@
 /**
  * Auth page side-panel backgrounds (login vs register).
  *
- * Use with inline `backgroundImage` style — do not use Tailwind arbitrary
+ * Use with inline `backgroundImage` style - do not use Tailwind arbitrary
  * background-url classes; they fail for public assets with spaces in filenames.
  *
  * Filenames with spaces are encoded via `authPanelBackgroundUrl`.
  */
 
-/** Home page hero image — shared by login and register side panels. */
+/** Home page hero image - shared by login and register side panels. */
 export const AUTH_HERO_BACKGROUND =
   "/comprehensive-world-flags-collection-stunning-national-flag-images-every-project-showcase-beauty-diversity-global-360726791.webp";
 

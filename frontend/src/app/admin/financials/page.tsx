@@ -163,8 +163,8 @@ export default function AdminFinancialsPage() {
           <h3 className="text-sm font-semibold text-brand-900">{filterLabel(activeFilter)}</h3>
           <p className="text-xs text-gray-500">
             {activeFilter === "ALL"
-              ? "Completed payments in date order — click a summary card to filter"
-              : `${filteredLineItems.length} matching payment(s) — click the card again to show all`}
+              ? "Completed payments in date order - click a summary card to filter"
+              : `${filteredLineItems.length} matching payment(s) - click the card again to show all`}
           </p>
         </div>
 
@@ -232,7 +232,7 @@ export default function AdminFinancialsPage() {
                           </span>
                         )
                       ) : (
-                        <span className="text-gray-400">—</span>
+                        <span className="text-gray-400">-</span>
                       )}
                     </td>
                   </tr>

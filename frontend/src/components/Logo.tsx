@@ -57,14 +57,14 @@ export function Logo({
     lg: "h-14 w-auto flex-shrink-0",
   };
 
-  // "ANI" — the brand mark
+  // "ANI" - the brand mark
   const brandSizes = {
     sm: "text-xl font-extrabold tracking-tight leading-none",
     md: "text-2xl font-extrabold tracking-tight leading-none",
     lg: "text-4xl font-extrabold tracking-tight leading-none",
   };
 
-  // Platform subtitle — compact form for nav & sidebars
+  // Platform subtitle - compact form for nav & sidebars
   const taglineSizes = {
     sm: "text-[9px] font-medium tracking-wide leading-none mt-1 opacity-80",
     md: "text-[10px] font-medium tracking-wide leading-none mt-1 opacity-80",

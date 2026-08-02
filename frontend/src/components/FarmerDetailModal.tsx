@@ -40,7 +40,7 @@ export function FarmerDetailModal({
   }, []);
 
   const accessLabel =
-    farmer.farmAccessPriceLabel ?? farmAccessPriceLabel ?? "—";
+    farmer.farmAccessPriceLabel ?? farmAccessPriceLabel ?? "-";
 
   return (
     <div

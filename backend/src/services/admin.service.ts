@@ -427,7 +427,7 @@ export class AdminService {
       ...recentOrders.map((o) => ({
         id: `order-${o.id}`,
         type: 'ORDER' as const,
-        label: `${o.listing.title} — ${o.status}`,
+        label: `${o.listing.title} - ${o.status}`,
         date: o.createdAt.toISOString(),
         amount: o.totalAmount,
       })),

@@ -69,7 +69,7 @@ export function aniPlatformShareAmount(
   return calculateDistributionAmounts(totalAmount, options).aniPlatform;
 }
 
-/** Policy rate of order total — not derived from rounded GHC amounts. */
+/** Policy rate of order total - not derived from rounded GHC amounts. */
 export function aniPlatformSharePercentOfTotal(
   _totalAmount: number,
   options: DistributionHandlerOptions = {}

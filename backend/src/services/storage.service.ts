@@ -27,7 +27,7 @@ export function isRemoteStorageUrl(url: string): boolean {
   return normalized.startsWith('http://') || normalized.startsWith('https://');
 }
 
-/** Render and similar hosts wipe local disk on redeploy — require Cloudinary in production. */
+/** Render and similar hosts wipe local disk on redeploy - require Cloudinary in production. */
 export function assertPersistentStorageAvailable(): void {
   if (process.env.NODE_ENV === 'production' && !isCloudStorageEnabled()) {
     throw new AppError(503, STORAGE_NOT_CONFIGURED_MESSAGE, 'STORAGE_NOT_CONFIGURED');

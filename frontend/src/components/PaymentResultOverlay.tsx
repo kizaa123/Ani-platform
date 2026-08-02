@@ -16,7 +16,7 @@ export interface PaymentResultOverlayProps {
   autoDismissMs?: number;
   /** Tighter layout for nested card modals (farm/publication access). */
   compact?: boolean;
-  /** Inline centered layout — replaces modal body instead of absolute overlay. */
+  /** Inline centered layout - replaces modal body instead of absolute overlay. */
   embedded?: boolean;
 }
 

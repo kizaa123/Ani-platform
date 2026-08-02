@@ -87,7 +87,7 @@ export default function ResearcherFinancialsPage() {
         </div>
         <div className="rounded-xl border border-brand-100 bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase text-gray-500">Institution</p>
-          <p className="mt-1 text-lg font-bold text-brand-900">{statement.institution || "—"}</p>
+          <p className="mt-1 text-lg font-bold text-brand-900">{statement.institution || "-"}</p>
           <p className="text-xs text-gray-500">{statement.researcherName}</p>
         </div>
       </div>

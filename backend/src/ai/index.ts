@@ -1,5 +1,5 @@
 /**
- * AI Service Layer — architecture-ready stubs for future integration.
+ * AI Service Layer - architecture-ready stubs for future integration.
  * Each service is isolated so vector DB, LLM, or ML models can be plugged in later.
  */
 

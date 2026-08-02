@@ -1,4 +1,4 @@
-/** City, region, country — matches backend `formatUserLocation` in orders utils. */
+/** City, region, country - matches backend `formatUserLocation` in orders utils. */
 export function formatUserLocation(user: {
   city?: string | null;
   region?: string | null;

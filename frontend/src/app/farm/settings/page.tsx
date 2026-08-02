@@ -358,7 +358,7 @@ export default function FarmSettingsPage() {
         </p>
 
         {registered.length === 0 ? (
-          <p className="mb-4 text-sm text-amber-700">No commodities yet — add at least one to post products.</p>
+          <p className="mb-4 text-sm text-amber-700">No commodities yet - add at least one to post products.</p>
         ) : (
           <div className="mb-6 flex gap-2 overflow-x-auto overflow-y-hidden pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {registered.map((fc) => (

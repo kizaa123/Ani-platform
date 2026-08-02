@@ -233,7 +233,7 @@ async function main() {
 
   await seedCategoryCommodities('Livestock', livestockData);
 
-  // Legacy flat "Crop" category — keeps existing farmer links valid on re-seed
+  // Legacy flat "Crop" category - keeps existing farmer links valid on re-seed
   const legacyCrop = await prisma.commodityCategory.upsert({
     where: { name: 'Crop' },
     update: {},
@@ -271,7 +271,7 @@ async function main() {
     update: { price: 120 },
     create: { id: '00000000-0000-0000-0000-000000000002', name: 'Premium Buyer Access', price: 120, durationDays: 90 },
   });
-  /** Reference record for farm/production access fee — charged via purchaseFarmAccess at fixed price. */
+  /** Reference record for farm/production access fee - charged via purchaseFarmAccess at fixed price. */
   await prisma.accessPackage.upsert({
     where: { id: '00000000-0000-0000-0000-000000000003' },
     update: { price: 1, name: 'Farm Access' },
@@ -504,7 +504,7 @@ async function main() {
           priority: 10,
         },
         {
-          title: 'Research Library — New Publications',
+          title: 'Research Library - New Publications',
           description: 'Browse the latest crop and livestock research from ANI fellows.',
           imageUrl: 'https://images.unsplash.com/photo-1507842217343-583bb7270def?w=1200&h=400&fit=crop',
           linkUrl: 'https://ani-platform.example/library',

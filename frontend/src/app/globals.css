@@ -352,7 +352,7 @@ body {
   }
 }
 
-/* Payment result overlay — animated success/error feedback */
+/* Payment result overlay - animated success/error feedback */
 @layer components {
   .payment-result-overlay {
     @apply absolute inset-0 z-10 flex items-center justify-center overflow-y-auto bg-white/95 p-6 backdrop-blur-sm;

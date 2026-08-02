@@ -14,7 +14,7 @@ export type PortalNavCardProps = {
   image: string;
 };
 
-/** Image-backed navigation card — matches homepage role card styling. */
+/** Image-backed navigation card - matches homepage role card styling. */
 export function PortalNavCard({ href, title, desc, icon, image }: PortalNavCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);

@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { isBuyerHandler, isHandler } from "@/lib/types";
 
-/** Client liaison officers view commission at /agents/financials — not per-client buyer financials */
+/** Client liaison officers view commission at /agents/financials - not per-client buyer financials */
 export default function HandlerClientBuyerFinancialsRedirectPage() {
   const params = useParams();
   const ownerId = params.id as string;

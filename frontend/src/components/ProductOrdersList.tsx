@@ -101,7 +101,7 @@ function OrderEscrowPanel({
 }: {
   order: OrderListItem;
   perspective: OrderListPerspective;
-  /** Liaison officer (FLO/CLO) viewing a client order — hide buyer-only release OTP UI. */
+  /** Liaison officer (FLO/CLO) viewing a client order - hide buyer-only release OTP UI. */
   handlerView?: boolean;
   onUpdated?: (updated: Partial<OrderListItem>) => void;
 }) {
@@ -561,7 +561,7 @@ export function OrderDetailModal({
                     {!isBuyerOrder(order) ? (order.buyerName ?? "Client") : "Client"}
                   </p>
                   <p className="text-xs text-gray-600">
-                    Location: {!isBuyerOrder(order) ? (order.buyerLocation ?? "—") : "—"}
+                    Location: {!isBuyerOrder(order) ? (order.buyerLocation ?? "-") : "-"}
                   </p>
                 </div>
               </div>
@@ -584,7 +584,7 @@ export function OrderDetailModal({
                       : "Fellow / My Production"}
                   </p>
                   <p className="text-xs text-gray-600">
-                    Location: {isBuyerOrder(order) ? order.farmerLocation : (order.productLocation ?? "—")}
+                    Location: {isBuyerOrder(order) ? order.farmerLocation : (order.productLocation ?? "-")}
                   </p>
                 </div>
               </div>

@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 
-/** Profile overview merged into orders/connections — redirect legacy URL */
+/** Profile overview merged into orders/connections - redirect legacy URL */
 export default function HandlerClientBuyerRedirectPage() {
   const params = useParams();
   const ownerId = params.id as string;

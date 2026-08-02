@@ -8,7 +8,7 @@ import { CountryBadge } from "@/components/CountrySelect";
 import { EmailText } from "@/components/EmailText";
 import { Icon, type IconName } from "@/components/icons";
 
-/** Clickable phone link for handler client contact — logistics backchannel */
+/** Clickable phone link for handler client contact - logistics backchannel */
 export function HandlerPhoneLink({
   phone,
   className,
@@ -29,7 +29,7 @@ export function HandlerPhoneLink({
   );
 }
 
-/** Compact identity row — dashboard preview & card headers */
+/** Compact identity row - dashboard preview & card headers */
 export function HandlerAssignmentIdentity({
   owner,
   subtitle,
@@ -170,7 +170,7 @@ export function HandlerAssignmentsPreviewCard({
 
       {!loading && remaining > 0 && (
         <div className="border-t border-brand-50 px-3 py-1.5 text-[11px] font-medium text-brand-600">
-          +{remaining} more — view all
+          +{remaining} more - view all
         </div>
       )}
 

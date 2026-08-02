@@ -47,7 +47,7 @@ function resolveTagPlacement(
   return avatarPx > MIN_TAG_AVATAR_PX ? "overlay" : "none";
 }
 
-/** Anchor badge cluster to the avatar's bottom-right rim (~4–5 o'clock). */
+/** Anchor badge cluster to the avatar's bottom-right rim (~4-5 o'clock). */
 function edgeBadgeStyle(avatarPx: number): CSSProperties {
   const nudge = Math.max(2, Math.round(avatarPx * 0.08));
   return {

@@ -17,9 +17,9 @@ import { useState } from "react";
 // ──────────────────────────────────────────────────────────────
 
 interface SpinnerProps {
-  /** Tailwind size classes — default h-5 w-5 */
+  /** Tailwind size classes - default h-5 w-5 */
   className?: string;
-  /** Tailwind colour class for the arc — default text-brand-600 */
+  /** Tailwind colour class for the arc - default text-brand-600 */
   color?: string;
 }
 
@@ -84,7 +84,7 @@ export function Skeleton({ className = "h-4 w-full", rounded = "rounded-lg" }: S
 }
 
 // ──────────────────────────────────────────────────────────────
-// SkeletonImage — white container + grey pulse (no broken icons)
+// SkeletonImage - white container + grey pulse (no broken icons)
 // ──────────────────────────────────────────────────────────────
 
 export function SkeletonImage({
@@ -110,7 +110,7 @@ export function SkeletonImage({
 }
 
 // ──────────────────────────────────────────────────────────────
-// ImageLoader — hides broken/default browser placeholders
+// ImageLoader - hides broken/default browser placeholders
 // ──────────────────────────────────────────────────────────────
 
 interface ImageLoaderProps {
@@ -184,7 +184,7 @@ function ImageLoaderInner({
 }
 
 // ──────────────────────────────────────────────────────────────
-// Card grid skeleton — reusable for marketplace, library, etc.
+// Card grid skeleton - reusable for marketplace, library, etc.
 // ──────────────────────────────────────────────────────────────
 
 export function CardGridSkeleton({
@@ -214,7 +214,7 @@ export function CardGridSkeleton({
 }
 
 // ──────────────────────────────────────────────────────────────
-// PageContentSkeleton — in-portal page loading placeholder
+// PageContentSkeleton - in-portal page loading placeholder
 // ──────────────────────────────────────────────────────────────
 
 export function PageContentSkeleton({
@@ -264,7 +264,7 @@ export function PageContentSkeleton({
 }
 
 // ──────────────────────────────────────────────────────────────
-// PageLoader — full-page skeleton used while auth resolves
+// PageLoader - full-page skeleton used while auth resolves
 // ──────────────────────────────────────────────────────────────
 
 export function PageLoader() {

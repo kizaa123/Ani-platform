@@ -31,7 +31,7 @@ export const ROLE_NAMES: Record<number, string> = {
 /** Roles that browse marketplace farms and place product orders (same access flow as buyers). */
 export const MARKETPLACE_BUYER_ROLES = [ROLES.BUYER, ROLES.RESEARCHER] as const;
 
-/** Buyers, researchers, and legacy student accounts — all treated as farmer "clients". */
+/** Buyers, researchers, and legacy student accounts - all treated as farmer "clients". */
 export const CLIENT_ROLES = [ROLES.BUYER, ROLES.RESEARCHER, ROLES.STUDENT] as const;
 
 export const PERMISSIONS = {
@@ -73,7 +73,7 @@ export const PORTAL_DIRECTORY_ROLES = [
   ROLES.STUDENT,
 ] as const;
 
-/** Farmers, buyers, and students — platform users researchers can notify about publications. */
+/** Farmers, buyers, and students - platform users researchers can notify about publications. */
 export const RESEARCHER_CLIENT_ROLES = [...FARMER_ROLES, ROLES.BUYER, ROLES.STUDENT] as const;
 
 export const AGENT_ROLES = [ROLES.FARMER_HANDLER, ROLES.BUYER_HANDLER];

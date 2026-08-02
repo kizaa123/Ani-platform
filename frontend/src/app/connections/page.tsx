@@ -71,15 +71,15 @@ export default function ConnectionsPage() {
       <h1 className="mb-2 text-2xl font-bold text-brand-900">Connections</h1>
       <p className="mb-6 text-sm text-gray-500">
         {isFarmer(user.roleId)
-          ? "Clients requesting access to your farm, and fellows you requested access from — ANI admin approves access"
+          ? "Clients requesting access to your farm, and fellows you requested access from - ANI admin approves access"
           : isMarketplaceBuyer(user.roleId)
-            ? "Fellows you requested access from — approved once ANI admin reviews"
+            ? "Fellows you requested access from - approved once ANI admin reviews"
             : user.roleId === ROLES.FARMER_HANDLER
-              ? "Client connections for your fellow clients — view-only; ANI admin approves access"
+              ? "Client connections for your fellow clients - view-only; ANI admin approves access"
               : user.roleId === ROLES.BUYER_HANDLER
-                ? "Fellow connections for your clients — see who they connected with"
+                ? "Fellow connections for your clients - see who they connected with"
                 : isStaff(user.roleId)
-                  ? "Pending farm access requests — accept or reject client connections"
+                  ? "Pending farm access requests - accept or reject client connections"
                   : "Client connection requests"}
       </p>
 
@@ -209,12 +209,12 @@ function ConnectionCard({
 
           {c.accessPaid && showPendingConnectionUi && !isBuyerView && !canModerate && (
             <p className="mt-2 text-xs font-medium text-amber-800">
-              Payment received — awaiting ANI admin review
+              Payment received - awaiting ANI admin review
             </p>
           )}
           {c.accessPaid && showPendingConnectionUi && isBuyerView && (
             <p className="mt-2 text-xs font-medium text-amber-800">
-              Payment received — waiting for ANI admin review
+              Payment received - waiting for ANI admin review
             </p>
           )}
         </div>

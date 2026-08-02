@@ -71,7 +71,7 @@ export default function DashboardPage() {
     { href: "/financials", title: "Purchase Financials", desc: "Spending & production access fees", icon: "chart", show: canPurchaseFromMarketplace(user.roleId) },
     { href: "/orders", title: "My Order", desc: "Track marketplace purchases", icon: "package", show: canPurchaseFromMarketplace(user.roleId) },
     { href: "/student/settings", title: "Profile", desc: "Account & contact details", icon: "user", show: isStudent(user.roleId) },
-    { href: "/connections", title: "Connections", desc: "Manage client–fellow requests", icon: "handshake", show: !isResearcher(user.roleId) && !isLiaison },
+    { href: "/connections", title: "Connections", desc: "Manage client-fellow requests", icon: "handshake", show: !isResearcher(user.roleId) && !isLiaison },
     { href: "/admin", title: "Admin Panel", desc: "Analytics, verification & moderation", icon: "shield", show: isAdmin(user.roleId) },
     { href: "/admin/staff", title: "ANI Team", desc: "Manage staff accounts & roles", icon: "users", show: isAdmin(user.roleId) },
     { href: "/admin/ads", title: "Internal Ads", desc: "Manage banner promotions", icon: "leaf", show: isAdmin(user.roleId) },

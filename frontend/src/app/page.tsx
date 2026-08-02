@@ -37,7 +37,7 @@ const HOW_IT_WORKS: { step: number; title: string; desc: string; image: string }
   {
     step: 4,
     title: "Connect & Trade",
-    desc: "Request connections, chat securely, finalise orders and track financials — all in one protected platform.",
+    desc: "Request connections, chat securely, finalise orders and track financials - all in one protected platform.",
     image: HOW_IT_WORKS_IMAGES.connectTrade,
   },
 ];
@@ -64,7 +64,7 @@ const TEAM = [
 ];
 
 /**
- * Role card images — swap any path below with your own file under frontend/public/.
+ * Role card images - swap any path below with your own file under frontend/public/.
  * Place images in public/roles/ (e.g. public/roles/crop-farmer.jpg) and update the matching entry.
  */
 const ROLE_CARD_IMAGES = {
@@ -83,7 +83,7 @@ const ROLE_CARDS: { icon: IconName; label: string; desc: string; image: string }
   {
     icon: "sprout",
     label: "Crop Fellow",
-    desc: "Register as a crop fellow to list produce, manage prices and delivery schedules, and track interested clients — all from one dashboard.",
+    desc: "Register as a crop fellow to list produce, manage prices and delivery schedules, and track interested clients - all from one dashboard.",
     image: ROLE_CARD_IMAGES.cropFarmer,
   },
   {
@@ -232,7 +232,7 @@ export default function HomePage() {
             </span>
             <h2 className="text-4xl font-black text-brand-900">One Platform, Many Roles</h2>
             <p className="mx-auto mt-4 max-w-xl text-gray-500">
-              Whether you produce it, buy it, or broker it — ANI has a tailored experience designed for your role.
+              Whether you produce it, buy it, or broker it - ANI has a tailored experience designed for your role.
             </p>
           </ScrollReveal>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -260,7 +260,7 @@ export default function HomePage() {
             </span>
             <h2 className="text-4xl font-black text-brand-900">How It Works</h2>
             <p className="mx-auto mt-4 max-w-xl text-gray-500">
-              Four simple steps from registration to closed deal — all protected by our secure escrow system.
+              Four simple steps from registration to closed deal - all protected by our secure escrow system.
             </p>
           </ScrollReveal>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">

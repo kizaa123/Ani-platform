@@ -91,7 +91,7 @@ export function PurchaseModal({
     setResult(null);
     try {
       const purchaseResult = await api.marketplace.purchase(listing.id, { quantity, paymentMethod });
-      const message = `${quantity} ${unitLabel} — GHC ${total.toFixed(2)} held in escrow until you confirm delivery.`;
+      const message = `${quantity} ${unitLabel} - GHC ${total.toFixed(2)} held in escrow until you confirm delivery.`;
       setResult({ variant: "success", message, releaseOtp: purchaseResult.releaseOtp });
       onSuccess();
     } catch (e) {
@@ -279,7 +279,7 @@ export function PurchaseModal({
           message={result.message}
           hint={
             result.releaseOtp
-              ? `Your 4-digit release code is ${result.releaseOtp}. Save it — you'll enter it in My Orders when you receive your delivery.`
+              ? `Your 4-digit release code is ${result.releaseOtp}. Save it - you'll enter it in My Orders when you receive your delivery.`
               : "Check My Orders for your release code and financial statement PDF."
           }
           actionLabel="View my orders"

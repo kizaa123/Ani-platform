@@ -180,8 +180,8 @@ export class PaymentService {
       return {
         farmAccess,
         message: paymentCompleted
-          ? `Access granted — you can now view ${farmer.firstName}'s farm and products`
-          : `Payment received — farm access will activate once payment is confirmed`,
+          ? `Access granted - you can now view ${farmer.firstName}'s farm and products`
+          : `Payment received - farm access will activate once payment is confirmed`,
         amountPaid: farmAccessPrice,
         farmerName: `${farmer.firstName} ${farmer.lastName}`,
         pendingApproval: !paymentCompleted,

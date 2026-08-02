@@ -48,7 +48,7 @@ export class OrderService {
     if (!(await buyerHasApprovedFarmAccess(buyerId, farmerUserId))) {
       throw new AppError(
         403,
-        'Farm access required — pay the access fee to unlock this farm and place orders'
+        'Farm access required - pay the access fee to unlock this farm and place orders'
       );
     }
 

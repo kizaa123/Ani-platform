@@ -426,7 +426,7 @@ export class AccountantService {
     if (data.status === 'COMPLETED' && existing.status !== 'COMPLETED') {
       const overview = await this.getOverview();
       if (existing.amount > overview.availableBalance) {
-        throw new AppError(400, 'Cannot complete withdrawal — insufficient available balance');
+        throw new AppError(400, 'Cannot complete withdrawal - insufficient available balance');
       }
     }
 

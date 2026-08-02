@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { isHandler } from "@/lib/types";
 
-/** Liaison officers cannot view client connections — redirect to orders */
+/** Liaison officers cannot view client connections - redirect to orders */
 export default function HandlerClientBuyerConnectionsRedirectPage() {
   const params = useParams();
   const ownerId = params.id as string;

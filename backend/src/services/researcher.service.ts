@@ -679,7 +679,7 @@ export class ResearcherService {
     );
 
     if (pub.isFree) {
-      throw new AppError(400, 'This publication is free — no payment required');
+      throw new AppError(400, 'This publication is free - no payment required');
     }
 
     const researcherUserId = pub.researcher.user.id;

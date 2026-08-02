@@ -14,7 +14,7 @@ export interface PaymentResult {
   providerReference?: string;
 }
 
-/** Abstraction layer — swap providers (Paystack, Stripe, MTN MoMo) without changing business logic */
+/** Abstraction layer - swap providers (Paystack, Stripe, MTN MoMo) without changing business logic */
 export interface PaymentProvider {
   readonly name: string;
   initiatePayment(request: PaymentInitRequest): Promise<PaymentResult>;

@@ -24,9 +24,9 @@ import { PlatformBrandTitle } from "@/components/PlatformBrandTitle";
 import { ScrollReveal } from "@/components/ScrollReveal";
 
 const ALL_ROLES = [
-  { group: "Fellow", id: ROLES.CROP_FARMER, label: "Fellow — Crop" },
-  { group: "Fellow", id: ROLES.LIVESTOCK_FARMER, label: "Fellow — Livestock" },
-  { group: "Fellow", id: ROLES.ORGANIZATION_FARMER, label: "Fellow — Organization" },
+  { group: "Fellow", id: ROLES.CROP_FARMER, label: "Fellow - Crop" },
+  { group: "Fellow", id: ROLES.LIVESTOCK_FARMER, label: "Fellow - Livestock" },
+  { group: "Fellow", id: ROLES.ORGANIZATION_FARMER, label: "Fellow - Organization" },
   { group: "Research & Commerce", id: ROLES.RESEARCHER, label: "Researcher" },
   { group: "Research & Commerce", id: ROLES.BUYER, label: "Client" },
   { group: "Support & Operations", id: ROLES.FARMER_HANDLER, label: "Fellow Liaison Officer" },
@@ -303,7 +303,7 @@ export default function CompleteProfilePage() {
                   <label htmlFor="complete-phone" className="auth-label">Mobile money phone</label>
                   <div className="flex overflow-hidden rounded-xl border border-brand-200 bg-white shadow-sm focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-200">
                     <span className="flex shrink-0 items-center border-r border-brand-200 bg-brand-50/80 px-3 text-sm font-semibold text-brand-800">
-                      {phoneDialCode || "—"}
+                      {phoneDialCode || "-"}
                     </span>
                     <input
                       id="complete-phone"
@@ -332,7 +332,7 @@ export default function CompleteProfilePage() {
                       className="auth-input"
                       placeholder="Set a password to also sign in with email"
                     />
-                    <p className="auth-hint">Optional — leave blank if you only use email/password login elsewhere</p>
+                    <p className="auth-hint">Optional - leave blank if you only use email/password login elsewhere</p>
                   </div>
                 )}
                 <div className="auth-field">

@@ -444,7 +444,7 @@ export default function AdminAdsPage() {
         <div className="card-elevated mb-8 rounded-2xl border border-red-100 bg-red-50/50 p-5 sm:p-6">
           <h2 className="text-lg font-bold text-brand-900">Delete ad?</h2>
           <p className="mt-1 text-sm text-gray-600">
-            Remove &ldquo;{confirmDelete.title}&rdquo; — this cannot be undone.
+            Remove &ldquo;{confirmDelete.title}&rdquo; - this cannot be undone.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <button

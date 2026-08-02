@@ -263,7 +263,7 @@ export default function HandlerFinancialsPage() {
                           {loadingOrderId === item.id ? "Loading…" : "View order"}
                         </button>
                       ) : (
-                        <span className="text-gray-400">—</span>
+                        <span className="text-gray-400">-</span>
                       )}
                     </td>
                   </tr>

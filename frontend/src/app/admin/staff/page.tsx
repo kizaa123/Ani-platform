@@ -183,7 +183,7 @@ export default function AdminStaffPage() {
           </Link>
           <h1 className="mt-2 text-3xl font-bold text-brand-900">ANI Team</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Manage platform staff — accountants, admins, CTO, and communications
+            Manage platform staff - accountants, admins, CTO, and communications
           </p>
         </div>
         <button
