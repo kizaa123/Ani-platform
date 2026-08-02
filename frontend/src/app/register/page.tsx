@@ -18,10 +18,8 @@ import { CustomProductInput } from "@/components/CustomProductInput";
 import { QualificationSelector } from "@/components/QualificationSelector";
 import { Icon } from "@/components/icons";
 import { AuthDivider, GoogleSignInButton } from "@/components/GoogleSignInButton";
-import { PlatformBrandTitle } from "@/components/PlatformBrandTitle";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { AuthHeroPanel } from "@/components/AuthHeroPanel";
-import { scrollStagger } from "@/lib/scrollStagger";
 import {
   blockingMessages,
   canProceedStep1,
@@ -492,25 +490,15 @@ function RegisterForm() {
   };
 
   return (
-    <div className="flex-1 w-full grid lg:grid-cols-12 bg-brand-50">
-      <AuthHeroPanel className="hidden lg:col-span-6 lg:flex" />
-
-      {/* Right Column: Form Container */}
-      <div
-        ref={formColumnRef}
-        className="lg:col-span-6 flex items-start justify-center p-6 sm:p-12 lg:p-16 overflow-y-auto"
-      >
-        <ScrollReveal trigger="mount" delay={120} duration={500} direction="fade-up" className="w-full max-w-xl">
-        <div className="space-y-8 bg-white p-8 rounded-2xl border border-brand-100 shadow-xl">
+    <AuthHeroPanel ref={formColumnRef} className="flex-1">
+      <ScrollReveal trigger="mount" delay={120} duration={500} direction="fade-up">
+        <div className="space-y-8 lg:space-y-6">
           <header className="text-center lg:text-left">
-            <div className="mb-6 text-center lg:hidden">
-              <PlatformBrandTitle theme="dark" size="compact" />
-            </div>
-            <div className="hidden lg:inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-100 text-brand-700 mb-4">
+            <div className="mb-4 hidden lg:inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 text-white backdrop-blur-sm">
               <Icon name="user" className="h-6 w-6" />
             </div>
-            <h1 className="text-3xl font-extrabold text-brand-900 tracking-tight">Create Account</h1>
-            <p className="mt-2 text-sm text-gray-500">
+            <h1 className="text-3xl font-extrabold tracking-tight text-brand-900 lg:text-white">Create Account</h1>
+            <p className="mt-2 text-sm text-gray-500 lg:text-brand-100">
               Step {step} of {totalSteps} — {stepLabels[step - 1]}
             </p>
           </header>
@@ -949,7 +937,7 @@ function RegisterForm() {
             )}
 
             {needsHandler && (
-              <div className="auth-section bg-white">
+              <div className="auth-section">
                 <HandlerSelect
                   handlers={availableHandlers}
                   value={form.handlerId}
@@ -1131,16 +1119,15 @@ function RegisterForm() {
           </div>
         )}
 
-          <p className="auth-switch">
+          <p className="auth-switch !mt-6 lg:!mt-4">
             Have an account?{" "}
             <Link href="/login" className="auth-switch-link">
               Sign in
             </Link>
           </p>
         </div>
-        </ScrollReveal>
-      </div>
-    </div>
+      </ScrollReveal>
+    </AuthHeroPanel>
   );
 }
 
