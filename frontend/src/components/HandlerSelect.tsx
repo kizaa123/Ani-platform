@@ -5,6 +5,7 @@ import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { EmailText } from "@/components/EmailText";
 import { CountryBadge } from "@/components/CountrySelect";
 import { RolePrefixedName } from "@/components/RolePrefixedName";
+import { InlineNameWithVerificationTags } from "@/components/VerificationTagBadge";
 import { Icon } from "@/components/icons";
 import { formatUserLocation } from "@/lib/formatUserLocation";
 
@@ -77,6 +78,7 @@ export function HandlerSelect({
                 }
                 verificationStatus={handler.verificationStatus}
                 verificationTags={handler.verificationTags}
+                tagPlacement="none"
               />
               <div className="min-w-0 flex-1 overflow-hidden">
                 {compact && handlerRoleId ? (
@@ -85,12 +87,20 @@ export function HandlerSelect({
                       roleId: handlerRoleId,
                       firstName: handler.firstName,
                       lastName: handler.lastName,
+                      verificationStatus: handler.verificationStatus,
                     }}
+                    verificationTags={handler.verificationTags}
                     className="block max-w-full truncate text-sm font-semibold"
                     nameClassName="text-brand-900"
                   />
                 ) : (
-                  <p className="line-clamp-2 break-words text-sm font-semibold leading-snug text-brand-900">{name}</p>
+                  <InlineNameWithVerificationTags
+                    name={name}
+                    verificationTags={handler.verificationTags}
+                    verificationStatus={handler.verificationStatus}
+                    nameClassName="line-clamp-2 break-words text-sm font-semibold leading-snug text-brand-900"
+                    className="max-w-full"
+                  />
                 )}
                 {compact ? (
                   location ? (

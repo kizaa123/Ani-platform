@@ -9,7 +9,7 @@ import { notifyMoneyDistributed } from './notification.service';
 import {
   calculateDistributionAmounts,
   FARMER_SHARE_PERCENT,
-  HANDLER_REMAINDER_SHARE_PERCENT,
+  handlerSharePercentOfTotal,
   aniPlatformSharePercentOfTotal,
   orderListingLabels,
 } from '../utils/distributionFinancials';
@@ -315,14 +315,22 @@ function buildLineSeeds(
     },
     {
       role: 'FARMER_HANDLER',
-      percentage: hasFarmerHandler ? HANDLER_REMAINDER_SHARE_PERCENT : 0,
+      percentage: handlerSharePercentOfTotal({
+        role: 'FARMER_HANDLER',
+        hasFarmerHandler,
+        hasBuyerHandler,
+      }),
       amount: amounts.farmerHandler,
       recipientUserId: handlers.farmerHandler?.agent.id ?? null,
       recipientName: farmerHandlerName,
     },
     {
       role: 'BUYER_HANDLER',
-      percentage: hasBuyerHandler ? HANDLER_REMAINDER_SHARE_PERCENT : 0,
+      percentage: handlerSharePercentOfTotal({
+        role: 'BUYER_HANDLER',
+        hasFarmerHandler,
+        hasBuyerHandler,
+      }),
       amount: amounts.buyerHandler,
       recipientUserId: handlers.buyerHandler?.agent.id ?? null,
       recipientName: buyerHandlerName,

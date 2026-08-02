@@ -111,6 +111,10 @@ function formatMetadata(metadata: NotificationMetadata | null): NotificationMeta
   };
 }
 
+function logNotificationError(type: NotificationTypeValue, err: unknown) {
+  console.error(`[notification] Failed to create ${type} notification:`, err);
+}
+
 export async function createNotification(input: CreateNotificationInput) {
   return prisma.notification.create({
     data: {
@@ -941,7 +945,7 @@ export async function notifyUserVerified(params: {
       actionUrl: link,
       actionLabel: 'View profile',
     },
-  }).catch(() => undefined);
+  }).catch((err) => logNotificationError('USER_VERIFIED', err));
 }
 
 export async function notifyInternationalVerification(params: {
@@ -966,7 +970,7 @@ export async function notifyInternationalVerification(params: {
       actionUrl: link,
       actionLabel: 'View profile',
     },
-  }).catch(() => undefined);
+  }).catch((err) => logNotificationError('INTERNATIONAL_VERIFICATION', err));
 }
 
 export async function notifyAdminsPendingAccountant(params: {

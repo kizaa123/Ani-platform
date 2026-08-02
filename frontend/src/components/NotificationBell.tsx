@@ -122,6 +122,8 @@ function RichNotificationContent({ n }: { n: AppNotification }) {
 }
 
 function StandardNotificationContent({ n }: { n: AppNotification }) {
+  const action = notificationAction(n);
+
   return (
     <>
       <div className="flex items-start justify-between gap-2">
@@ -129,6 +131,11 @@ function StandardNotificationContent({ n }: { n: AppNotification }) {
         {!n.read && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-brand-600" />}
       </div>
       <p className="mt-1 text-sm leading-snug text-gray-600">{n.body}</p>
+      {action && (
+        <span className="mt-2 inline-flex rounded-lg bg-brand-700 px-3 py-1 text-xs font-semibold text-white">
+          {action.label}
+        </span>
+      )}
       <p className="mt-2 text-[10px] text-gray-400">{formatDate(n.createdAt)}</p>
     </>
   );

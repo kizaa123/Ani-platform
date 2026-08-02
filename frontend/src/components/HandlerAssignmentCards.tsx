@@ -4,6 +4,7 @@ import Link from "next/link";
 import { AgentAssignment, AgentClientOwner, fullName, isResearcher } from "@/lib/types";
 import { formatUserLocation } from "@/lib/formatUserLocation";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
+import { InlineNameWithVerificationTags } from "@/components/VerificationTagBadge";
 import { CountryBadge } from "@/components/CountrySelect";
 import { EmailText } from "@/components/EmailText";
 import { Icon, type IconName } from "@/components/icons";
@@ -52,11 +53,16 @@ export function HandlerAssignmentIdentity({
         cacheBust={owner.updatedAt ? new Date(owner.updatedAt).getTime() : undefined}
         verificationStatus={owner.verificationStatus}
         verificationTags={owner.verificationTags}
+        tagPlacement="none"
       />
       <div className="min-w-0 flex-1">
-        <p className="line-clamp-2 break-words text-sm font-semibold leading-snug text-brand-900">
-          {fullName(owner)}
-        </p>
+        <InlineNameWithVerificationTags
+          name={fullName(owner)}
+          verificationTags={owner.verificationTags}
+          verificationStatus={owner.verificationStatus}
+          nameClassName="line-clamp-2 break-words text-sm font-semibold leading-snug text-brand-900"
+          className="max-w-full"
+        />
         {subtitle && (
           <p className="mt-0.5 truncate text-xs text-gray-500">{subtitle}</p>
         )}

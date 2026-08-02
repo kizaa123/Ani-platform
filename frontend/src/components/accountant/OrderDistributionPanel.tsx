@@ -38,10 +38,6 @@ function recipientDisplayLabel(line: OrderDistributionLine, farmerName: string):
   }
 }
 
-function isHandlerLine(line: OrderDistributionLine): boolean {
-  return line.role === "FARMER_HANDLER" || line.role === "BUYER_HANDLER";
-}
-
 type DistributionPaymentResult = {
   title: string;
   message: string;
@@ -243,9 +239,7 @@ export function OrderDistributionPanel({
                             </p>
                           </td>
                           <td className="px-3 py-2.5 text-right tabular-nums">
-                            {isHandlerLine(line) || line.percentage <= 0
-                              ? "-"
-                              : `${line.percentage.toFixed(2)}%`}
+                            {line.percentage > 0 ? `${line.percentage.toFixed(2)}%` : "-"}
                           </td>
                           <td className="px-3 py-2.5 text-right font-semibold tabular-nums text-brand-900">
                             {formatGhc(line.amount)}

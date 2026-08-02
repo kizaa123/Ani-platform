@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { FarmerBrowseCard } from "@/lib/types";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
+import { InlineNameWithVerificationTags } from "@/components/VerificationTagBadge";
 import { Icon } from "@/components/icons";
 
 interface MarketplaceFarmerCardProps {
@@ -110,10 +111,16 @@ export function MarketplaceFarmerCard({
           size={avatarSize}
           verificationStatus={farmer.verificationStatus}
           verificationTags={farmer.verificationTags}
+          tagPlacement="none"
         />
         <div className="min-w-0 flex-1 pt-0.5">
           <h3 className="line-clamp-2 break-words text-sm font-bold leading-snug text-brand-900 sm:text-base">
-            {farmer.farmerName}
+            <InlineNameWithVerificationTags
+              name={farmer.farmerName}
+              verificationTags={farmer.verificationTags}
+              verificationStatus={farmer.verificationStatus}
+              nameClassName="font-bold text-brand-900"
+            />
           </h3>
           <p className="truncate text-sm font-medium text-brand-700">
             {farmer.farmName || "Farm name not set"}

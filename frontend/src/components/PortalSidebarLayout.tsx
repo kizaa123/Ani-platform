@@ -68,10 +68,12 @@ function SidebarContent({
           cacheBust={photoCacheBust}
           verificationStatus={user.verificationStatus}
           verificationTags={user.verificationTags}
+          tagPlacement="none"
         />
         <div className="min-w-0">
           <RolePrefixedName
             user={user}
+            verificationTags={user.verificationTags}
             className="text-sm font-semibold"
             nameClassName="text-brand-900 font-semibold"
           />

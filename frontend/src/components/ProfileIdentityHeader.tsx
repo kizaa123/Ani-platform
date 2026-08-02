@@ -37,13 +37,16 @@ export function ProfileIdentityHeader({ user, photoCacheBust, onEditClick }: Pro
           cacheBust={cacheBust}
           verificationStatus={user.verificationStatus}
           verificationTags={user.verificationTags}
+          tagPlacement="none"
         />
         <div className="min-w-0 flex-1 text-center sm:text-left">
           <h2 className="text-2xl font-bold">
             <RolePrefixedName
               user={user}
+              verificationTags={user.verificationTags}
               prefixClassName="text-brand-600 font-bold"
               nameClassName="text-brand-900 font-bold"
+              tagSize="md"
             />
           </h2>
           {!getRoleNamePrefix(user.roleId) && (
@@ -74,6 +77,7 @@ export function ProfileIdentityHeader({ user, photoCacheBust, onEditClick }: Pro
                 }
                 verificationStatus={user.assignedHandler.verificationStatus}
                 verificationTags={user.assignedHandler.verificationTags}
+                tagPlacement="none"
               />
               <p className="text-sm text-brand-700">
                 Handler:{" "}
@@ -82,7 +86,9 @@ export function ProfileIdentityHeader({ user, photoCacheBust, onEditClick }: Pro
                     roleId: isFarmer(user.roleId) ? ROLES.FARMER_HANDLER : ROLES.BUYER_HANDLER,
                     firstName: user.assignedHandler.firstName,
                     lastName: user.assignedHandler.lastName,
+                    verificationStatus: user.assignedHandler.verificationStatus,
                   }}
+                  verificationTags={user.assignedHandler.verificationTags}
                   nameClassName="text-brand-700"
                   prefixClassName="text-brand-600"
                 />

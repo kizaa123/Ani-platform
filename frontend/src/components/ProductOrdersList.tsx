@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ProductImage } from "@/components/FarmerAvatar";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
+import { InlineNameWithVerificationTags } from "@/components/VerificationTagBadge";
 import { OrderTrackControls, OrderTrackTimeline } from "@/components/OrderTrackTimeline";
 import { api } from "@/lib/api";
 import {
@@ -555,10 +556,20 @@ export function OrderDetailModal({
                   size={48}
                   verificationStatus={!isBuyerOrder(order) ? order.buyerVerificationStatus : undefined}
                   verificationTags={!isBuyerOrder(order) ? order.buyerVerificationTags : undefined}
+                  tagPlacement="none"
                 />
                 <div className="min-w-0 flex-1">
                   <p className="font-bold text-brand-900">
-                    {!isBuyerOrder(order) ? (order.buyerName ?? "Client") : "Client"}
+                    {!isBuyerOrder(order) ? (
+                      <InlineNameWithVerificationTags
+                        name={order.buyerName ?? "Client"}
+                        verificationTags={order.buyerVerificationTags}
+                        verificationStatus={order.buyerVerificationStatus}
+                        nameClassName="font-bold text-brand-900"
+                      />
+                    ) : (
+                      "Client"
+                    )}
                   </p>
                   <p className="text-xs text-gray-600">
                     Location: {!isBuyerOrder(order) ? (order.buyerLocation ?? "-") : "-"}
@@ -576,12 +587,20 @@ export function OrderDetailModal({
                   size={48}
                   verificationStatus={isBuyerOrder(order) ? order.farmerVerificationStatus : undefined}
                   verificationTags={isBuyerOrder(order) ? order.farmerVerificationTags : undefined}
+                  tagPlacement="none"
                 />
                 <div className="min-w-0 flex-1">
                   <p className="font-bold text-brand-900">
-                    {isBuyerOrder(order)
-                      ? `${order.farmerName}${order.farmName ? ` (${order.farmName})` : ""}`
-                      : "Fellow / My Production"}
+                    {isBuyerOrder(order) ? (
+                      <InlineNameWithVerificationTags
+                        name={`${order.farmerName}${order.farmName ? ` (${order.farmName})` : ""}`}
+                        verificationTags={order.farmerVerificationTags}
+                        verificationStatus={order.farmerVerificationStatus}
+                        nameClassName="font-bold text-brand-900"
+                      />
+                    ) : (
+                      "Fellow / My Production"
+                    )}
                   </p>
                   <p className="text-xs text-gray-600">
                     Location: {isBuyerOrder(order) ? order.farmerLocation : (order.productLocation ?? "-")}

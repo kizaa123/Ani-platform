@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
+import { InlineNameWithVerificationTags } from "@/components/VerificationTagBadge";
 import { api } from "@/lib/api";
 import { Message, fullName, UserVerificationTag } from "@/lib/types";
 
@@ -69,8 +70,17 @@ export function ConnectionChatPanel({
             size={44}
             verificationStatus={partnerVerificationStatus}
             verificationTags={partnerVerificationTags}
+            tagPlacement="none"
           />
-          <p className="text-sm font-semibold text-brand-900">Chat with {partnerName}</p>
+          <p className="text-sm font-semibold text-brand-900">
+            Chat with{" "}
+            <InlineNameWithVerificationTags
+              name={partnerName}
+              verificationTags={partnerVerificationTags}
+              verificationStatus={partnerVerificationStatus}
+              nameClassName="font-semibold text-brand-900"
+            />
+          </p>
         </div>
       )}
 

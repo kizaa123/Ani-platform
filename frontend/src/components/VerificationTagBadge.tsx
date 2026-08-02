@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { VerifiedBadgeIcon } from "@/components/VerificationBadge";
 import type { UserVerificationTag, VerificationTagType } from "@/lib/types";
 
@@ -169,10 +170,10 @@ export function VerificationTags({
   const labelVisible = showLabels ?? false;
 
   return (
-    <div
-      className={`flex max-w-full ${
+    <span
+      className={`inline-flex max-w-full ${
         layout === "row" ? "flex-row flex-wrap" : "flex-col"
-      } items-center justify-center ${labelVisible ? "gap-1.5" : "gap-2.5"} ${className}`}
+      } items-center ${labelVisible ? "gap-1.5" : "gap-1"} ${className}`}
     >
       {badges.map((tagType) => (
         <VerificationTagBadge
@@ -183,7 +184,42 @@ export function VerificationTags({
           className={badgeClassName}
         />
       ))}
-    </div>
+    </span>
+  );
+}
+
+/** Username (or role-prefixed name) with verification badges inline after the name. */
+export function InlineNameWithVerificationTags({
+  name,
+  verificationTags,
+  verificationStatus,
+  nameClassName = "",
+  tagSize = "sm",
+  showLabels = false,
+  className = "",
+}: {
+  name: ReactNode;
+  verificationTags?: UserVerificationTag[];
+  verificationStatus?: string | null;
+  nameClassName?: string;
+  tagSize?: TagBadgeSize;
+  showLabels?: boolean;
+  className?: string;
+}) {
+  return (
+    <span
+      className={`inline-flex max-w-full flex-wrap items-center gap-x-1.5 gap-y-0.5 ${className}`}
+    >
+      <span className={`min-w-0 ${nameClassName}`}>{name}</span>
+      <VerificationTags
+        verificationTags={verificationTags}
+        verificationStatus={verificationStatus}
+        size={tagSize}
+        showLabels={showLabels}
+        layout="row"
+        className="shrink-0"
+      />
+    </span>
   );
 }
 

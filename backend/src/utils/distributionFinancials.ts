@@ -3,13 +3,28 @@ import prisma from '../database/prisma';
 import { formatFarmerIncomingOrder, formatUserLocation } from './orders';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
 
+function roundGhc(amount: number): number {
+  return Math.round(amount * 100) / 100;
+}
+
 /** Fellow share of order total. */
 export const FARMER_SHARE_PERCENT = 66.66;
-/** Each assigned handler receives this share of the post-Fellow remainder. */
+/** Post-Fellow platform pool as % of order total (100 − Fellow share). */
+export const PLATFORM_POOL_PERCENT = roundGhc(100 - FARMER_SHARE_PERCENT);
+/** Handlers combined receive this % of the platform pool. */
+export const HANDLER_POOL_SHARE_PERCENT = 20;
+/** ANI receives this % of the platform pool when both handlers are assigned. */
+export const ANI_POOL_SHARE_PERCENT = 80;
+/** Each assigned handler receives this % of the platform pool (equal split of handler allocation). */
 export const HANDLER_REMAINDER_SHARE_PERCENT = 10;
-/** ANI share of order total when both handlers are assigned (100 − Fellow − FLO − CLO). */
-export const ANI_PLATFORM_SHARE_PERCENT =
-  100 - FARMER_SHARE_PERCENT - HANDLER_REMAINDER_SHARE_PERCENT - HANDLER_REMAINDER_SHARE_PERCENT;
+/** Each assigned handler's share of order total (10% of platform pool). */
+export const HANDLER_SHARE_OF_TOTAL_PERCENT = roundGhc(
+  (PLATFORM_POOL_PERCENT * HANDLER_REMAINDER_SHARE_PERCENT) / 100
+);
+/** ANI share of order total when both handlers are assigned (80% of platform pool). */
+export const ANI_PLATFORM_SHARE_PERCENT = roundGhc(
+  (PLATFORM_POOL_PERCENT * ANI_POOL_SHARE_PERCENT) / 100
+);
 /** @deprecated Use HANDLER_REMAINDER_SHARE_PERCENT - kept for distribution line labels. */
 export const FARMER_HANDLER_SHARE_PERCENT = HANDLER_REMAINDER_SHARE_PERCENT;
 /** @deprecated Use HANDLER_REMAINDER_SHARE_PERCENT - kept for distribution line labels. */
@@ -42,10 +57,6 @@ export type DistributionHandlerOptions = {
   hasBuyerHandler?: boolean;
 };
 
-function roundGhc(amount: number): number {
-  return Math.round(amount * 100) / 100;
-}
-
 export function distributionShareAmount(totalAmount: number, percentage: number): number {
   return roundGhc((totalAmount * percentage) / 100);
 }
@@ -53,8 +64,9 @@ export function distributionShareAmount(totalAmount: number, percentage: number)
 /**
  * Released-order split:
  * 1. Fellow receives 66.66% of order total.
- * 2. Each assigned handler receives 10% of the post-Fellow remainder.
- * 3. ANI receives the rounded GHC remainder (includes unassigned handler shares).
+ * 2. The remaining 33.34% is ANI's platform pool.
+ * 3. From that pool: handlers share 20% (10% each when both assigned); ANI keeps 80%.
+ * 4. Unassigned handler shares flow to ANI; amounts are rounded to GHC.
  */
 export function calculateDistributionAmounts(
   totalAmount: number,
@@ -83,6 +95,19 @@ export function aniPlatformShareAmount(
   return calculateDistributionAmounts(totalAmount, options).aniPlatform;
 }
 
+/** Policy rate of order total for an assigned handler - not derived from rounded GHC amounts. */
+export function handlerSharePercentOfTotal(
+  options: Pick<DistributionHandlerOptions, 'hasFarmerHandler' | 'hasBuyerHandler'> & {
+    role: 'FARMER_HANDLER' | 'BUYER_HANDLER';
+  }
+): number {
+  const hasHandler =
+    options.role === 'FARMER_HANDLER'
+      ? (options.hasFarmerHandler ?? true)
+      : (options.hasBuyerHandler ?? true);
+  return hasHandler ? HANDLER_SHARE_OF_TOTAL_PERCENT : 0;
+}
+
 /** Policy rate of order total - not derived from rounded GHC amounts. */
 export function aniPlatformSharePercentOfTotal(
   _totalAmount: number,
@@ -91,9 +116,9 @@ export function aniPlatformSharePercentOfTotal(
   const hasFarmerHandler = options.hasFarmerHandler ?? true;
   const hasBuyerHandler = options.hasBuyerHandler ?? true;
 
-  let percent = 100 - FARMER_SHARE_PERCENT;
-  if (hasFarmerHandler) percent -= HANDLER_REMAINDER_SHARE_PERCENT;
-  if (hasBuyerHandler) percent -= HANDLER_REMAINDER_SHARE_PERCENT;
+  let percent = ANI_PLATFORM_SHARE_PERCENT;
+  if (!hasFarmerHandler) percent += HANDLER_SHARE_OF_TOTAL_PERCENT;
+  if (!hasBuyerHandler) percent += HANDLER_SHARE_OF_TOTAL_PERCENT;
   return roundGhc(percent);
 }
 

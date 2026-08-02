@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthProvider";
 import { FarmerBrowseCard, isResearcher } from "@/lib/types";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
+import { InlineNameWithVerificationTags } from "@/components/VerificationTagBadge";
 import { Icon } from "@/components/icons";
 
 interface FarmerDetailModalProps {
@@ -60,9 +61,18 @@ export function FarmerDetailModal({
                 size="lg"
                 verificationStatus={farmer.verificationStatus}
                 verificationTags={farmer.verificationTags}
+                tagPlacement="none"
               />
               <div className="min-w-0">
-                <h2 className="text-xl font-bold text-brand-900">{farmer.farmerName}</h2>
+                <h2 className="text-xl font-bold text-brand-900">
+                  <InlineNameWithVerificationTags
+                    name={farmer.farmerName}
+                    verificationTags={farmer.verificationTags}
+                    verificationStatus={farmer.verificationStatus}
+                    nameClassName="font-bold text-brand-900"
+                    tagSize="md"
+                  />
+                </h2>
                 <p className="text-sm font-medium text-brand-700">{farmer.farmName}</p>
                 <CountryBadge country={farmer.country} region={farmer.region} className="mt-1.5" />
               </div>

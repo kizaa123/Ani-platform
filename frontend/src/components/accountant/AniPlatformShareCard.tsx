@@ -1,4 +1,4 @@
-import { aniPlatformShareAmount, aniPlatformSharePercentOfTotal } from "@/lib/handlerDisplayName";
+import { aniPlatformShareAmount, aniPlatformSharePercentOfTotal, DISTRIBUTION_SHARES } from "@/lib/handlerDisplayName";
 import { formatGhc } from "@/lib/format";
 
 interface AniPlatformShareCardProps {
@@ -25,7 +25,9 @@ export function AniPlatformShareCard({ orderAmounts, className = "" }: AniPlatfo
       <p className="mt-1 text-xs tabular-nums font-semibold text-brand-800">
         ~{referencePercent.toFixed(2)}% of each order
       </p>
-      <p className="mt-1 text-[10px] text-gray-500">Remainder after Fellow and liaison officers</p>
+      <p className="mt-1 text-[10px] text-gray-500">
+        80% of platform share after Fellow ({DISTRIBUTION_SHARES.PLATFORM_POOL}% pool)
+      </p>
     </div>
   );
 }

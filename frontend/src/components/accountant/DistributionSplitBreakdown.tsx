@@ -1,8 +1,8 @@
 import {
   DISTRIBUTION_SHARES,
-  aniPlatformShareAmount,
   aniPlatformSharePercentOfTotal,
   calculateDistributionAmounts,
+  handlerSharePercentOfTotal,
 } from "@/lib/handlerDisplayName";
 import { formatGhc } from "@/lib/format";
 
@@ -27,23 +27,39 @@ function buildDefaultSplitLines(orderAmount?: number): DistributionSplitLine[] {
 
     return [
       { label: "Fellow", percentage: DISTRIBUTION_SHARES.FARMER, amount: amounts.farmer },
-      { label: "Fellow Liaison Officer", amount: amounts.farmerHandler },
-      { label: "Client Liaison Officer", amount: amounts.buyerHandler },
+      {
+        label: "Fellow Liaison Officer",
+        percentage: handlerSharePercentOfTotal({ role: "FARMER_HANDLER" }),
+        amount: amounts.farmerHandler,
+      },
+      {
+        label: "Client Liaison Officer",
+        percentage: handlerSharePercentOfTotal({ role: "BUYER_HANDLER" }),
+        amount: amounts.buyerHandler,
+      },
       {
         label: "ANI",
         percentage: aniPercent,
         amount: amounts.aniPlatform,
+        note: `${DISTRIBUTION_SHARES.ANI_POOL}% of platform share (${DISTRIBUTION_SHARES.PLATFORM_POOL}% after Fellow)`,
       },
     ];
   }
 
   return [
     { label: "Fellow", percentage: DISTRIBUTION_SHARES.FARMER },
-    { label: "Fellow Liaison Officer" },
-    { label: "Client Liaison Officer" },
+    {
+      label: "Fellow Liaison Officer",
+      percentage: handlerSharePercentOfTotal({ role: "FARMER_HANDLER" }),
+    },
+    {
+      label: "Client Liaison Officer",
+      percentage: handlerSharePercentOfTotal({ role: "BUYER_HANDLER" }),
+    },
     {
       label: "ANI",
       percentage: aniPlatformSharePercentOfTotal(100),
+      note: `${DISTRIBUTION_SHARES.ANI_POOL}% of platform share (${DISTRIBUTION_SHARES.PLATFORM_POOL}% after Fellow)`,
     },
   ];
 }
@@ -99,4 +115,4 @@ export function DistributionSplitBreakdown({
   );
 }
 
-export { aniPlatformShareAmount };
+export { aniPlatformShareAmount } from "@/lib/handlerDisplayName";

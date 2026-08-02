@@ -488,17 +488,27 @@ export default function AdminPage() {
                         const busy = verifyingId === u.id;
                         const tagOptions = assignableTagsForUser(u);
                         const intlTags = internationalTagsForUser(u);
-                        const hasTagRow =
-                          tagOptions.length > 0 ||
-                          intlTags.length > 0 ||
-                          u.verificationStatus === "VERIFIED";
+                        const hasAssignRow = tagOptions.length > 0;
 
                         return (
                           <Fragment key={u.id}>
                             <tr className="align-top">
                               <td className="py-3 pr-4">
-                                <div className="flex flex-wrap items-center gap-2">
+                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                                   <span className="font-semibold text-brand-900">{fullName(u)}</span>
+                                  {u.verificationStatus === "VERIFIED" && (
+                                    <VerificationTagBadge tagType="STANDARD" showLabel size="sm" />
+                                  )}
+                                  {intlTags.map((tag) => (
+                                    <VerificationTagBadge
+                                      key={tag.id}
+                                      tagType={tag.tagType}
+                                      showLabel
+                                      size="sm"
+                                      removing={tagBusy === `${u.id}:${tag.tagType}`}
+                                      onRemove={() => void removeTag(u.id, tag.tagType)}
+                                    />
+                                  ))}
                                   {u.verificationStatus !== "VERIFIED" && (
                                     <VerificationBadge adminView status={u.verificationStatus} />
                                   )}
@@ -559,22 +569,10 @@ export default function AdminPage() {
                                 </div>
                               </td>
                             </tr>
-                            {hasTagRow && (
+                            {hasAssignRow && (
                               <tr className="bg-brand-50/30">
                                 <td colSpan={6} className="px-0 pb-3 pt-0">
                                   <div className="flex flex-wrap items-center gap-2 px-0 py-2">
-                                    {u.verificationStatus === "VERIFIED" && (
-                                      <VerificationTagBadge tagType="STANDARD" showLabel />
-                                    )}
-                                    {intlTags.map((tag) => (
-                                      <VerificationTagBadge
-                                        key={tag.id}
-                                        tagType={tag.tagType}
-                                        showLabel
-                                        removing={tagBusy === `${u.id}:${tag.tagType}`}
-                                        onRemove={() => void removeTag(u.id, tag.tagType)}
-                                      />
-                                    ))}
                                     {tagOptions.map((tagType) => (
                                       <button
                                         key={tagType}

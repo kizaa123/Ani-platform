@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { Listing, formatListingUnit, listingCommodityName } from "@/lib/types";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
+import { InlineNameWithVerificationTags } from "@/components/VerificationTagBadge";
 import { FarmerProductCard } from "@/components/FarmerProductCard";
 import { ProductMediaGallery } from "@/components/ProductMediaGallery";
 import { PaymentCheckout } from "@/components/PaymentCheckout";
@@ -66,9 +67,15 @@ function FarmViewHeader({
             size="sm"
             verificationStatus={farmerVerificationStatus}
             verificationTags={farmerVerificationTags}
+            tagPlacement="none"
           />
           <div className="hidden text-right sm:block">
-            <p className="text-sm font-semibold text-brand-900">{farmerName}</p>
+            <InlineNameWithVerificationTags
+              name={farmerName}
+              verificationTags={farmerVerificationTags}
+              verificationStatus={farmerVerificationStatus}
+              nameClassName="text-sm font-semibold text-brand-900"
+            />
             <CountryBadge country={country} region={region} />
           </div>
         </div>
