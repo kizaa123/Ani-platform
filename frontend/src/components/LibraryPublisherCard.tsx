@@ -35,6 +35,7 @@ export function LibraryPublisherCard({ publisher, onViewFiles }: LibraryPublishe
           size="lg"
           verificationStatus={publisher.verificationStatus}
           verificationTags={publisher.verificationTags}
+          tagPlacement="none"
         />
         <div className="min-w-0 flex-1">
           <h3 className="line-clamp-2 break-words text-sm font-bold leading-snug text-brand-900">

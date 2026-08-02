@@ -12,6 +12,9 @@
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma generate && prisma db push",
     "db:seed": "prisma generate && tsx prisma/seed.ts",
+    "db:clear-activities": "tsx prisma/clear-activities.ts --yes",
+    "db:clear-activities:dry-run": "tsx prisma/clear-activities.ts --dry-run",
+    "db:clear-activities:reseed": "tsx prisma/clear-activities.ts --yes --reseed",
     "db:dedupe": "tsx prisma/dedupe-agent-assignments.ts",
     "db:setup": "prisma generate && tsx prisma/dedupe-agent-assignments.ts && prisma db push && tsx prisma/seed.ts",
     "db:studio": "prisma studio"
