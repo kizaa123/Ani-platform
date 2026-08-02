@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
@@ -89,6 +89,35 @@ function instituteName(user: AdminVerificationUser): string | null {
   return null;
 }
 
+function hasVerificationTag(
+  user: AdminVerificationUser,
+  tagType: VerificationTagType
+): boolean {
+  return (user.verificationTags ?? []).some((tag) => tag.tagType === tagType);
+}
+
+function showStandardVerificationBadge(user: AdminVerificationUser): boolean {
+  return user.verificationStatus === "VERIFIED" || hasVerificationTag(user, "STANDARD");
+}
+
+function canVerifyLocally(user: AdminVerificationUser): boolean {
+  return user.verificationStatus !== "VERIFIED";
+}
+
+function assignableTagsForUser(user: AdminVerificationUser): VerificationTagType[] {
+  const options: VerificationTagType[] = [];
+  if (isFarmer(user.roleId) && !hasVerificationTag(user, "INTERNATIONAL_FARMER")) {
+    options.push("INTERNATIONAL_FARMER");
+  }
+  if (
+    (isBuyer(user.roleId) || user.roleId === 8) &&
+    !hasVerificationTag(user, "INTERNATIONAL_BUYER")
+  ) {
+    options.push("INTERNATIONAL_BUYER");
+  }
+  return options;
+}
+
 export default function AdminPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -103,8 +132,9 @@ export default function AdminPage() {
   const [usersLoading, setUsersLoading] = useState(true);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
 
-  const loadUsers = useCallback(() => {
-    const params = statusFilter === "all" ? undefined : { status: statusFilter };
+  const loadUsers = useCallback((statusOverride?: StatusFilter) => {
+    const activeStatus = statusOverride ?? statusFilter;
+    const params = activeStatus === "all" ? undefined : { status: activeStatus };
     setUsersLoading(true);
     api.admin
       .users(params)
@@ -173,18 +203,6 @@ export default function AdminPage() {
   const internationalTagsForUser = (user: AdminVerificationUser) =>
     (user.verificationTags ?? []).filter((tag) => tag.tagType !== "STANDARD");
 
-  const assignableTagsForUser = (user: AdminVerificationUser): VerificationTagType[] => {
-    const existing = new Set((user.verificationTags ?? []).map((t) => t.tagType));
-    const options: VerificationTagType[] = [];
-    if (isFarmer(user.roleId) && !existing.has("INTERNATIONAL_FARMER")) {
-      options.push("INTERNATIONAL_FARMER");
-    }
-    if ((isBuyer(user.roleId) || user.roleId === 8) && !existing.has("INTERNATIONAL_BUYER")) {
-      options.push("INTERNATIONAL_BUYER");
-    }
-    return options;
-  };
-
   const assignTagLabel = (tagType: VerificationTagType) =>
     tagType === "INTERNATIONAL_FARMER" ? "International Fellow" : "International Client";
 
@@ -204,9 +222,12 @@ export default function AdminPage() {
     setTagBusy(`${userId}:${tagType}`);
     try {
       await api.admin.removeVerificationTag(userId, tagType);
-      loadUsers();
       if (tagType === "STANDARD") {
+        setStatusFilter("PENDING");
         loadDashboard();
+        loadUsers("PENDING");
+      } else {
+        loadUsers();
       }
     } catch (e) {
       console.error(e);
@@ -491,15 +512,15 @@ export default function AdminPage() {
                         const busy = verifyingId === u.id;
                         const tagOptions = assignableTagsForUser(u);
                         const intlTags = internationalTagsForUser(u);
-                        const hasAssignRow = tagOptions.length > 0;
+                        const showStandardBadge = showStandardVerificationBadge(u);
+                        const verifyLocally = canVerifyLocally(u);
 
                         return (
-                          <Fragment key={u.id}>
-                            <tr className="align-top">
+                          <tr key={u.id} className="align-top">
                               <td className="py-3 pr-4">
                                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                                   <span className="font-semibold text-brand-900">{fullName(u)}</span>
-                                  {u.verificationStatus === "VERIFIED" && (
+                                  {showStandardBadge && (
                                     <VerificationTagBadge
                                       tagType="STANDARD"
                                       showLabel
@@ -518,7 +539,7 @@ export default function AdminPage() {
                                       onRemove={() => void removeTag(u.id, tag.tagType)}
                                     />
                                   ))}
-                                  {u.verificationStatus !== "VERIFIED" && (
+                                  {!showStandardBadge && (
                                     <VerificationBadge adminView status={u.verificationStatus} />
                                   )}
                                 </div>
@@ -535,7 +556,7 @@ export default function AdminPage() {
                               </td>
                               <td className="py-3">
                                 <div className="flex flex-wrap gap-2">
-                                  {u.verificationStatus !== "VERIFIED" && (
+                                  {verifyLocally && (
                                     <button
                                       type="button"
                                       disabled={busy}
@@ -545,7 +566,7 @@ export default function AdminPage() {
                                       Verify
                                     </button>
                                   )}
-                                  {u.verificationStatus === "VERIFIED" && (
+                                  {!verifyLocally && (
                                     <button
                                       type="button"
                                       disabled={busy}
@@ -555,6 +576,17 @@ export default function AdminPage() {
                                       Unverify
                                     </button>
                                   )}
+                                  {tagOptions.map((tagType) => (
+                                    <button
+                                      key={tagType}
+                                      type="button"
+                                      disabled={tagBusy === `${u.id}:${tagType}`}
+                                      onClick={() => void assignTag(u.id, tagType)}
+                                      className="rounded-lg border border-brand-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-brand-700 hover:bg-brand-50 disabled:opacity-50"
+                                    >
+                                      + {assignTagLabel(tagType)}
+                                    </button>
+                                  ))}
                                   {u.verificationStatus !== "REJECTED" && (
                                     <button
                                       type="button"
@@ -578,26 +610,6 @@ export default function AdminPage() {
                                 </div>
                               </td>
                             </tr>
-                            {hasAssignRow && (
-                              <tr className="bg-brand-50/30">
-                                <td colSpan={6} className="px-0 pb-3 pt-0">
-                                  <div className="flex flex-wrap items-center gap-2 px-0 py-2">
-                                    {tagOptions.map((tagType) => (
-                                      <button
-                                        key={tagType}
-                                        type="button"
-                                        disabled={tagBusy === `${u.id}:${tagType}`}
-                                        onClick={() => void assignTag(u.id, tagType)}
-                                        className="rounded-lg border border-brand-200 bg-white px-2.5 py-1 text-[10px] font-semibold text-brand-700 hover:bg-brand-50 disabled:opacity-50"
-                                      >
-                                        + {assignTagLabel(tagType)}
-                                      </button>
-                                    ))}
-                                  </div>
-                                </td>
-                              </tr>
-                            )}
-                          </Fragment>
                         );
                       })}
                     </tbody>

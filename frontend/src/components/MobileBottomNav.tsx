@@ -90,11 +90,13 @@ function farmerHandlerNav(): BottomNavItem[] {
     { href: "/dashboard", label: "Home", icon: "home", match: (p) => p === "/dashboard" },
     { href: "/library", label: "Library", icon: "book", match: (p) => p.startsWith("/library") },
     {
-      href: "/agents",
+      href: "/agents/clients",
       label: "Fellows",
       icon: "users",
       match: (p) =>
-        (p === "/agents" || p.startsWith("/agents/farm/") || p.startsWith("/agents/buyer/")) &&
+        (p === "/agents/clients" ||
+          p.startsWith("/agents/farm/") ||
+          p.startsWith("/agents/buyer/")) &&
         !p.startsWith("/agents/settings"),
     },
     {
@@ -117,11 +119,13 @@ function buyerHandlerNav(): BottomNavItem[] {
     { href: "/dashboard", label: "Home", icon: "home", match: (p) => p === "/dashboard" },
     { href: "/library", label: "Library", icon: "book", match: (p) => p.startsWith("/library") },
     {
-      href: "/agents",
+      href: "/agents/clients",
       label: "Clients",
       icon: "users",
       match: (p) =>
-        (p === "/agents" || p.startsWith("/agents/farm/") || p.startsWith("/agents/buyer/")) &&
+        (p === "/agents/clients" ||
+          p.startsWith("/agents/farm/") ||
+          p.startsWith("/agents/buyer/")) &&
         !p.startsWith("/agents/settings"),
     },
     {
@@ -144,11 +148,13 @@ function handlerNav(): BottomNavItem[] {
     { href: "/dashboard", label: "Home", icon: "home", match: (p) => p === "/dashboard" },
     { href: "/marketplace", label: "Market", icon: "store", match: (p) => p.startsWith("/marketplace") },
     {
-      href: "/agents",
+      href: "/agents/clients",
       label: "Clients",
       icon: "users",
       match: (p) =>
-        (p === "/agents" || p.startsWith("/agents/farm/") || p.startsWith("/agents/buyer/")) &&
+        (p === "/agents/clients" ||
+          p.startsWith("/agents/farm/") ||
+          p.startsWith("/agents/buyer/")) &&
         !p.startsWith("/agents/settings"),
     },
     {

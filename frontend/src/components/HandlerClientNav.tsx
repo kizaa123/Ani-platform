@@ -19,7 +19,7 @@ export function HandlerClientNav({
 
   return (
     <div className="mb-6">
-      <Link href="/agents" className="text-sm font-medium text-brand-600 hover:underline">
+      <Link href="/agents/clients" className="text-sm font-medium text-brand-600 hover:underline">
         Back to Assigned Fellows
       </Link>
       {farmName && (

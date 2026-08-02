@@ -498,7 +498,14 @@ export async function releaseOrderPayment(
       releaseOtp: null,
     },
     include: {
-      listing: { select: { title: true } },
+      listing: {
+        select: {
+          id: true,
+          title: true,
+          images: true,
+          media: { where: { type: 'IMAGE' }, orderBy: { orderIndex: 'asc' }, take: 1 },
+        },
+      },
       buyer: { select: { firstName: true, lastName: true } },
       farmer: { select: { firstName: true, lastName: true } },
     },

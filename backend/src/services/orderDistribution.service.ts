@@ -6,6 +6,7 @@ import { DistributionLineStatus, DistributionRecipientRole } from '@prisma/clien
 import prisma from '../database/prisma';
 import { AppError, assertFound } from '../utils/errors';
 import { notifyMoneyDistributed } from './notification.service';
+import { normalizeImages, normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import {
   calculateDistributionAmounts,
   FARMER_SHARE_PERCENT,
@@ -244,7 +245,15 @@ async function loadReleasedOrder(orderId: string) {
             farmerProfile: { select: { farmName: true } },
           },
         },
-        listing: { select: { title: true, description: true } },
+        listing: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            images: true,
+            media: { where: { type: 'IMAGE' }, orderBy: { orderIndex: 'asc' }, take: 1 },
+          },
+        },
       },
     }),
     'Order not found'
@@ -502,13 +511,27 @@ export class OrderDistributionService {
     });
 
     const { orderName } = orderListingLabels(order.listing);
+    const normalized = normalizeImages(order.listing.images);
+    const imageFromMedia = order.listing.media?.[0]?.url;
+    const imageUrl = imageFromMedia
+      ? normalizePublicAssetUrl(imageFromMedia)
+      : normalized[0]
+        ? normalizePublicAssetUrl(normalized[0])
+        : null;
 
     await notifyMoneyDistributed(
       line.recipientUserId,
       line.recipient.firstName,
       line.amount,
       buyerName,
-      orderName
+      orderName,
+      {
+        totalAmount: order.totalAmount,
+        quantity: order.quantity,
+        unit: order.unit,
+        imageUrl,
+        listingId: order.listing.id,
+      }
     );
 
     return this.getOrCreateDistribution(orderId);

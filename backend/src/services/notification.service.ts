@@ -21,6 +21,8 @@ export type NotificationMetadata = {
   imageUrl?: string | null;
   price?: number | null;
   priceLabel?: string | null;
+  quantity?: number | null;
+  unit?: string | null;
   farmerId?: string | null;
   farmerUserId?: string | null;
   listingId?: string | null;
@@ -253,6 +255,29 @@ function firstListingImage(images: unknown, media?: { type: string; url: string 
   return normalized[0] ? normalizePublicAssetUrl(normalized[0]) : null;
 }
 
+function buildOrderNotificationMetadata(params: {
+  productName: string;
+  totalAmount?: number;
+  quantity?: number;
+  unit?: string;
+  imageUrl?: string | null;
+  listingId?: string;
+  actionUrl?: string;
+}): NotificationMetadata {
+  const { productName, totalAmount, quantity, unit, imageUrl, listingId, actionUrl } = params;
+  return {
+    orderName: productName,
+    actionLabel: productName,
+    imageUrl: imageUrl ?? null,
+    listingId: listingId ?? null,
+    quantity: quantity ?? null,
+    unit: unit ?? null,
+    price: totalAmount ?? null,
+    priceLabel: totalAmount != null ? `GHC ${totalAmount.toFixed(2)}` : null,
+    actionUrl: actionUrl ?? null,
+  };
+}
+
 export async function notifyNewProductListing(params: {
   farmerUserId: string;
   farmerName: string;
@@ -410,9 +435,24 @@ export async function notifyNewOrder(
   buyerId: string,
   buyerName: string,
   productName: string,
-  totalAmount: number
+  totalAmount: number,
+  orderDetails?: {
+    quantity?: number;
+    unit?: string;
+    imageUrl?: string | null;
+    listingId?: string;
+  }
 ) {
   const body = `${buyerName} ordered ${productName} - GHC ${totalAmount.toFixed(2)} held in escrow until buyer confirms delivery. Download the order statement from Buyer Orders.`;
+  const orderMeta = buildOrderNotificationMetadata({
+    productName,
+    totalAmount,
+    quantity: orderDetails?.quantity,
+    unit: orderDetails?.unit,
+    imageUrl: orderDetails?.imageUrl,
+    listingId: orderDetails?.listingId,
+  });
+
   await createNotification({
     userId: farmerId,
     actorId: buyerId,
@@ -420,10 +460,7 @@ export async function notifyNewOrder(
     title: 'New buyer order',
     body,
     link: '/farm/orders',
-    metadata: {
-      actionLabel: productName,
-      actionUrl: '/farm/orders',
-    },
+    metadata: { ...orderMeta, actionUrl: '/farm/orders' },
   }).catch(() => undefined);
 
   const farmerHandler = await prisma.agentAssignment.findFirst({
@@ -431,17 +468,15 @@ export async function notifyNewOrder(
     select: { agentId: true },
   });
   if (farmerHandler) {
+    const link = `/agents/farm/${farmerId}/orders`;
     await createNotification({
       userId: farmerHandler.agentId,
       actorId: buyerId,
       type: 'NEW_ORDER',
       title: 'New order for your farmer',
       body,
-      link: `/agents/farm/${farmerId}/orders`,
-      metadata: {
-        actionLabel: productName,
-        actionUrl: `/agents/farm/${farmerId}/orders`,
-      },
+      link,
+      metadata: { ...orderMeta, actionUrl: link },
     }).catch(() => undefined);
   }
 
@@ -450,17 +485,15 @@ export async function notifyNewOrder(
     select: { agentId: true },
   });
   if (buyerHandler) {
+    const link = `/agents/buyer/${buyerId}/orders`;
     await createNotification({
       userId: buyerHandler.agentId,
       actorId: buyerId,
       type: 'NEW_ORDER',
       title: 'New order from your client',
       body: `Your client ${buyerName} ordered ${productName} - GHC ${totalAmount.toFixed(2)} held in escrow until buyer confirms delivery.`,
-      link: `/agents/buyer/${buyerId}/orders`,
-      metadata: {
-        actionLabel: productName,
-        actionUrl: `/agents/buyer/${buyerId}/orders`,
-      },
+      link,
+      metadata: { ...orderMeta, actionUrl: link },
     }).catch(() => undefined);
   }
 }
@@ -494,14 +527,28 @@ export async function notifyOrderPaymentReleased(order: {
   buyerId: string;
   farmerId: string;
   totalAmount: number;
-  listing: { title: string };
+  quantity?: number;
+  unit?: string;
+  listing: {
+    id?: string;
+    title: string;
+    images?: unknown;
+    media?: { type: string; url: string }[];
+  };
   buyer: { firstName: string; lastName: string };
   farmer: { firstName: string; lastName: string };
 }) {
   const buyerName = `${order.buyer.firstName} ${order.buyer.lastName}`;
-  const farmerName = `${order.farmer.firstName} ${order.farmer.lastName}`;
   const orderName = order.listing.title;
   const body = `${buyerName} confirmed delivery for "${orderName}" - GHC ${order.totalAmount.toFixed(2)} released to ANI Accountant.`;
+  const orderMeta = buildOrderNotificationMetadata({
+    productName: orderName,
+    totalAmount: order.totalAmount,
+    quantity: order.quantity,
+    unit: order.unit,
+    imageUrl: firstListingImage(order.listing.images, order.listing.media),
+    listingId: order.listing.id,
+  });
 
   const buyerHandlers = await prisma.agentAssignment.findMany({
     where: { ownerId: order.buyerId, relationshipType: 'BUYER_REPRESENTATIVE' },
@@ -521,10 +568,7 @@ export async function notifyOrderPaymentReleased(order: {
     type: 'ORDER_PAYMENT_RELEASED' as const,
     title: 'Order payment released',
     body,
-    metadata: {
-      actionLabel: orderName,
-      orderName,
-    },
+    metadata: orderMeta,
   };
 
   const notifyReleased = (userId: string, link: string) =>
@@ -553,17 +597,30 @@ export async function notifyOrderTracked(
   farmerId: string,
   farmerName: string,
   productName: string,
-  stageLabel: string
+  stageLabel: string,
+  orderDetails?: {
+    totalAmount?: number;
+    quantity?: number;
+    unit?: string;
+    imageUrl?: string | null;
+    listingId?: string;
+  }
 ) {
   const body = `${farmerName} updated your order for ${productName} - now at "${stageLabel}".`;
+  const orderMeta = buildOrderNotificationMetadata({
+    productName,
+    totalAmount: orderDetails?.totalAmount,
+    quantity: orderDetails?.quantity,
+    unit: orderDetails?.unit,
+    imageUrl: orderDetails?.imageUrl,
+    listingId: orderDetails?.listingId,
+  });
   const baseInput = {
     actorId: farmerId,
     type: 'ORDER_TRACKED' as const,
     title: 'Order update',
     body,
-    metadata: {
-      actionLabel: productName,
-    },
+    metadata: orderMeta,
   };
 
   await createNotification({
@@ -781,7 +838,14 @@ export async function notifyMoneyDistributed(
   recipientFirstName: string,
   amount: number,
   buyerName: string,
-  orderName: string
+  orderName: string,
+  orderDetails?: {
+    quantity?: number;
+    unit?: string;
+    imageUrl?: string | null;
+    listingId?: string;
+    totalAmount?: number;
+  }
 ) {
   const formatted = amount.toFixed(2);
   const recipient = await prisma.user.findUnique({
@@ -796,6 +860,16 @@ export async function notifyMoneyDistributed(
         : '/financials'
     : '/financials';
 
+  const orderMeta = buildOrderNotificationMetadata({
+    productName: orderName,
+    totalAmount: orderDetails?.totalAmount ?? amount,
+    quantity: orderDetails?.quantity,
+    unit: orderDetails?.unit,
+    imageUrl: orderDetails?.imageUrl,
+    listingId: orderDetails?.listingId,
+    actionUrl: link,
+  });
+
   await createNotification({
     userId: recipientId,
     type: 'MONEY_DISTRIBUTED',
@@ -803,11 +877,9 @@ export async function notifyMoneyDistributed(
     body: `Dear ${recipientFirstName}, you have received GHC ${formatted} from ANI for the successful delivery of "${orderName}" (${buyerName} order).`,
     link,
     metadata: {
+      ...orderMeta,
       price: amount,
       priceLabel: `GHC ${formatted}`,
-      actionLabel: orderName,
-      actionUrl: link,
-      orderName,
     },
   }).catch(() => undefined);
 }
@@ -927,6 +999,23 @@ export async function getUserDisplayName(userId: string) {
   return user ? formatName(user.firstName, user.lastName) : 'Someone';
 }
 
+function verifiedAccountClosing(roleId: number): string {
+  if (isResearcherRole(roleId)) {
+    return 'We look forward to your continued contributions and your good publishes on the platform.';
+  }
+  return 'We look forward to your continued contributions and quality products on the platform.';
+}
+
+function internationalVerificationClosing(roleId: number): string {
+  if (isResearcherRole(roleId)) {
+    return 'We look forward to your continued contributions and your good publishes on the platform.';
+  }
+  if (isFarmerRole(roleId)) {
+    return 'We look forward to your continued quality production on the platform.';
+  }
+  return 'We look forward to your continued contributions and quality products on the platform.';
+}
+
 export async function notifyUserVerified(params: {
   userId: string;
   firstName: string;
@@ -939,7 +1028,7 @@ export async function notifyUserVerified(params: {
     userId: params.userId,
     type: 'USER_VERIFIED',
     title: 'Account verified',
-    body: `Congratulations ${params.firstName}, you have been verified as a ${roleLabel} on the ANI platform. We look forward to your continued contribution and quality products.`,
+    body: `Congratulations ${params.firstName}, you have been verified as a ${roleLabel} on the ANI platform. ${verifiedAccountClosing(params.roleId)}`,
     link,
     metadata: {
       actionUrl: link,
@@ -964,7 +1053,7 @@ export async function notifyInternationalVerification(params: {
     userId: params.userId,
     type: 'INTERNATIONAL_VERIFICATION',
     title: 'International verification granted',
-    body: `Hello ${params.firstName}, congratulations! You have been verified for international ${intlRoleLabel} status and may serve clients outside your country. We look forward to your continued quality production.`,
+    body: `Hello ${params.firstName}, congratulations! You have been verified for international ${intlRoleLabel} status and may serve clients outside your country. ${internationalVerificationClosing(params.roleId)}`,
     link,
     metadata: {
       actionUrl: link,

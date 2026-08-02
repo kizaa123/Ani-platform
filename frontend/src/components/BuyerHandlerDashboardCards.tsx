@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { AgentAssignment, AppNotification, isBuyerAssignment } from "@/lib/types";
+import { AgentAssignment, AppNotification, isBuyerAssignment, isResearcher } from "@/lib/types";
 import {
   HandlerAssignmentsPreviewCard,
   HandlerOrderAlertsCard,
@@ -21,7 +21,7 @@ const ORDER_NOTIFICATION_TYPES = new Set([
 
 export function BuyerHandlerDashboardCards() {
   const [clients, setClients] = useState<AgentAssignment[] | null>(null);
-  const [orderAlertCount, setOrderAlertCount] = useState<number | null>(null);
+  const [orderAlerts, setOrderAlerts] = useState<AppNotification[] | null>(null);
   const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
@@ -45,13 +45,15 @@ export function BuyerHandlerDashboardCards() {
       .list()
       .then((notifications) => {
         if (cancelled) return;
-        const unreadOrderAlerts = (notifications as AppNotification[]).filter(
-          (n) => !n.read && ORDER_NOTIFICATION_TYPES.has(n.type)
-        ).length;
-        setOrderAlertCount(unreadOrderAlerts);
+        const unreadOrderAlerts = (notifications as AppNotification[])
+          .filter((n) => !n.read && ORDER_NOTIFICATION_TYPES.has(n.type))
+          .sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+        setOrderAlerts(unreadOrderAlerts);
       })
       .catch(() => {
-        if (!cancelled) setOrderAlertCount(0);
+        if (!cancelled) setOrderAlerts([]);
       });
 
     return () => {
@@ -70,7 +72,7 @@ export function BuyerHandlerDashboardCards() {
       )}
       <ScrollReveal delay={scrollStagger(0, 90)} duration={500} direction="fade-up">
         <HandlerAssignmentsPreviewCard
-          href="/agents"
+          href="/agents/clients"
           title="Assigned Clients"
           icon="users"
           assignments={clients ?? []}
@@ -78,17 +80,19 @@ export function BuyerHandlerDashboardCards() {
           emptyMessage="No clients assigned yet"
           clientType="buyer"
           getSubtitle={(owner) => {
-            const company = owner.buyerProfile?.company;
+            const organization = isResearcher(owner.roleId ?? 0)
+              ? owner.researcherProfile?.institution?.trim()
+              : owner.buyerProfile?.company?.trim();
             const location = formatUserLocation(owner);
-            return [company, location].filter(Boolean).join(" · ");
+            return [location, organization].filter(Boolean) as string[];
           }}
         />
       </ScrollReveal>
       <ScrollReveal delay={scrollStagger(1, 90)} duration={500} direction="fade-up">
         <HandlerOrderAlertsCard
-          href="/agents"
-          count={orderAlertCount}
-          loading={orderAlertCount === null}
+          href="/agents/clients"
+          notifications={orderAlerts}
+          loading={orderAlerts === null}
           entityLabel="clients"
         />
       </ScrollReveal>

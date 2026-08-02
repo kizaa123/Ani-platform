@@ -19,7 +19,7 @@ function handlerNavCards(roleId: number): HandlerNavCard[] {
 
   return [
     {
-      href: "/agents",
+      href: "/agents/clients",
       title: isClo ? "My Clients" : "My Fellows",
       desc: isClo
         ? "View assigned clients, orders & connections"

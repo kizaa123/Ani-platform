@@ -16,7 +16,7 @@ const NAV = [
   { href: "/farm", label: "My Production", farmer: true },
   { href: "/financials", label: "Financials", buyer: true },
   { href: "/orders", label: "My Orders", buyer: true },
-  { href: "/agents", label: "Clients", handler: true },
+  { href: "/agents/clients", label: "Clients", handler: true },
   { href: "/connections", label: "Connections" },
   { href: "/admin", label: "Admin", staff: true },
 ];

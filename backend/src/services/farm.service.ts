@@ -25,7 +25,7 @@ import {
   getUserDisplayName,
   notifyFarmProductsAvailable,
 } from './notification.service';
-import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
+import { normalizeImages, normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import { formatVerificationTags, verificationTagSelect } from '../utils/verificationTags';
 import { listingCommodityName, listingCommodityCategory } from '../utils/listingDisplay';
 
@@ -205,15 +205,38 @@ export class FarmService {
 
     const listing = await prisma.commodityListing.findUnique({
       where: { id: listingId },
-      select: { title: true },
+      select: {
+        id: true,
+        title: true,
+        images: true,
+        unit: true,
+        media: { where: { type: 'IMAGE' }, orderBy: { orderIndex: 'asc' }, take: 1 },
+      },
     });
+    const latestOrder = orders[0];
     const farmerName = await getUserDisplayName(farmerUserId);
+    const normalized = normalizeImages(listing?.images);
+    const imageFromMedia = listing?.media[0]?.url;
+    const imageUrl = imageFromMedia
+      ? normalizePublicAssetUrl(imageFromMedia)
+      : normalized[0]
+        ? normalizePublicAssetUrl(normalized[0])
+        : null;
     await notifyOrderTracked(
       buyerId,
       farmerUserId,
       farmerName,
       listing?.title ?? 'your order',
-      ORDER_TRACK_LABELS[trackStage]
+      ORDER_TRACK_LABELS[trackStage],
+      latestOrder
+        ? {
+            totalAmount: latestOrder.totalAmount,
+            quantity: latestOrder.quantity,
+            unit: latestOrder.unit,
+            imageUrl,
+            listingId: listing?.id,
+          }
+        : { imageUrl, listingId: listing?.id }
     );
 
     return grouped[0] ?? null;

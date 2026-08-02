@@ -14,20 +14,10 @@ import {
   ProfileIdentityHeader,
   ProfileEditSection,
   ProfileEditActions,
+  ProfileInfoSection,
 } from "@/components/ProfileIdentityHeader";
 import { QualificationSelector } from "@/components/QualificationSelector";
-import { QualificationBadges } from "@/components/QualificationBadges";
 import { DEFAULT_COUNTRY } from "@/lib/africanCountries";
-
-function formatLocation(
-  country?: string,
-  region?: string,
-  city?: string,
-  address?: string
-): string | null {
-  const parts = [country?.trim(), region?.trim(), city?.trim(), address?.trim()].filter(Boolean);
-  return parts.length > 0 ? parts.join(", ") : null;
-}
 
 export default function ResearcherSettingsPage() {
   const { user, loading, refreshUser } = useAuth();
@@ -147,11 +137,6 @@ export default function ResearcherSettingsPage() {
     return <PageContentSkeleton variant="form" maxWidth="max-w-2xl" />;
   }
 
-  const location = formatLocation(user.country, user.region, user.city, user.address);
-  const bioText = user.researcherProfile?.bio?.trim();
-  const institutionText = user.researcherProfile?.institution?.trim();
-  const expertiseText = user.researcherProfile?.expertise?.trim();
-
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
       <h1 className="mb-8 text-2xl font-bold text-brand-900">Researcher Profile</h1>
@@ -169,48 +154,7 @@ export default function ResearcherSettingsPage() {
         <div className="mb-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</div>
       )}
 
-      {!editing && (
-        <section className="space-y-6 rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
-          {user.phone && (
-            <div>
-              <h2 className="text-sm font-medium text-gray-500">Phone</h2>
-              <p className="mt-1 text-brand-900">{user.phone}</p>
-            </div>
-          )}
-          {location && (
-            <div>
-              <h2 className="text-sm font-medium text-gray-500">Location</h2>
-              <p className="mt-1 text-brand-900">{location}</p>
-            </div>
-          )}
-          <div>
-            <h2 className="text-sm font-medium text-gray-500">Institution</h2>
-            <p className="mt-1 text-brand-900">{institutionText || "Not specified."}</p>
-          </div>
-          <div>
-            <h2 className="text-sm font-medium text-gray-500">Area of expertise</h2>
-            <p className="mt-1 text-brand-900">{expertiseText || "Not specified."}</p>
-          </div>
-          <div>
-            <h2 className="text-sm font-medium text-gray-500">Qualifications</h2>
-            {user.researcherProfile?.qualifications?.length ? (
-              <QualificationBadges
-                qualifications={user.researcherProfile.qualifications}
-                className="mt-2"
-                size="md"
-              />
-            ) : (
-              <p className="mt-1 text-brand-900">No qualifications added yet.</p>
-            )}
-          </div>
-          <div>
-            <h2 className="text-sm font-medium text-gray-500">Bio</h2>
-            <p className="mt-1 whitespace-pre-wrap text-brand-900">
-              {bioText || "No bio added yet."}
-            </p>
-          </div>
-        </section>
-      )}
+      {!editing && <ProfileInfoSection user={user} className="mb-6" />}
 
       {editing && (
         <ProfileEditSection>

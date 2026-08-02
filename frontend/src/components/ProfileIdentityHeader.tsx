@@ -3,10 +3,15 @@
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
 import { RolePrefixedName, getRoleNamePrefix } from "@/components/RolePrefixedName";
+import { QualificationBadges } from "@/components/QualificationBadges";
+import { EmailText } from "@/components/EmailText";
 import {
   isFarmer,
   isHandler,
   isBuyerHandler,
+  isBuyer,
+  isResearcher,
+  isStudent,
   ROLES,
   hasAssignedHandlerRole,
   type UserProfile,
@@ -151,5 +156,166 @@ export function ProfileEditActions({
         </button>
       )}
     </div>
+  );
+}
+
+export function formatProfileLocation(
+  country?: string,
+  region?: string,
+  city?: string,
+  address?: string
+): string | null {
+  const parts = [country?.trim(), region?.trim(), city?.trim(), address?.trim()].filter(Boolean);
+  return parts.length > 0 ? parts.join(", ") : null;
+}
+
+function ProfileInfoField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <h2 className="text-sm font-medium text-gray-500">{label}</h2>
+      <div className="mt-1 text-brand-900">{children}</div>
+    </div>
+  );
+}
+
+export interface ProfileInfoSectionProps {
+  user: UserProfile;
+  /** Fellow commodities for view mode */
+  commodities?: { id: string; name: string }[];
+  experienceYears?: number;
+  className?: string;
+}
+
+export function ProfileInfoSection({
+  user,
+  commodities,
+  experienceYears,
+  className = "",
+}: ProfileInfoSectionProps) {
+  const location = formatProfileLocation(user.country, user.region, user.city, user.address);
+  const resolvedExperienceYears = experienceYears ?? user.farmerProfile?.experienceYears;
+
+  return (
+    <section
+      className={`space-y-6 rounded-2xl border border-brand-100 bg-white p-6 shadow-sm ${className}`}
+    >
+      <ProfileInfoField label="Name">
+        <RolePrefixedName
+          user={user}
+          hideVerificationTags
+          nameClassName="text-brand-900 font-medium"
+          prefixClassName="text-brand-600 font-medium"
+        />
+      </ProfileInfoField>
+
+      {user.email && (
+        <ProfileInfoField label="Email">
+          <EmailText email={user.email} />
+        </ProfileInfoField>
+      )}
+
+      {user.phone && (
+        <ProfileInfoField label="Phone">
+          <span>{user.phone}</span>
+        </ProfileInfoField>
+      )}
+
+      {location && (
+        <ProfileInfoField label="Location">
+          <span>{location}</span>
+        </ProfileInfoField>
+      )}
+
+      {isFarmer(user.roleId) && (
+        <>
+          {user.farmerProfile?.farmName && (
+            <ProfileInfoField label="Farm name">
+              <span>{user.farmerProfile.farmName}</span>
+            </ProfileInfoField>
+          )}
+          {resolvedExperienceYears != null && resolvedExperienceYears > 0 && (
+            <ProfileInfoField label="Experience">
+              <span>
+                {resolvedExperienceYears} year{resolvedExperienceYears === 1 ? "" : "s"}
+              </span>
+            </ProfileInfoField>
+          )}
+          <ProfileInfoField label="Commodities">
+            {commodities?.length ? (
+              <div className="flex flex-wrap gap-2">
+                {commodities.map((item) => (
+                  <span
+                    key={item.id}
+                    className="inline-flex rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-sm font-medium text-brand-900"
+                  >
+                    {item.name}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <span>No commodities registered yet.</span>
+            )}
+          </ProfileInfoField>
+        </>
+      )}
+
+      {isBuyer(user.roleId) && (
+        <>
+          {user.buyerProfile?.company && (
+            <ProfileInfoField label="Company">
+              <span>{user.buyerProfile.company}</span>
+            </ProfileInfoField>
+          )}
+          {user.buyerProfile?.industry && (
+            <ProfileInfoField label="Industry">
+              <span>{user.buyerProfile.industry}</span>
+            </ProfileInfoField>
+          )}
+        </>
+      )}
+
+      {isResearcher(user.roleId) && (
+        <>
+          <ProfileInfoField label="Institution">
+            <span>{user.researcherProfile?.institution?.trim() || "Not specified."}</span>
+          </ProfileInfoField>
+          <ProfileInfoField label="Area of expertise">
+            <span>{user.researcherProfile?.expertise?.trim() || "Not specified."}</span>
+          </ProfileInfoField>
+          <ProfileInfoField label="Qualifications">
+            {user.researcherProfile?.qualifications?.length ? (
+              <QualificationBadges
+                qualifications={user.researcherProfile.qualifications}
+                className="mt-0.5"
+                size="md"
+              />
+            ) : (
+              <span>No qualifications added yet.</span>
+            )}
+          </ProfileInfoField>
+          <ProfileInfoField label="Bio">
+            <p className="whitespace-pre-wrap">
+              {user.researcherProfile?.bio?.trim() || "No bio added yet."}
+            </p>
+          </ProfileInfoField>
+        </>
+      )}
+
+      {isHandler(user.roleId) && user.agentProfile?.agentType && (
+        <ProfileInfoField label="Handler type">
+          <span>{user.agentProfile.agentType}</span>
+        </ProfileInfoField>
+      )}
+
+      {!isFarmer(user.roleId) &&
+        !isBuyer(user.roleId) &&
+        !isResearcher(user.roleId) &&
+        !isHandler(user.roleId) &&
+        !isStudent(user.roleId) && (
+          <ProfileInfoField label="Role">
+            <span>{user.role}</span>
+          </ProfileInfoField>
+        )}
+    </section>
   );
 }

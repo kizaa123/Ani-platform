@@ -21,7 +21,7 @@ const ORDER_NOTIFICATION_TYPES = new Set([
 
 export function FarmerHandlerDashboardCards() {
   const [farmers, setFarmers] = useState<AgentAssignment[] | null>(null);
-  const [orderAlertCount, setOrderAlertCount] = useState<number | null>(null);
+  const [orderAlerts, setOrderAlerts] = useState<AppNotification[] | null>(null);
   const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
@@ -45,13 +45,15 @@ export function FarmerHandlerDashboardCards() {
       .list()
       .then((notifications) => {
         if (cancelled) return;
-        const unreadOrderAlerts = (notifications as AppNotification[]).filter(
-          (n) => !n.read && ORDER_NOTIFICATION_TYPES.has(n.type)
-        ).length;
-        setOrderAlertCount(unreadOrderAlerts);
+        const unreadOrderAlerts = (notifications as AppNotification[])
+          .filter((n) => !n.read && ORDER_NOTIFICATION_TYPES.has(n.type))
+          .sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+        setOrderAlerts(unreadOrderAlerts);
       })
       .catch(() => {
-        if (!cancelled) setOrderAlertCount(0);
+        if (!cancelled) setOrderAlerts([]);
       });
 
     return () => {
@@ -70,7 +72,7 @@ export function FarmerHandlerDashboardCards() {
       )}
       <ScrollReveal delay={scrollStagger(0, 90)} duration={500} direction="fade-up">
         <HandlerAssignmentsPreviewCard
-          href="/agents"
+          href="/agents/clients"
           title="Assigned Fellows"
           icon="users"
           assignments={farmers ?? []}
@@ -80,16 +82,16 @@ export function FarmerHandlerDashboardCards() {
           getSubtitle={(owner) => {
             const farm = owner.farmerProfile?.farmName;
             const location = formatUserLocation(owner);
-            return [farm, location].filter(Boolean).join(" · ");
+            return [location, farm].filter(Boolean) as string[];
           }}
           getStat={(owner) => owner.farmerProfile?.farmSize ?? undefined}
         />
       </ScrollReveal>
       <ScrollReveal delay={scrollStagger(1, 90)} duration={500} direction="fade-up">
         <HandlerOrderAlertsCard
-          href="/agents"
-          count={orderAlertCount}
-          loading={orderAlertCount === null}
+          href="/agents/clients"
+          notifications={orderAlerts}
+          loading={orderAlerts === null}
           entityLabel="fellows"
         />
       </ScrollReveal>

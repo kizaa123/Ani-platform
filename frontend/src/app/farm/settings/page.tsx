@@ -20,7 +20,7 @@ import { CountrySelect } from "@/components/CountrySelect";
 import { HandlerSelect } from "@/components/HandlerSelect";
 import { CommodityPicker } from "@/components/CommodityPicker";
 import { DEFAULT_COUNTRY } from "@/lib/africanCountries";
-import { ProfileIdentityHeader, ProfileEditSection, ProfileEditActions } from "@/components/ProfileIdentityHeader";
+import { ProfileIdentityHeader, ProfileEditSection, ProfileEditActions, ProfileInfoSection } from "@/components/ProfileIdentityHeader";
 
 interface FarmProfileData {
   experienceYears?: number;
@@ -224,6 +224,18 @@ export default function FarmSettingsPage() {
         >
           {message}
         </div>
+      )}
+
+      {!editing && (
+        <ProfileInfoSection
+          user={user}
+          commodities={registered.map((fc) => ({
+            id: fc.id,
+            name: fc.commodity?.name ?? "Unknown",
+          }))}
+          experienceYears={farm.experienceYears}
+          className="mb-6"
+        />
       )}
 
       {editing && (

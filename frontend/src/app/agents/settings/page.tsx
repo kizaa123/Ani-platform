@@ -12,7 +12,7 @@ import { CountrySelect } from "@/components/CountrySelect";
 import { RolePrefixedName } from "@/components/RolePrefixedName";
 import { EmailText } from "@/components/EmailText";
 import { DEFAULT_COUNTRY } from "@/lib/africanCountries";
-import { ProfileIdentityHeader, ProfileEditSection, ProfileEditActions } from "@/components/ProfileIdentityHeader";
+import { ProfileIdentityHeader, ProfileEditSection, ProfileEditActions, ProfileInfoSection } from "@/components/ProfileIdentityHeader";
 
 export default function HandlerSettingsPage() {
   const { user, loading, refreshUser } = useAuth();
@@ -128,6 +128,8 @@ export default function HandlerSettingsPage() {
       {error && (
         <div className="mb-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</div>
       )}
+
+      {!editing && <ProfileInfoSection user={user} className="mb-6" />}
 
       {editing && (
       <ProfileEditSection>

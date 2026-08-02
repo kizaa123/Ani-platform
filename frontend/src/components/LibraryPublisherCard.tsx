@@ -3,6 +3,7 @@
 import { PublisherBrowseCard } from "@/lib/types";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { QualificationBadges } from "@/components/QualificationBadges";
+import { InlineNameWithVerificationTags } from "@/components/VerificationTagBadge";
 
 interface LibraryPublisherCardProps {
   publisher: PublisherBrowseCard;
@@ -27,26 +28,32 @@ function PublisherActionButton({
 export function LibraryPublisherCard({ publisher, onViewFiles }: LibraryPublisherCardProps) {
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-brand-100 bg-white p-5 shadow-sm transition hover:border-brand-200 hover:shadow-md">
-      <div className="flex items-start gap-3">
-        <AvatarWithVerification
-          src={publisher.profilePicture}
-          name={publisher.name}
-          size="lg"
-          verificationStatus={publisher.verificationStatus}
-          verificationTags={publisher.verificationTags}
-        />
-        <div className="min-w-0 flex-1">
-          <h3 className="line-clamp-2 break-words text-sm font-bold leading-snug text-brand-900">
-            {publisher.name}
-          </h3>
-          {publisher.institution && (
-            <p className="truncate text-sm text-brand-700">{publisher.institution}</p>
-          )}
-          <p className="mt-1 text-xs text-gray-500">
-            {publisher.publicationCount} publication{publisher.publicationCount === 1 ? "" : "s"}
-          </p>
-          <QualificationBadges qualifications={publisher.qualifications} className="mt-2" />
-        </div>
+      <div className="min-w-0">
+        <h3 className="line-clamp-2 break-words text-sm font-bold leading-snug text-brand-900">
+          <span className="inline-flex max-w-full flex-wrap items-center gap-x-1.5 gap-y-0.5">
+            <AvatarWithVerification
+              src={publisher.profilePicture}
+              name={publisher.name}
+              size={28}
+              verificationStatus={publisher.verificationStatus}
+              verificationTags={publisher.verificationTags}
+              tagPlacement="none"
+            />
+            <InlineNameWithVerificationTags
+              name={publisher.name}
+              verificationTags={publisher.verificationTags}
+              verificationStatus={publisher.verificationStatus}
+              nameClassName="font-bold text-brand-900"
+            />
+          </span>
+        </h3>
+        {publisher.institution && (
+          <p className="mt-1 truncate text-sm text-brand-700">{publisher.institution}</p>
+        )}
+        <p className="mt-1 text-xs text-gray-500">
+          {publisher.publicationCount} publication{publisher.publicationCount === 1 ? "" : "s"}
+        </p>
+        <QualificationBadges qualifications={publisher.qualifications} className="mt-2" />
       </div>
 
       {publisher.bio && (

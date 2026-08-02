@@ -172,7 +172,7 @@ export const PORTAL_NAV_IMAGES_HANDLER = {
 
   /** Change image here: My Fellows / My Clients card */
 
-  "/agents": "/farmer and her agent.webp",
+  "/agents/clients": "/all the client image card.jpg",
 
   /** Change image here: Handler Financial Statement card */
 

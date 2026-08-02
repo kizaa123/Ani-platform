@@ -5,12 +5,14 @@ import { PortalSidebarLayout, type PortalNavLink } from "@/components/PortalSide
 import { ROLES, isHandler, isBuyerHandler } from "@/lib/types";
 
 const clientMatch = (p: string) =>
-  (p === "/agents" || p.startsWith("/agents/farm/") || p.startsWith("/agents/buyer/")) &&
+  (p === "/agents/clients" ||
+    p.startsWith("/agents/farm/") ||
+    p.startsWith("/agents/buyer/")) &&
   !p.startsWith("/agents/settings");
 
 export const FLO_NAV_LINKS: PortalNavLink[] = [
   { href: "/dashboard", label: "Dashboard", icon: "home", match: (p) => p === "/dashboard" },
-  { href: "/agents", label: "My Fellows", icon: "users", match: clientMatch },
+  { href: "/agents/clients", label: "My Fellows", icon: "users", match: clientMatch },
   {
     href: "/agents/financials",
     label: "Financials",
@@ -28,7 +30,7 @@ export const FLO_NAV_LINKS: PortalNavLink[] = [
 
 export const CLO_NAV_LINKS: PortalNavLink[] = [
   { href: "/dashboard", label: "Dashboard", icon: "home", match: (p) => p === "/dashboard" },
-  { href: "/agents", label: "My Clients", icon: "users", match: clientMatch },
+  { href: "/agents/clients", label: "My Clients", icon: "users", match: clientMatch },
   {
     href: "/agents/financials",
     label: "Financials",
@@ -47,11 +49,13 @@ export const CLO_NAV_LINKS: PortalNavLink[] = [
 export const HANDLER_NAV_LINKS: PortalNavLink[] = [
   { href: "/dashboard", label: "Dashboard", icon: "home", match: (p) => p === "/dashboard" },
   {
-    href: "/agents",
+    href: "/agents/clients",
     label: "My Clients",
     icon: "users",
     match: (p) =>
-      (p === "/agents" || p.startsWith("/agents/farm/") || p.startsWith("/agents/buyer/")) &&
+      (p === "/agents/clients" ||
+        p.startsWith("/agents/farm/") ||
+        p.startsWith("/agents/buyer/")) &&
       !p.startsWith("/agents/settings"),
   },
   {

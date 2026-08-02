@@ -16,6 +16,7 @@ import {
   ProfileIdentityHeader,
   ProfileEditSection,
   ProfileEditActions,
+  ProfileInfoSection,
 } from "@/components/ProfileIdentityHeader";
 
 export default function ProfilePage() {
@@ -134,6 +135,8 @@ export default function ProfilePage() {
       {error && (
         <div className="mb-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</div>
       )}
+
+      {!editing && <ProfileInfoSection user={user} className="mb-6" />}
 
       {editing && (
         <ProfileEditSection>

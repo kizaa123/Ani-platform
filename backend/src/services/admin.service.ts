@@ -474,7 +474,7 @@ export class AdminService {
     });
   }
 
-  async verifyUser(userId: string, status: VerificationStatus) {
+  async verifyUser(userId: string, status: VerificationStatus, assignedBy?: string) {
     const existing = assertFound(
       await prisma.user.findUnique({
         where: { id: userId },
@@ -504,6 +504,18 @@ export class AdminService {
       });
     }
 
+    if (status === 'VERIFIED' && assignedBy) {
+      await prisma.userVerificationTag.upsert({
+        where: { userId_tagType: { userId, tagType: 'STANDARD' } },
+        create: { userId, tagType: 'STANDARD', assignedBy },
+        update: { assignedBy },
+      });
+    } else if (status === 'PENDING' || status === 'REJECTED') {
+      await prisma.userVerificationTag.deleteMany({
+        where: { userId, tagType: 'STANDARD' },
+      });
+    }
+
     if (status === 'VERIFIED' && existing.verificationStatus !== 'VERIFIED') {
       await notifyUserVerified({
         userId: user.id,
@@ -512,7 +524,10 @@ export class AdminService {
       });
     }
 
-    return user;
+    return prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      include: verifiableUserInclude,
+    });
   }
 
   async listUserVerificationTags(userId: string) {

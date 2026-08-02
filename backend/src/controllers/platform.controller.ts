@@ -311,7 +311,11 @@ export class AdminController {
 
   verifyUser = async (req: AuthRequest, res: Response) => {
     try {
-      const user = await adminService.verifyUser(req.params.id as string, req.body.status);
+      const user = await adminService.verifyUser(
+        req.params.id as string,
+        req.body.status,
+        req.user!.userId
+      );
       await createAuditLog(req, `USER_${req.body.status}`, 'users');
       ApiResponse.success(res, user);
     } catch (e) {

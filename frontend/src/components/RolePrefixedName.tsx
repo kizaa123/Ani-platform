@@ -39,6 +39,7 @@ interface RolePrefixedNameProps {
   showVerifiedBadge?: boolean;
   tagSize?: "xs" | "sm" | "md";
   showTagLabels?: boolean;
+  hideVerificationTags?: boolean;
 }
 
 function InlineVerificationTags({
@@ -77,6 +78,7 @@ export function RolePrefixedName({
   showVerifiedBadge = false,
   tagSize = "sm",
   showTagLabels = false,
+  hideVerificationTags = false,
 }: RolePrefixedNameProps) {
   const resolvedTags = verificationTags ?? user.verificationTags;
   const config = getRoleNamePrefix(user.roleId);
@@ -89,7 +91,7 @@ export function RolePrefixedName({
       ? user.firstName
       : fullName(user);
   const isVerified = user.verificationStatus === "VERIFIED";
-  const inlineTags = (
+  const inlineTags = hideVerificationTags ? null : (
     <InlineVerificationTags
       verificationTags={resolvedTags}
       verificationStatus={user.verificationStatus}
@@ -110,7 +112,7 @@ export function RolePrefixedName({
       >
         <span className={nameClassName}>{name}</span>
         {inlineTags}
-        {showVerifiedBadge && isVerified && !resolvedTags?.length && (
+        {showVerifiedBadge && !hideVerificationTags && isVerified && !resolvedTags?.length && (
           <span title="Verified User">
             <VerifiedBadgeIcon className="h-4 w-4 shrink-0" />
           </span>
@@ -136,7 +138,7 @@ export function RolePrefixedName({
       )}
       <span className={nameClassName}>{name}</span>
       {inlineTags}
-      {showVerifiedBadge && isVerified && !resolvedTags?.length && (
+      {showVerifiedBadge && !hideVerificationTags && isVerified && !resolvedTags?.length && (
         <span title="Verified User">
           <VerifiedBadgeIcon className="h-4 w-4 shrink-0" />
         </span>

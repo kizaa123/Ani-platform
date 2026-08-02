@@ -7,6 +7,7 @@ import { isListingOrderable } from './farmAccess.service';
 import { getPaymentProvider } from './payment.provider';
 import { notifyNewOrder, notifyProductPurchase } from './notification.service';
 import { generateReleaseOtp } from '../utils/orderOtp';
+import { normalizeImages } from '../middleware/upload.middleware';
 
 export const purchaseProductSchema = z.object({
   quantity: z.number().positive(),
@@ -126,7 +127,14 @@ export class OrderService {
 
     const buyerName = `${txResult.order.buyer.firstName} ${txResult.order.buyer.lastName}`;
     const farmerName = `${listing.farmer.user.firstName} ${listing.farmer.user.lastName}`;
-    await notifyNewOrder(farmerUserId, buyerId, buyerName, listing.title, totalAmount);
+    const normalized = normalizeImages(listing.images);
+    const imageUrl = normalized[0] ?? null;
+    await notifyNewOrder(farmerUserId, buyerId, buyerName, listing.title, totalAmount, {
+      quantity: data.quantity,
+      unit: listing.unit,
+      imageUrl,
+      listingId: listing.id,
+    });
     await notifyProductPurchase(
       buyerId,
       farmerUserId,

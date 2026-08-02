@@ -80,7 +80,7 @@ export default function HandlerClientFinancialsPage() {
       return;
     }
     if (user && isFarmerHandler(user.roleId)) {
-      router.replace("/agents");
+      router.replace("/agents/clients");
       return;
     }
     if (user && ownerId) {

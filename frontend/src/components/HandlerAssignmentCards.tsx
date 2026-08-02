@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AgentAssignment, AgentClientOwner, fullName, isResearcher } from "@/lib/types";
+import { AgentAssignment, AgentClientOwner, AppNotification, fullName, isResearcher } from "@/lib/types";
 import { formatUserLocation } from "@/lib/formatUserLocation";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { InlineNameWithVerificationTags } from "@/components/VerificationTagBadge";
@@ -30,6 +30,17 @@ export function HandlerPhoneLink({
   );
 }
 
+function renderSubtitleLines(subtitle: string | string[]) {
+  const lines = (Array.isArray(subtitle) ? subtitle : [subtitle]).filter(Boolean);
+  if (lines.length === 0) return null;
+
+  return lines.map((line, i) => (
+    <p key={i} className="mt-0.5 truncate text-xs text-gray-500">
+      {line}
+    </p>
+  ));
+}
+
 /** Compact identity row - dashboard preview & card headers */
 export function HandlerAssignmentIdentity({
   owner,
@@ -37,19 +48,27 @@ export function HandlerAssignmentIdentity({
   stat,
   avatarSize = "md",
   showPhone = false,
+  compact = false,
 }: {
   owner: AgentClientOwner;
-  subtitle?: string;
+  subtitle?: string | string[];
   stat?: string;
-  avatarSize?: "sm" | "md";
+  avatarSize?: "sm" | "md" | number;
   showPhone?: boolean;
+  compact?: boolean;
 }) {
+  const resolvedAvatarSize = compact ? 36 : avatarSize;
+  const gapClass = compact ? "gap-2" : "gap-2.5";
+  const nameClass = compact
+    ? "line-clamp-1 break-words text-xs font-semibold leading-snug text-brand-900"
+    : "line-clamp-2 break-words text-sm font-semibold leading-snug text-brand-900";
+
   return (
-    <div className="flex min-w-0 items-start gap-2.5">
+    <div className={`flex min-w-0 items-start ${gapClass}`}>
       <AvatarWithVerification
         src={owner.profilePicture}
         name={owner.firstName}
-        size={avatarSize}
+        size={resolvedAvatarSize}
         cacheBust={owner.updatedAt ? new Date(owner.updatedAt).getTime() : undefined}
         verificationStatus={owner.verificationStatus}
         verificationTags={owner.verificationTags}
@@ -60,20 +79,22 @@ export function HandlerAssignmentIdentity({
           name={fullName(owner)}
           verificationTags={owner.verificationTags}
           verificationStatus={owner.verificationStatus}
-          nameClassName="line-clamp-2 break-words text-sm font-semibold leading-snug text-brand-900"
+          nameClassName={nameClass}
           className="max-w-full"
         />
-        {subtitle && (
-          <p className="mt-0.5 truncate text-xs text-gray-500">{subtitle}</p>
-        )}
-        {showPhone && (
+        {subtitle && renderSubtitleLines(subtitle)}
+        {showPhone && !compact && (
           <p className="mt-0.5 text-xs">
             <HandlerPhoneLink phone={owner.phone} />
           </p>
         )}
       </div>
       {stat && (
-        <span className="shrink-0 rounded-md bg-brand-50 px-1.5 py-0.5 text-[10px] font-semibold text-brand-800">
+        <span
+          className={`shrink-0 rounded-md bg-brand-50 font-semibold text-brand-800 ${
+            compact ? "px-1 py-0.5 text-[9px]" : "px-1.5 py-0.5 text-[10px]"
+          }`}
+        >
           {stat}
         </span>
       )}
@@ -120,7 +141,7 @@ export function HandlerAssignmentsPreviewCard({
   assignments: AgentAssignment[];
   loading: boolean;
   emptyMessage: string;
-  getSubtitle: (owner: AgentClientOwner) => string;
+  getSubtitle: (owner: AgentClientOwner) => string | string[];
   getStat?: (owner: AgentClientOwner) => string | undefined;
   clientType: "farmer" | "buyer";
 }) {
@@ -148,14 +169,14 @@ export function HandlerAssignmentsPreviewCard({
         )}
       </div>
 
-      <div className="flex flex-1 flex-col gap-2 p-3">
+      <div className="flex flex-1 flex-col gap-1.5 p-2.5">
         {loading ? (
           Array.from({ length: 2 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-2.5">
-              <div className="h-14 w-14 shrink-0 animate-pulse rounded-full bg-gray-200" />
-              <div className="min-w-0 flex-1 space-y-1.5">
-                <div className="h-3.5 w-2/3 animate-pulse rounded bg-gray-200" />
-                <div className="h-3 w-1/2 animate-pulse rounded bg-gray-100" />
+            <div key={i} className="flex items-center gap-2">
+              <div className="h-9 w-9 shrink-0 animate-pulse rounded-full bg-gray-200" />
+              <div className="min-w-0 flex-1 space-y-1">
+                <div className="h-3 w-2/3 animate-pulse rounded bg-gray-200" />
+                <div className="h-2.5 w-1/2 animate-pulse rounded bg-gray-100" />
               </div>
             </div>
           ))
@@ -168,7 +189,7 @@ export function HandlerAssignmentsPreviewCard({
               owner={a.owner}
               subtitle={getSubtitle(a.owner)}
               stat={getStat?.(a.owner)}
-              showPhone
+              compact
             />
           ))
         )}
@@ -189,48 +210,132 @@ export function HandlerAssignmentsPreviewCard({
   );
 }
 
-/** Compact stat card for dashboard order alerts */
+function orderAlertProductName(notification: AppNotification) {
+  return (
+    notification.metadata?.orderName ??
+    notification.metadata?.actionLabel ??
+    notification.title
+  );
+}
+
+function orderAlertTotalLabel(notification: AppNotification) {
+  if (notification.metadata?.priceLabel) return notification.metadata.priceLabel;
+  if (notification.metadata?.price != null) {
+    return `GHC ${notification.metadata.price.toFixed(2)}`;
+  }
+  return null;
+}
+
+/** Single order notification row - matches assigned client/fellow preview style */
+function HandlerOrderAlertItem({ notification }: { notification: AppNotification }) {
+  const productName = orderAlertProductName(notification);
+  const totalLabel = orderAlertTotalLabel(notification);
+  const quantity = notification.metadata?.quantity;
+  const unit = notification.metadata?.unit;
+  const imageUrl = notification.metadata?.imageUrl;
+
+  return (
+    <div className="flex min-w-0 items-start gap-2">
+      {imageUrl ? (
+        <img
+          src={imageUrl}
+          alt=""
+          className="h-9 w-9 shrink-0 rounded-lg border border-brand-100 object-cover"
+        />
+      ) : (
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-brand-100 bg-brand-50 text-brand-700">
+          <Icon name="package" className="h-3.5 w-3.5" />
+        </span>
+      )}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-start justify-between gap-1.5">
+          <p className="line-clamp-1 text-xs font-semibold text-brand-900">{productName}</p>
+          {!notification.read && (
+            <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" aria-hidden />
+          )}
+        </div>
+        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-gray-500">
+          {quantity != null && unit && (
+            <span>
+              Qty: {quantity} {unit}
+            </span>
+          )}
+          {totalLabel && <span className="font-semibold text-brand-700">{totalLabel}</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Dashboard preview card listing unread order notifications */
 export function HandlerOrderAlertsCard({
   href,
-  count,
+  notifications,
   loading,
   entityLabel,
 }: {
   href: string;
-  count: number | null;
+  notifications: AppNotification[] | null;
   loading: boolean;
   entityLabel: string;
 }) {
-  const desc =
-    count === null
-      ? "Loading order alerts..."
-      : count === 0
-        ? "No unread order notifications"
-        : `${count} unread notification${count === 1 ? "" : "s"} for your ${entityLabel}`;
+  const items = notifications ?? [];
+  const preview = items.slice(0, 3);
+  const remaining = items.length - preview.length;
+  const count = items.length;
 
   return (
     <Link
       href={href}
       className="group card-elevated card-elevated-hover flex flex-col overflow-hidden rounded-xl"
     >
-      <div className="flex items-start gap-3 p-3">
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700 ring-1 ring-brand-100 transition-colors group-hover:bg-brand-700 group-hover:text-white">
-          <Icon name="package" className="h-3.5 w-3.5" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="text-sm font-bold text-brand-900 group-hover:text-brand-700">
-              Order Notifications
-            </h3>
-            {!loading && count !== null && count > 0 && (
-              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold tabular-nums text-amber-800">
-                {count}
-              </span>
-            )}
-          </div>
-          <p className="mt-1 text-xs leading-snug text-gray-500">{desc}</p>
+      <div className="flex items-center justify-between gap-2 border-b border-brand-100 bg-brand-50/50 px-3 py-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-brand-700 shadow-sm ring-1 ring-brand-100 transition-colors group-hover:bg-brand-700 group-hover:text-white">
+            <Icon name="package" className="h-3.5 w-3.5" />
+          </span>
+          <h3 className="truncate text-sm font-bold text-brand-900 group-hover:text-brand-700">
+            Order Notifications
+          </h3>
         </div>
+        {!loading && count > 0 && (
+          <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold tabular-nums text-amber-800">
+            {count}
+          </span>
+        )}
       </div>
+
+      <div className="flex flex-1 flex-col gap-1.5 p-2.5">
+        {loading ? (
+          Array.from({ length: 2 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <div className="h-9 w-9 shrink-0 animate-pulse rounded-lg bg-gray-200" />
+              <div className="min-w-0 flex-1 space-y-1">
+                <div className="h-3 w-2/3 animate-pulse rounded bg-gray-200" />
+                <div className="h-2.5 w-1/2 animate-pulse rounded bg-gray-100" />
+              </div>
+            </div>
+          ))
+        ) : count === 0 ? (
+          <p className="py-2 text-center text-xs text-gray-500">
+            No unread order notifications for your {entityLabel}
+          </p>
+        ) : (
+          preview.map((n) => <HandlerOrderAlertItem key={n.id} notification={n} />)
+        )}
+      </div>
+
+      {!loading && remaining > 0 && (
+        <div className="border-t border-brand-50 px-3 py-1.5 text-[11px] font-medium text-brand-600">
+          +{remaining} more - view all
+        </div>
+      )}
+
+      {!loading && count > 0 && remaining === 0 && (
+        <div className="border-t border-brand-50 px-3 py-1.5 text-[11px] font-medium text-brand-600">
+          View all order notifications
+        </div>
+      )}
     </Link>
   );
 }
@@ -246,7 +351,7 @@ export function HandlerFarmerClientCard({ assignment }: { assignment: AgentAssig
       <div className="border-b border-brand-50 bg-brand-50/40 px-3 py-2.5">
         <HandlerAssignmentIdentity
           owner={owner}
-          subtitle={[farmName, location].filter(Boolean).join(" · ")}
+          subtitle={[location, farmName].filter(Boolean)}
           stat={owner.farmerProfile?.farmSize ?? undefined}
           avatarSize="md"
         />
@@ -316,14 +421,14 @@ export function HandlerBuyerClientCard({ assignment }: { assignment: AgentAssign
   const { owner } = assignment;
   const organization = clientOrganization(owner);
   const location = formatUserLocation(owner);
-  const subtitle = [organization, location].filter(Boolean).join(" · ");
+  const subtitle = [location, organization].filter(Boolean);
 
   return (
     <article className="card-elevated flex flex-col overflow-hidden rounded-xl transition hover:shadow-md">
       <div className="border-b border-brand-50 bg-brand-50/40 px-3 py-2.5">
         <HandlerAssignmentIdentity
           owner={owner}
-          subtitle={subtitle || undefined}
+          subtitle={subtitle.length > 0 ? subtitle : undefined}
           avatarSize="md"
         />
         <CountryBadge country={owner.country} region={owner.region} city={owner.city} className="mt-2" />

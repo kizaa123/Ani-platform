@@ -652,6 +652,8 @@ export interface NotificationMetadata {
   imageUrl?: string | null;
   price?: number | null;
   priceLabel?: string | null;
+  quantity?: number | null;
+  unit?: string | null;
   farmerId?: string | null;
   farmerUserId?: string | null;
   listingId?: string | null;
