@@ -16,6 +16,7 @@ import { PublicationCoverImage } from "@/components/PublicationCoverImage";
 import { PublicationPolicyModal } from "@/components/PublicationPolicyModal";
 import { PageContentSkeleton, SpinnerLabel } from "@/components/LoadingPrimitives";
 import { assetUrl } from "@/lib/assetUrl";
+import { useMoneyFormat } from "@/hooks/useMoneyFormat";
 
 const emptyForm = {
   title: "",
@@ -29,6 +30,7 @@ const emptyForm = {
 
 export default function ResearcherPublicationsPage() {
   const { user, loading, refreshUser } = useAuth();
+  const { format } = useMoneyFormat();
   const router = useRouter();
 
   const [publications, setPublications] = useState<ResearchPublication[]>([]);
@@ -344,7 +346,7 @@ export default function ResearcherPublicationsPage() {
                       {pub.viewCount}
                     </span>
                     <span className="text-sm font-semibold text-brand-700">
-                      {pub.isFree ? "Free" : `GHC ${(pub.price ?? 0).toFixed(2)}`}
+                      {pub.isFree ? "Free" : format(pub.price ?? 0)}
                     </span>
                   </div>
                   <div className="mt-2.5 flex gap-1.5">

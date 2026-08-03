@@ -6,8 +6,8 @@ import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { PaymentCheckout } from "@/components/PaymentCheckout";
 import { PaymentResultOverlay } from "@/components/PaymentResultOverlay";
 import { Icon } from "@/components/icons";
-import { formatGhc } from "@/lib/format";
 import { api } from "@/lib/api";
+import { useMoneyFormat } from "@/hooks/useMoneyFormat";
 
 interface PublicationAccessPaymentModalProps {
   publication: ResearchPublication;
@@ -28,11 +28,12 @@ export function PublicationAccessPaymentModal({
   onSuccess,
   onReadNow,
 }: PublicationAccessPaymentModalProps) {
+  const { format } = useMoneyFormat();
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<PaymentResult | null>(null);
 
   const price = publication.price ?? 0;
-  const priceLabel = publication.isFree ? "Free" : formatGhc(price);
+  const priceLabel = publication.isFree ? "Free" : format(price);
 
   const handlePay = async (paymentMethod: string) => {
     setSubmitting(true);

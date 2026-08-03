@@ -82,7 +82,7 @@ export function FarmAccessPaymentModal({
                 embedded
                 title="Access granted"
                 message={`Your ${feeLabel} payment was successful. Instant access to ${farmer.farmName} is now active.`}
-                hint="Browse products and place orders from this farm."
+                hint="Browse farm and place orders from this farm."
                 actionLabel="Browse farm"
                 onDismiss={onClose}
               />

@@ -4,9 +4,9 @@ import { useState } from "react";
 import { ResearchPublication } from "@/lib/types";
 import { Icon } from "@/components/icons";
 import { PublicationCoverImage } from "@/components/PublicationCoverImage";
-import { formatGhc } from "@/lib/format";
 import { PUBLICATION_CATEGORY_OPTIONS } from "@/lib/publicationCategories";
 import { api } from "@/lib/api";
+import { useMoneyFormat } from "@/hooks/useMoneyFormat";
 
 interface LibraryPublicationCardProps {
   pub: ResearchPublication;
@@ -24,6 +24,7 @@ function PublicationActionButton({
   onPayToAccess,
   onReadNow,
 }: Pick<LibraryPublicationCardProps, "pub" | "onPayToAccess" | "onReadNow">) {
+  const { format } = useMoneyFormat();
   const hasAccess = pub.hasAccess || !pub.isLocked;
 
   if (hasAccess) {
@@ -38,7 +39,7 @@ function PublicationActionButton({
     );
   }
 
-  const priceLabel = pub.isFree ? null : formatGhc(pub.price ?? 0);
+  const priceLabel = pub.isFree ? null : format(pub.price ?? 0);
 
   return (
     <button
@@ -62,6 +63,7 @@ export function LibraryPublicationCard({
   onShare,
   sharePath,
 }: LibraryPublicationCardProps) {
+  const { format } = useMoneyFormat();
   const [liking, setLiking] = useState(false);
   const [sharing, setSharing] = useState(false);
 
@@ -147,7 +149,7 @@ export function LibraryPublicationCard({
             {viewCount} view{viewCount === 1 ? "" : "s"}
           </span>
           <span className="text-sm font-bold text-brand-700">
-            {pub.isFree ? "Free" : formatGhc(pub.price ?? 0)}
+            {pub.isFree ? "Free" : format(pub.price ?? 0)}
           </span>
         </div>
 

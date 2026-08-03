@@ -39,6 +39,7 @@ export const updateFarmSchema = z.object({
   farmName: z.string().min(2).optional(),
   farmSize: z.string().optional(),
   experienceYears: z.number().int().min(0).optional(),
+  customProducts: z.array(z.string()).optional(),
 });
 
 export const addCommoditySchema = z.object({

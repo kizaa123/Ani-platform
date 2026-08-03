@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  getDialCodeForCountryName,
-  parsePhoneInput,
-  PHONE_VALIDATION_MESSAGE,
-} from "@/lib/phone";
+import { getDialCodeForCountryName, parsePhoneInput } from "@/lib/phone";
 
 interface PhoneInputProps {
   id?: string;
@@ -60,13 +56,7 @@ export function PhoneInput({
           }
         />
       </div>
-      {hint !== null && (
-        <p className="mt-1 text-xs text-gray-500">
-          {hint ?? PHONE_VALIDATION_MESSAGE}
-        </p>
-      )}
+      {hint ? <p className="mt-1 text-xs text-gray-500">{hint}</p> : null}
     </div>
   );
 }
-
-export { PHONE_VALIDATION_MESSAGE };

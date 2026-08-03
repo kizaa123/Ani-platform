@@ -26,11 +26,13 @@ import { ProfilePhoto } from "@/components/FarmerAvatar";
 import { CountrySelect } from "@/components/CountrySelect";
 import { HandlerSelect } from "@/components/HandlerSelect";
 import { CommodityPicker } from "@/components/CommodityPicker";
+import { CustomProductInput } from "@/components/CustomProductInput";
 import { DEFAULT_COUNTRY } from "@/lib/africanCountries";
 import { ProfileIdentityHeader, ProfileEditSection, ProfileEditActions, ProfileInfoSection } from "@/components/ProfileIdentityHeader";
 
 interface FarmProfileData {
   experienceYears?: number;
+  customProducts?: string[];
   farmerCommodities: FarmerCommodity[];
 }
 
@@ -60,6 +62,7 @@ export default function FarmSettingsPage() {
 
   const [farm, setFarm] = useState({
     experienceYears: 0,
+    customProducts: [] as string[],
   });
 
   const categoryFilter = user ? farmerCategoryFilter(user.roleId) : null;
@@ -79,6 +82,7 @@ export default function FarmSettingsPage() {
     setCategories(cats);
     setFarm({
       experienceYears: profile.experienceYears ?? 0,
+      customProducts: profile.customProducts ?? [],
     });
   };
 
@@ -144,6 +148,7 @@ export default function FarmSettingsPage() {
         }),
         api.farm.update({
           experienceYears: farm.experienceYears,
+          customProducts: farm.customProducts,
         }),
       ]);
       if (handlerId && handlerId !== user?.assignedHandler?.id) {
@@ -243,6 +248,7 @@ export default function FarmSettingsPage() {
             id: fc.id,
             name: fc.commodity?.name ?? "Unknown",
           }))}
+          customProducts={farm.customProducts}
           experienceYears={farm.experienceYears}
           className="mb-6"
         />
@@ -420,6 +426,20 @@ export default function FarmSettingsPage() {
           onSelectAdd={addCommodity}
           idPrefix="farm-commodity"
         />
+
+        <div className="mt-8 border-t border-brand-100 pt-6">
+          <h3 className="mb-1 text-sm font-semibold text-brand-800">
+            Custom Commodities / Products
+          </h3>
+          <p className="mb-3 text-xs text-gray-500">
+            If your commodity or produce is not listed in the catalog above, type it below to add it to your profile.
+          </p>
+          <CustomProductInput
+            products={farm.customProducts}
+            onChange={(products) => setFarm((prev) => ({ ...prev, customProducts: products }))}
+            idPrefix="farm-custom-commodity"
+          />
+        </div>
       </section>
 
       <ProfileEditActions

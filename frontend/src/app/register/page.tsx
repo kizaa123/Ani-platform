@@ -671,9 +671,6 @@ function RegisterForm() {
                 />
               </div>
               <FieldErrorMessage message={fieldError("phone")} />
-              {!fieldError("phone") && (
-                <p className="auth-hint">Accepts local (0241234567) or international (+233…) · country code shown above</p>
-              )}
             </div>
 
             <div className="auth-field">

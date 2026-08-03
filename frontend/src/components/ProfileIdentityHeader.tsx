@@ -183,6 +183,7 @@ export interface ProfileInfoSectionProps {
   user: UserProfile;
   /** Fellow commodities for view mode */
   commodities?: { id: string; name: string }[];
+  customProducts?: string[];
   experienceYears?: number;
   className?: string;
 }
@@ -190,11 +191,13 @@ export interface ProfileInfoSectionProps {
 export function ProfileInfoSection({
   user,
   commodities,
+  customProducts,
   experienceYears,
   className = "",
 }: ProfileInfoSectionProps) {
   const location = formatProfileLocation(user.country, user.region, user.city, user.address);
   const resolvedExperienceYears = experienceYears ?? user.farmerProfile?.experienceYears;
+  const customProductsList = customProducts ?? user.farmerProfile?.customProducts ?? [];
 
   return (
     <section
@@ -242,14 +245,22 @@ export function ProfileInfoSection({
             </ProfileInfoField>
           )}
           <ProfileInfoField label="Commodities">
-            {commodities?.length ? (
+            {commodities?.length || customProductsList.length ? (
               <div className="flex flex-wrap gap-2">
-                {commodities.map((item) => (
+                {commodities?.map((item) => (
                   <span
                     key={item.id}
                     className="inline-flex rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-sm font-medium text-brand-900"
                   >
-                    {item.name}
+                    ✓ {item.name}
+                  </span>
+                ))}
+                {customProductsList.map((productName, idx) => (
+                  <span
+                    key={`custom-${idx}`}
+                    className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-900"
+                  >
+                    ✓ {productName}
                   </span>
                 ))}
               </div>

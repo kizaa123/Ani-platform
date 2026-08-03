@@ -11,7 +11,6 @@ import {
   normalizePhoneForStorage,
   onCountryChangePhone,
   parsePhoneInput,
-  PHONE_VALIDATION_MESSAGE,
 } from "@/lib/phone";
 import { CountrySelect } from "@/components/CountrySelect";
 import { HandlerSelect } from "@/components/HandlerSelect";
@@ -316,7 +315,6 @@ export default function CompleteProfilePage() {
                       className="min-w-0 flex-1 border-0 bg-transparent px-4 py-3 text-sm focus:outline-none focus:ring-0"
                     />
                   </div>
-                  <p className="auth-hint">Accepts local (0241234567) or international (+233…) · {PHONE_VALIDATION_MESSAGE.toLowerCase()}</p>
                 </div>
                 {!hasGoogleAuth && (
                   <div className="auth-field">

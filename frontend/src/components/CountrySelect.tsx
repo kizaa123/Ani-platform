@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 
 import {
 
-  AFRICAN_COUNTRIES,
+  COUNTRIES,
 
   getCountryByName,
 
@@ -89,11 +89,11 @@ export function CountrySelect({ value, onChange, required, className = "", inval
 
   const query = search.trim().toLowerCase();
   const filtered = query
-    ? AFRICAN_COUNTRIES.filter(
+    ? COUNTRIES.filter(
         (c) =>
           c.name.toLowerCase().includes(query) || c.code.toLowerCase().includes(query)
       )
-    : AFRICAN_COUNTRIES;
+    : COUNTRIES;
 
   useEffect(() => {
     const close = (e: MouseEvent) => {
