@@ -343,9 +343,10 @@ export default function AdminAdsPage() {
                 className="mt-1 w-full rounded-lg border border-brand-200 px-3 py-2"
               />
             </label>
-            <label className="block text-sm">
-              <span className="font-semibold text-brand-800">Placement</span>
+            <div className="block text-sm">
+              <label htmlFor="ad-placement-select" className="block font-semibold text-brand-800">Select Placement</label>
               <select
+                id="ad-placement-select"
                 value={form.placement}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, placement: e.target.value as AdPlacement }))
@@ -358,7 +359,7 @@ export default function AdminAdsPage() {
                   </option>
                 ))}
               </select>
-            </label>
+            </div>
             <label className="block text-sm">
               <span className="font-semibold text-brand-800">Priority (higher first)</span>
               <input

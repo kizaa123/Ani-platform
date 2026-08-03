@@ -12,12 +12,14 @@ interface QualificationSelectorProps {
   value: string[];
   onChange: (qualifications: string[]) => void;
   idPrefix?: string;
+  label?: string;
 }
 
 export function QualificationSelector({
   value,
   onChange,
   idPrefix = "qualification",
+  label = "Select Qualifications",
 }: QualificationSelectorProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -117,6 +119,7 @@ export function QualificationSelector({
     onChange(value.filter((item) => item !== qualification));
   };
 
+  const triggerId = `${idPrefix}-trigger`;
   const searchId = `${idPrefix}-search`;
   const customInputId = `${idPrefix}-custom`;
   const triggerText =
@@ -127,7 +130,11 @@ export function QualificationSelector({
   return (
     <div className="space-y-3">
       <div ref={rootRef} className="relative">
+        <label htmlFor={triggerId} className="mb-1.5 block text-sm font-medium text-brand-900">
+          {label}
+        </label>
         <button
+          id={triggerId}
           type="button"
           aria-expanded={open}
           aria-haspopup="listbox"

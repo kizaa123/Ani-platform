@@ -131,12 +131,13 @@ export function CommodityPicker({
     return <p className="text-sm text-gray-500">Loading commodities...</p>;
   }
 
+  const triggerId = `${idPrefix}-trigger`;
   const searchId = `${idPrefix}-search`;
   const triggerLabel =
     mode === "select-add"
-      ? "Add commodity"
+      ? "Select Commodity to Add"
       : categoryLabel === "All"
-        ? "Select commodities"
+        ? "Select Commodities"
         : `Select ${categoryLabel?.toLowerCase()} commodities`;
 
   const triggerText =
@@ -151,10 +152,11 @@ export function CommodityPicker({
       className={`space-y-4 ${invalid ? "rounded-xl border border-red-500 bg-red-50/30 p-4" : ""}`}
     >
       <div ref={rootRef} className="relative">
-        <label htmlFor={searchId} className="mb-1.5 block text-sm font-medium text-brand-900">
+        <label htmlFor={triggerId} className="mb-1.5 block text-sm font-medium text-brand-900">
           {triggerLabel}
         </label>
         <button
+          id={triggerId}
           type="button"
           aria-expanded={open}
           aria-haspopup="listbox"

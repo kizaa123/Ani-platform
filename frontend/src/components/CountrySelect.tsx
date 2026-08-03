@@ -65,22 +65,15 @@ export function CountryFlag({ code, countryName, size = 24, className = "" }: Co
 
 
 interface CountrySelectProps {
-
   value: string;
-
   onChange: (country: string) => void;
-
   required?: boolean;
-
   className?: string;
-
   invalid?: boolean;
-
+  id?: string;
 }
 
-
-
-export function CountrySelect({ value, onChange, required, className = "", invalid = false }: CountrySelectProps) {
+export function CountrySelect({ value, onChange, required, className = "", invalid = false, id }: CountrySelectProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
@@ -134,6 +127,7 @@ export function CountrySelect({ value, onChange, required, className = "", inval
         />
       )}
       <button
+        id={id}
         type="button"
         aria-expanded={open}
         aria-haspopup="listbox"

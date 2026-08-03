@@ -296,8 +296,8 @@ export default function CompleteProfilePage() {
                   <input value={user.email} readOnly className="auth-input bg-brand-50/80" />
                 </div>
                 <div className="auth-field">
-                  <label className="auth-label">Country</label>
-                  <CountrySelect value={form.country} onChange={handleCountryChange} required />
+                  <label htmlFor="complete-country" className="auth-label">Select Country</label>
+                  <CountrySelect id="complete-country" value={form.country} onChange={handleCountryChange} required />
                 </div>
                 <div className="auth-field">
                   <label htmlFor="complete-phone" className="auth-label">Mobile money phone</label>
@@ -333,7 +333,7 @@ export default function CompleteProfilePage() {
                   </div>
                 )}
                 <div className="auth-field">
-                  <label htmlFor="complete-role" className="auth-label">I am a…</label>
+                  <label htmlFor="complete-role" className="auth-label">Select Role</label>
                   <select
                     id="complete-role"
                     value={form.roleId}

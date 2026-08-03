@@ -125,7 +125,7 @@ const ROLE_CARDS: { icon: IconName; label: string; desc: string; image: string }
   {
     icon: "book",
     label: "Researcher",
-    desc: "Access research data, publish field research, and connect with fellows and clients to support evidence-based farming across the region.",
+    desc: "Access research data, publish field research, and connect with fellows and clients.",
     image: ROLE_CARD_IMAGES.researcher,
   },
   {
@@ -144,7 +144,7 @@ export default function HomePage() {
       <section className="relative flex min-h-[min(100dvh,720px)] items-end overflow-hidden bg-brand-900 sm:min-h-[85vh] sm:items-center lg:min-h-[92vh]">
         <div className="absolute inset-0 z-0">
           <Image
-            src="/comprehensive-world-flags-collection-stunning-national-flag-images-every-project-showcase-beauty-diversity-global-360726791.webp"
+            src="/edited flag for the ani bag.jpg"
             alt="Agricultural field background"
             fill
             className="object-cover object-[center_25%] sm:object-center"

@@ -8,8 +8,7 @@
  */
 
 /** Home page hero image - shared by login and register side panels. */
-export const AUTH_HERO_BACKGROUND =
-  "/comprehensive-world-flags-collection-stunning-national-flag-images-every-project-showcase-beauty-diversity-global-360726791.webp";
+export const AUTH_HERO_BACKGROUND = "/edited flag for the ani bag.jpg";
 
 /** Focal point aligned with the home page hero (`object-[center_25%]`). */
 export const AUTH_HERO_BACKGROUND_POSITION = "center 25%";

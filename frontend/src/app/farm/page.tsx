@@ -377,10 +377,11 @@ export default function FarmPage() {
             {/* Commodity & Title */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-brand-900">
+                <label htmlFor="farm-commodity-select" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-brand-900">
                   Select Commodity <span className="text-red-500">*</span>
                 </label>
                 <select
+                  id="farm-commodity-select"
                   value={form.commodityId}
                   onChange={(e) => {
                     const commodityId = parseInt(e.target.value, 10);
@@ -403,7 +404,7 @@ export default function FarmPage() {
                   }}
                   className="select-field w-full rounded-xl border border-brand-200 bg-white px-4 py-2.5 text-sm shadow-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
                 >
-                  <option value={0}>Choose a commodity</option>
+                  <option value={0} disabled hidden>Select a commodity</option>
                   {registeredCommodities.map((fc) => (
                     <option key={fc.id} value={fc.commodity.id}>
                       {fc.commodity.name} ({fc.commodity.category.name})
@@ -484,8 +485,9 @@ export default function FarmPage() {
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-gray-700">Unit *</label>
+                  <label htmlFor="farm-unit-select" className="mb-1 block text-xs font-semibold text-gray-700">Select Unit *</label>
                   <select
+                    id="farm-unit-select"
                     value={form.unit}
                     onChange={(e) =>
                       setForm({
@@ -496,6 +498,7 @@ export default function FarmPage() {
                     }
                     className="select-field w-full rounded-xl border border-brand-200 bg-white px-4 py-2 text-sm shadow-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
                   >
+                    <option value="" disabled hidden>Select unit</option>
                     {listingUnitsForRole(user?.roleId ?? ROLES.CROP_FARMER).map((u) => (
                       <option key={u} value={u}>
                         {formatListingUnit(u)}

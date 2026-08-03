@@ -354,9 +354,10 @@ export default function AdminStaffPage() {
                 </label>
               </>
             )}
-            <label className="block text-sm sm:col-span-2">
-              <span className="font-semibold text-brand-800">Role</span>
+            <div className="block text-sm sm:col-span-2">
+              <label htmlFor="staff-role-select" className="block font-semibold text-brand-800">Select Role</label>
               <select
+                id="staff-role-select"
                 value={form.roleId}
                 onChange={(e) => setForm((f) => ({ ...f, roleId: Number(e.target.value) }))}
                 disabled={editing?.id === user.id}
@@ -368,7 +369,7 @@ export default function AdminStaffPage() {
                   </option>
                 ))}
               </select>
-            </label>
+            </div>
             <div className="flex flex-wrap gap-2 sm:col-span-2">
               <button
                 type="submit"
