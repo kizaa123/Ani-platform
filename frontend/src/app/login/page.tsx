@@ -45,12 +45,12 @@ function LoginForm() {
     <AuthHeroPanel className="flex-1">
       <ScrollReveal trigger="mount" delay={120} duration={500} direction="fade-up">
         <div className="space-y-6">
-          <header className="text-center lg:text-left">
-            <div className="flex items-center justify-center gap-3 lg:justify-start">
+          <header className="text-center">
+            <div className="flex items-center justify-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-brand-200 bg-gradient-to-br from-brand-50 to-brand-100/70 text-brand-700 shadow-xs">
                 <Icon name="lock" className="h-5 w-5 text-brand-700" />
               </div>
-              <h1 className="auth-title text-2xl font-extrabold tracking-tight text-brand-950 sm:text-3xl lg:text-3xl">
+              <h1 className="text-2xl font-bold tracking-tight text-brand-900 sm:text-3xl">
                 Sign In
               </h1>
             </div>
