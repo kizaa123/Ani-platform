@@ -252,6 +252,27 @@ class ApiClient {
         method: "POST",
         body: JSON.stringify(body),
       }),
+    sendPhoneVerification: (phone?: string, country?: string) =>
+      this.request<{
+        challengeId: string;
+        expiresAt: string;
+        smsSent?: boolean;
+        devMode?: boolean;
+        devCode?: string;
+      }>("/auth/phone-verification/send", {
+        method: "POST",
+        body: JSON.stringify({ phone, country }),
+      }),
+    verifyPhoneChallenge: (body: {
+      phone?: string;
+      challengeId: string;
+      code: string;
+      country?: string;
+    }) =>
+      this.request<{ verified: boolean }>("/auth/phone-verification/verify", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
     completeProfile: (body: Record<string, unknown>) =>
       this.request<{ user: import("./types").User; accessToken: string; refreshToken: string }>(
         "/auth/complete-profile",

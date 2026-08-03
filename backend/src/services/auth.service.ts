@@ -71,70 +71,70 @@ async function resolveCommodityNamesInOrder(commodityIds: number[]): Promise<str
 
 export const registerSchema = z
   .object({
-  firstName: z.preprocess(
-    (val) => (typeof val === 'string' ? val.trim() : val),
-    z.string().min(2)
-  ),
-  lastName: z.preprocess(
-    (val) => (typeof val === 'string' ? val.trim() : val),
-    z.string().min(2)
-  ),
-  email: z.preprocess(
-    (val) => (typeof val === 'string' ? val.trim().toLowerCase() : val),
-    z.string().email()
-  ),
-  phone: phoneInputSchema,
-  password: z.string().min(8),
-  profilePicture: optionalString(),
-  country: z.preprocess(
-    (val) => (typeof val === 'string' ? val.trim() : val),
-    z.string().min(2)
-  ),
-  region: z.preprocess(
-    (val) => (typeof val === 'string' ? val.trim() : val),
-    z.string().min(2)
-  ),
-  city: z.preprocess(
-    (val) => (typeof val === 'string' ? val.trim() : val),
-    z.string().min(2)
-  ),
-  address: optionalString(),
-  gpsLatitude: z.coerce.number().optional(),
-  gpsLongitude: z.coerce.number().optional(),
-  roleId: z.coerce
-    .number()
-    .int()
-    .refine(
-      (id): id is (typeof REGISTERABLE_ROLE_IDS)[number] =>
-        (REGISTERABLE_ROLE_IDS as readonly number[]).includes(id),
-      { message: 'Invalid role for registration' }
+    firstName: z.preprocess(
+      (val) => (typeof val === 'string' ? val.trim() : val),
+      z.string().min(2)
     ),
-  farmName: optionalString(),
-  farmSize: optionalString(),
-  experienceYears: z.preprocess(
-    emptyToUndefined,
-    z.coerce.number().int().min(0).optional()
-  ),
-  institution: optionalString(),
-  expertise: optionalString(),
-  qualifications: z.preprocess(
-    emptyToUndefined,
-    z.array(z.string()).optional()
-  ),
-  commodityIds: z.preprocess(
-    emptyToUndefined,
-    z.array(z.coerce.number().int()).optional()
-  ),
-  customProducts: z.preprocess(
-    emptyToUndefined,
-    z.array(z.string()).optional()
-  ),
-  company: optionalString(),
-  handlerId: z.preprocess(
-    emptyToUndefined,
-    z.string().uuid().optional()
-  ),
-})
+    lastName: z.preprocess(
+      (val) => (typeof val === 'string' ? val.trim() : val),
+      z.string().min(2)
+    ),
+    email: z.preprocess(
+      (val) => (typeof val === 'string' ? val.trim().toLowerCase() : val),
+      z.string().email()
+    ),
+    phone: phoneInputSchema,
+    password: z.string().min(8),
+    profilePicture: optionalString(),
+    country: z.preprocess(
+      (val) => (typeof val === 'string' ? val.trim() : val),
+      z.string().min(2)
+    ),
+    region: z.preprocess(
+      (val) => (typeof val === 'string' ? val.trim() : val),
+      z.string().min(2)
+    ),
+    city: z.preprocess(
+      (val) => (typeof val === 'string' ? val.trim() : val),
+      z.string().min(2)
+    ),
+    address: optionalString(),
+    gpsLatitude: z.coerce.number().optional(),
+    gpsLongitude: z.coerce.number().optional(),
+    roleId: z.coerce
+      .number()
+      .int()
+      .refine(
+        (id): id is (typeof REGISTERABLE_ROLE_IDS)[number] =>
+          (REGISTERABLE_ROLE_IDS as readonly number[]).includes(id),
+        { message: 'Invalid role for registration' }
+      ),
+    farmName: optionalString(),
+    farmSize: optionalString(),
+    experienceYears: z.preprocess(
+      emptyToUndefined,
+      z.coerce.number().int().min(0).optional()
+    ),
+    institution: optionalString(),
+    expertise: optionalString(),
+    qualifications: z.preprocess(
+      emptyToUndefined,
+      z.array(z.string()).optional()
+    ),
+    commodityIds: z.preprocess(
+      emptyToUndefined,
+      z.array(z.coerce.number().int()).optional()
+    ),
+    customProducts: z.preprocess(
+      emptyToUndefined,
+      z.array(z.string()).optional()
+    ),
+    company: optionalString(),
+    handlerId: z.preprocess(
+      emptyToUndefined,
+      z.string().uuid().optional()
+    ),
+  })
   .superRefine((data, ctx) => {
     if (!isValidPhoneNumber(data.phone, data.country)) {
       ctx.addIssue({
@@ -270,6 +270,33 @@ export const emailVerificationVerifySchema = z.object({
   ),
 });
 
+export const phoneVerificationSendSchema = z.object({
+  phone: z.preprocess(
+    (val) => (typeof val === 'string' ? val.trim() : val),
+    z.string().optional()
+  ),
+  country: z.preprocess(
+    (val) => (typeof val === 'string' ? val.trim() : val),
+    z.string().optional()
+  ),
+});
+
+export const phoneVerificationVerifySchema = z.object({
+  phone: z.preprocess(
+    (val) => (typeof val === 'string' ? val.trim() : val),
+    z.string().optional()
+  ),
+  challengeId: z.string().uuid(),
+  code: z.preprocess(
+    (val) => (typeof val === 'string' ? val.trim() : val),
+    z.string().regex(/^\d{4}$/, 'Enter the 4-digit code from your SMS')
+  ),
+  country: z.preprocess(
+    (val) => (typeof val === 'string' ? val.trim() : val),
+    z.string().optional()
+  ),
+});
+
 export const updateUserProfileSchema = z.object({
   firstName: z.string().min(2).optional(),
   lastName: z.string().min(2).optional(),
@@ -289,6 +316,7 @@ function sanitizeUser(user: {
   roleId: number;
   verificationStatus: string;
   emailVerified?: boolean;
+  phoneVerified?: boolean;
   profileComplete?: boolean;
   googleId?: string | null;
   role: { roleName: string };
@@ -303,6 +331,7 @@ function sanitizeUser(user: {
     roleId: user.roleId,
     verificationStatus: user.verificationStatus,
     emailVerified: user.emailVerified ?? false,
+    phoneVerified: user.phoneVerified ?? false,
     profileComplete: user.profileComplete ?? true,
     hasGoogleAuth: Boolean(user.googleId),
   };
@@ -613,6 +642,7 @@ export class AuthService {
       roleId: user.roleId,
       verificationStatus: user.verificationStatus,
       emailVerified: user.emailVerified,
+      phoneVerified: (user as any).phoneVerified ?? false,
       profileComplete: user.profileComplete,
       hasGoogleAuth: Boolean(user.googleId),
       verificationTags: user.verificationTags.map((tag) => ({
@@ -795,6 +825,16 @@ export class AuthService {
     });
   }
 
+  async markPhoneVerified(userId: string, phone?: string) {
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        phoneVerified: true,
+        ...(phone ? { phone } : {}),
+      } as any,
+    });
+  }
+
   async completeProfile(userId: string, input: z.infer<typeof completeProfileSchema>) {
     const user = assertFound(
       await prisma.user.findUnique({
@@ -815,6 +855,9 @@ export class AuthService {
     }
     if (!user.emailVerified) {
       throw new AppError(400, 'Verify your email before completing your profile');
+    }
+    if (!(user as any).phoneVerified) {
+      throw new AppError(400, 'Verify your phone number before completing your profile');
     }
 
     const isGoogleUser = Boolean(user.googleId);

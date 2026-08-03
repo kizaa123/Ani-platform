@@ -16,7 +16,7 @@ import {
 } from '../controllers/platform.controller';
 import { authenticate, requirePermission, requireCanPurchaseFromMarketplace, requireApprovedAccountant } from '../middleware/auth.middleware';
 import { validateBody } from '../middleware/validate.middleware';
-import { registerSchema, loginSchema, updateUserProfileSchema, updateHandlerSchema, completeProfileSchema, emailVerificationSendSchema, emailVerificationVerifySchema } from '../services/auth.service';
+import { registerSchema, loginSchema, updateUserProfileSchema, updateHandlerSchema, completeProfileSchema, emailVerificationSendSchema, emailVerificationVerifySchema, phoneVerificationSendSchema, phoneVerificationVerifySchema } from '../services/auth.service';
 import { updateFarmSchema, addCommoditySchema, updateOrderTrackSchema, notifyClientSchema } from '../services/farm.service';
 import { listingSchema, updateListingSchema } from '../services/marketplace.service';
 import { purchaseSchema, packageSchema, purchaseFarmAccessSchema } from '../services/payment.service';
@@ -119,6 +119,8 @@ router.put('/auth/profile', authenticate, validateBody(updateUserProfileSchema),
 router.put('/auth/handler', authenticate, validateBody(updateHandlerSchema), authController.updateHandler);
 router.post('/auth/email-verification/send', authenticate, validateBody(emailVerificationSendSchema), authController.sendEmailVerification);
 router.post('/auth/email-verification/verify', authenticate, validateBody(emailVerificationVerifySchema), authController.verifyEmailChallenge);
+router.post('/auth/phone-verification/send', authenticate, validateBody(phoneVerificationSendSchema), authController.sendPhoneVerification);
+router.post('/auth/phone-verification/verify', authenticate, validateBody(phoneVerificationVerifySchema), authController.verifyPhoneChallenge);
 router.post('/auth/complete-profile', authenticate, validateBody(completeProfileSchema), authController.completeProfile);
 
 // Commodities (public catalog)

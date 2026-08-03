@@ -23,6 +23,7 @@ export interface User {
   roleId: number;
   verificationStatus: string;
   emailVerified?: boolean;
+  phoneVerified?: boolean;
   profileComplete?: boolean;
   hasGoogleAuth?: boolean;
   verificationTags?: UserVerificationTag[];

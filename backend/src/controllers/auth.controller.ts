@@ -5,6 +5,7 @@ import { authService } from '../services/auth.service';
 import { agentService } from '../services/agent.service';
 import { googleAuthService } from '../services/googleAuth.service';
 import { emailVerificationService } from '../services/emailVerification.service';
+import { phoneVerificationService } from '../services/phoneVerification.service';
 import { getFrontendBaseUrl, getGoogleOAuthConfig } from '../config/google.config';
 import { createAuditLog } from '../middleware/audit.middleware';
 import { AppError } from '../utils/errors';
@@ -184,6 +185,37 @@ export class AuthController {
         req.body.code
       );
       await authService.markEmailVerified(req.user!.userId);
+      ApiResponse.success(res, { verified: true });
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  sendPhoneVerification = async (req: AuthRequest, res: Response) => {
+    try {
+      const profile = await authService.getProfile(req.user!.userId);
+      const phone = req.body.phone?.trim() || profile.phone;
+      if (!phone) {
+        throw new AppError(400, 'Phone number is required for SMS verification');
+      }
+      const result = await phoneVerificationService.sendChallenge(phone, req.body.country || profile.country);
+      ApiResponse.success(res, result);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  verifyPhoneChallenge = async (req: AuthRequest, res: Response) => {
+    try {
+      const profile = await authService.getProfile(req.user!.userId);
+      const phone = req.body.phone?.trim() || profile.phone;
+      await phoneVerificationService.verifyChallenge(
+        phone,
+        req.body.challengeId,
+        req.body.code,
+        req.body.country || profile.country
+      );
+      await authService.markPhoneVerified(req.user!.userId, phone);
       ApiResponse.success(res, { verified: true });
     } catch (e) {
       ApiResponse.error(res, e);

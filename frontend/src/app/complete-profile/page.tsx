@@ -18,6 +18,7 @@ import { CommodityPicker } from "@/components/CommodityPicker";
 import { CustomProductInput } from "@/components/CustomProductInput";
 import { QualificationSelector } from "@/components/QualificationSelector";
 import { EmailVerificationChallenge } from "@/components/EmailVerificationChallenge";
+import { PhoneVerificationChallenge } from "@/components/PhoneVerificationChallenge";
 import { EmailText } from "@/components/EmailText";
 import { Icon } from "@/components/icons";
 import { PasswordInput } from "@/components/PasswordInput";
@@ -142,7 +143,8 @@ export default function CompleteProfilePage() {
 
   useEffect(() => {
     if (user && !user.emailVerified) setStep(0);
-    else if (user) setStep(1);
+    else if (user && !user.phoneVerified) setStep(1);
+    else if (user) setStep(2);
   }, [user]);
 
   const isFarmerRole = isFarmer(form.roleId);
@@ -151,7 +153,7 @@ export default function CompleteProfilePage() {
   const needsHandler = isFarmerRole || isBuyerRole || isResearcherRole;
   const availableHandlers = isFarmerRole ? farmerHandlers : isBuyerRole || isResearcherRole ? buyerHandlers : [];
   const categoryFilter = farmerCategoryFilter(form.roleId);
-  const totalSteps = (user?.emailVerified ? 0 : 1) + (isFarmerRole ? 3 : 2);
+  const totalSteps = (user?.emailVerified ? 0 : 1) + (user?.phoneVerified ? 0 : 1) + (isFarmerRole ? 3 : 2);
   const phoneDialCode = getDialCodeForCountryName(form.country);
 
   const handleCountryChange = (country: string) => {
@@ -217,14 +219,17 @@ export default function CompleteProfilePage() {
     );
   }
 
-  const displayStep = user.emailVerified ? step : step;
-  const stepLabels = user.emailVerified
-    ? isFarmerRole
-      ? ["Account", "Details", "Commodities"]
-      : ["Account", "Details"]
-    : isFarmerRole
-      ? ["Verify", "Account", "Details", "Commodities"]
-      : ["Verify", "Account", "Details"];
+  const displayStep = step;
+  const needsEmailStep = !user.emailVerified;
+  const needsPhoneStep = !user.phoneVerified;
+  const verifyLabels = [
+    ...(needsEmailStep ? ["Email"] : []),
+    ...(needsPhoneStep ? ["Phone"] : []),
+  ];
+  const profileLabels = isFarmerRole
+    ? ["Account", "Details", "Commodities"]
+    : ["Account", "Details"];
+  const stepLabels = [...verifyLabels, ...profileLabels];
 
   return (
     <div className="flex-1 w-full bg-brand-50">
@@ -273,13 +278,24 @@ export default function CompleteProfilePage() {
               <EmailVerificationChallenge
                 email={user.email}
                 onVerified={async () => {
-                  await refreshUser();
-                  setStep(1);
+                  const updated = await refreshUser();
+                  setStep(updated.phoneVerified ? 2 : 1);
                 }}
               />
             )}
 
-            {step === 1 && (
+            {step === 1 && !user.phoneVerified && (
+              <PhoneVerificationChallenge
+                phone={user.phone || ""}
+                country={user.country}
+                onVerified={async () => {
+                  await refreshUser();
+                  setStep(2);
+                }}
+              />
+            )}
+
+            {step === 2 && (
               <div className="auth-form">
                 <div className="grid gap-5 sm:grid-cols-2">
                   <div className="auth-field">
@@ -453,7 +469,7 @@ export default function CompleteProfilePage() {
                 )}
 
                 <div className="auth-nav">
-                  <button type="button" onClick={() => setStep(1)} className="btn-outline auth-nav-btn">Back</button>
+                  <button type="button" onClick={() => setStep(user.phoneVerified ? (user.emailVerified ? 2 : 0) : 1)} className="btn-outline auth-nav-btn">Back</button>
                   <button
                     type="button"
                     disabled={submitting || !canContinueDetails}

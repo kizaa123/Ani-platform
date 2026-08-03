@@ -53,6 +53,7 @@ model User {
   passwordHash       String?            @map("password_hash")
   googleId           String?            @unique @map("google_id")
   emailVerified      Boolean            @default(false) @map("email_verified")
+  phoneVerified      Boolean            @default(false) @map("phone_verified")
   profileComplete    Boolean            @default(true) @map("profile_complete")
   profilePicture     String?            @db.Text @map("profile_picture")
   country            String             @default("")
@@ -127,6 +128,18 @@ model EmailVerificationChallenge {
 
   @@index([email])
   @@map("email_verification_challenges")
+}
+
+model PhoneVerificationChallenge {
+  id        String   @id @default(uuid())
+  phone     String
+  code      Int
+  verified  Boolean  @default(false)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([phone])
+  @@map("phone_verification_challenges")
 }
 
 // ─── Profiles ────────────────────────────────────────────────────────────────
@@ -801,3 +814,33 @@ model AuditLog {
 
   @@map("audit_logs")
 }
+
+// ─── Verification Challenges ───────────────────────────────────────────────────
+
+model EmailVerificationChallenge {
+  id           String   @id @default(uuid())
+  email        String
+  choices      Int[]
+  correctIndex Int      @default(0) @map("correct_index")
+  verified     Boolean  @default(false)
+  expiresAt    DateTime @map("expires_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([email, verified])
+  @@map("email_verification_challenges")
+}
+
+model PhoneVerificationChallenge {
+  id        String   @id @default(uuid())
+  phone     String
+  code      Int
+  verified  Boolean  @default(false)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([phone, verified])
+  @@map("phone_verification_challenges")
+}
+
