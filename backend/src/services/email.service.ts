@@ -3,17 +3,35 @@ import { AppError } from '../utils/errors';
 
 function createTransport() {
   const user = process.env.SMTP_USER?.trim() || process.env.GMAIL_USER?.trim();
-  const pass = process.env.SMTP_PASS?.trim() || process.env.GMAIL_PASS?.trim() || process.env.GMAIL_APP_PASSWORD?.trim();
-  const host = process.env.SMTP_HOST?.trim() || (user?.endsWith('@gmail.com') || process.env.GMAIL_USER ? 'smtp.gmail.com' : undefined);
-  const port = Number(process.env.SMTP_PORT || (host === 'smtp.gmail.com' ? 465 : 587));
+  const rawPass = process.env.SMTP_PASS?.trim() || process.env.GMAIL_PASS?.trim() || process.env.GMAIL_APP_PASSWORD?.trim();
+  const pass = rawPass ? rawPass.replace(/\s+/g, '') : undefined;
+  const isGmail = !!(user?.endsWith('@gmail.com') || process.env.GMAIL_USER);
+  const host = process.env.SMTP_HOST?.trim() || (isGmail ? 'smtp.gmail.com' : undefined);
+  const port = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : (isGmail ? 465 : 587);
+  const secure = process.env.SMTP_SECURE !== undefined ? process.env.SMTP_SECURE === 'true' : (port === 465);
 
-  if (host && user && pass) {
+  if (user && pass && host) {
     return nodemailer.createTransport({
       host,
       port,
-      secure: port === 465,
+      secure,
       auth: { user, pass },
-      ...(host === 'smtp.gmail.com' ? { service: 'gmail' } : {}),
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
+  }
+
+  if (user && pass && isGmail) {
+    return nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user, pass },
+      tls: {
+        rejectUnauthorized: false,
+      },
     });
   }
 
@@ -22,9 +40,9 @@ function createTransport() {
 
 export async function sendVerificationCodeEmail(to: string, code: number) {
   const userEmail = process.env.SMTP_USER?.trim() || process.env.GMAIL_USER?.trim();
-  const from = process.env.EMAIL_FROM?.trim() || (userEmail ? `ANI Platform <${userEmail}>` : 'ANI Platform <noreply@ani-platform.local>');
-  const subject = 'Your ANI Platform Verification Code';
+  const formattedFrom = process.env.EMAIL_FROM?.trim() || (userEmail ? `"ANI Platform" <${userEmail}>` : '"ANI Platform" <noreply@ani-platform.local>');
   const formattedCode = String(code).padStart(4, '0');
+  const subject = `Your ANI Platform Verification Code: ${formattedCode}`;
 
   const text = [
     'Verify your email address on ANI Platform.',
@@ -57,16 +75,58 @@ export async function sendVerificationCodeEmail(to: string, code: number) {
 
   const transport = createTransport();
   if (!transport) {
-    console.log('[email:dev] Verification code for', to, '→', formattedCode);
+    console.log('[email:dev] No SMTP transport configured. Verification code for', to, '→', formattedCode);
     return { devMode: true as const, devCode: formattedCode };
   }
 
   try {
-    await transport.sendMail({ from, to, subject, text, html });
+    await transport.sendMail({
+      from: formattedFrom,
+      to,
+      subject,
+      text,
+      html,
+      headers: {
+        'X-Priority': '1',
+        'X-MSMail-Priority': 'High',
+        'Importance': 'high',
+      },
+    });
     console.log(`[email] Successfully sent verification OTP (${formattedCode}) to ${to}`);
     return { devMode: false as const };
   } catch (err) {
-    console.error('[email] Failed to send verification email:', err);
+    console.error('[email] Failed to send verification email via primary transport:', err);
+
+    try {
+      if (userEmail) {
+        const rawPass = process.env.SMTP_PASS?.trim() || process.env.GMAIL_PASS?.trim() || process.env.GMAIL_APP_PASSWORD?.trim();
+        const pass = rawPass ? rawPass.replace(/\s+/g, '') : undefined;
+        if (pass) {
+          const fallbackTransport = nodemailer.createTransport({
+            service: 'gmail',
+            auth: { user: userEmail, pass },
+            tls: { rejectUnauthorized: false },
+          });
+          await fallbackTransport.sendMail({
+            from: formattedFrom,
+            to,
+            subject,
+            text,
+            html,
+          });
+          console.log(`[email:fallback] Sent verification OTP (${formattedCode}) via fallback Gmail transport to ${to}`);
+          return { devMode: false as const };
+        }
+      }
+    } catch (fallbackErr) {
+      console.error('[email:fallback] Fallback Gmail transport also failed:', fallbackErr);
+    }
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[email:dev-fallback] Verification code for ${to} → ${formattedCode}`);
+      return { devMode: true as const, devCode: formattedCode };
+    }
+
     throw new AppError(
       503,
       `Could not send verification email to ${to}: ${err instanceof Error ? err.message : 'SMTP failed'}`
