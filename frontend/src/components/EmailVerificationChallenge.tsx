@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { EmailText } from "@/components/EmailText";
 import { Icon } from "@/components/icons";
 import { api } from "@/lib/api";
@@ -17,6 +17,7 @@ export function EmailVerificationChallenge({ email, onVerified }: EmailVerificat
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
+  const autoSentRef = useRef(false);
 
   const sendChallenge = async () => {
     setError("");
@@ -32,6 +33,13 @@ export function EmailVerificationChallenge({ email, onVerified }: EmailVerificat
       setSending(false);
     }
   };
+
+  useEffect(() => {
+    if (!autoSentRef.current) {
+      autoSentRef.current = true;
+      sendChallenge();
+    }
+  }, []);
 
   const verifyCode = async () => {
     if (!challengeId || code.length !== 4) return;

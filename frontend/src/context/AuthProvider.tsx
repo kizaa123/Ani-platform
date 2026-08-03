@@ -15,7 +15,7 @@ interface AuthContextType {
   user: UserProfile | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<UserProfile>;
-  register: (data: Record<string, unknown>) => Promise<void>;
+  register: (data: Record<string, unknown>) => Promise<UserProfile>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<UserProfile>;
 }
@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (data: Record<string, unknown>) => {
     const { accessToken, refreshToken } = await api.auth.register(data);
     api.setTokens(accessToken, refreshToken);
-    await refreshUser();
+    return refreshUser();
   };
 
   const logout = async () => {

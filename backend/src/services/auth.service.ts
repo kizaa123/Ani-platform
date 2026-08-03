@@ -23,6 +23,7 @@ import { defaultListingUnit } from '../constants/units';
 import { normalizeQualifications } from '../constants/qualifications';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import { normalizePhone, normalizePhoneForStorage, isValidPhoneNumber, PHONE_VALIDATION_MESSAGE } from '../utils/phone';
+import { emailVerificationService } from './emailVerification.service';
 import {
   notifyHandlerDropped,
   notifyNewFarmerJoined,
@@ -519,10 +520,17 @@ export class AuthService {
       include: { role: true },
     });
 
+    try {
+      await emailVerificationService.sendChallenge(user.email);
+    } catch (err) {
+      console.error('[register] Auto email verification challenge failed:', err);
+    }
+
     return {
       user: sanitizeUser(fullUser!),
       accessToken,
       refreshToken,
+      needsEmailVerification: !fullUser?.emailVerified,
     };
   }
 

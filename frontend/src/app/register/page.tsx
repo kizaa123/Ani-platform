@@ -440,7 +440,7 @@ function RegisterForm() {
     setError("");
     setLoading(true);
     try {
-      await register(
+      const profile = await register(
         buildRegisterPayload(form, selectedCommodities, customProducts, isFarmerRole, needsHandler)
       );
 
@@ -453,9 +453,13 @@ function RegisterForm() {
         }
       }
 
-      router.push(
-        isFarmerRole ? "/farm" : isResearcherRole ? "/researcher/publications" : "/dashboard"
-      );
+      if (!profile?.emailVerified) {
+        router.push("/complete-profile");
+      } else {
+        router.push(
+          isFarmerRole ? "/farm" : isResearcherRole ? "/researcher/publications" : "/dashboard"
+        );
+      }
     } catch (err) {
       const parsed = parseRegistrationError(err);
       setBackendFieldErrors(parsed.fieldErrors);
