@@ -358,6 +358,14 @@ export interface ProductOrderLineItem extends OrderEscrowFields {
   purchaseCount?: number;
   orderName?: string;
   orderDescription?: string;
+  farmerName?: string;
+  farmerEmail?: string;
+  farmerLocation?: string;
+  farmerCountry?: string;
+  farmerProfilePicture?: string | null;
+  farmerVerificationStatus?: string;
+  farmerVerificationTags?: UserVerificationTag[];
+  farmName?: string | null;
   /** Buyer's assigned CLO - included on handler-scoped order endpoints only. */
   counterpartHandler?: CounterpartHandlerContact | null;
 }

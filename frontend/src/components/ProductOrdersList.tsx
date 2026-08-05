@@ -30,7 +30,31 @@ export type OrderListPerspective = "farmer" | "buyer";
 type OrderListItem = ProductOrderLineItem | BuyerOrderLineItem;
 
 function isBuyerOrder(order: OrderListItem): order is BuyerOrderLineItem {
-  return "farmerName" in order;
+  return "farmerPhone" in order;
+}
+
+function fellowDisplay(order: OrderListItem) {
+  if (isBuyerOrder(order)) {
+    return {
+      name: order.farmerName,
+      location: order.farmerLocation,
+      farmName: order.farmName,
+      profilePicture: order.farmerProfilePicture,
+      verificationStatus: order.farmerVerificationStatus,
+      verificationTags: order.farmerVerificationTags,
+    };
+  }
+
+  if (!order.farmerName) return null;
+
+  return {
+    name: order.farmerName,
+    location: order.farmerLocation ?? order.productLocation ?? "-",
+    farmName: order.farmName,
+    profilePicture: order.farmerProfilePicture,
+    verificationStatus: order.farmerVerificationStatus,
+    verificationTags: order.farmerVerificationTags,
+  };
 }
 
 type OrderMoneyFormatter = (amountGhc: number, order: OrderListItem) => string;
@@ -663,48 +687,61 @@ export function OrderDetailModal({
 
             <div className="border-t border-brand-100 pt-3">
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">To (Fellow)</p>
-              <div className="flex items-center gap-3">
-                <AvatarWithVerification
-                  src={isBuyerOrder(order) ? order.farmerProfilePicture : undefined}
-                  name={isBuyerOrder(order) ? order.farmerName : "Fellow"}
-                  size={48}
-                  verificationStatus={isBuyerOrder(order) ? order.farmerVerificationStatus : undefined}
-                  verificationTags={isBuyerOrder(order) ? order.farmerVerificationTags : undefined}
-                  tagPlacement="none"
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold text-brand-900">
-                    {isBuyerOrder(order) ? (
-                      <span className="inline-flex max-w-full flex-wrap items-center gap-x-0.5 gap-y-0.5">
-                        <RolePrefixedName
-                          user={{
-                            roleId: ROLES.CROP_FARMER,
-                            ...splitDisplayName(order.farmerName),
-                            verificationStatus: order.farmerVerificationStatus,
-                          }}
-                          hideVerificationTags
-                          nameClassName="font-bold text-brand-900"
-                          prefixClassName="font-bold text-brand-900"
-                        />
-                        {order.farmName && (
-                          <span className="font-bold text-brand-900"> ({order.farmName})</span>
-                        )}
-                        <VerificationTags
-                          verificationTags={order.farmerVerificationTags}
-                          verificationStatus={order.farmerVerificationStatus}
-                          size="sm"
-                          className="inline-flex shrink-0"
-                        />
-                      </span>
-                    ) : (
-                      "Fellow / My Production"
-                    )}
-                  </p>
-                  <p className="text-xs text-gray-600">
-                    Location: {isBuyerOrder(order) ? order.farmerLocation : (order.productLocation ?? "-")}
-                  </p>
-                </div>
-              </div>
+              {(() => {
+                const fellow = fellowDisplay(order);
+                if (!fellow) {
+                  return (
+                    <div className="flex items-center gap-3">
+                      <AvatarWithVerification src={undefined} name="Fellow" size={48} tagPlacement="none" />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold text-brand-900">Fellow / My Production</p>
+                        <p className="text-xs text-gray-600">
+                          Location: {order.productLocation ?? "-"}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="flex items-center gap-3">
+                    <AvatarWithVerification
+                      src={fellow.profilePicture}
+                      name={fellow.name}
+                      size={48}
+                      verificationStatus={fellow.verificationStatus}
+                      verificationTags={fellow.verificationTags}
+                      tagPlacement="none"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-brand-900">
+                        <span className="inline-flex max-w-full flex-wrap items-center gap-x-0.5 gap-y-0.5">
+                          <RolePrefixedName
+                            user={{
+                              roleId: ROLES.CROP_FARMER,
+                              ...splitDisplayName(fellow.name),
+                              verificationStatus: fellow.verificationStatus,
+                            }}
+                            hideVerificationTags
+                            nameClassName="font-bold text-brand-900"
+                            prefixClassName="font-bold text-brand-900"
+                          />
+                          {fellow.farmName && (
+                            <span className="font-bold text-brand-900"> ({fellow.farmName})</span>
+                          )}
+                          <VerificationTags
+                            verificationTags={fellow.verificationTags}
+                            verificationStatus={fellow.verificationStatus}
+                            size="sm"
+                            className="inline-flex shrink-0"
+                          />
+                        </span>
+                      </p>
+                      <p className="text-xs text-gray-600">Location: {fellow.location ?? "-"}</p>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
 

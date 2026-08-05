@@ -68,7 +68,12 @@ type OrderCore = {
   listing: ListingFields;
 };
 
-export type FarmerIncomingOrderRow = OrderCore & { buyerId: string; listingId: string; buyer: BuyerFields };
+export type FarmerIncomingOrderRow = OrderCore & {
+  buyerId: string;
+  listingId: string;
+  buyer: BuyerFields;
+  farmer?: FarmerFields;
+};
 
 export function formatUserLocation(user: {
   city?: string | null;
@@ -110,8 +115,9 @@ function escrowFields(order: OrderCore, perspective: 'buyer' | 'farmer') {
 
 /** Orders received by a farmer (buyer details shown). */
 export function formatFarmerIncomingOrder(
-  order: OrderCore & { buyerId: string; listingId: string; buyer: BuyerFields }
+  order: OrderCore & { buyerId: string; listingId: string; buyer: BuyerFields; farmer?: FarmerFields }
 ) {
+  const fellow = order.farmer;
   return {
     id: order.id,
     buyerId: order.buyerId,
@@ -139,6 +145,18 @@ export function formatFarmerIncomingOrder(
     buyerProfilePicture: normalizePublicAssetUrl(order.buyer.profilePicture),
     buyerVerificationStatus: order.buyer.verificationStatus,
     buyerVerificationTags: formatVerificationTags(order.buyer.verificationTags ?? []),
+    ...(fellow
+      ? {
+          farmerName: `${fellow.firstName} ${fellow.lastName}`,
+          farmerEmail: fellow.email,
+          farmerLocation: formatUserLocation(fellow),
+          farmerCountry: fellow.country,
+          farmerProfilePicture: normalizePublicAssetUrl(fellow.profilePicture ?? null),
+          farmerVerificationStatus: fellow.verificationStatus,
+          farmerVerificationTags: formatVerificationTags(fellow.verificationTags ?? []),
+          farmName: fellow.farmerProfile?.farmName ?? null,
+        }
+      : {}),
     purchaseCount: 1,
     ...escrowFields(order, 'farmer'),
   };
@@ -233,6 +251,22 @@ export const orderInclude = {
       profilePicture: true,
       verificationStatus: true,
       verificationTags: { select: verificationTagSelect },
+    },
+  },
+  farmer: {
+    select: {
+      firstName: true,
+      lastName: true,
+      email: true,
+      phone: true,
+      country: true,
+      region: true,
+      city: true,
+      address: true,
+      profilePicture: true,
+      verificationStatus: true,
+      verificationTags: { select: verificationTagSelect },
+      farmerProfile: { select: { farmName: true } },
     },
   },
 } as const;
