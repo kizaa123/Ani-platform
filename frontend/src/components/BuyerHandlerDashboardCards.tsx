@@ -3,19 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { AgentAssignment, AppNotification, isBuyerAssignment, isResearcher } from "@/lib/types";
-import { filterHandlerOrderNotifications } from "@/lib/handlerOrderNotifications";
-import {
-  HandlerAssignmentsPreviewCard,
-  HandlerOrderAlertsCard,
-} from "@/components/HandlerAssignmentCards";
+import { AgentAssignment, isBuyerAssignment, isResearcher } from "@/lib/types";
+import { HandlerAssignmentsPreviewCard } from "@/components/HandlerAssignmentCards";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
 import { formatUserLocation } from "@/lib/formatUserLocation";
 
 export function BuyerHandlerDashboardCards() {
   const [clients, setClients] = useState<AgentAssignment[] | null>(null);
-  const [orderAlerts, setOrderAlerts] = useState<AppNotification[] | null>(null);
   const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
@@ -33,17 +28,6 @@ export function BuyerHandlerDashboardCards() {
           setClients([]);
           setLoadError(e instanceof Error ? e.message : "Failed to load assigned clients");
         }
-      });
-
-    api.notifications
-      .list()
-      .then((notifications) => {
-        if (cancelled) return;
-        const unreadOrderAlerts = filterHandlerOrderNotifications(notifications).filter((n) => !n.read);
-        setOrderAlerts(unreadOrderAlerts);
-      })
-      .catch(() => {
-        if (!cancelled) setOrderAlerts([]);
       });
 
     return () => {
@@ -76,14 +60,6 @@ export function BuyerHandlerDashboardCards() {
             const location = formatUserLocation(owner);
             return [location, organization].filter(Boolean) as string[];
           }}
-        />
-      </ScrollReveal>
-      <ScrollReveal delay={scrollStagger(1, 90)} duration={500} direction="fade-up">
-        <HandlerOrderAlertsCard
-          href="/agents/order-notifications"
-          notifications={orderAlerts}
-          loading={orderAlerts === null}
-          entityLabel="clients"
         />
       </ScrollReveal>
     </>

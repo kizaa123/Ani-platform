@@ -25,6 +25,7 @@ import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import { normalizePhone, normalizePhoneForStorage, isValidPhoneNumber, PHONE_VALIDATION_MESSAGE } from '../utils/phone';
 import { emailVerificationService } from './emailVerification.service';
 import { phoneVerificationService } from './phoneVerification.service';
+import { isPhoneSmsVerificationEnabled } from '../config/sms.config';
 import {
   notifyHandlerDropped,
   notifyNewFarmerJoined,
@@ -374,7 +375,9 @@ export class AuthService {
       throw new AppError(400, PHONE_VALIDATION_MESSAGE);
     }
 
-    await phoneVerificationService.assertPhoneVerifiedRecently(input.phone, input.country);
+    if (isPhoneSmsVerificationEnabled()) {
+      await phoneVerificationService.assertPhoneVerifiedRecently(input.phone, input.country);
+    }
 
     if (!input.password) {
       throw new AppError(400, 'Password is required for email registration');
@@ -453,7 +456,7 @@ export class AuthService {
           gpsLongitude: input.gpsLongitude,
           roleId: input.roleId,
           emailVerified: true,
-          phoneVerified: true,
+          phoneVerified: isPhoneSmsVerificationEnabled(),
           profileComplete: true,
           ...(input.roleId === ROLES.ANI_ACCOUNTANT
             ? { verificationStatus: 'PENDING' as const }
@@ -877,8 +880,12 @@ export class AuthService {
     if (user.profileComplete) {
       throw new AppError(400, 'Profile is already complete');
     }
-    if (!(user as any).phoneVerified) {
+    if (isPhoneSmsVerificationEnabled() && !(user as any).phoneVerified) {
       throw new AppError(400, 'Verify your phone number before completing your profile');
+    }
+
+    if (!isValidPhoneNumber(input.phone, input.country)) {
+      throw new AppError(400, PHONE_VALIDATION_MESSAGE);
     }
 
     const isGoogleUser = Boolean(user.googleId);
@@ -980,6 +987,7 @@ export class AuthService {
           gpsLongitude: input.gpsLongitude,
           roleId: input.roleId,
           profileComplete: true,
+          phoneVerified: isPhoneSmsVerificationEnabled() ? (user as any).phoneVerified : false,
           ...(input.roleId === ROLES.ANI_ACCOUNTANT
             ? { verificationStatus: 'PENDING' as const }
             : {}),

@@ -113,11 +113,11 @@ export default function DashboardPage() {
         {isHandlerUser && (
           <HandlerPortalNavCards
             roleId={user.roleId}
-            startIndex={isLiaison ? 2 : 0}
+            startIndex={isLiaison ? 1 : 0}
           />
         )}
         {cards.map((c, i) => {
-          const staggerIndex = isHandlerUser ? (isLiaison ? 2 : 0) + 4 + i : i;
+          const staggerIndex = isHandlerUser ? (isLiaison ? 1 : 0) + 4 + i : i;
           return (
             <ScrollReveal key={c.href} delay={scrollStagger(staggerIndex, 90)} duration={500} direction="fade-up">
               <PortalNavCard

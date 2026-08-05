@@ -3,19 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { AgentAssignment, AppNotification, isFarmerAssignment } from "@/lib/types";
-import { filterHandlerOrderNotifications } from "@/lib/handlerOrderNotifications";
-import {
-  HandlerAssignmentsPreviewCard,
-  HandlerOrderAlertsCard,
-} from "@/components/HandlerAssignmentCards";
+import { AgentAssignment, isFarmerAssignment } from "@/lib/types";
+import { HandlerAssignmentsPreviewCard } from "@/components/HandlerAssignmentCards";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
 import { formatUserLocation } from "@/lib/formatUserLocation";
 
 export function FarmerHandlerDashboardCards() {
   const [farmers, setFarmers] = useState<AgentAssignment[] | null>(null);
-  const [orderAlerts, setOrderAlerts] = useState<AppNotification[] | null>(null);
   const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
@@ -33,17 +28,6 @@ export function FarmerHandlerDashboardCards() {
           setFarmers([]);
           setLoadError(e instanceof Error ? e.message : "Failed to load assigned fellows");
         }
-      });
-
-    api.notifications
-      .list()
-      .then((notifications) => {
-        if (cancelled) return;
-        const unreadOrderAlerts = filterHandlerOrderNotifications(notifications).filter((n) => !n.read);
-        setOrderAlerts(unreadOrderAlerts);
-      })
-      .catch(() => {
-        if (!cancelled) setOrderAlerts([]);
       });
 
     return () => {
@@ -75,14 +59,6 @@ export function FarmerHandlerDashboardCards() {
             return [location, farm].filter(Boolean) as string[];
           }}
           getStat={(owner) => owner.farmerProfile?.farmSize ?? undefined}
-        />
-      </ScrollReveal>
-      <ScrollReveal delay={scrollStagger(1, 90)} duration={500} direction="fade-up">
-        <HandlerOrderAlertsCard
-          href="/agents/order-notifications"
-          notifications={orderAlerts}
-          loading={orderAlerts === null}
-          entityLabel="fellows"
         />
       </ScrollReveal>
     </>

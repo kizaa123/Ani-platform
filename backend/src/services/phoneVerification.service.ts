@@ -52,7 +52,6 @@ export class PhoneVerificationService {
       expiresAt: new Date(challenge.expiresAt).toISOString(),
       smsSent: smsRes.sent,
       devMode: 'devMode' in smsRes ? smsRes.devMode : false,
-      devCode: 'devCode' in smsRes ? smsRes.devCode : undefined,
     };
   }
 

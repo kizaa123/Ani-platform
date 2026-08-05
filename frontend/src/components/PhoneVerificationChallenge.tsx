@@ -25,7 +25,7 @@ export function PhoneVerificationChallenge({
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
-  const [devCode, setDevCode] = useState<string | null>(null);
+  const [devMode, setDevMode] = useState(false);
   const autoSentRef = useRef(false);
   const normalizedPhone = normalizePhoneForStorage(phone, country) || phone;
 
@@ -39,11 +39,7 @@ export function PhoneVerificationChallenge({
       setChallengeId(result.challengeId);
       setSent(true);
       setCode("");
-      if (result.devMode && result.devCode) {
-        setDevCode(result.devCode);
-      } else {
-        setDevCode(null);
-      }
+      setDevMode(Boolean(result.devMode));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not send SMS code");
     } finally {
@@ -91,9 +87,11 @@ export function PhoneVerificationChallenge({
     setCode(raw.replace(/\D/g, "").slice(0, 4));
   };
 
-  const displayPhone = normalizedPhone
-    ? normalizedPhone.slice(0, 4) + "****" + normalizedPhone.slice(-3)
-    : "your number";
+  const displayPhone = devMode
+    ? "your phone number"
+    : normalizedPhone
+      ? normalizedPhone.slice(0, 4) + "****" + normalizedPhone.slice(-3)
+      : "your number";
 
   return (
     <div className="space-y-5">
@@ -103,9 +101,15 @@ export function PhoneVerificationChallenge({
           <div>
             <h3 className="auth-section-title">Verify your phone number</h3>
             <p className="auth-hint mt-1">
-              We{sending ? " are sending" : " sent"} a 4-digit code via SMS to{" "}
-              <span className="font-semibold text-brand-900">{displayPhone}</span>.
-              Enter it below to confirm your number.
+              {devMode ? (
+                <>Enter the 4-digit verification code to confirm your phone number.</>
+              ) : (
+                <>
+                  We{sending ? " are sending" : " sent"} a 4-digit code via SMS to{" "}
+                  <span className="font-semibold text-brand-900">{displayPhone}</span>.
+                  Enter it below to confirm your number.
+                </>
+              )}
             </p>
           </div>
         </div>
@@ -118,18 +122,23 @@ export function PhoneVerificationChallenge({
         </div>
       )}
 
-      {devCode && (
-        <div className="auth-info-box rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800" role="status">
-          <p className="font-semibold">Dev mode – SMS not configured</p>
-          <p>
-            Your verification code is:{" "}
-            <span className="font-mono text-lg font-bold tracking-widest text-amber-900">
-              {devCode}
+      {devMode && sent && (
+        <div
+          className="rounded-xl border border-brand-200 bg-gradient-to-br from-brand-50 to-white p-4 shadow-sm"
+          role="status"
+        >
+          <div className="flex items-start gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-100 text-brand-700">
+              <Icon name="settings" className="h-4 w-4" />
             </span>
-          </p>
-          <p className="mt-2 text-xs text-amber-700">
-            Configure Hubtel or Twilio in backend `.env` to send real SMS in production.
-          </p>
+            <div className="min-w-0 text-sm text-brand-900">
+              <p className="font-semibold">Local testing mode</p>
+              <p className="mt-1 leading-relaxed text-brand-800/90">
+                SMS is simulated in this environment. Open your backend server console to find
+                the verification code, then enter it below.
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
@@ -140,15 +149,15 @@ export function PhoneVerificationChallenge({
           disabled={sending || !phone.trim()}
           className="btn-primary w-full py-3 font-semibold disabled:opacity-50"
         >
-          {sending ? "Sending SMS code..." : "Send SMS code"}
+          {sending ? "Preparing verification..." : devMode ? "Continue" : "Send SMS code"}
         </button>
       ) : (
         <>
-          {!devCode && (
+          {!devMode && (
             <div className="auth-info-box text-brand-800" role="status">
               SMS code sent to{" "}
-              <span className="font-semibold">{displayPhone}</span>. Check your
-              messages and enter the code below.
+              <span className="font-semibold">{displayPhone}</span>. Check your messages and
+              enter the code below.
             </div>
           )}
 
@@ -167,7 +176,11 @@ export function PhoneVerificationChallenge({
               className="auth-input text-center text-2xl font-bold tracking-[0.35em]"
               autoFocus
             />
-            <p className="auth-hint">Enter the 4-digit code from your SMS</p>
+            <p className="auth-hint">
+              {devMode
+                ? "Enter the 4-digit code shown in your backend server logs"
+                : "Enter the 4-digit code from your SMS"}
+            </p>
           </div>
 
           <button
@@ -185,7 +198,7 @@ export function PhoneVerificationChallenge({
             disabled={sending || loading}
             className="w-full text-sm font-semibold text-brand-700 hover:underline disabled:opacity-50"
           >
-            {sending ? "Resending..." : "Resend SMS code"}
+            {sending ? "Refreshing..." : devMode ? "Generate a new code" : "Resend SMS code"}
           </button>
         </>
       )}

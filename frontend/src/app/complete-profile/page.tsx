@@ -16,7 +16,7 @@ import { CountrySelect } from "@/components/CountrySelect";
 import { HandlerSelect } from "@/components/HandlerSelect";
 import { CommodityPicker } from "@/components/CommodityPicker";
 import { QualificationSelector } from "@/components/QualificationSelector";
-// Email verification removed
+import { SMS_PHONE_VERIFICATION_ENABLED } from "@/lib/smsVerification";
 import { PhoneVerificationChallenge } from "@/components/PhoneVerificationChallenge";
 import { EmailText } from "@/components/EmailText";
 import { Icon } from "@/components/icons";
@@ -145,7 +145,7 @@ export default function CompleteProfilePage() {
   const needsHandler = isFarmerRole || isBuyerRole || isResearcherRole;
   const availableHandlers = isFarmerRole ? farmerHandlers : isBuyerRole || isResearcherRole ? buyerHandlers : [];
   const categoryFilter = farmerCategoryFilter(form.roleId);
-  const needsPhoneStep = !user?.phoneVerified;
+  const needsPhoneStep = SMS_PHONE_VERIFICATION_ENABLED && !user?.phoneVerified;
   const ACCOUNT_STEP = 0;
   const PHONE_STEP = needsPhoneStep ? 1 : -1;
   const DETAILS_STEP = needsPhoneStep ? 2 : 1;
@@ -179,6 +179,11 @@ export default function CompleteProfilePage() {
     (!needsHandler || (form.handlerId.trim() && availableHandlers.length > 0));
 
   const finish = async () => {
+    if (!isValidPhone(form.phone, form.country)) {
+      setError("Enter a valid mobile number for your country.");
+      setStep(ACCOUNT_STEP);
+      return;
+    }
     if (needsHandler && !form.handlerId) {
       setError("Please select a handler before finishing.");
       return;

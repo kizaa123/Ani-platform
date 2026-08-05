@@ -21,6 +21,7 @@ import { PasswordInput } from "@/components/PasswordInput";
 import { AuthDivider, GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { AuthHeroPanel } from "@/components/AuthHeroPanel";
+import { SMS_PHONE_VERIFICATION_ENABLED } from "@/lib/smsVerification";
 import { PhoneVerificationChallenge } from "@/components/PhoneVerificationChallenge";
 import {
   blockingMessages,
@@ -57,10 +58,11 @@ const ROLE_GROUPS_FOR_SELECT = [
   { groupLabel: "Support & Operations",roles: ALL_ROLES.filter((r) => r.group === "Support & Operations") },
 ];
 
-const STEP_LABELS = ["Account", "Phone", "Details", "Commodities"] as const;
-const PHONE_STEP = 2;
-const DETAILS_STEP = 3;
-const COMMODITIES_STEP = 4;
+const STEP_LABELS_WITH_PHONE = ["Account", "Phone", "Details", "Commodities"] as const;
+const STEP_LABELS_NO_PHONE = ["Account", "Details", "Commodities"] as const;
+const PHONE_STEP = SMS_PHONE_VERIFICATION_ENABLED ? 2 : -1;
+const DETAILS_STEP = SMS_PHONE_VERIFICATION_ENABLED ? 3 : 2;
+const COMMODITIES_STEP = SMS_PHONE_VERIFICATION_ENABLED ? 4 : 3;
 
 function buildRegisterPayload(
   form: {
@@ -240,7 +242,9 @@ function RegisterForm() {
   });
 
   useEffect(() => {
-    setPhoneVerified(false);
+    if (SMS_PHONE_VERIFICATION_ENABLED) {
+      setPhoneVerified(false);
+    }
   }, [form.phone, form.country]);
 
   const isFarmerRole = isFarmer(form.roleId);
@@ -259,8 +263,20 @@ function RegisterForm() {
     ? "No fellow liaison officers registered yet. One must register first."
     : "No client liaison officers registered yet. One must register first.";
   const categoryFilter = farmerCategoryFilter(form.roleId);
-  const totalSteps = isFarmerRole ? 4 : 3;
-  const stepLabels = isFarmerRole ? STEP_LABELS : STEP_LABELS.slice(0, 3);
+  const totalSteps = isFarmerRole
+    ? SMS_PHONE_VERIFICATION_ENABLED
+      ? 4
+      : 3
+    : SMS_PHONE_VERIFICATION_ENABLED
+      ? 3
+      : 2;
+  const stepLabels = isFarmerRole
+    ? SMS_PHONE_VERIFICATION_ENABLED
+      ? [...STEP_LABELS_WITH_PHONE]
+      : [...STEP_LABELS_NO_PHONE]
+    : SMS_PHONE_VERIFICATION_ENABLED
+      ? STEP_LABELS_WITH_PHONE.slice(0, 3)
+      : STEP_LABELS_NO_PHONE.slice(0, 2);
   const phoneDialCode = getDialCodeForCountryName(form.country);
   const normalizedRegisterPhone = normalizePhoneForStorage(form.phone, form.country);
 
@@ -311,10 +327,10 @@ function RegisterForm() {
 
   const stepProceed = {
     1: canProceedStep1(validationCtx.form),
-    2: phoneVerified,
-    3: canProceedStep2(validationCtx),
-    4: canProceedStep3(validationCtx),
-  } as const;
+    ...(SMS_PHONE_VERIFICATION_ENABLED ? { 2: phoneVerified } : {}),
+    [DETAILS_STEP]: canProceedStep2(validationCtx),
+    [COMMODITIES_STEP]: canProceedStep3(validationCtx),
+  } as Record<number, boolean>;
 
   const currentClientErrors =
     step === 1 ? step1Errors : step === DETAILS_STEP ? step2Errors : step === COMMODITIES_STEP ? step3Errors : {};
@@ -334,7 +350,11 @@ function RegisterForm() {
 
   const stepsWithValidationErrors = useMemo(() => {
     if (!showValidation && Object.keys(backendFieldErrors).length === 0) return [];
-    return stepsWithErrors(validationCtx, totalSteps, phoneVerified);
+    return stepsWithErrors(
+      validationCtx,
+      totalSteps,
+      SMS_PHONE_VERIFICATION_ENABLED ? phoneVerified : true
+    );
   }, [showValidation, backendFieldErrors, validationCtx, totalSteps, phoneVerified]);
 
   const clearBackendError = useCallback((field: RegisterField) => {
@@ -406,6 +426,10 @@ function RegisterForm() {
       setError("");
       return;
     }
+    if (!SMS_PHONE_VERIFICATION_ENABLED) {
+      goToDetailsStep();
+      return;
+    }
     setShowValidation(false);
     setBackendFieldErrors((prev) => errorsForStep(prev, STEP2_FIELDS.concat(STEP3_FIELDS)));
     setError("");
@@ -414,7 +438,7 @@ function RegisterForm() {
   };
 
   const goToDetailsStep = () => {
-    if (!phoneVerified) {
+    if (SMS_PHONE_VERIFICATION_ENABLED && !phoneVerified) {
       setError("Verify your phone number with the SMS code before continuing.");
       setStep(PHONE_STEP);
       return;
@@ -426,7 +450,7 @@ function RegisterForm() {
   };
 
   const goToCommoditiesStep = () => {
-    if (!stepProceed[3]) {
+    if (!stepProceed[DETAILS_STEP]) {
       revealValidation();
       setError("");
       return;
@@ -439,9 +463,10 @@ function RegisterForm() {
 
   const handleSubmit = async () => {
     const submitStep = isFarmerRole && step === COMMODITIES_STEP ? COMMODITIES_STEP : DETAILS_STEP;
-    const canSubmit = submitStep === COMMODITIES_STEP ? stepProceed[4] : stepProceed[3];
+    const canSubmit =
+      submitStep === COMMODITIES_STEP ? stepProceed[COMMODITIES_STEP] : stepProceed[DETAILS_STEP];
 
-    if (!phoneVerified) {
+    if (SMS_PHONE_VERIFICATION_ENABLED && !phoneVerified) {
       setError("Verify your phone number with the SMS code before creating your account.");
       setStep(PHONE_STEP);
       return;
@@ -449,8 +474,8 @@ function RegisterForm() {
 
     if (!canSubmit) {
       revealValidation();
-      if (submitStep === COMMODITIES_STEP && !stepProceed[3]) {
-        setError("Complete step 3 (Details) before creating your account.");
+      if (submitStep === COMMODITIES_STEP && !stepProceed[DETAILS_STEP]) {
+        setError(`Complete step ${DETAILS_STEP} (Details) before creating your account.`);
         setStep(DETAILS_STEP);
       } else {
         setError("");
@@ -754,12 +779,12 @@ function RegisterForm() {
               </select>
               {isFarmerRole && categoryFilter && categoryFilter !== "All" && (
                 <p className="auth-hint text-brand-700 mt-1">
-                  You will only select {categoryFilter.toLowerCase()} commodities in step 4.
+                  You will only select {categoryFilter.toLowerCase()} commodities in step {COMMODITIES_STEP}.
                 </p>
               )}
               {isOrganizationFarmer(form.roleId) && (
                 <p className="auth-hint text-brand-700 mt-1">
-                  You will select crop and livestock commodities in step 4.
+                  You will select crop and livestock commodities in step {COMMODITIES_STEP}.
                 </p>
               )}
               <FieldErrorMessage message={fieldError("roleId")} />
@@ -777,7 +802,7 @@ function RegisterForm() {
           </div>
         )}
 
-        {step === PHONE_STEP && (
+        {SMS_PHONE_VERIFICATION_ENABLED && step === PHONE_STEP && (
           <div className="auth-form">
             <PhoneVerificationChallenge
               key={`${normalizedRegisterPhone}-${form.country}`}
@@ -1031,14 +1056,14 @@ function RegisterForm() {
                 type="button"
                 onClick={() => {
                   setShowValidation(false);
-                  setStep(PHONE_STEP);
+                  setStep(SMS_PHONE_VERIFICATION_ENABLED ? PHONE_STEP : 1);
                 }}
                 className="btn-outline auth-nav-btn"
               >
                 Back
               </button>
               <RegisterActionButton
-                blocked={!stepProceed[3]}
+                blocked={!stepProceed[DETAILS_STEP]}
                 blockingItems={blockingMessages(step2Errors)}
                 loading={loading}
                 onBlocked={revealValidation}
@@ -1104,7 +1129,7 @@ function RegisterForm() {
                 Back
               </button>
               <RegisterActionButton
-                blocked={!stepProceed[4]}
+                blocked={!stepProceed[COMMODITIES_STEP]}
                 blockingItems={blockingMessages(step3Errors)}
                 loading={loading}
                 onBlocked={revealValidation}

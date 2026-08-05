@@ -1,5 +1,6 @@
 import { isValidPhone, PHONE_VALIDATION_MESSAGE } from "./phone";
 import { ROLES } from "./types";
+import { SMS_PHONE_VERIFICATION_ENABLED } from "./smsVerification";
 
 /** Fields that can show inline registration errors */
 export type RegisterField =
@@ -156,10 +157,10 @@ export function stepsWithErrors(
 ): number[] {
   const steps: number[] = [];
   if (blockingMessages(validateStep1(ctx.form)).length > 0) steps.push(1);
-  if (!phoneVerified) steps.push(2);
+  if (!phoneVerified && SMS_PHONE_VERIFICATION_ENABLED) steps.push(2);
 
-  const detailsStep = 3;
-  const commoditiesStep = 4;
+  const detailsStep = SMS_PHONE_VERIFICATION_ENABLED ? 3 : 2;
+  const commoditiesStep = SMS_PHONE_VERIFICATION_ENABLED ? 4 : 3;
 
   if (blockingMessages(validateStep2(ctx)).length > 0) steps.push(detailsStep);
   if (totalSteps >= commoditiesStep && blockingMessages(validateStep3(ctx)).length > 0) {
@@ -219,11 +220,11 @@ export function parseRegistrationError(err: unknown): {
   if (fieldErrors.firstName || fieldErrors.lastName || fieldErrors.email || fieldErrors.phone || fieldErrors.password || fieldErrors.country || fieldErrors.roleId) {
     targetStep = 1;
   } else if (/verify your phone number with the sms code/i.test(message)) {
-    targetStep = 2;
+    targetStep = SMS_PHONE_VERIFICATION_ENABLED ? 2 : 1;
   } else if (fieldErrors.region || fieldErrors.city || fieldErrors.handlerId) {
-    targetStep = 3;
+    targetStep = SMS_PHONE_VERIFICATION_ENABLED ? 3 : 2;
   } else if (fieldErrors.commodities) {
-    targetStep = 4;
+    targetStep = SMS_PHONE_VERIFICATION_ENABLED ? 4 : 3;
   }
 
   if (/email already registered/i.test(message)) {

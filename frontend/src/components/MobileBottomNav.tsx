@@ -88,6 +88,12 @@ function studentNav(): BottomNavItem[] {
 function farmerHandlerNav(): BottomNavItem[] {
   return [
     { href: "/dashboard", label: "Home", icon: "home", match: (p) => p === "/dashboard" },
+    {
+      href: "/agents/fellows",
+      label: "Fellows",
+      icon: "users",
+      match: (p) => p.startsWith("/agents/fellows") || p.startsWith("/agents/farm/"),
+    },
     { href: "/library", label: "Library", icon: "book", match: (p) => p.startsWith("/library") },
     {
       href: "/agents/financials",
@@ -107,6 +113,12 @@ function farmerHandlerNav(): BottomNavItem[] {
 function buyerHandlerNav(): BottomNavItem[] {
   return [
     { href: "/dashboard", label: "Home", icon: "home", match: (p) => p === "/dashboard" },
+    {
+      href: "/agents/clients",
+      label: "Clients",
+      icon: "users",
+      match: (p) => p.startsWith("/agents/clients") || p.startsWith("/agents/buyer/"),
+    },
     { href: "/library", label: "Library", icon: "book", match: (p) => p.startsWith("/library") },
     {
       href: "/agents/financials",

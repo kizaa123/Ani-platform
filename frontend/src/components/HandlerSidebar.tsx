@@ -7,6 +7,12 @@ import { ROLES, isHandler, isBuyerHandler } from "@/lib/types";
 export const FLO_NAV_LINKS: PortalNavLink[] = [
   { href: "/dashboard", label: "Dashboard", icon: "home", match: (p) => p === "/dashboard" },
   {
+    href: "/agents/fellows",
+    label: "Assigned Fellows",
+    icon: "users",
+    match: (p) => p.startsWith("/agents/fellows") || p.startsWith("/agents/farm/"),
+  },
+  {
     href: "/agents/financials",
     label: "Financials",
     icon: "chart",
@@ -23,6 +29,12 @@ export const FLO_NAV_LINKS: PortalNavLink[] = [
 
 export const CLO_NAV_LINKS: PortalNavLink[] = [
   { href: "/dashboard", label: "Dashboard", icon: "home", match: (p) => p === "/dashboard" },
+  {
+    href: "/agents/clients",
+    label: "Assigned Clients",
+    icon: "users",
+    match: (p) => p.startsWith("/agents/clients") || p.startsWith("/agents/buyer/"),
+  },
   {
     href: "/agents/financials",
     label: "Financials",

@@ -258,7 +258,6 @@ class ApiClient {
         expiresAt: string;
         smsSent?: boolean;
         devMode?: boolean;
-        devCode?: string;
       }>("/auth/phone-verification/send", {
         method: "POST",
         body: JSON.stringify({ phone, country }),
@@ -269,7 +268,6 @@ class ApiClient {
         expiresAt: string;
         smsSent?: boolean;
         devMode?: boolean;
-        devCode?: string;
       }>("/auth/phone-verification/send-public", {
         method: "POST",
         body: JSON.stringify({ phone, country }),
