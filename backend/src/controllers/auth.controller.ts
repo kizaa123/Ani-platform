@@ -205,6 +205,16 @@ export class AuthController {
     }
   };
 
+  sendPhoneVerificationPublic = async (req: AuthRequest, res: Response) => {
+    try {
+      const { phone, country } = req.body;
+      const result = await phoneVerificationService.sendChallenge(phone, country);
+      ApiResponse.success(res, result);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
   verifyPhoneChallenge = async (req: AuthRequest, res: Response) => {
     try {
       const profile = await authService.getProfile(req.user!.userId);
@@ -216,6 +226,16 @@ export class AuthController {
         req.body.country || profile.country
       );
       await authService.markPhoneVerified(req.user!.userId, phone);
+      ApiResponse.success(res, { verified: true });
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  verifyPhoneChallengePublic = async (req: AuthRequest, res: Response) => {
+    try {
+      const { phone, country, challengeId, code } = req.body;
+      await phoneVerificationService.verifyChallenge(phone, challengeId, code, country);
       ApiResponse.success(res, { verified: true });
     } catch (e) {
       ApiResponse.error(res, e);

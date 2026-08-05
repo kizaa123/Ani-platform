@@ -51,8 +51,17 @@ function createOrderMoneyFormatter(
   };
 }
 
-function orderStatementId(order: OrderListItem): string | null {
-  return order.orderId ?? null;
+function orderListKey(order: OrderListItem): string {
+  return order.orderId ?? order.id;
+}
+
+function orderReference(order: OrderListItem): string {
+  const id = order.orderId ?? order.id;
+  return id.slice(0, 8).toUpperCase();
+}
+
+function isOrderServed(order: OrderListItem): boolean {
+  return order.trackStage === "DELIVERED" || order.escrowStatus === "RELEASED";
 }
 
 function CounterpartHandlerSection({
@@ -134,7 +143,7 @@ function OrderEscrowPanel({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const statementId = orderStatementId(order);
+  const statementId = order.orderId ?? order.id;
   const escrowStatus = order.escrowStatus ?? "HELD";
   const canRelease =
     !handlerView && perspective === "buyer" && order.canRelease && escrowStatus === "HELD";
@@ -285,6 +294,7 @@ export function ProductOrdersList({
   handlerOwnerId,
   emptyMessage,
   emptyAction,
+  sectionTitle,
 }: {
   orders: OrderListItem[];
   perspective?: OrderListPerspective;
@@ -292,6 +302,7 @@ export function ProductOrdersList({
   handlerOwnerId?: string;
   emptyMessage?: string;
   emptyAction?: React.ReactNode;
+  sectionTitle?: string;
 }) {
   const { user } = useAuth();
   const { format } = useMoneyFormat();
@@ -308,9 +319,10 @@ export function ProductOrdersList({
   }, [initialOrders]);
 
   if (orders.length === 0) {
+    if (!emptyMessage) return null;
     return (
       <div className="rounded-2xl border border-dashed border-brand-200 bg-brand-50/20 px-6 py-12 text-center text-gray-500">
-        {emptyMessage ?? "No orders yet."}
+        {emptyMessage}
         {emptyAction && <div className="mt-2">{emptyAction}</div>}
       </div>
     );
@@ -318,10 +330,13 @@ export function ProductOrdersList({
 
   return (
     <>
+      {sectionTitle && (
+        <h2 className="mb-4 text-lg font-bold text-brand-900">{sectionTitle}</h2>
+      )}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {orders.map((order) => (
           <CompactOrderCard
-            key={order.id}
+            key={orderListKey(order)}
             order={order}
             onView={() => setSelected(order)}
             formatOrderMoney={formatOrderMoney}
@@ -338,10 +353,13 @@ export function ProductOrdersList({
           formatOrderMoney={formatOrderMoney}
           onClose={() => setSelected(null)}
           onTrackUpdated={(updated) => {
+            const updatedKey = orderListKey(updated);
             setOrders((prev) =>
-              prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item))
+              prev.map((item) => (orderListKey(item) === updatedKey ? { ...item, ...updated } : item))
             );
-            setSelected((prev) => (prev?.id === updated.id ? { ...prev, ...updated } : prev));
+            setSelected((prev) =>
+              prev && orderListKey(prev) === updatedKey ? { ...prev, ...updated } : prev
+            );
           }}
         />
       )}
@@ -358,12 +376,17 @@ function CompactOrderCard({
   onView: () => void;
   formatOrderMoney: OrderMoneyFormatter;
 }) {
-  const isServed = order.trackStage === "DELIVERED" || order.escrowStatus === "RELEASED";
+  const isServed = isOrderServed(order);
 
   return (
     <article className="flex flex-col overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm transition hover:border-brand-200 hover:shadow-md">
       <div className="flex items-center justify-between border-b border-brand-50 bg-brand-50/40 px-4 py-2.5">
-        <span className="text-xs font-semibold text-gray-500">{formatDate(order.date)}</span>
+        <div className="min-w-0">
+          <span className="text-xs font-semibold text-gray-500">{formatDate(order.date)}</span>
+          <p className="text-[10px] font-medium uppercase tracking-wide text-brand-600">
+            Order #{orderReference(order)}
+          </p>
+        </div>
         {isServed ? (
           <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">
             <Icon name="check-circle" className="h-3.5 w-3.5 shrink-0" />
@@ -451,21 +474,17 @@ export function OrderDetailModal({
 
   const advanceTrack = async (nextStage: OrderTrackStage) => {
     const targetOrderId = order.orderId ?? order.id;
-    if (!targetOrderId && (!order.buyerId || !order.listingId)) return;
+    if (!targetOrderId) return;
     setUpdatingTrack(true);
     setTrackError("");
     try {
       const updated = handlerOwnerId
         ? await api.agents.updateClientOrderTrack(handlerOwnerId, {
             orderId: targetOrderId,
-            buyerId: order.buyerId,
-            listingId: order.listingId,
             trackStage: nextStage,
           })
         : await api.farm.updateOrderTrack({
             orderId: targetOrderId,
-            buyerId: order.buyerId,
-            listingId: order.listingId,
             trackStage: nextStage,
           });
       onTrackUpdated?.({ ...order, ...updated });
@@ -679,10 +698,7 @@ export function OrderDetailModal({
           </div>
 
           <p className="mt-4 text-center text-xs text-gray-500">
-            {formatDate(order.date)}
-            {(order.purchaseCount ?? 1) > 1 && (
-              <span className="text-brand-700"> · {order.purchaseCount} purchases combined</span>
-            )}
+            {formatDateTime(order.date)} · Order #{orderReference(order)}
           </p>
         </div>
         </div>
@@ -742,11 +758,7 @@ export function BuyerOrdersTable({ items }: { items: BuyerOrderLineItem[] }) {
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-gray-600">
                 {formatDateTime(item.date)}
-                {(item.purchaseCount ?? 1) > 1 && (
-                  <span className="block text-[10px] text-brand-700">
-                    {item.purchaseCount} purchases combined
-                  </span>
-                )}
+                <span className="block text-[10px] text-brand-700">#{orderReference(item)}</span>
               </td>
             </tr>
           ))}
@@ -809,11 +821,7 @@ export function SalesOrdersTable({ items }: { items: ProductOrderLineItem[] }) {
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-gray-600">
                 {formatDate(item.date)}
-                {(item.purchaseCount ?? 1) > 1 && (
-                  <span className="block text-[10px] text-brand-700">
-                    {item.purchaseCount} purchases combined
-                  </span>
-                )}
+                <span className="block text-[10px] text-brand-700">#{orderReference(item)}</span>
               </td>
             </tr>
           ))}

@@ -24,6 +24,7 @@ import { normalizeQualifications } from '../constants/qualifications';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import { normalizePhone, normalizePhoneForStorage, isValidPhoneNumber, PHONE_VALIDATION_MESSAGE } from '../utils/phone';
 import { emailVerificationService } from './emailVerification.service';
+import { phoneVerificationService } from './phoneVerification.service';
 import {
   notifyHandlerDropped,
   notifyNewFarmerJoined,
@@ -270,6 +271,17 @@ export const emailVerificationVerifySchema = z.object({
   ),
 });
 
+export const phoneVerificationPublicSendSchema = z.object({
+  phone: z.preprocess(
+    (val) => (typeof val === 'string' ? val.trim() : val),
+    z.string().min(1, 'Phone number is required')
+  ),
+  country: z.preprocess(
+    (val) => (typeof val === 'string' ? val.trim() : val),
+    z.string().min(2, 'Country is required')
+  ),
+});
+
 export const phoneVerificationSendSchema = z.object({
   phone: z.preprocess(
     (val) => (typeof val === 'string' ? val.trim() : val),
@@ -294,6 +306,17 @@ export const phoneVerificationVerifySchema = z.object({
   country: z.preprocess(
     (val) => (typeof val === 'string' ? val.trim() : val),
     z.string().optional()
+  ),
+});
+
+export const phoneVerificationPublicVerifySchema = phoneVerificationVerifySchema.extend({
+  phone: z.preprocess(
+    (val) => (typeof val === 'string' ? val.trim() : val),
+    z.string().min(1, 'Phone number is required')
+  ),
+  country: z.preprocess(
+    (val) => (typeof val === 'string' ? val.trim() : val),
+    z.string().min(2, 'Country is required')
   ),
 });
 
@@ -346,6 +369,12 @@ export class AuthService {
       await prisma.role.findUnique({ where: { id: input.roleId } }),
       'Invalid role'
     );
+
+    if (!isValidPhoneNumber(input.phone, input.country)) {
+      throw new AppError(400, PHONE_VALIDATION_MESSAGE);
+    }
+
+    await phoneVerificationService.assertPhoneVerifiedRecently(input.phone, input.country);
 
     if (!input.password) {
       throw new AppError(400, 'Password is required for email registration');
@@ -424,6 +453,7 @@ export class AuthService {
           gpsLongitude: input.gpsLongitude,
           roleId: input.roleId,
           emailVerified: true,
+          phoneVerified: true,
           profileComplete: true,
           ...(input.roleId === ROLES.ANI_ACCOUNTANT
             ? { verificationStatus: 'PENDING' as const }

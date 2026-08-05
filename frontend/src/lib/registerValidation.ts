@@ -151,12 +151,20 @@ export function canProceedStep3(ctx: RegisterValidationContext): boolean {
 /** Which steps currently have validation errors */
 export function stepsWithErrors(
   ctx: RegisterValidationContext,
-  totalSteps: number
+  totalSteps: number,
+  phoneVerified = true
 ): number[] {
   const steps: number[] = [];
   if (blockingMessages(validateStep1(ctx.form)).length > 0) steps.push(1);
-  if (totalSteps >= 2 && blockingMessages(validateStep2(ctx)).length > 0) steps.push(2);
-  if (totalSteps >= 3 && blockingMessages(validateStep3(ctx)).length > 0) steps.push(3);
+  if (!phoneVerified) steps.push(2);
+
+  const detailsStep = 3;
+  const commoditiesStep = 4;
+
+  if (blockingMessages(validateStep2(ctx)).length > 0) steps.push(detailsStep);
+  if (totalSteps >= commoditiesStep && blockingMessages(validateStep3(ctx)).length > 0) {
+    steps.push(commoditiesStep);
+  }
   return steps;
 }
 
@@ -210,10 +218,12 @@ export function parseRegistrationError(err: unknown): {
   let targetStep: number | undefined;
   if (fieldErrors.firstName || fieldErrors.lastName || fieldErrors.email || fieldErrors.phone || fieldErrors.password || fieldErrors.country || fieldErrors.roleId) {
     targetStep = 1;
-  } else if (fieldErrors.region || fieldErrors.city || fieldErrors.handlerId) {
+  } else if (/verify your phone number with the sms code/i.test(message)) {
     targetStep = 2;
-  } else if (fieldErrors.commodities) {
+  } else if (fieldErrors.region || fieldErrors.city || fieldErrors.handlerId) {
     targetStep = 3;
+  } else if (fieldErrors.commodities) {
+    targetStep = 4;
   }
 
   if (/email already registered/i.test(message)) {

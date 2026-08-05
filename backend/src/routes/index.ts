@@ -16,7 +16,7 @@ import {
 } from '../controllers/platform.controller';
 import { authenticate, requirePermission, requireCanPurchaseFromMarketplace, requireApprovedAccountant } from '../middleware/auth.middleware';
 import { validateBody } from '../middleware/validate.middleware';
-import { registerSchema, loginSchema, updateUserProfileSchema, updateHandlerSchema, completeProfileSchema, emailVerificationSendSchema, emailVerificationVerifySchema, phoneVerificationSendSchema, phoneVerificationVerifySchema } from '../services/auth.service';
+import { registerSchema, loginSchema, updateUserProfileSchema, updateHandlerSchema, completeProfileSchema, emailVerificationSendSchema, emailVerificationVerifySchema, phoneVerificationSendSchema, phoneVerificationVerifySchema, phoneVerificationPublicSendSchema, phoneVerificationPublicVerifySchema } from '../services/auth.service';
 import { updateFarmSchema, addCommoditySchema, updateOrderTrackSchema, notifyClientSchema } from '../services/farm.service';
 import { listingSchema, updateListingSchema } from '../services/marketplace.service';
 import { purchaseSchema, packageSchema, purchaseFarmAccessSchema } from '../services/payment.service';
@@ -110,6 +110,18 @@ router.get('/auth/google', authController.googleStart);
 router.get('/auth/google/callback', authController.googleCallback);
 router.post('/auth/google/dev', authRateLimiter, authController.googleDev);
 router.post('/auth/register', authRateLimiter, validateBody(registerSchema), authController.register);
+router.post(
+  '/auth/phone-verification/send-public',
+  authRateLimiter,
+  validateBody(phoneVerificationPublicSendSchema),
+  authController.sendPhoneVerificationPublic
+);
+router.post(
+  '/auth/phone-verification/verify-public',
+  authRateLimiter,
+  validateBody(phoneVerificationPublicVerifySchema),
+  authController.verifyPhoneChallengePublic
+);
 router.get('/auth/handlers/:type', authController.listHandlers);
 router.post('/auth/login', authRateLimiter, validateBody(loginSchema), authController.login);
 router.post('/auth/refresh', authController.refresh);

@@ -528,14 +528,12 @@ export class AgentService {
     agentId: string,
     roleId: number,
     ownerId: string,
-    buyerId: string | undefined,
-    listingId: string | undefined,
-    trackStage: import('../constants/orderTrack').OrderTrackStage,
-    orderId?: string
+    orderId: string,
+    trackStage: import('../constants/orderTrack').OrderTrackStage
   ) {
     assertAuthorized(isFarmerHandler(roleId), 'Only farmer handlers can update order tracking');
     await this.assertFarmerClientAssignment(agentId, ownerId);
-    return farmService.updateOrderTrack(ownerId, buyerId, listingId, trackStage, orderId);
+    return farmService.updateOrderTrack(ownerId, orderId, trackStage);
   }
 
   async getClientFinancialStatement(agentId: string, roleId: number, ownerId: string) {

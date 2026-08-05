@@ -5,12 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { AgentAssignment, isBuyerAssignment, isBuyerHandler, isHandler } from "@/lib/types";
-import { HandlerBuyerClientCard } from "@/components/HandlerAssignmentCards";
+import { AgentAssignment, isFarmerAssignment, isFarmerHandler, isHandler } from "@/lib/types";
+import { HandlerFarmerClientCard } from "@/components/HandlerAssignmentCards";
 import { PageContentSkeleton } from "@/components/LoadingPrimitives";
 import { Icon } from "@/components/icons";
 
-export default function AssignedClientsPage() {
+export default function AssignedFellowsPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [assignments, setAssignments] = useState<AgentAssignment[] | null>(null);
@@ -26,27 +26,27 @@ export default function AssignedClientsPage() {
       router.push("/dashboard");
       return;
     }
-    if (!isBuyerHandler(user.roleId)) {
-      router.replace("/agents/fellows");
+    if (!isFarmerHandler(user.roleId)) {
+      router.replace("/agents/clients");
     }
   }, [user, loading, router]);
 
   useEffect(() => {
-    if (!user || !isBuyerHandler(user.roleId)) return;
+    if (!user || !isFarmerHandler(user.roleId)) return;
 
     let cancelled = false;
     api.agents
       .assignments()
       .then((list) => {
         if (!cancelled) {
-          setAssignments(list.filter(isBuyerAssignment));
+          setAssignments(list.filter(isFarmerAssignment));
           setError("");
         }
       })
       .catch((e) => {
         if (!cancelled) {
           setAssignments([]);
-          setError(e instanceof Error ? e.message : "Failed to load assigned clients");
+          setError(e instanceof Error ? e.message : "Failed to load assigned fellows");
         }
       });
 
@@ -59,7 +59,7 @@ export default function AssignedClientsPage() {
     return <PageContentSkeleton maxWidth="max-w-6xl" />;
   }
 
-  const clients = assignments ?? [];
+  const fellows = assignments ?? [];
   const loadingList = assignments === null;
 
   return (
@@ -73,9 +73,9 @@ export default function AssignedClientsPage() {
       </Link>
 
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-brand-900">Assigned Clients</h1>
+        <h1 className="text-3xl font-bold text-brand-900">Assigned Fellows</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Clients who assigned you as their liaison officer — view their profiles and order activity.
+          Fellows who assigned you as their liaison officer — view profiles and support their orders.
         </p>
       </div>
 
@@ -85,22 +85,22 @@ export default function AssignedClientsPage() {
 
       {loadingList ? (
         <PageContentSkeleton maxWidth="max-w-6xl" />
-      ) : clients.length === 0 ? (
+      ) : fellows.length === 0 ? (
         <div className="rounded-xl border border-dashed border-brand-200 bg-brand-50/30 p-10 text-center">
           <p className="text-3xl">👥</p>
-          <p className="mt-2 font-semibold text-brand-900">No clients assigned yet</p>
+          <p className="mt-2 font-semibold text-brand-900">No fellows assigned yet</p>
           <p className="mt-1 text-sm text-gray-500">
-            Clients choose you as their liaison officer when they register on the platform.
+            Fellows choose you as their liaison officer when they register on the platform.
           </p>
         </div>
       ) : (
         <>
           <p className="mb-4 text-xs text-gray-500">
-            {clients.length} client{clients.length !== 1 ? "s" : ""} assigned
+            {fellows.length} fellow{fellows.length !== 1 ? "s" : ""} assigned
           </p>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {clients.map((assignment) => (
-              <HandlerBuyerClientCard key={assignment.id} assignment={assignment} />
+            {fellows.map((assignment) => (
+              <HandlerFarmerClientCard key={assignment.id} assignment={assignment} />
             ))}
           </div>
         </>

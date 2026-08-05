@@ -117,14 +117,27 @@ export default function BuyerOrdersPage() {
 
       <ProductOrdersList
         perspective="buyer"
-        orders={orders}
-        emptyMessage="No orders yet."
+        orders={unservedOrders}
+        emptyMessage={orders.length === 0 ? "No orders yet." : undefined}
         emptyAction={
-          <Link href="/marketplace" className="font-semibold text-brand-700 underline">
-            Browse the marketplace
-          </Link>
+          orders.length === 0 ? (
+            <Link href="/marketplace" className="font-semibold text-brand-700 underline">
+              Browse the marketplace
+            </Link>
+          ) : undefined
         }
+        sectionTitle={orders.length > 0 ? "Active orders" : undefined}
       />
+
+      {servedOrders.length > 0 && (
+        <div className="mt-10">
+          <ProductOrdersList
+            perspective="buyer"
+            orders={servedOrders}
+            sectionTitle="Completed orders"
+          />
+        </div>
+      )}
     </div>
   );
 }

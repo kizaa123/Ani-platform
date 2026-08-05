@@ -8,6 +8,7 @@ import {
 } from "@/lib/types";
 import { getCommodityEmoji } from "@/lib/commodityEmoji";
 import { Icon } from "@/components/icons";
+import { CustomProductInput } from "@/components/CustomProductInput";
 
 export type CommodityPickerMode = "multi" | "select-add";
 
@@ -18,6 +19,9 @@ export interface CommodityPickerProps {
   /** Selected commodity IDs (multi mode). */
   selectedIds?: number[];
   onSelectionChange?: (ids: number[]) => void;
+  /** Custom product names typed when "Production" is chosen (multi mode). */
+  customProducts?: string[];
+  onCustomProductsChange?: (products: string[]) => void;
   /** IDs that cannot be selected (e.g. already on farm). */
   excludeIds?: Set<number>;
   /** Called when user picks from dropdown in select-add mode. */
@@ -33,6 +37,8 @@ export function CommodityPicker({
   mode,
   selectedIds = [],
   onSelectionChange,
+  customProducts = [],
+  onCustomProductsChange,
   excludeIds,
   onSelectAdd,
   loading = false,
@@ -41,8 +47,12 @@ export function CommodityPicker({
 }: CommodityPickerProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [customInputVisible, setCustomInputVisible] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const allowCustomProducts = mode === "multi" && Boolean(onCustomProductsChange);
+  const showCustomInput = allowCustomProducts && (customInputVisible || customProducts.length > 0);
 
   const categoryLabel = farmerCategoryFilter(roleId);
   const grouped = useMemo(
@@ -127,6 +137,21 @@ export function CommodityPicker({
     onSelectionChange?.(selectedIds.filter((x) => x !== id));
   };
 
+  const openProductionInput = () => {
+    setCustomInputVisible(true);
+    closeDropdown();
+  };
+
+  const removeCustomProduct = (index: number) => {
+    const next = customProducts.filter((_, i) => i !== index);
+    onCustomProductsChange?.(next);
+    if (next.length === 0) {
+      setCustomInputVisible(false);
+    }
+  };
+
+  const totalSelected = selectedCommodities.length + customProducts.length;
+
   if (loading || allCommodities.length === 0) {
     return <p className="text-sm text-gray-500">Loading commodities...</p>;
   }
@@ -141,8 +166,8 @@ export function CommodityPicker({
         : `Select ${categoryLabel?.toLowerCase()} commodities`;
 
   const triggerText =
-    mode === "multi" && selectedCommodities.length > 0
-      ? `${selectedCommodities.length} selected - click to add more`
+    mode === "multi" && totalSelected > 0
+      ? `${totalSelected} selected - click to add more`
       : mode === "select-add"
         ? "Search and add a commodity…"
         : "Search and select commodities…";
@@ -170,7 +195,7 @@ export function CommodityPicker({
           <Icon name="search" className="h-4 w-4 shrink-0 text-gray-400" />
           <span
             className={`flex-1 text-sm ${
-              mode === "multi" && selectedCommodities.length > 0
+              mode === "multi" && totalSelected > 0
                 ? "font-medium text-brand-900"
                 : "text-gray-500"
             }`}
@@ -196,9 +221,35 @@ export function CommodityPicker({
               />
             </div>
             <ul role="listbox" className="max-h-64 overflow-y-auto py-1">
+              {allowCustomProducts && (
+                <li role="option">
+                  <button
+                    type="button"
+                    onClick={openProductionInput}
+                    className="flex w-full items-center gap-3 border-b border-brand-100 px-4 py-2.5 text-left text-sm text-brand-900 hover:bg-brand-50"
+                  >
+                    <span
+                      className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-100 text-base leading-none"
+                      aria-hidden
+                    >
+                      ✏️
+                    </span>
+                    <span>
+                      <span className="font-semibold">Production</span>
+                      <span className="block text-xs font-normal text-gray-500">
+                        Type your own commodity if it is not in the list
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              )}
               {availableCount === 0 ? (
                 <li className="px-4 py-3 text-sm text-gray-500">
-                  {query ? "No matching commodities found" : "All commodities selected"}
+                  {query
+                    ? "No matching commodities found"
+                    : allowCustomProducts
+                      ? "Choose Production above to type your own, or all listed commodities are selected"
+                      : "All commodities selected"}
                 </li>
               ) : (
                 filteredGroups.map((cat) => (
@@ -233,10 +284,10 @@ export function CommodityPicker({
         )}
       </div>
 
-      {mode === "multi" && selectedCommodities.length > 0 && (
+      {mode === "multi" && totalSelected > 0 && (
         <div>
           <p className="mb-2 text-sm font-medium text-brand-800">
-            Selected ({selectedCommodities.length})
+            Selected ({totalSelected})
           </p>
           <div className="flex gap-2 overflow-x-auto overflow-y-hidden pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {selectedCommodities.map((c) => (
@@ -259,15 +310,48 @@ export function CommodityPicker({
                 </button>
               </span>
             ))}
+            {customProducts.map((product, index) => (
+              <span
+                key={`custom-${product}-${index}`}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-3 py-1.5 text-sm font-medium text-brand-900"
+              >
+                <Icon name="leaf" className="h-3.5 w-3.5 text-brand-600" />
+                <span className="whitespace-nowrap">{product}</span>
+                <span className="text-xs font-normal text-gray-500 whitespace-nowrap">(Production)</span>
+                <button
+                  type="button"
+                  onClick={() => removeCustomProduct(index)}
+                  className="ml-0.5 shrink-0 text-red-500 hover:text-red-700"
+                  aria-label={`Remove ${product}`}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
           </div>
         </div>
       )}
 
-      {mode === "multi" && selectedCommodities.length === 0 && (
+      {showCustomInput && (
+        <CustomProductInput
+          products={customProducts}
+          onChange={(products) => {
+            onCustomProductsChange?.(products);
+            if (products.length > 0) {
+              setCustomInputVisible(true);
+            }
+          }}
+          idPrefix={`${idPrefix}-custom`}
+          invalid={invalid}
+        />
+      )}
+
+      {mode === "multi" && totalSelected === 0 && (
         <p className="text-sm text-gray-500">
           Select at least one{" "}
-          {categoryLabel === "All" ? "commodity" : `${categoryLabel?.toLowerCase()} commodity`} using
-          the search above.
+          {categoryLabel === "All" ? "commodity" : `${categoryLabel?.toLowerCase()} commodity`}{" "}
+          from the list
+          {allowCustomProducts ? ", or choose Production to type your own." : " using the search above."}
         </p>
       )}
     </div>

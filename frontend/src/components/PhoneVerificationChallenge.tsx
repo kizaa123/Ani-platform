@@ -3,17 +3,21 @@
 import { useState, useEffect, useRef } from "react";
 import { Icon } from "@/components/icons";
 import { api } from "@/lib/api";
+import { normalizePhoneForStorage } from "@/lib/phone";
 
 interface PhoneVerificationChallengeProps {
   phone: string;
   country?: string;
   onVerified: () => void;
+  /** Use before account exists (registration). */
+  publicMode?: boolean;
 }
 
 export function PhoneVerificationChallenge({
   phone,
   country,
   onVerified,
+  publicMode = false,
 }: PhoneVerificationChallengeProps) {
   const [challengeId, setChallengeId] = useState<string | null>(null);
   const [code, setCode] = useState("");
@@ -23,12 +27,15 @@ export function PhoneVerificationChallenge({
   const [sent, setSent] = useState(false);
   const [devCode, setDevCode] = useState<string | null>(null);
   const autoSentRef = useRef(false);
+  const normalizedPhone = normalizePhoneForStorage(phone, country) || phone;
 
   const sendChallenge = async () => {
     setError("");
     setSending(true);
     try {
-      const result = await api.auth.sendPhoneVerification(phone, country);
+      const result = publicMode
+        ? await api.auth.sendPhoneVerificationPublic(normalizedPhone, country ?? "")
+        : await api.auth.sendPhoneVerification(normalizedPhone, country);
       setChallengeId(result.challengeId);
       setSent(true);
       setCode("");
@@ -45,24 +52,33 @@ export function PhoneVerificationChallenge({
   };
 
   useEffect(() => {
-    if (!autoSentRef.current) {
+    if (!autoSentRef.current && phone.trim()) {
       autoSentRef.current = true;
       sendChallenge();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [phone, country]);
 
   const verifyCode = async () => {
     if (!challengeId || code.length !== 4) return;
     setError("");
     setLoading(true);
     try {
-      await api.auth.verifyPhoneChallenge({
-        phone,
-        challengeId,
-        code,
-        country,
-      });
+      if (publicMode) {
+        await api.auth.verifyPhoneChallengePublic({
+          phone: normalizedPhone,
+          challengeId,
+          code,
+          country: country ?? "",
+        });
+      } else {
+        await api.auth.verifyPhoneChallenge({
+          phone: normalizedPhone,
+          challengeId,
+          code,
+          country,
+        });
+      }
       onVerified();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Verification failed");
@@ -75,9 +91,8 @@ export function PhoneVerificationChallenge({
     setCode(raw.replace(/\D/g, "").slice(0, 4));
   };
 
-  // Format phone for display (mask middle digits)
-  const displayPhone = phone
-    ? phone.slice(0, 4) + "****" + phone.slice(-3)
+  const displayPhone = normalizedPhone
+    ? normalizedPhone.slice(0, 4) + "****" + normalizedPhone.slice(-3)
     : "your number";
 
   return (
@@ -105,12 +120,15 @@ export function PhoneVerificationChallenge({
 
       {devCode && (
         <div className="auth-info-box rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800" role="status">
-          <p className="font-semibold">Dev mode – SMS not sent</p>
+          <p className="font-semibold">Dev mode – SMS not configured</p>
           <p>
             Your verification code is:{" "}
             <span className="font-mono text-lg font-bold tracking-widest text-amber-900">
               {devCode}
             </span>
+          </p>
+          <p className="mt-2 text-xs text-amber-700">
+            Configure Hubtel or Twilio in backend `.env` to send real SMS in production.
           </p>
         </div>
       )}
@@ -119,7 +137,7 @@ export function PhoneVerificationChallenge({
         <button
           type="button"
           onClick={sendChallenge}
-          disabled={sending}
+          disabled={sending || !phone.trim()}
           className="btn-primary w-full py-3 font-semibold disabled:opacity-50"
         >
           {sending ? "Sending SMS code..." : "Send SMS code"}

@@ -263,6 +263,17 @@ class ApiClient {
         method: "POST",
         body: JSON.stringify({ phone, country }),
       }),
+    sendPhoneVerificationPublic: (phone: string, country: string) =>
+      this.request<{
+        challengeId: string;
+        expiresAt: string;
+        smsSent?: boolean;
+        devMode?: boolean;
+        devCode?: string;
+      }>("/auth/phone-verification/send-public", {
+        method: "POST",
+        body: JSON.stringify({ phone, country }),
+      }),
     verifyPhoneChallenge: (body: {
       phone?: string;
       challengeId: string;
@@ -270,6 +281,16 @@ class ApiClient {
       country?: string;
     }) =>
       this.request<{ verified: boolean }>("/auth/phone-verification/verify", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    verifyPhoneChallengePublic: (body: {
+      phone: string;
+      challengeId: string;
+      code: string;
+      country: string;
+    }) =>
+      this.request<{ verified: boolean }>("/auth/phone-verification/verify-public", {
         method: "POST",
         body: JSON.stringify(body),
       }),
@@ -376,9 +397,7 @@ class ApiClient {
     financialStatement: () => this.request<import("./types").FinancialStatement>("/farm/financial-statement"),
     orders: () => this.request<import("./types").ProductOrderLineItem[]>("/farm/orders"),
     updateOrderTrack: (body: {
-      orderId?: string;
-      buyerId?: string;
-      listingId?: string;
+      orderId: string;
       trackStage: import("./orderTrack").OrderTrackStage;
     }) =>
       this.request<import("./types").ProductOrderLineItem>("/farm/orders/track", {
@@ -499,9 +518,7 @@ class ApiClient {
     updateClientOrderTrack: (
       ownerId: string,
       body: {
-        orderId?: string;
-        buyerId?: string;
-        listingId?: string;
+        orderId: string;
         trackStage: import("./orderTrack").OrderTrackStage;
       }
     ) =>

@@ -73,14 +73,12 @@ export class FarmController {
 
   updateOrderTrack = async (req: AuthRequest, res: Response) => {
     try {
-      const { orderId, buyerId, listingId, trackStage } = req.body;
+      const { orderId, trackStage } = req.body;
       const order = await farmService.updateOrderTrackForFarmer(
         req.user!.userId,
         req.user!.roleId,
-        buyerId,
-        listingId,
-        trackStage,
-        orderId
+        orderId,
+        trackStage
       );
       await createAuditLog(req, 'ORDER_TRACK_UPDATED', 'product_order');
       ApiResponse.success(res, order);

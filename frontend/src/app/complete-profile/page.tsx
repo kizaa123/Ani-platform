@@ -15,7 +15,6 @@ import {
 import { CountrySelect } from "@/components/CountrySelect";
 import { HandlerSelect } from "@/components/HandlerSelect";
 import { CommodityPicker } from "@/components/CommodityPicker";
-import { CustomProductInput } from "@/components/CustomProductInput";
 import { QualificationSelector } from "@/components/QualificationSelector";
 // Email verification removed
 import { PhoneVerificationChallenge } from "@/components/PhoneVerificationChallenge";
@@ -99,7 +98,6 @@ export default function CompleteProfilePage() {
   const [categories, setCategories] = useState<CommodityCategory[]>([]);
   const [selectedCommodities, setSelectedCommodities] = useState<number[]>([]);
   const [customProducts, setCustomProducts] = useState<string[]>([]);
-  const [commodityMode, setCommodityMode] = useState<"catalog" | "custom">("catalog");
   const [profilePreview, setProfilePreview] = useState<string | null>(null);
   const [profileFile, setProfileFile] = useState<File | null>(null);
   const [farmerHandlers, setFarmerHandlers] = useState<HandlerProfile[]>([]);
@@ -476,55 +474,25 @@ export default function CompleteProfilePage() {
               <div className="auth-form">
                 <div className="auth-section">
                   <h3 className="auth-section-title">
-                    {commodityMode === "custom"
-                      ? "Product"
-                      : categoryFilter === "All"
-                        ? "Commodities"
-                        : `${categoryFilter} Commodities`}
+                    {categoryFilter === "All"
+                      ? "Commodities"
+                      : `${categoryFilter} Commodities`}
                   </h3>
+                  <p className="auth-hint mt-1">
+                    Search and choose commodities from the list, or select Production to type your own.
+                  </p>
                 </div>
 
-                <div className="mb-4 flex rounded-xl border border-brand-200 bg-brand-50/50 p-1">
-                  <button
-                    type="button"
-                    onClick={() => setCommodityMode("catalog")}
-                    className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold transition ${
-                      commodityMode === "catalog"
-                        ? "bg-white text-brand-900 shadow-sm"
-                        : "text-gray-600 hover:text-brand-800"
-                    }`}
-                  >
-                    Select from list
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCommodityMode("custom")}
-                    className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold transition ${
-                      commodityMode === "custom"
-                        ? "bg-white text-brand-900 shadow-sm"
-                        : "text-gray-600 hover:text-brand-800"
-                    }`}
-                  >
-                    Type my products
-                  </button>
-                </div>
-
-                {commodityMode === "catalog" ? (
-                  <CommodityPicker
-                    categories={categories}
-                    roleId={form.roleId}
-                    mode="multi"
-                    selectedIds={selectedCommodities}
-                    onSelectionChange={setSelectedCommodities}
-                    idPrefix="complete-commodity"
-                  />
-                ) : (
-                  <CustomProductInput
-                    products={customProducts}
-                    onChange={setCustomProducts}
-                    idPrefix="complete-product"
-                  />
-                )}
+                <CommodityPicker
+                  categories={categories}
+                  roleId={form.roleId}
+                  mode="multi"
+                  selectedIds={selectedCommodities}
+                  onSelectionChange={setSelectedCommodities}
+                  customProducts={customProducts}
+                  onCustomProductsChange={setCustomProducts}
+                  idPrefix="complete-commodity"
+                />
 
                 <div className="auth-nav">
                   <button type="button" onClick={() => setStep(DETAILS_STEP)} className="btn-outline auth-nav-btn">Back</button>

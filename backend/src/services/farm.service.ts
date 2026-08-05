@@ -31,9 +31,7 @@ import { formatVerificationTags, verificationTagSelect } from '../utils/verifica
 import { listingCommodityName, listingCommodityCategory } from '../utils/listingDisplay';
 
 export const updateOrderTrackSchema = z.object({
-  orderId: z.string().uuid().optional(),
-  buyerId: z.string().uuid().optional(),
-  listingId: z.string().uuid().optional(),
+  orderId: z.string().uuid(),
   trackStage: z.enum(ORDER_TRACK_STAGES),
 });
 
@@ -166,13 +164,11 @@ export class FarmService {
   async updateOrderTrackForFarmer(
     userId: string,
     roleId: number,
-    buyerId?: string,
-    listingId?: string,
-    trackStage: OrderTrackStage = 'ORDER_RECEIVED',
-    orderId?: string
+    orderId: string,
+    trackStage: OrderTrackStage
   ) {
     assertAuthorized(isFarmerRole(roleId), 'Order tracking only available to farmers');
-    return this.updateOrderTrack(userId, buyerId, listingId, trackStage, orderId);
+    return this.updateOrderTrack(userId, orderId, trackStage);
   }
 
   async fetchFarmerOrders(farmerUserId: string) {
@@ -186,14 +182,10 @@ export class FarmService {
 
   async updateOrderTrack(
     farmerUserId: string,
-    buyerId?: string,
-    listingId?: string,
-    trackStage: OrderTrackStage = 'ORDER_RECEIVED',
-    orderId?: string
+    orderId: string,
+    trackStage: OrderTrackStage
   ) {
-    const whereCondition = orderId
-      ? { id: orderId, farmerId: farmerUserId }
-      : { farmerId: farmerUserId, buyerId, listingId };
+    const whereCondition = { id: orderId, farmerId: farmerUserId };
 
     const result = await prisma.productOrder.updateMany({
       where: whereCondition,

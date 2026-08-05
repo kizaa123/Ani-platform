@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { AgentAssignment, AppNotification, isBuyerAssignment, isResearcher } from "@/lib/types";
+import { filterHandlerOrderNotifications } from "@/lib/handlerOrderNotifications";
 import {
   HandlerAssignmentsPreviewCard,
   HandlerOrderAlertsCard,
@@ -11,13 +12,6 @@ import {
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
 import { formatUserLocation } from "@/lib/formatUserLocation";
-
-const ORDER_NOTIFICATION_TYPES = new Set([
-  "NEW_ORDER",
-  "ORDER_TRACKED",
-  "ORDER_PAYMENT_RELEASED",
-  "MONEY_DISTRIBUTED",
-]);
 
 export function BuyerHandlerDashboardCards() {
   const [clients, setClients] = useState<AgentAssignment[] | null>(null);
@@ -45,11 +39,7 @@ export function BuyerHandlerDashboardCards() {
       .list()
       .then((notifications) => {
         if (cancelled) return;
-        const unreadOrderAlerts = (notifications as AppNotification[])
-          .filter((n) => !n.read && ORDER_NOTIFICATION_TYPES.has(n.type))
-          .sort(
-            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
+        const unreadOrderAlerts = filterHandlerOrderNotifications(notifications).filter((n) => !n.read);
         setOrderAlerts(unreadOrderAlerts);
       })
       .catch(() => {
@@ -72,6 +62,7 @@ export function BuyerHandlerDashboardCards() {
       )}
       <ScrollReveal delay={scrollStagger(0, 90)} duration={500} direction="fade-up">
         <HandlerAssignmentsPreviewCard
+          href="/agents/clients"
           title="Assigned Clients"
           icon="users"
           assignments={clients ?? []}
@@ -89,6 +80,7 @@ export function BuyerHandlerDashboardCards() {
       </ScrollReveal>
       <ScrollReveal delay={scrollStagger(1, 90)} duration={500} direction="fade-up">
         <HandlerOrderAlertsCard
+          href="/agents/order-notifications"
           notifications={orderAlerts}
           loading={orderAlerts === null}
           entityLabel="clients"
@@ -105,7 +97,7 @@ export function BuyerHandlerDashboardHint() {
       <Link href="/library" className="font-semibold text-brand-700 hover:underline">
         Research Library
       </Link>{" "}
-      is available for agricultural resources.
+      is available for industry and academic resources.
     </p>
   );
 }

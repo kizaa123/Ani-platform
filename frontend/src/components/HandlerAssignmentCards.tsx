@@ -11,6 +11,7 @@ import { CountryBadge } from "@/components/CountrySelect";
 import { EmailText } from "@/components/EmailText";
 import { Icon, type IconName } from "@/components/icons";
 
+import { formatDate } from "@/lib/format";
 import { formatPhoneDisplay, phoneToTelHref } from "@/lib/phone";
 
 /** Clickable phone link for handler client contact - logistics backchannel */
@@ -207,15 +208,13 @@ export function HandlerAssignmentsPreviewCard({
         )}
       </div>
 
-      {!loading && remaining > 0 && href && (
+      {!loading && href && (
         <div className="border-t border-brand-50 px-3 py-1.5 text-[11px] font-medium text-brand-600">
-          +{remaining} more - view all
-        </div>
-      )}
-
-      {!loading && assignments.length > 0 && remaining === 0 && href && (
-        <div className="border-t border-brand-50 px-3 py-1.5 text-[11px] font-medium text-brand-600">
-          View all {clientType === "farmer" ? "fellows" : "clients"}
+          {remaining > 0
+            ? `+${remaining} more - view all`
+            : assignments.length > 0
+              ? `View all ${clientType === "farmer" ? "fellows" : "clients"}`
+              : `View all ${clientType === "farmer" ? "fellows" : "clients"}`}
         </div>
       )}
     </>
@@ -278,7 +277,7 @@ function OrderAlertThumbnail({ imageUrl }: { imageUrl?: string | null }) {
 }
 
 /** Single order notification row - matches assigned client/fellow preview style */
-function HandlerOrderAlertItem({ notification }: { notification: AppNotification }) {
+export function HandlerOrderAlertItem({ notification }: { notification: AppNotification }) {
   const productName = orderAlertProductName(notification);
   const totalLabel = orderAlertTotalLabel(notification);
   const quantity = notification.metadata?.quantity;
@@ -305,6 +304,60 @@ function HandlerOrderAlertItem({ notification }: { notification: AppNotification
         </div>
       </div>
     </div>
+  );
+}
+
+/** Full-page order notification row for handler order notifications list */
+export function HandlerOrderAlertListItem({
+  notification,
+  onOpen,
+}: {
+  notification: AppNotification;
+  onOpen: () => void;
+}) {
+  const productName = orderAlertProductName(notification);
+  const totalLabel = orderAlertTotalLabel(notification);
+  const quantity = notification.metadata?.quantity;
+  const unit = notification.metadata?.unit;
+  const imageUrl = notification.metadata?.imageUrl;
+  const actionLabel = notification.metadata?.actionLabel;
+
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className={`flex w-full items-start gap-3 rounded-xl border bg-white p-4 text-left shadow-sm transition hover:border-brand-300 hover:shadow-md ${
+        notification.read ? "border-brand-100" : "border-amber-200 bg-amber-50/20"
+      }`}
+    >
+      <OrderAlertThumbnail imageUrl={imageUrl} />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-start justify-between gap-2">
+          <p className="font-semibold text-brand-900">{notification.title}</p>
+          {!notification.read && (
+            <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-amber-500" aria-hidden />
+          )}
+        </div>
+        <p className="mt-0.5 line-clamp-1 text-sm font-medium text-brand-800">{productName}</p>
+        {notification.body && (
+          <p className="mt-1 line-clamp-2 text-sm text-gray-600">{notification.body}</p>
+        )}
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
+          {quantity != null && unit && (
+            <span>
+              Qty: {quantity} {unit}
+            </span>
+          )}
+          {totalLabel && <span className="font-semibold text-brand-700">{totalLabel}</span>}
+          <span>{formatDate(notification.createdAt)}</span>
+        </div>
+        {actionLabel && (
+          <span className="mt-2 inline-flex rounded-lg bg-brand-700 px-2.5 py-1 text-[11px] font-semibold text-white">
+            {actionLabel}
+          </span>
+        )}
+      </div>
+    </button>
   );
 }
 
@@ -366,15 +419,9 @@ export function HandlerOrderAlertsCard({
         )}
       </div>
 
-      {!loading && remaining > 0 && href && (
+      {!loading && href && (
         <div className="border-t border-brand-50 px-3 py-1.5 text-[11px] font-medium text-brand-600">
-          +{remaining} more - view all
-        </div>
-      )}
-
-      {!loading && count > 0 && remaining === 0 && href && (
-        <div className="border-t border-brand-50 px-3 py-1.5 text-[11px] font-medium text-brand-600">
-          View all order notifications
+          {remaining > 0 ? `+${remaining} more - view all` : "View all order notifications"}
         </div>
       )}
     </>

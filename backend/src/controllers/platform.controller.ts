@@ -143,15 +143,13 @@ export class AgentController {
 
   updateClientOrderTrack = async (req: AuthRequest, res: Response) => {
     try {
-      const { orderId, buyerId, listingId, trackStage } = req.body;
+      const { orderId, trackStage } = req.body;
       const order = await agentService.updateClientOrderTrack(
           req.user!.userId,
           req.user!.roleId,
           req.params.ownerId as string,
-          buyerId,
-          listingId,
-          trackStage,
-          orderId
+          orderId,
+          trackStage
       );
       ApiResponse.success(res, order);
     } catch (e) {

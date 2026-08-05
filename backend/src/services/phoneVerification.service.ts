@@ -36,7 +36,16 @@ export class PhoneVerificationService {
       },
     });
 
-    const smsRes = await sendSmsOtp(normalizedPhone, code);
+    let smsRes;
+    try {
+      smsRes = await sendSmsOtp(normalizedPhone, code);
+    } catch (err) {
+      await getDb().phoneVerificationChallenge.delete({ where: { id: challenge.id } }).catch(() => {});
+      throw new AppError(
+        503,
+        err instanceof Error ? err.message : 'Could not send SMS verification code'
+      );
+    }
 
     return {
       challengeId: challenge.id as string,
@@ -45,6 +54,27 @@ export class PhoneVerificationService {
       devMode: 'devMode' in smsRes ? smsRes.devMode : false,
       devCode: 'devCode' in smsRes ? smsRes.devCode : undefined,
     };
+  }
+
+  async assertPhoneVerifiedRecently(phone: string, country?: string) {
+    const normalizedPhone = normalizePhoneForStorage(phone, country);
+    if (!normalizedPhone) {
+      throw new AppError(400, 'Invalid phone number format');
+    }
+
+    const cutoff = new Date(Date.now() - CHALLENGE_TTL_MS);
+    const challenge = await getDb().phoneVerificationChallenge.findFirst({
+      where: {
+        phone: normalizedPhone,
+        verified: true,
+        createdAt: { gte: cutoff },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!challenge) {
+      throw new AppError(400, 'Verify your phone number with the SMS code before registering');
+    }
   }
 
   async verifyChallenge(phone: string, challengeId: string, code: string, country?: string) {

@@ -15,13 +15,13 @@ import {
 import { CountrySelect } from "@/components/CountrySelect";
 import { HandlerSelect } from "@/components/HandlerSelect";
 import { CommodityPicker } from "@/components/CommodityPicker";
-import { CustomProductInput } from "@/components/CustomProductInput";
 import { QualificationSelector } from "@/components/QualificationSelector";
 import { Icon } from "@/components/icons";
 import { PasswordInput } from "@/components/PasswordInput";
 import { AuthDivider, GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { AuthHeroPanel } from "@/components/AuthHeroPanel";
+import { PhoneVerificationChallenge } from "@/components/PhoneVerificationChallenge";
 import {
   blockingMessages,
   canProceedStep1,
@@ -57,7 +57,10 @@ const ROLE_GROUPS_FOR_SELECT = [
   { groupLabel: "Support & Operations",roles: ALL_ROLES.filter((r) => r.group === "Support & Operations") },
 ];
 
-const STEP_LABELS = ["Account", "Details", "Commodities"] as const;
+const STEP_LABELS = ["Account", "Phone", "Details", "Commodities"] as const;
+const PHONE_STEP = 2;
+const DETAILS_STEP = 3;
+const COMMODITIES_STEP = 4;
 
 function buildRegisterPayload(
   form: {
@@ -210,9 +213,9 @@ function RegisterForm() {
   const [categories, setCategories] = useState<CommodityCategory[]>([]);
   const [selectedCommodities, setSelectedCommodities] = useState<number[]>([]);
   const [customProducts, setCustomProducts] = useState<string[]>([]);
-  const [commodityMode, setCommodityMode] = useState<"catalog" | "custom">("catalog");
   const [profilePreview, setProfilePreview] = useState<string | null>(null);
   const [profileFile, setProfileFile] = useState<File | null>(null);
+  const [phoneVerified, setPhoneVerified] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [devLoading, setDevLoading] = useState(false);
@@ -236,6 +239,10 @@ function RegisterForm() {
     handlerId: "",
   });
 
+  useEffect(() => {
+    setPhoneVerified(false);
+  }, [form.phone, form.country]);
+
   const isFarmerRole = isFarmer(form.roleId);
   const isBuyerRole = form.roleId === ROLES.BUYER;
   const isResearcherRole = form.roleId === ROLES.RESEARCHER;
@@ -252,9 +259,10 @@ function RegisterForm() {
     ? "No fellow liaison officers registered yet. One must register first."
     : "No client liaison officers registered yet. One must register first.";
   const categoryFilter = farmerCategoryFilter(form.roleId);
-  const totalSteps = isFarmerRole ? 3 : 2;
-  const stepLabels = isFarmerRole ? STEP_LABELS : STEP_LABELS.slice(0, 2);
+  const totalSteps = isFarmerRole ? 4 : 3;
+  const stepLabels = isFarmerRole ? STEP_LABELS : STEP_LABELS.slice(0, 3);
   const phoneDialCode = getDialCodeForCountryName(form.country);
+  const normalizedRegisterPhone = normalizePhoneForStorage(form.phone, form.country);
 
   const validationCtx = useMemo(
     () => ({
@@ -303,30 +311,31 @@ function RegisterForm() {
 
   const stepProceed = {
     1: canProceedStep1(validationCtx.form),
-    2: canProceedStep2(validationCtx),
-    3: canProceedStep3(validationCtx),
+    2: phoneVerified,
+    3: canProceedStep2(validationCtx),
+    4: canProceedStep3(validationCtx),
   } as const;
 
   const currentClientErrors =
-    step === 1 ? step1Errors : step === 2 ? step2Errors : step3Errors;
+    step === 1 ? step1Errors : step === DETAILS_STEP ? step2Errors : step === COMMODITIES_STEP ? step3Errors : {};
 
   const visibleFieldErrors = useMemo(() => {
     const client = showValidation ? currentClientErrors : {};
     const stepFields =
-      step === 1 ? STEP1_FIELDS : step === 2 ? STEP2_FIELDS : STEP3_FIELDS;
+      step === 1 ? STEP1_FIELDS : step === DETAILS_STEP ? STEP2_FIELDS : step === COMMODITIES_STEP ? STEP3_FIELDS : [];
     const backend = errorsForStep(backendFieldErrors, stepFields);
     return mergeFieldErrors(client, backend);
   }, [showValidation, currentClientErrors, backendFieldErrors, step]);
 
   const currentBlockingItems = useMemo(
-    () => blockingMessages(mergeFieldErrors(showValidation ? currentClientErrors : {}, errorsForStep(backendFieldErrors, step === 1 ? STEP1_FIELDS : step === 2 ? STEP2_FIELDS : STEP3_FIELDS))),
+    () => blockingMessages(mergeFieldErrors(showValidation ? currentClientErrors : {}, errorsForStep(backendFieldErrors, step === 1 ? STEP1_FIELDS : step === DETAILS_STEP ? STEP2_FIELDS : step === COMMODITIES_STEP ? STEP3_FIELDS : []))),
     [showValidation, currentClientErrors, backendFieldErrors, step]
   );
 
   const stepsWithValidationErrors = useMemo(() => {
     if (!showValidation && Object.keys(backendFieldErrors).length === 0) return [];
-    return stepsWithErrors(validationCtx, totalSteps);
-  }, [showValidation, backendFieldErrors, validationCtx, totalSteps]);
+    return stepsWithErrors(validationCtx, totalSteps, phoneVerified);
+  }, [showValidation, backendFieldErrors, validationCtx, totalSteps, phoneVerified]);
 
   const clearBackendError = useCallback((field: RegisterField) => {
     setBackendFieldErrors((prev) => {
@@ -372,7 +381,6 @@ function RegisterForm() {
   useEffect(() => {
     setSelectedCommodities([]);
     setCustomProducts([]);
-    setCommodityMode("catalog");
     setForm((prev) => ({ ...prev, handlerId: "" }));
   }, [form.roleId]);
 
@@ -392,7 +400,7 @@ function RegisterForm() {
     setProfilePreview(URL.createObjectURL(file));
   };
 
-  const goToStep2 = () => {
+  const goToPhoneStep = () => {
     if (!stepProceed[1]) {
       revealValidation();
       setError("");
@@ -401,11 +409,24 @@ function RegisterForm() {
     setShowValidation(false);
     setBackendFieldErrors((prev) => errorsForStep(prev, STEP2_FIELDS.concat(STEP3_FIELDS)));
     setError("");
-    setStep(2);
+    setPhoneVerified(false);
+    setStep(PHONE_STEP);
   };
 
-  const goToStep3 = () => {
-    if (!stepProceed[2]) {
+  const goToDetailsStep = () => {
+    if (!phoneVerified) {
+      setError("Verify your phone number with the SMS code before continuing.");
+      setStep(PHONE_STEP);
+      return;
+    }
+    setShowValidation(false);
+    setBackendFieldErrors((prev) => errorsForStep(prev, STEP3_FIELDS));
+    setError("");
+    setStep(DETAILS_STEP);
+  };
+
+  const goToCommoditiesStep = () => {
+    if (!stepProceed[3]) {
       revealValidation();
       setError("");
       return;
@@ -413,18 +434,24 @@ function RegisterForm() {
     setShowValidation(false);
     setBackendFieldErrors((prev) => errorsForStep(prev, STEP3_FIELDS));
     setError("");
-    setStep(3);
+    setStep(COMMODITIES_STEP);
   };
 
   const handleSubmit = async () => {
-    const submitStep = isFarmerRole && step === 3 ? 3 : 2;
-    const canSubmit = submitStep === 3 ? stepProceed[3] : stepProceed[2];
+    const submitStep = isFarmerRole && step === COMMODITIES_STEP ? COMMODITIES_STEP : DETAILS_STEP;
+    const canSubmit = submitStep === COMMODITIES_STEP ? stepProceed[4] : stepProceed[3];
+
+    if (!phoneVerified) {
+      setError("Verify your phone number with the SMS code before creating your account.");
+      setStep(PHONE_STEP);
+      return;
+    }
 
     if (!canSubmit) {
       revealValidation();
-      if (submitStep === 3 && !stepProceed[2]) {
-        setError("Complete step 2 (Details) before creating your account.");
-        setStep(2);
+      if (submitStep === COMMODITIES_STEP && !stepProceed[3]) {
+        setError("Complete step 3 (Details) before creating your account.");
+        setStep(DETAILS_STEP);
       } else {
         setError("");
       }
@@ -727,12 +754,12 @@ function RegisterForm() {
               </select>
               {isFarmerRole && categoryFilter && categoryFilter !== "All" && (
                 <p className="auth-hint text-brand-700 mt-1">
-                  You will only select {categoryFilter.toLowerCase()} commodities in step 3.
+                  You will only select {categoryFilter.toLowerCase()} commodities in step 4.
                 </p>
               )}
               {isOrganizationFarmer(form.roleId) && (
                 <p className="auth-hint text-brand-700 mt-1">
-                  You will select crop and livestock commodities in step 3.
+                  You will select crop and livestock commodities in step 4.
                 </p>
               )}
               <FieldErrorMessage message={fieldError("roleId")} />
@@ -743,14 +770,52 @@ function RegisterForm() {
               blockingItems={blockingMessages(step1Errors)}
               loading={loading}
               onBlocked={revealValidation}
-              onClick={goToStep2}
+              onClick={goToPhoneStep}
             >
               Continue
             </RegisterActionButton>
           </div>
         )}
 
-        {step === 2 && (
+        {step === PHONE_STEP && (
+          <div className="auth-form">
+            <PhoneVerificationChallenge
+              key={`${normalizedRegisterPhone}-${form.country}`}
+              phone={form.phone}
+              country={form.country}
+              publicMode
+              onVerified={() => {
+                setPhoneVerified(true);
+                setError("");
+                setStep(DETAILS_STEP);
+              }}
+            />
+
+            <div className="auth-nav">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowValidation(false);
+                  setStep(1);
+                }}
+                className="btn-outline auth-nav-btn"
+              >
+                Back
+              </button>
+              <RegisterActionButton
+                blocked={!phoneVerified}
+                blockingItems={phoneVerified ? [] : ["Verify your phone number with the SMS code"]}
+                loading={loading}
+                onBlocked={() => setError("Enter the SMS code and tap Verify phone number.")}
+                onClick={goToDetailsStep}
+              >
+                Continue
+              </RegisterActionButton>
+            </div>
+          </div>
+        )}
+
+        {step === DETAILS_STEP && (
           <div className="auth-form">
             <div className="auth-section">
               <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -966,18 +1031,18 @@ function RegisterForm() {
                 type="button"
                 onClick={() => {
                   setShowValidation(false);
-                  setStep(1);
+                  setStep(PHONE_STEP);
                 }}
                 className="btn-outline auth-nav-btn"
               >
                 Back
               </button>
               <RegisterActionButton
-                blocked={!stepProceed[2]}
+                blocked={!stepProceed[3]}
                 blockingItems={blockingMessages(step2Errors)}
                 loading={loading}
                 onBlocked={revealValidation}
-                onClick={() => (isFarmerRole ? goToStep3() : handleSubmit())}
+                onClick={() => (isFarmerRole ? goToCommoditiesStep() : handleSubmit())}
               >
                 {loading ? "Creating..." : isFarmerRole ? "Continue" : "Create Account"}
               </RegisterActionButton>
@@ -985,113 +1050,45 @@ function RegisterForm() {
           </div>
         )}
 
-        {step === 3 && isFarmerRole && categoryFilter && (
+        {step === COMMODITIES_STEP && isFarmerRole && categoryFilter && (
           <div className="auth-form">
             <div className="auth-section">
               <div className="flex items-start gap-3">
                 <Icon name="leaf" className="mt-0.5 h-5 w-5 shrink-0 text-brand-700" />
                 <div>
                   <h3 className="auth-section-title">
-                    {commodityMode === "custom"
-                      ? "Product"
-                      : categoryFilter === "All"
-                        ? "Commodities"
-                        : `${categoryFilter} Commodities`}
+                    {categoryFilter === "All"
+                      ? "Commodities"
+                      : `${categoryFilter} Commodities`}
                   </h3>
                   <p className="auth-hint mt-1">
-                    {commodityMode === "custom"
-                      ? "Type the products you produce. Buyers will see these on your profile."
-                      : `Search and choose the ${
-                          categoryFilter === "All"
-                            ? "crop and livestock products"
-                            : categoryFilter?.toLowerCase()
-                        } you produce. Buyers will see these on your profile.`}
+                    Search and choose the{" "}
+                    {categoryFilter === "All"
+                      ? "crop and livestock products"
+                      : categoryFilter?.toLowerCase()}{" "}
+                    you produce, or select Production to type your own. Buyers will see these on your profile.
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="mb-4 flex rounded-xl border border-brand-200 bg-brand-50/50 p-1">
-              <button
-                type="button"
-                onClick={() => setCommodityMode("catalog")}
-                className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold transition ${
-                  commodityMode === "catalog"
-                    ? "bg-white text-brand-900 shadow-sm"
-                    : "text-gray-600 hover:text-brand-800"
-                }`}
-              >
-                Select from list
-              </button>
-              <button
-                type="button"
-                onClick={() => setCommodityMode("custom")}
-                className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold transition ${
-                  commodityMode === "custom"
-                    ? "bg-white text-brand-900 shadow-sm"
-                    : "text-gray-600 hover:text-brand-800"
-                }`}
-              >
-                Type my products
-              </button>
-            </div>
-
-            {commodityMode === "catalog" ? (
-              <CommodityPicker
-                categories={categories}
-                roleId={form.roleId}
-                mode="multi"
-                selectedIds={selectedCommodities}
-                onSelectionChange={(ids) => {
-                  clearBackendError("commodities");
-                  setSelectedCommodities(ids);
-                }}
-                idPrefix="reg-commodity"
-                invalid={!!fieldError("commodities")}
-              />
-            ) : (
-              <CustomProductInput
-                products={customProducts}
-                onChange={(products) => {
-                  clearBackendError("commodities");
-                  setCustomProducts(products);
-                }}
-                idPrefix="reg-product"
-                invalid={!!fieldError("commodities")}
-              />
-            )}
-
-            {(selectedCommodities.length > 0 || customProducts.length > 0) && (
-              <div className="rounded-xl border border-brand-100 bg-brand-50/60 p-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  Your selections
-                </p>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {selectedCommodities.map((id) => {
-                    const name =
-                      categories
-                        .flatMap((c) => c.commodities ?? [])
-                        .find((c) => c.id === id)?.name ?? `Commodity #${id}`;
-                    return (
-                      <span
-                        key={`catalog-${id}`}
-                        className="rounded-full border border-brand-200 bg-white px-2.5 py-0.5 text-xs font-medium text-brand-800"
-                      >
-                        {name}
-                      </span>
-                    );
-                  })}
-                  {customProducts.map((product, index) => (
-                    <span
-                      key={`custom-${product}-${index}`}
-                      className="rounded-full border border-brand-200 bg-white px-2.5 py-0.5 text-xs font-medium text-brand-800"
-                    >
-                      {product}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
+            <CommodityPicker
+              categories={categories}
+              roleId={form.roleId}
+              mode="multi"
+              selectedIds={selectedCommodities}
+              onSelectionChange={(ids) => {
+                clearBackendError("commodities");
+                setSelectedCommodities(ids);
+              }}
+              customProducts={customProducts}
+              onCustomProductsChange={(products) => {
+                clearBackendError("commodities");
+                setCustomProducts(products);
+              }}
+              idPrefix="reg-commodity"
+              invalid={!!fieldError("commodities")}
+            />
 
             <FieldErrorMessage message={fieldError("commodities")} />
 
@@ -1100,14 +1097,14 @@ function RegisterForm() {
                 type="button"
                 onClick={() => {
                   setShowValidation(false);
-                  setStep(2);
+                  setStep(DETAILS_STEP);
                 }}
                 className="btn-outline auth-nav-btn"
               >
                 Back
               </button>
               <RegisterActionButton
-                blocked={!stepProceed[3]}
+                blocked={!stepProceed[4]}
                 blockingItems={blockingMessages(step3Errors)}
                 loading={loading}
                 onBlocked={revealValidation}
