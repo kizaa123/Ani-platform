@@ -3,29 +3,35 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { AgentAssignment, isFarmerAssignment } from "@/lib/types";
-import { HandlerAssignmentsPreviewCard } from "@/components/HandlerAssignmentCards";
+import { AgentAssignment, AppNotification, isFarmerAssignment } from "@/lib/types";
+import { filterUnreadHandlerOrderNotifications } from "@/lib/handlerOrderNotifications";
+import {
+  HandlerAssignmentsPreviewCard,
+  HandlerOrderAlertsCard,
+} from "@/components/HandlerAssignmentCards";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
 import { formatUserLocation } from "@/lib/formatUserLocation";
 
 export function FarmerHandlerDashboardCards() {
   const [farmers, setFarmers] = useState<AgentAssignment[] | null>(null);
+  const [orderAlerts, setOrderAlerts] = useState<AppNotification[] | null>(null);
   const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
 
-    api.agents
-      .assignments()
-      .then((assignments) => {
+    Promise.all([api.agents.assignments(), api.notifications.list()])
+      .then(([assignments, notifications]) => {
         if (cancelled) return;
         setFarmers(assignments.filter(isFarmerAssignment));
+        setOrderAlerts(filterUnreadHandlerOrderNotifications(notifications));
         setLoadError("");
       })
       .catch((e) => {
         if (!cancelled) {
           setFarmers([]);
+          setOrderAlerts([]);
           setLoadError(e instanceof Error ? e.message : "Failed to load assigned fellows");
         }
       });
@@ -35,7 +41,7 @@ export function FarmerHandlerDashboardCards() {
     };
   }, []);
 
-  const loading = farmers === null;
+  const loading = farmers === null || orderAlerts === null;
 
   return (
     <>
@@ -59,6 +65,14 @@ export function FarmerHandlerDashboardCards() {
             return [location, farm].filter(Boolean) as string[];
           }}
           getStat={(owner) => owner.farmerProfile?.farmSize ?? undefined}
+        />
+      </ScrollReveal>
+      <ScrollReveal delay={scrollStagger(1, 90)} duration={500} direction="fade-up">
+        <HandlerOrderAlertsCard
+          href="/agents/order-notifications"
+          notifications={orderAlerts}
+          loading={loading}
+          entityLabel="fellows"
         />
       </ScrollReveal>
     </>

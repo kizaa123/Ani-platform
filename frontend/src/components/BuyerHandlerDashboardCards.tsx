@@ -3,29 +3,35 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { AgentAssignment, isBuyerAssignment, isResearcher } from "@/lib/types";
-import { HandlerAssignmentsPreviewCard } from "@/components/HandlerAssignmentCards";
+import { AgentAssignment, AppNotification, isBuyerAssignment, isResearcher } from "@/lib/types";
+import { filterUnreadHandlerOrderNotifications } from "@/lib/handlerOrderNotifications";
+import {
+  HandlerAssignmentsPreviewCard,
+  HandlerOrderAlertsCard,
+} from "@/components/HandlerAssignmentCards";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
 import { formatUserLocation } from "@/lib/formatUserLocation";
 
 export function BuyerHandlerDashboardCards() {
   const [clients, setClients] = useState<AgentAssignment[] | null>(null);
+  const [orderAlerts, setOrderAlerts] = useState<AppNotification[] | null>(null);
   const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
 
-    api.agents
-      .assignments()
-      .then((assignments) => {
+    Promise.all([api.agents.assignments(), api.notifications.list()])
+      .then(([assignments, notifications]) => {
         if (cancelled) return;
         setClients(assignments.filter(isBuyerAssignment));
+        setOrderAlerts(filterUnreadHandlerOrderNotifications(notifications));
         setLoadError("");
       })
       .catch((e) => {
         if (!cancelled) {
           setClients([]);
+          setOrderAlerts([]);
           setLoadError(e instanceof Error ? e.message : "Failed to load assigned clients");
         }
       });
@@ -35,7 +41,7 @@ export function BuyerHandlerDashboardCards() {
     };
   }, []);
 
-  const loading = clients === null;
+  const loading = clients === null || orderAlerts === null;
 
   return (
     <>
@@ -60,6 +66,14 @@ export function BuyerHandlerDashboardCards() {
             const location = formatUserLocation(owner);
             return [location, organization].filter(Boolean) as string[];
           }}
+        />
+      </ScrollReveal>
+      <ScrollReveal delay={scrollStagger(1, 90)} duration={500} direction="fade-up">
+        <HandlerOrderAlertsCard
+          href="/agents/order-notifications"
+          notifications={orderAlerts}
+          loading={loading}
+          entityLabel="clients"
         />
       </ScrollReveal>
     </>

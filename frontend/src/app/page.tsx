@@ -59,7 +59,7 @@ const TEAM = [
     name: "Lawrence Kennedy Kwarteng ",
     role: "Director of Research and Quality Assurance",
     bio: "Head of Extension/Plant Doctor | Agricultural Extension Specialist | 15+ Years Farmer Advisory Experience | Crop Health & Sustainable Agriculture Advocate.",
-    img: "/ANI Director of Research and Quality Assurance .png",
+    img: "/Replace ANI Director.png",
   },
 ];
 
