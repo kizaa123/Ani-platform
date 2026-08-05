@@ -9,11 +9,10 @@ import {
   FARMER_ROLES,
   CLIENT_ROLES,
   PORTAL_DIRECTORY_ROLES,
-  portalDirectoryRoleLabel,
 } from '../constants/roles';
 import { AppError } from '../utils/errors';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
-import { farmService, notifyClientSchema } from './farm.service';
+import { farmService, listPortalDirectoryClients, notifyClientSchema } from './farm.service';
 import {
   notifyFarmProductsAvailable,
   notifyHandlerFarmProductsAvailable,
@@ -89,39 +88,7 @@ export class AgentService {
       isFarmerHandler(roleId) || isBuyerHandler(roleId),
       'Only liaison officers can list clients'
     );
-    const clients = await prisma.user.findMany({
-      where: {
-        roleId: { in: [...PORTAL_DIRECTORY_ROLES] },
-        id: { not: userId },
-      },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        profilePicture: true,
-        city: true,
-        region: true,
-        country: true,
-        roleId: true,
-        verificationStatus: true,
-        verificationTags: { select: verificationTagSelect },
-      },
-      orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
-    });
-
-    return clients.map((c) => ({
-      id: c.id,
-      firstName: c.firstName,
-      lastName: c.lastName,
-      profilePicture: normalizePublicAssetUrl(c.profilePicture),
-      city: c.city,
-      region: c.region,
-      country: c.country,
-      roleId: c.roleId,
-      roleLabel: portalDirectoryRoleLabel(c.roleId),
-      verificationStatus: c.verificationStatus,
-      verificationTags: formatVerificationTags(c.verificationTags),
-    }));
+    return listPortalDirectoryClients(userId);
   }
 
   async notifyClient(

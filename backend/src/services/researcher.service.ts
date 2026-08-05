@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import prisma from '../database/prisma';
 import { AppError, assertFound, assertAuthorized } from '../utils/errors';
-import { ROLES, isResearcherRole, PORTAL_DIRECTORY_ROLES, portalDirectoryRoleLabel, canPurchasePublication } from '../constants/roles';
+import { ROLES, isResearcherRole, PORTAL_DIRECTORY_ROLES, canPurchasePublication } from '../constants/roles';
+import { listPortalDirectoryClients } from './farm.service';
 import { getPaymentProvider } from './payment.provider';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import { formatVerificationTags, verificationTagSelect } from '../utils/verificationTags';
@@ -942,39 +943,7 @@ export class ResearcherService {
 
   async listClients(userId: string, roleId: number) {
     assertAuthorized(isResearcherRole(roleId), 'Only researchers can list clients');
-    const clients = await prisma.user.findMany({
-      where: {
-        roleId: { in: [...PORTAL_DIRECTORY_ROLES] },
-        id: { not: userId },
-      },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        profilePicture: true,
-        city: true,
-        region: true,
-        country: true,
-        roleId: true,
-        verificationStatus: true,
-        verificationTags: { select: verificationTagSelect },
-      },
-      orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
-    });
-
-    return clients.map((c) => ({
-      id: c.id,
-      firstName: c.firstName,
-      lastName: c.lastName,
-      profilePicture: normalizePublicAssetUrl(c.profilePicture),
-      city: c.city,
-      region: c.region,
-      country: c.country,
-      roleId: c.roleId,
-      roleLabel: portalDirectoryRoleLabel(c.roleId),
-      verificationStatus: c.verificationStatus,
-      verificationTags: formatVerificationTags(c.verificationTags),
-    }));
+    return listPortalDirectoryClients(userId);
   }
 
   async notifyClient(

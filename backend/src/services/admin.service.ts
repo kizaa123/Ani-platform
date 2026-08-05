@@ -19,8 +19,8 @@ import {
 import { publicationPlatformShareAmount } from '../utils/distributionFinancials';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import { formatVerificationTags, verificationTagSelect } from '../utils/verificationTags';
-import { PORTAL_DIRECTORY_ROLES, portalDirectoryRoleLabel } from '../constants/roles';
-import { notifyClientSchema } from './farm.service';
+import { PORTAL_DIRECTORY_ROLES } from '../constants/roles';
+import { listPortalDirectoryClients, notifyClientSchema } from './farm.service';
 
 const CHART_MONTHS = 6;
 
@@ -697,39 +697,7 @@ export class AdminService {
   }
 
   async listClients(adminUserId: string) {
-    const clients = await prisma.user.findMany({
-      where: {
-        roleId: { in: [...PORTAL_DIRECTORY_ROLES] },
-        id: { not: adminUserId },
-      },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        profilePicture: true,
-        city: true,
-        region: true,
-        country: true,
-        roleId: true,
-        verificationStatus: true,
-        verificationTags: { select: verificationTagSelect },
-      },
-      orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
-    });
-
-    return clients.map((c) => ({
-      id: c.id,
-      firstName: c.firstName,
-      lastName: c.lastName,
-      profilePicture: normalizePublicAssetUrl(c.profilePicture),
-      city: c.city,
-      region: c.region,
-      country: c.country,
-      roleId: c.roleId,
-      roleLabel: portalDirectoryRoleLabel(c.roleId),
-      verificationStatus: c.verificationStatus,
-      verificationTags: formatVerificationTags(c.verificationTags),
-    }));
+    return listPortalDirectoryClients(adminUserId);
   }
 
   async notifyClient(adminUserId: string, data: z.infer<typeof notifyClientSchema>) {

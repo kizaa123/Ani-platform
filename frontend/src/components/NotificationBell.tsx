@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import { AppNotification } from "@/lib/types";
-import { getNotificationDestination } from "@/lib/handlerOrderNotifications";
+import { getNotificationDestination } from "@/lib/notificationNavigation";
 import { formatDate } from "@/lib/format";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { Icon, NOTIFICATION_ICONS } from "@/components/icons";
@@ -75,9 +75,11 @@ function NotificationThumbnail({ n }: { n: AppNotification }) {
 function RichNotificationContent({
   n,
   destination,
+  onNavigate,
 }: {
   n: AppNotification;
   destination: string | null;
+  onNavigate?: () => void;
 }) {
   const action = notificationAction(n, destination);
   const bodyClass = linkTextClass(Boolean(destination));
@@ -118,7 +120,25 @@ function RichNotificationContent({
       )}
 
       {n.body && (
-        <p className={`mt-1 text-sm leading-snug ${bodyClass}`}>{n.body}</p>
+        <p
+          className={`mt-1 text-sm leading-snug ${bodyClass}`}
+          onClick={destination && onNavigate ? (e) => { e.stopPropagation(); onNavigate(); } : undefined}
+          onKeyDown={
+            destination && onNavigate
+              ? (e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onNavigate();
+                  }
+                }
+              : undefined
+          }
+          role={destination ? "link" : undefined}
+          tabIndex={destination ? 0 : undefined}
+        >
+          {n.body}
+        </p>
       )}
 
       {action && (
@@ -135,9 +155,11 @@ function RichNotificationContent({
 function StandardNotificationContent({
   n,
   destination,
+  onNavigate,
 }: {
   n: AppNotification;
   destination: string | null;
+  onNavigate?: () => void;
 }) {
   const action = notificationAction(n, destination);
   const bodyClass = linkTextClass(Boolean(destination));
@@ -148,7 +170,25 @@ function StandardNotificationContent({
         <p className="font-semibold text-brand-900">{n.title}</p>
         {!n.read && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-brand-600" />}
       </div>
-      <p className={`mt-1 text-sm leading-snug ${bodyClass}`}>{n.body}</p>
+      <p
+        className={`mt-1 text-sm leading-snug ${bodyClass}`}
+        onClick={destination && onNavigate ? (e) => { e.stopPropagation(); onNavigate(); } : undefined}
+        onKeyDown={
+          destination && onNavigate
+            ? (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onNavigate();
+                }
+              }
+            : undefined
+        }
+        role={destination ? "link" : undefined}
+        tabIndex={destination ? 0 : undefined}
+      >
+        {n.body}
+      </p>
       {action && (
         <span className="mt-2 inline-flex rounded-lg bg-brand-700 px-3 py-1 text-xs font-semibold text-white">
           {destination?.startsWith("/agents/order-notifications") ? "View update" : action.label}
@@ -311,11 +351,12 @@ export function NotificationBell({ className = "" }: { className?: string }) {
                       const rich = isRichNotification(n.type);
                       const destination = getNotificationDestination(n, user.roleId);
                       const navigable = Boolean(destination);
+                      const openThis = () => void openNotification(n);
                       return (
                         <li key={n.id}>
                           <button
                             type="button"
-                            onClick={() => openNotification(n)}
+                            onClick={openThis}
                             className={`flex w-full gap-3 px-5 py-4 text-left transition ${
                               navigable ? "cursor-pointer hover:bg-brand-50/60" : "cursor-default"
                             } ${!n.read ? "bg-brand-50/40" : ""}`}
@@ -324,7 +365,7 @@ export function NotificationBell({ className = "" }: { className?: string }) {
                               <>
                                 <NotificationThumbnail n={n} />
                                 <div className="min-w-0 flex-1">
-                                  <RichNotificationContent n={n} destination={destination} />
+                                  <RichNotificationContent n={n} destination={destination} onNavigate={openThis} />
                                 </div>
                               </>
                             ) : (
@@ -334,7 +375,7 @@ export function NotificationBell({ className = "" }: { className?: string }) {
                                   className="mt-0.5 h-5 w-5 shrink-0 text-brand-700"
                                 />
                                 <div className="min-w-0 flex-1">
-                                  <StandardNotificationContent n={n} destination={destination} />
+                                  <StandardNotificationContent n={n} destination={destination} onNavigate={openThis} />
                                 </div>
                               </>
                             )}

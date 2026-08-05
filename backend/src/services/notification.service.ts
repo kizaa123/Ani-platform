@@ -836,9 +836,9 @@ export async function notifyAdminsConnectionRequest(
       type: 'CONNECTION_REQUEST',
       title: 'Farm access request pending',
       body: `${buyerName} requested access to ${farmerName}'s farm. Review and approve on Connections or Admin.`,
-      link: '/admin',
+      link: '/connections',
       metadata: {
-        actionUrl: '/admin',
+        actionUrl: '/connections',
         actionLabel: 'Review request',
       },
     }

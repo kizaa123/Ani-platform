@@ -54,6 +54,42 @@ export const notifyClientSchema = z.object({
   message: z.string().min(1).max(500).optional(),
 });
 
+export async function listPortalDirectoryClients(excludeUserId: string) {
+  const clients = await prisma.user.findMany({
+    where: {
+      roleId: { in: [...PORTAL_DIRECTORY_ROLES] },
+      id: { not: excludeUserId },
+    },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      profilePicture: true,
+      city: true,
+      region: true,
+      country: true,
+      roleId: true,
+      verificationStatus: true,
+      verificationTags: { select: verificationTagSelect },
+    },
+    orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
+  });
+
+  return clients.map((c) => ({
+    id: c.id,
+    firstName: c.firstName,
+    lastName: c.lastName,
+    profilePicture: normalizePublicAssetUrl(c.profilePicture),
+    city: c.city,
+    region: c.region,
+    country: c.country,
+    roleId: c.roleId,
+    roleLabel: portalDirectoryRoleLabel(c.roleId),
+    verificationStatus: c.verificationStatus,
+    verificationTags: formatVerificationTags(c.verificationTags),
+  }));
+}
+
 export class FarmService {
   async getProfile(userId: string, roleId: number) {
     assertAuthorized(isFarmerRole(roleId), 'Farmer profile only available to farmers');
@@ -355,39 +391,7 @@ export class FarmService {
 
   async listClients(userId: string, roleId: number) {
     assertAuthorized(isFarmerRole(roleId), 'Only farmers can list clients');
-    const clients = await prisma.user.findMany({
-      where: {
-        roleId: { in: [...PORTAL_DIRECTORY_ROLES] },
-        id: { not: userId },
-      },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        profilePicture: true,
-        city: true,
-        region: true,
-        country: true,
-        roleId: true,
-        verificationStatus: true,
-        verificationTags: { select: verificationTagSelect },
-      },
-      orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
-    });
-
-    return clients.map((c) => ({
-      id: c.id,
-      firstName: c.firstName,
-      lastName: c.lastName,
-      profilePicture: normalizePublicAssetUrl(c.profilePicture),
-      city: c.city,
-      region: c.region,
-      country: c.country,
-      roleId: c.roleId,
-      roleLabel: portalDirectoryRoleLabel(c.roleId),
-      verificationStatus: c.verificationStatus,
-      verificationTags: formatVerificationTags(c.verificationTags),
-    }));
+    return listPortalDirectoryClients(userId);
   }
 
   async notifyClient(

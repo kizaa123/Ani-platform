@@ -60,16 +60,20 @@ export default function AdminClientsPage() {
   const router = useRouter();
   const [clients, setClients] = useState<FarmClient[]>([]);
   const [loadingClients, setLoadingClients] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [search, setSearch] = useState("");
   const [selectedClient, setSelectedClient] = useState<FarmClient | null>(null);
 
   const load = useCallback(async () => {
     setLoadingClients(true);
+    setLoadError("");
     try {
       const list = await api.admin.clients();
-      setClients(list);
+      setClients(Array.isArray(list) ? list : []);
     } catch (e) {
       console.error(e);
+      setClients([]);
+      setLoadError(e instanceof Error ? e.message : "Failed to load users");
     } finally {
       setLoadingClients(false);
     }
@@ -122,6 +126,19 @@ export default function AdminClientsPage() {
           className="w-full rounded-xl border border-brand-200 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
         />
       </div>
+
+      {loadError && (
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <span>{loadError}</span>
+          <button
+            type="button"
+            onClick={() => void load()}
+            className="rounded-lg bg-red-700 px-3 py-1.5 text-xs font-semibold text-white"
+          >
+            Retry
+          </button>
+        </div>
+      )}
 
       {loadingClients ? (
         <PageContentSkeleton />

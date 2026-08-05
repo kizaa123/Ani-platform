@@ -14,7 +14,7 @@ import {
   accountantController,
   aiController,
 } from '../controllers/platform.controller';
-import { authenticate, requirePermission, requireCanPurchaseFromMarketplace, requireApprovedAccountant } from '../middleware/auth.middleware';
+import { authenticate, requirePermission, requireRole, requireCanPurchaseFromMarketplace, requireApprovedAccountant } from '../middleware/auth.middleware';
 import { validateBody } from '../middleware/validate.middleware';
 import { registerSchema, loginSchema, updateUserProfileSchema, updateHandlerSchema, completeProfileSchema, emailVerificationSendSchema, emailVerificationVerifySchema, phoneVerificationSendSchema, phoneVerificationVerifySchema, phoneVerificationPublicSendSchema, phoneVerificationPublicVerifySchema } from '../services/auth.service';
 import { updateFarmSchema, addCommoditySchema, updateOrderTrackSchema, notifyClientSchema } from '../services/farm.service';
@@ -37,7 +37,7 @@ import { productMediaController } from '../controllers/productMedia.controller';
 import { researcherController } from '../controllers/researcher.controller';
 import { profileUpload, listingImagesUpload, adImagesUpload, publicationFileUpload, farmMediaUpload, productMediaUpload, MAX_IMAGE_FILE_SIZE, MAX_DOCUMENT_FILE_SIZE, MAX_FARM_MEDIA_FILE_SIZE } from '../middleware/upload.middleware';
 import { authRateLimiter } from '../middleware/rate-limit.middleware';
-import { PERMISSIONS } from '../constants/roles';
+import { PERMISSIONS, ROLES } from '../constants/roles';
 
 const router = Router();
 
@@ -365,11 +365,11 @@ router.get(
   adminController.dashboardCharts
 );
 router.get('/admin/financial-statement', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), adminController.financialStatement);
-router.get('/admin/clients', authenticate, requirePermission(PERMISSIONS.VERIFY_USERS), adminController.listClients);
+router.get('/admin/clients', authenticate, requireRole(ROLES.ADMIN), adminController.listClients);
 router.post(
   '/admin/notify-client',
   authenticate,
-  requirePermission(PERMISSIONS.VERIFY_USERS),
+  requireRole(ROLES.ADMIN),
   validateBody(notifyClientSchema),
   adminController.notifyClient
 );
