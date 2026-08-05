@@ -25,14 +25,14 @@ export default function HandlerOrderNotificationsPage() {
   }, [user, loading, router]);
 
   if (loading || !user) {
-    return <PageContentSkeleton maxWidth="max-w-6xl" />;
+    return <PageContentSkeleton maxWidth="max-w-md" />;
   }
 
   const isFlo = isFarmerHandler(user.roleId);
   const entityLabel = isFlo ? "fellows" : "clients";
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
+    <div className="mx-auto max-w-md px-4 py-10">
       <Link
         href="/dashboard"
         className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:underline"
@@ -40,13 +40,6 @@ export default function HandlerOrderNotificationsPage() {
         <Icon name="chevron-left" className="h-4 w-4" />
         Back to dashboard
       </Link>
-
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-brand-900">Order Notifications</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Order updates for your assigned {entityLabel}.
-        </p>
-      </div>
 
       <HandlerOrderNotificationsPanel entityLabel={entityLabel} />
     </div>
