@@ -22,6 +22,7 @@ import { EmailText } from "@/components/EmailText";
 import { Icon } from "@/components/icons";
 import { PasswordInput } from "@/components/PasswordInput";
 import { AuthHeroPanel } from "@/components/AuthHeroPanel";
+import { useCancelRegistration } from "@/components/RegistrationTopBar";
 import { ScrollReveal } from "@/components/ScrollReveal";
 
 const ALL_ROLES = [
@@ -91,6 +92,7 @@ function buildCompletePayload(
 
 export default function CompleteProfilePage() {
   const { user, loading, refreshUser } = useAuth();
+  const cancelRegistration = useCancelRegistration();
   const router = useRouter();
   const profileInputRef = useRef<HTMLInputElement>(null);
   const formColumnRef = useRef<HTMLDivElement>(null);
@@ -620,6 +622,15 @@ export default function CompleteProfilePage() {
                 </div>
               </div>
             )}
+          <p className="auth-switch !mt-6 text-center">
+            <button
+              type="button"
+              onClick={cancelRegistration}
+              className="text-sm font-medium text-gray-500 hover:text-brand-700"
+            >
+              Cancel registration
+            </button>
+          </p>
         </div>
       </ScrollReveal>
     </AuthHeroPanel>

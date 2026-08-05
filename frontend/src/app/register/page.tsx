@@ -21,6 +21,7 @@ import { PasswordInput } from "@/components/PasswordInput";
 import { AuthDivider, GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { AuthHeroPanel } from "@/components/AuthHeroPanel";
+import { useCancelRegistration } from "@/components/RegistrationTopBar";
 import { SMS_PHONE_VERIFICATION_ENABLED } from "@/lib/smsVerification";
 import { PhoneVerificationChallenge } from "@/components/PhoneVerificationChallenge";
 import {
@@ -224,6 +225,7 @@ function RegisterForm() {
   const [showValidation, setShowValidation] = useState(false);
   const [backendFieldErrors, setBackendFieldErrors] = useState<FieldErrors>({});
   const { register, refreshUser } = useAuth();
+  const cancelRegistration = useCancelRegistration();
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryError = searchParams.get("error");
@@ -1146,6 +1148,15 @@ function RegisterForm() {
             <Link href="/login" className="auth-switch-link">
               Sign in
             </Link>
+          </p>
+          <p className="mt-3 text-center">
+            <button
+              type="button"
+              onClick={cancelRegistration}
+              className="text-sm font-medium text-gray-500 hover:text-brand-700"
+            >
+              Cancel registration
+            </button>
           </p>
         </div>
       </ScrollReveal>
