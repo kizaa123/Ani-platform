@@ -181,6 +181,7 @@ function PurchaseModalContent({
 
   const [quantity, setQuantity] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+  const [orderPlaced, setOrderPlaced] = useState(false);
   const [result, setResult] = useState<
     | { variant: "success"; message: string; releaseOtp: string | null }
     | { variant: "error"; message: string }
@@ -188,13 +189,13 @@ function PurchaseModalContent({
   >(null);
   const total = Math.round(quantity * unitPrice * 100) / 100;
   const canPurchase = listing.available !== false && maxQty > 0;
-  const orderPlaced = result?.variant === "success";
   const otherFarmProducts = relatedProducts.filter((product) => product.id !== listing.id);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setQuantity(Math.min(1, maxQty) || 1);
+    setOrderPlaced(false);
     setResult(null);
+    setQuantity(Math.min(1, maxQty) || 1);
   }, [listing.id, maxQty]);
 
   useEffect(() => {
@@ -227,8 +228,8 @@ function PurchaseModalContent({
     try {
       const purchaseResult = await api.marketplace.purchase(listing.id, { quantity, paymentMethod });
       const message = `${quantity} ${unitLabel} - ${format(total)} held in escrow until you confirm delivery.`;
+      setOrderPlaced(true);
       setResult({ variant: "success", message, releaseOtp: purchaseResult.releaseOtp });
-      onSuccess();
     } catch (e) {
       setResult({
         variant: "error",
@@ -403,9 +404,13 @@ function PurchaseModalContent({
           }
           actionLabel="View my orders"
           onAction={() => {
+            onSuccess();
             window.location.href = "/orders";
           }}
-          onDismiss={onClose}
+          onDismiss={() => {
+            onSuccess();
+            onClose();
+          }}
           dismissLabel="Continue shopping"
         />
       )}

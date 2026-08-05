@@ -72,7 +72,6 @@ export function BuyerHandlerDashboardCards() {
       )}
       <ScrollReveal delay={scrollStagger(0, 90)} duration={500} direction="fade-up">
         <HandlerAssignmentsPreviewCard
-          href="/agents/clients"
           title="Assigned Clients"
           icon="users"
           assignments={clients ?? []}
@@ -90,7 +89,6 @@ export function BuyerHandlerDashboardCards() {
       </ScrollReveal>
       <ScrollReveal delay={scrollStagger(1, 90)} duration={500} direction="fade-up">
         <HandlerOrderAlertsCard
-          href="/agents/clients"
           notifications={orderAlerts}
           loading={orderAlerts === null}
           entityLabel="clients"

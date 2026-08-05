@@ -13,6 +13,8 @@ const PROFILE_COMPLETION_EXEMPT = new Set([
   '/auth/logout',
   '/auth/email-verification/send',
   '/auth/email-verification/verify',
+  '/auth/phone-verification/send',
+  '/auth/phone-verification/verify',
   '/auth/complete-profile',
 ]);
 

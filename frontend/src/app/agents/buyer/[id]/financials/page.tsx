@@ -19,7 +19,7 @@ export default function HandlerClientBuyerFinancialsRedirectPage() {
       return;
     }
     if (user && isBuyerHandler(user.roleId)) {
-      router.replace("/agents/clients");
+      router.replace("/dashboard");
       return;
     }
     if (ownerId) router.replace(`/agents/buyer/${ownerId}/orders`);

@@ -147,7 +147,7 @@ export function HandlerAssignmentsPreviewCard({
   getStat,
   clientType,
 }: {
-  href: string;
+  href?: string;
   title: string;
   icon: IconName;
   assignments: AgentAssignment[];
@@ -159,12 +159,12 @@ export function HandlerAssignmentsPreviewCard({
 }) {
   const preview = assignments.slice(0, 3);
   const remaining = assignments.length - preview.length;
+  const cardClassName =
+    "group card-elevated flex flex-col overflow-hidden rounded-xl" +
+    (href ? " card-elevated-hover" : "");
 
-  return (
-    <Link
-      href={href}
-      className="group card-elevated card-elevated-hover flex flex-col overflow-hidden rounded-xl"
-    >
+  const content = (
+    <>
       <div className="flex items-center justify-between gap-2 border-b border-brand-100 bg-brand-50/50 px-3 py-2">
         <div className="flex min-w-0 items-center gap-2">
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-brand-700 shadow-sm ring-1 ring-brand-100 transition-colors group-hover:bg-brand-700 group-hover:text-white">
@@ -207,19 +207,29 @@ export function HandlerAssignmentsPreviewCard({
         )}
       </div>
 
-      {!loading && remaining > 0 && (
+      {!loading && remaining > 0 && href && (
         <div className="border-t border-brand-50 px-3 py-1.5 text-[11px] font-medium text-brand-600">
           +{remaining} more - view all
         </div>
       )}
 
-      {!loading && assignments.length > 0 && remaining === 0 && (
+      {!loading && assignments.length > 0 && remaining === 0 && href && (
         <div className="border-t border-brand-50 px-3 py-1.5 text-[11px] font-medium text-brand-600">
           View all {clientType === "farmer" ? "fellows" : "clients"}
         </div>
       )}
-    </Link>
+    </>
   );
+
+  if (href) {
+    return (
+      <Link href={href} className={cardClassName}>
+        {content}
+      </Link>
+    );
+  }
+
+  return <div className={cardClassName}>{content}</div>;
 }
 
 function orderAlertProductName(notification: AppNotification) {
@@ -305,7 +315,7 @@ export function HandlerOrderAlertsCard({
   loading,
   entityLabel,
 }: {
-  href: string;
+  href?: string;
   notifications: AppNotification[] | null;
   loading: boolean;
   entityLabel: string;
@@ -314,12 +324,12 @@ export function HandlerOrderAlertsCard({
   const preview = items.slice(0, 3);
   const remaining = items.length - preview.length;
   const count = items.length;
+  const cardClassName =
+    "group card-elevated flex flex-col overflow-hidden rounded-xl" +
+    (href ? " card-elevated-hover" : "");
 
-  return (
-    <Link
-      href={href}
-      className="group card-elevated card-elevated-hover flex flex-col overflow-hidden rounded-xl"
-    >
+  const content = (
+    <>
       <div className="flex items-center justify-between gap-2 border-b border-brand-100 bg-brand-50/50 px-3 py-2">
         <div className="flex min-w-0 items-center gap-2">
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-brand-700 shadow-sm ring-1 ring-brand-100 transition-colors group-hover:bg-brand-700 group-hover:text-white">
@@ -356,19 +366,29 @@ export function HandlerOrderAlertsCard({
         )}
       </div>
 
-      {!loading && remaining > 0 && (
+      {!loading && remaining > 0 && href && (
         <div className="border-t border-brand-50 px-3 py-1.5 text-[11px] font-medium text-brand-600">
           +{remaining} more - view all
         </div>
       )}
 
-      {!loading && count > 0 && remaining === 0 && (
+      {!loading && count > 0 && remaining === 0 && href && (
         <div className="border-t border-brand-50 px-3 py-1.5 text-[11px] font-medium text-brand-600">
           View all order notifications
         </div>
       )}
-    </Link>
+    </>
   );
+
+  if (href) {
+    return (
+      <Link href={href} className={cardClassName}>
+        {content}
+      </Link>
+    );
+  }
+
+  return <div className={cardClassName}>{content}</div>;
 }
 
 /** Compact farmer client card for /agents list */

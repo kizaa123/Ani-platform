@@ -371,7 +371,7 @@ export default function FarmSettingsPage() {
 
       {/* Farm details */}
       <section className="mb-6 rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-lg font-bold text-brand-900">Farm Details</h2>
+        <h2 className="mb-4 text-lg font-bold text-brand-900">Production Details</h2>
         <div>
           <label className="mb-1 block text-sm font-medium">Experience (years)</label>
           <input

@@ -4,15 +4,8 @@ import { useAuth } from "@/context/AuthProvider";
 import { PortalSidebarLayout, type PortalNavLink } from "@/components/PortalSidebarLayout";
 import { ROLES, isHandler, isBuyerHandler } from "@/lib/types";
 
-const clientMatch = (p: string) =>
-  (p === "/agents/clients" ||
-    p.startsWith("/agents/farm/") ||
-    p.startsWith("/agents/buyer/")) &&
-  !p.startsWith("/agents/settings");
-
 export const FLO_NAV_LINKS: PortalNavLink[] = [
   { href: "/dashboard", label: "Dashboard", icon: "home", match: (p) => p === "/dashboard" },
-  { href: "/agents/clients", label: "Clients", icon: "users", match: clientMatch },
   {
     href: "/agents/financials",
     label: "Financials",
@@ -30,7 +23,6 @@ export const FLO_NAV_LINKS: PortalNavLink[] = [
 
 export const CLO_NAV_LINKS: PortalNavLink[] = [
   { href: "/dashboard", label: "Dashboard", icon: "home", match: (p) => p === "/dashboard" },
-  { href: "/agents/clients", label: "Clients", icon: "users", match: clientMatch },
   {
     href: "/agents/financials",
     label: "Financials",
@@ -48,12 +40,6 @@ export const CLO_NAV_LINKS: PortalNavLink[] = [
 
 export const HANDLER_NAV_LINKS: PortalNavLink[] = [
   { href: "/dashboard", label: "Dashboard", icon: "home", match: (p) => p === "/dashboard" },
-  {
-    href: "/agents/clients",
-    label: "Clients",
-    icon: "users",
-    match: clientMatch,
-  },
   {
     href: "/agents/financials",
     label: "Financials",

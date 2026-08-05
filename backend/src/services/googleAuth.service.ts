@@ -146,7 +146,7 @@ export class GoogleAuthService {
           profilePicture: profile.profilePicture,
           roleId: ROLES.BUYER,
           profileComplete: false,
-          emailVerified: false,
+          emailVerified: true,
           phone: '',
           country: '',
           region: '',
@@ -174,7 +174,7 @@ export class GoogleAuthService {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       needsProfile: user.profileComplete ? 'false' : 'true',
-      needsEmailVerification: user.emailVerified ? 'false' : 'true',
+      needsEmailVerification: 'false',
     });
 
     return {
@@ -182,7 +182,7 @@ export class GoogleAuthService {
       user: sanitizeAuthUser(user),
       ...tokens,
       needsProfile: !user.profileComplete,
-      needsEmailVerification: !user.emailVerified,
+      needsEmailVerification: false,
     };
   }
 

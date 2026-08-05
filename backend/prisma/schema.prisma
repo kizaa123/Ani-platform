@@ -52,7 +52,7 @@ model User {
   phone              String             @default("")
   passwordHash       String?            @map("password_hash")
   googleId           String?            @unique @map("google_id")
-  emailVerified      Boolean            @default(false) @map("email_verified")
+  emailVerified      Boolean            @default(true) @map("email_verified")
   phoneVerified      Boolean            @default(false) @map("phone_verified")
   profileComplete    Boolean            @default(true) @map("profile_complete")
   profilePicture     String?            @db.Text @map("profile_picture")

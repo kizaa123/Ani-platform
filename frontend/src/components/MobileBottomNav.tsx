@@ -90,16 +90,6 @@ function farmerHandlerNav(): BottomNavItem[] {
     { href: "/dashboard", label: "Home", icon: "home", match: (p) => p === "/dashboard" },
     { href: "/library", label: "Library", icon: "book", match: (p) => p.startsWith("/library") },
     {
-      href: "/agents/clients",
-      label: "Clients",
-      icon: "users",
-      match: (p) =>
-        (p === "/agents/clients" ||
-          p.startsWith("/agents/farm/") ||
-          p.startsWith("/agents/buyer/")) &&
-        !p.startsWith("/agents/settings"),
-    },
-    {
       href: "/agents/financials",
       label: "Financials",
       icon: "chart",
@@ -119,16 +109,6 @@ function buyerHandlerNav(): BottomNavItem[] {
     { href: "/dashboard", label: "Home", icon: "home", match: (p) => p === "/dashboard" },
     { href: "/library", label: "Library", icon: "book", match: (p) => p.startsWith("/library") },
     {
-      href: "/agents/clients",
-      label: "Clients",
-      icon: "users",
-      match: (p) =>
-        (p === "/agents/clients" ||
-          p.startsWith("/agents/farm/") ||
-          p.startsWith("/agents/buyer/")) &&
-        !p.startsWith("/agents/settings"),
-    },
-    {
       href: "/agents/financials",
       label: "Financials",
       icon: "chart",
@@ -147,16 +127,6 @@ function handlerNav(): BottomNavItem[] {
   return [
     { href: "/dashboard", label: "Home", icon: "home", match: (p) => p === "/dashboard" },
     { href: "/marketplace", label: "Market", icon: "store", match: (p) => p.startsWith("/marketplace") },
-    {
-      href: "/agents/clients",
-      label: "Clients",
-      icon: "users",
-      match: (p) =>
-        (p === "/agents/clients" ||
-          p.startsWith("/agents/farm/") ||
-          p.startsWith("/agents/buyer/")) &&
-        !p.startsWith("/agents/settings"),
-    },
     {
       href: "/agents/financials",
       label: "Financials",

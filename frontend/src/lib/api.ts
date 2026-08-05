@@ -376,8 +376,9 @@ class ApiClient {
     financialStatement: () => this.request<import("./types").FinancialStatement>("/farm/financial-statement"),
     orders: () => this.request<import("./types").ProductOrderLineItem[]>("/farm/orders"),
     updateOrderTrack: (body: {
-      buyerId: string;
-      listingId: string;
+      orderId?: string;
+      buyerId?: string;
+      listingId?: string;
       trackStage: import("./orderTrack").OrderTrackStage;
     }) =>
       this.request<import("./types").ProductOrderLineItem>("/farm/orders/track", {
@@ -498,8 +499,9 @@ class ApiClient {
     updateClientOrderTrack: (
       ownerId: string,
       body: {
-        buyerId: string;
-        listingId: string;
+        orderId?: string;
+        buyerId?: string;
+        listingId?: string;
         trackStage: import("./orderTrack").OrderTrackStage;
       }
     ) =>

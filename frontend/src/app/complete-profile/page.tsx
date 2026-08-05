@@ -17,7 +17,7 @@ import { HandlerSelect } from "@/components/HandlerSelect";
 import { CommodityPicker } from "@/components/CommodityPicker";
 import { CustomProductInput } from "@/components/CustomProductInput";
 import { QualificationSelector } from "@/components/QualificationSelector";
-import { EmailVerificationChallenge } from "@/components/EmailVerificationChallenge";
+// Email verification removed
 import { PhoneVerificationChallenge } from "@/components/PhoneVerificationChallenge";
 import { EmailText } from "@/components/EmailText";
 import { Icon } from "@/components/icons";
@@ -141,19 +141,18 @@ export default function CompleteProfilePage() {
     api.auth.handlers("buyer").then(setBuyerHandlers).catch(() => {});
   }, []);
 
-  useEffect(() => {
-    if (user && !user.emailVerified) setStep(0);
-    else if (user && !user.phoneVerified) setStep(1);
-    else if (user) setStep(2);
-  }, [user]);
-
   const isFarmerRole = isFarmer(form.roleId);
   const isBuyerRole = form.roleId === ROLES.BUYER;
   const isResearcherRole = form.roleId === ROLES.RESEARCHER;
   const needsHandler = isFarmerRole || isBuyerRole || isResearcherRole;
   const availableHandlers = isFarmerRole ? farmerHandlers : isBuyerRole || isResearcherRole ? buyerHandlers : [];
   const categoryFilter = farmerCategoryFilter(form.roleId);
-  const totalSteps = (user?.emailVerified ? 0 : 1) + (user?.phoneVerified ? 0 : 1) + (isFarmerRole ? 3 : 2);
+  const needsPhoneStep = !user?.phoneVerified;
+  const ACCOUNT_STEP = 0;
+  const PHONE_STEP = needsPhoneStep ? 1 : -1;
+  const DETAILS_STEP = needsPhoneStep ? 2 : 1;
+  const COMMODITIES_STEP = needsPhoneStep ? 3 : 2;
+  const totalSteps = (isFarmerRole ? 4 : 3) - (needsPhoneStep ? 0 : 1);
   const phoneDialCode = getDialCodeForCountryName(form.country);
 
   const handleCountryChange = (country: string) => {
@@ -220,16 +219,12 @@ export default function CompleteProfilePage() {
   }
 
   const displayStep = step;
-  const needsEmailStep = !user.emailVerified;
-  const needsPhoneStep = !user.phoneVerified;
-  const verifyLabels = [
-    ...(needsEmailStep ? ["Email"] : []),
+  const stepLabels = [
+    "Account",
     ...(needsPhoneStep ? ["Phone"] : []),
+    "Details",
+    ...(isFarmerRole ? ["Commodities"] : []),
   ];
-  const profileLabels = isFarmerRole
-    ? ["Account", "Details", "Commodities"]
-    : ["Account", "Details"];
-  const stepLabels = [...verifyLabels, ...profileLabels];
 
   return (
     <div className="flex-1 w-full bg-brand-50">
@@ -253,7 +248,7 @@ export default function CompleteProfilePage() {
                 {Array.from({ length: totalSteps }, (_, i) => i + 1).map((s) => (
                   <div
                     key={s}
-                    className={`auth-step-bar ${displayStep >= s - (user.emailVerified ? 0 : 0) ? "auth-step-bar-active" : ""}`}
+                    className={`auth-step-bar ${displayStep >= s - 1 ? "auth-step-bar-active" : ""}`}
                     aria-hidden
                   />
                 ))}
@@ -274,28 +269,20 @@ export default function CompleteProfilePage() {
               </div>
             )}
 
-            {step === 0 && !user.emailVerified && (
-              <EmailVerificationChallenge
-                email={user.email}
-                onVerified={async () => {
-                  const updated = await refreshUser();
-                  setStep(updated.phoneVerified ? 2 : 1);
-                }}
-              />
-            )}
+            {/* Email verification step removed */}
 
-            {step === 1 && !user.phoneVerified && (
+            {step === PHONE_STEP && needsPhoneStep && (
               <PhoneVerificationChallenge
-                phone={user.phone || ""}
-                country={user.country}
+                phone={normalizePhoneForStorage(form.phone, form.country) || form.phone}
+                country={form.country}
                 onVerified={async () => {
                   await refreshUser();
-                  setStep(2);
+                  setStep(DETAILS_STEP);
                 }}
               />
             )}
 
-            {step === 2 && (
+            {step === ACCOUNT_STEP && (
               <div className="auth-form">
                 <div className="grid gap-5 sm:grid-cols-2">
                   <div className="auth-field">
@@ -368,7 +355,10 @@ export default function CompleteProfilePage() {
                 <button
                   type="button"
                   disabled={!canContinueAccount}
-                  onClick={() => { setError(""); setStep(2); }}
+                  onClick={() => {
+                    setError("");
+                    setStep(needsPhoneStep ? PHONE_STEP : DETAILS_STEP);
+                  }}
                   className="btn-primary auth-nav-btn disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Continue
@@ -376,7 +366,7 @@ export default function CompleteProfilePage() {
               </div>
             )}
 
-            {step === 2 && (
+            {step === DETAILS_STEP && (
               <div className="auth-form">
                 <div className="grid gap-5 sm:grid-cols-2">
                   <div className="auth-field">
@@ -420,7 +410,7 @@ export default function CompleteProfilePage() {
                       </div>
                     </div>
                     <div className="auth-field">
-                      <label className="auth-label">{isOrganizationFarmer(form.roleId) ? "Organization name" : "Farm name"}</label>
+                      <label className="auth-label">{isOrganizationFarmer(form.roleId) ? "Organization name" : "Production name"}</label>
                       <input value={form.farmName} onChange={(e) => setForm({ ...form, farmName: e.target.value })} className="auth-input" />
                     </div>
                   </>
@@ -469,11 +459,11 @@ export default function CompleteProfilePage() {
                 )}
 
                 <div className="auth-nav">
-                  <button type="button" onClick={() => setStep(user.phoneVerified ? (user.emailVerified ? 2 : 0) : 1)} className="btn-outline auth-nav-btn">Back</button>
+                  <button type="button" onClick={() => setStep(needsPhoneStep ? PHONE_STEP : ACCOUNT_STEP)} className="btn-outline auth-nav-btn">Back</button>
                   <button
                     type="button"
                     disabled={submitting || !canContinueDetails}
-                    onClick={() => (isFarmerRole ? setStep(3) : finish())}
+                    onClick={() => (isFarmerRole ? setStep(COMMODITIES_STEP) : finish())}
                     className="btn-primary auth-nav-btn disabled:opacity-50"
                   >
                     {submitting ? "Saving..." : isFarmerRole ? "Continue" : "Finish setup"}
@@ -482,7 +472,7 @@ export default function CompleteProfilePage() {
               </div>
             )}
 
-            {step === 3 && isFarmerRole && categoryFilter && (
+            {step === COMMODITIES_STEP && isFarmerRole && categoryFilter && (
               <div className="auth-form">
                 <div className="auth-section">
                   <h3 className="auth-section-title">
@@ -537,7 +527,7 @@ export default function CompleteProfilePage() {
                 )}
 
                 <div className="auth-nav">
-                  <button type="button" onClick={() => setStep(2)} className="btn-outline auth-nav-btn">Back</button>
+                  <button type="button" onClick={() => setStep(DETAILS_STEP)} className="btn-outline auth-nav-btn">Back</button>
                   <button
                     type="button"
                     disabled={

@@ -233,7 +233,7 @@ export function ProfileInfoSection({
       {isFarmer(user.roleId) && (
         <>
           {user.farmerProfile?.farmName && (
-            <ProfileInfoField label="Farm name">
+            <ProfileInfoField label="Production name">
               <span>{user.farmerProfile.farmName}</span>
             </ProfileInfoField>
           )}

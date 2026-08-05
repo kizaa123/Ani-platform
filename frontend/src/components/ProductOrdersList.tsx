@@ -450,17 +450,20 @@ export function OrderDetailModal({
   }, [onClose]);
 
   const advanceTrack = async (nextStage: OrderTrackStage) => {
-    if (!order.buyerId || !order.listingId) return;
+    const targetOrderId = order.orderId ?? order.id;
+    if (!targetOrderId && (!order.buyerId || !order.listingId)) return;
     setUpdatingTrack(true);
     setTrackError("");
     try {
       const updated = handlerOwnerId
         ? await api.agents.updateClientOrderTrack(handlerOwnerId, {
+            orderId: targetOrderId,
             buyerId: order.buyerId,
             listingId: order.listingId,
             trackStage: nextStage,
           })
         : await api.farm.updateOrderTrack({
+            orderId: targetOrderId,
             buyerId: order.buyerId,
             listingId: order.listingId,
             trackStage: nextStage,

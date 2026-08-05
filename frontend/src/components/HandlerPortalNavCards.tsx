@@ -19,12 +19,6 @@ function handlerNavCards(roleId: number): HandlerNavCard[] {
 
   return [
     {
-      href: "/agents/clients",
-      title: "Clients",
-      desc: "Browse all platform users — fellows, clients, liaison officers, and researchers",
-      icon: "users",
-    },
-    {
       href: "/agents/financials",
       title: "Financial Statement",
       desc: isClo

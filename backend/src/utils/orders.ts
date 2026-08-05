@@ -145,68 +145,15 @@ export function formatFarmerIncomingOrder(
 }
 
 /**
- * Combine repeated purchases of the same product by the same buyer into one row.
- * Used on farmer/handler order pages and financial statement sales.
+ * Format each incoming order for a farmer into a distinct order card item.
  */
 export function groupFarmerIncomingOrders(orders: FarmerIncomingOrderRow[]) {
-  type Group = FarmerIncomingOrderRow & { purchaseCount: number };
-
-  const groups = new Map<string, Group>();
-
-  for (const order of orders) {
-    const key = `${order.buyerId}:${order.listingId}`;
-    const existing = groups.get(key);
-
-    if (!existing) {
-      groups.set(key, { ...order, purchaseCount: 1 });
-      continue;
-    }
-
-    existing.quantity += order.quantity;
-    existing.totalAmount += order.totalAmount;
-    existing.purchaseCount += 1;
-    existing.trackStage = maxTrackStage(
-      existing.trackStage ?? 'ORDER_RECEIVED',
-      order.trackStage ?? 'ORDER_RECEIVED'
-    );
-
-    if (order.createdAt > existing.createdAt) {
-      existing.createdAt = order.createdAt;
-      existing.paymentMethod = order.paymentMethod;
-      existing.transactionId = order.transactionId;
-      existing.id = order.id;
-      existing.escrowStatus = order.escrowStatus;
-      existing.otpVerifiedAt = order.otpVerifiedAt;
-      existing.paymentReleasedAt = order.paymentReleasedAt;
-      existing.releaseOtp = order.releaseOtp;
-    }
-
-    if (existing.escrowStatus !== order.escrowStatus && order.escrowStatus === 'HELD') {
-      existing.escrowStatus = 'HELD';
-      existing.id = order.id;
-      existing.releaseOtp = order.releaseOtp;
-    }
-
-    if (
-      order.trackUpdatedAt &&
-      (!existing.trackUpdatedAt || order.trackUpdatedAt > existing.trackUpdatedAt)
-    ) {
-      existing.trackUpdatedAt = order.trackUpdatedAt;
-    }
-
-    if (existing.status !== order.status) {
-      existing.status = 'PENDING';
-    }
-  }
-
-  return Array.from(groups.values())
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-    .map((order) => ({
-      ...formatFarmerIncomingOrder(order),
-      id: `${order.buyerId}-${order.listingId}`,
-      orderId: order.id,
-      purchaseCount: order.purchaseCount,
-    }));
+  return orders.map((order) => ({
+    ...formatFarmerIncomingOrder(order),
+    id: order.id,
+    orderId: order.id,
+    purchaseCount: 1,
+  }));
 }
 
 /** Orders placed by a buyer (farmer details shown). */
@@ -255,68 +202,15 @@ export type BuyerPlacedOrderRow = OrderCore & {
 };
 
 /**
- * Combine repeated purchases of the same product by the same buyer into one row.
- * Used on the buyer orders page.
+ * Format each placed order for a buyer into a distinct order card item.
  */
 export function groupBuyerPlacedOrders(orders: BuyerPlacedOrderRow[]) {
-  type Group = BuyerPlacedOrderRow & { purchaseCount: number };
-
-  const groups = new Map<string, Group>();
-
-  for (const order of orders) {
-    const key = `${order.buyerId}:${order.listingId}`;
-    const existing = groups.get(key);
-
-    if (!existing) {
-      groups.set(key, { ...order, purchaseCount: 1 });
-      continue;
-    }
-
-    existing.quantity += order.quantity;
-    existing.totalAmount += order.totalAmount;
-    existing.purchaseCount += 1;
-    existing.trackStage = maxTrackStage(
-      existing.trackStage ?? 'ORDER_RECEIVED',
-      order.trackStage ?? 'ORDER_RECEIVED'
-    );
-
-    if (order.createdAt > existing.createdAt) {
-      existing.createdAt = order.createdAt;
-      existing.paymentMethod = order.paymentMethod;
-      existing.transactionId = order.transactionId;
-      existing.id = order.id;
-      existing.escrowStatus = order.escrowStatus;
-      existing.otpVerifiedAt = order.otpVerifiedAt;
-      existing.paymentReleasedAt = order.paymentReleasedAt;
-      existing.releaseOtp = order.releaseOtp;
-    }
-
-    if (existing.escrowStatus !== order.escrowStatus && order.escrowStatus === 'HELD') {
-      existing.escrowStatus = 'HELD';
-      existing.id = order.id;
-      existing.releaseOtp = order.releaseOtp;
-    }
-
-    if (
-      order.trackUpdatedAt &&
-      (!existing.trackUpdatedAt || order.trackUpdatedAt > existing.trackUpdatedAt)
-    ) {
-      existing.trackUpdatedAt = order.trackUpdatedAt;
-    }
-
-    if (existing.status !== order.status) {
-      existing.status = 'PENDING';
-    }
-  }
-
-  return Array.from(groups.values())
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-    .map((order) => ({
-      ...formatBuyerPlacedOrder(order),
-      id: `${order.buyerId}-${order.listingId}`,
-      orderId: order.id,
-      purchaseCount: order.purchaseCount,
-    }));
+  return orders.map((order) => ({
+    ...formatBuyerPlacedOrder(order),
+    id: order.id,
+    orderId: order.id,
+    purchaseCount: 1,
+  }));
 }
 
 export const orderInclude = {

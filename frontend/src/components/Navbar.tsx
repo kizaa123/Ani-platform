@@ -16,7 +16,6 @@ const NAV = [
   { href: "/farm", label: "My Production", farmer: true },
   { href: "/financials", label: "Financials", buyer: true },
   { href: "/orders", label: "My Orders", buyer: true },
-  { href: "/agents/clients", label: "Clients", handler: true },
   { href: "/connections", label: "Connections" },
   { href: "/admin", label: "Admin", staff: true },
 ];
@@ -138,7 +137,6 @@ export function Navbar() {
     if (n.href === "/connections" && isHandler(user.roleId)) return false;
     if (n.farmer && !isFarmer(user.roleId)) return false;
     if (n.buyer && !isBuyer(user.roleId)) return false;
-    if (n.handler && !isHandler(user.roleId)) return false;
     if (n.staff && !isStaff(user.roleId)) return false;
     return true;
   });

@@ -72,7 +72,6 @@ export function FarmerHandlerDashboardCards() {
       )}
       <ScrollReveal delay={scrollStagger(0, 90)} duration={500} direction="fade-up">
         <HandlerAssignmentsPreviewCard
-          href="/agents/clients"
           title="Assigned Fellows"
           icon="users"
           assignments={farmers ?? []}
@@ -89,7 +88,6 @@ export function FarmerHandlerDashboardCards() {
       </ScrollReveal>
       <ScrollReveal delay={scrollStagger(1, 90)} duration={500} direction="fade-up">
         <HandlerOrderAlertsCard
-          href="/agents/clients"
           notifications={orderAlerts}
           loading={orderAlerts === null}
           entityLabel="fellows"

@@ -330,7 +330,7 @@ function sanitizeUser(user: {
     role: user.role.roleName,
     roleId: user.roleId,
     verificationStatus: user.verificationStatus,
-    emailVerified: user.emailVerified ?? false,
+    emailVerified: user.emailVerified ?? true,
     phoneVerified: user.phoneVerified ?? false,
     profileComplete: user.profileComplete ?? true,
     hasGoogleAuth: Boolean(user.googleId),
@@ -423,7 +423,7 @@ export class AuthService {
           gpsLatitude: input.gpsLatitude,
           gpsLongitude: input.gpsLongitude,
           roleId: input.roleId,
-          emailVerified: false,
+          emailVerified: true,
           profileComplete: true,
           ...(input.roleId === ROLES.ANI_ACCOUNTANT
             ? { verificationStatus: 'PENDING' as const }
@@ -549,17 +549,11 @@ export class AuthService {
       include: { role: true },
     });
 
-    try {
-      await emailVerificationService.sendChallenge(user.email);
-    } catch (err) {
-      console.error('[register] Auto email verification challenge failed:', err);
-    }
-
     return {
       user: sanitizeUser(fullUser!),
       accessToken,
       refreshToken,
-      needsEmailVerification: !fullUser?.emailVerified,
+      needsEmailVerification: false,
     };
   }
 
@@ -852,9 +846,6 @@ export class AuthService {
 
     if (user.profileComplete) {
       throw new AppError(400, 'Profile is already complete');
-    }
-    if (!user.emailVerified) {
-      throw new AppError(400, 'Verify your email before completing your profile');
     }
     if (!(user as any).phoneVerified) {
       throw new AppError(400, 'Verify your phone number before completing your profile');

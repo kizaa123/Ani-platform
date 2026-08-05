@@ -453,13 +453,9 @@ function RegisterForm() {
         }
       }
 
-      if (!profile?.emailVerified) {
-        router.push("/complete-profile");
-      } else {
-        router.push(
-          isFarmerRole ? "/farm" : isResearcherRole ? "/researcher/publications" : "/dashboard"
-        );
-      }
+      router.push(
+        isFarmerRole ? "/farm" : isResearcherRole ? "/researcher/publications" : "/dashboard"
+      );
     } catch (err) {
       const parsed = parseRegistrationError(err);
       setBackendFieldErrors(parsed.fieldErrors);

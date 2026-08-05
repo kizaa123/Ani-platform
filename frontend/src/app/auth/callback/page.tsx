@@ -14,7 +14,6 @@ function AuthCallbackContent() {
     const accessToken = searchParams.get("accessToken");
     const refreshToken = searchParams.get("refreshToken");
     const needsProfile = searchParams.get("needsProfile") === "true";
-    const needsEmailVerification = searchParams.get("needsEmailVerification") === "true";
 
     if (!accessToken || !refreshToken) {
       setError("Google sign-in did not return valid session tokens.");
@@ -23,8 +22,7 @@ function AuthCallbackContent() {
 
     api.setTokens(accessToken, refreshToken);
 
-    const target =
-      needsProfile || needsEmailVerification ? "/complete-profile" : "/dashboard";
+    const target = needsProfile ? "/complete-profile" : "/dashboard";
     window.location.href = target;
   }, [searchParams]);
 

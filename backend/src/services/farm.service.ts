@@ -15,6 +15,7 @@ import {
   mapDistributionToFarmerSaleLineItem,
 } from '../utils/distributionFinancials';
 import {
+  formatFarmerIncomingOrder,
   groupFarmerIncomingOrders,
   orderInclude,
   type FarmerIncomingOrderRow,
@@ -30,8 +31,9 @@ import { formatVerificationTags, verificationTagSelect } from '../utils/verifica
 import { listingCommodityName, listingCommodityCategory } from '../utils/listingDisplay';
 
 export const updateOrderTrackSchema = z.object({
-  buyerId: z.string().uuid(),
-  listingId: z.string().uuid(),
+  orderId: z.string().uuid().optional(),
+  buyerId: z.string().uuid().optional(),
+  listingId: z.string().uuid().optional(),
   trackStage: z.enum(ORDER_TRACK_STAGES),
 });
 
@@ -164,12 +166,13 @@ export class FarmService {
   async updateOrderTrackForFarmer(
     userId: string,
     roleId: number,
-    buyerId: string,
-    listingId: string,
-    trackStage: OrderTrackStage
+    buyerId?: string,
+    listingId?: string,
+    trackStage: OrderTrackStage = 'ORDER_RECEIVED',
+    orderId?: string
   ) {
     assertAuthorized(isFarmerRole(roleId), 'Order tracking only available to farmers');
-    return this.updateOrderTrack(userId, buyerId, listingId, trackStage);
+    return this.updateOrderTrack(userId, buyerId, listingId, trackStage, orderId);
   }
 
   async fetchFarmerOrders(farmerUserId: string) {
@@ -183,12 +186,17 @@ export class FarmService {
 
   async updateOrderTrack(
     farmerUserId: string,
-    buyerId: string,
-    listingId: string,
-    trackStage: OrderTrackStage
+    buyerId?: string,
+    listingId?: string,
+    trackStage: OrderTrackStage = 'ORDER_RECEIVED',
+    orderId?: string
   ) {
+    const whereCondition = orderId
+      ? { id: orderId, farmerId: farmerUserId }
+      : { farmerId: farmerUserId, buyerId, listingId };
+
     const result = await prisma.productOrder.updateMany({
-      where: { farmerId: farmerUserId, buyerId, listingId },
+      where: whereCondition,
       data: { trackStage, trackUpdatedAt: new Date() },
     });
 
@@ -196,16 +204,21 @@ export class FarmService {
       throw new AppError(404, 'Order not found');
     }
 
-    const orders = await prisma.productOrder.findMany({
-      where: { farmerId: farmerUserId, buyerId, listingId },
+    const updatedOrder = await prisma.productOrder.findFirst({
+      where: whereCondition,
       include: orderInclude,
       orderBy: { createdAt: 'desc' },
     });
 
-    const grouped = groupFarmerIncomingOrders(orders as FarmerIncomingOrderRow[]);
+    if (!updatedOrder) {
+      throw new AppError(404, 'Order not found');
+    }
+
+    const effectiveBuyerId = updatedOrder.buyerId;
+    const effectiveListingId = updatedOrder.listingId;
 
     const listing = await prisma.commodityListing.findUnique({
-      where: { id: listingId },
+      where: { id: effectiveListingId },
       select: {
         id: true,
         title: true,
@@ -214,11 +227,12 @@ export class FarmService {
         media: { where: { type: 'IMAGE' }, orderBy: { orderIndex: 'asc' }, take: 1 },
       },
     });
-    const latestOrder = orders[0];
+
     const farmerUser = await prisma.user.findUnique({
       where: { id: farmerUserId },
       select: { country: true },
     });
+
     const farmerName = await getUserDisplayName(farmerUserId);
     const normalized = normalizeImages(listing?.images);
     const imageFromMedia = listing?.media[0]?.url;
@@ -227,26 +241,30 @@ export class FarmService {
       : normalized[0]
         ? normalizePublicAssetUrl(normalized[0])
         : null;
+
     await notifyOrderTracked(
-      buyerId,
+      effectiveBuyerId,
       farmerUserId,
       farmerName,
       listing?.title ?? 'your order',
       ORDER_TRACK_LABELS[trackStage],
-      latestOrder
-        ? {
-            totalAmount: latestOrder.totalAmount,
-            quantity: latestOrder.quantity,
-            unit: latestOrder.unit,
-            imageUrl,
-            listingId: listing?.id,
-            buyerCountry: latestOrder.buyer.country ?? 'Ghana',
-            farmerCountry: farmerUser?.country ?? 'Ghana',
-          }
-        : { imageUrl, listingId: listing?.id }
+      {
+        totalAmount: updatedOrder.totalAmount,
+        quantity: updatedOrder.quantity,
+        unit: updatedOrder.unit,
+        imageUrl,
+        listingId: listing?.id,
+        buyerCountry: updatedOrder.buyer.country ?? 'Ghana',
+        farmerCountry: farmerUser?.country ?? 'Ghana',
+      }
     );
 
-    return grouped[0] ?? null;
+    return {
+      ...formatFarmerIncomingOrder(updatedOrder as FarmerIncomingOrderRow),
+      id: updatedOrder.id,
+      orderId: updatedOrder.id,
+      purchaseCount: 1,
+    };
   }
 
   async getFinancialStatement(userId: string, roleId: number) {
