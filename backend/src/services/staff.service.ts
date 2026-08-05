@@ -8,6 +8,10 @@ import {
   MANAGEABLE_STAFF_ROLE_IDS,
   STAFF_ROLES,
 } from '../constants/roles';
+import {
+  notifyAccountantApproved,
+  notifyAccountantRejected,
+} from './notification.service';
 
 const phoneInputSchema = z.preprocess(normalizePhone, z.string().min(1, 'Enter your phone number'));
 
@@ -211,6 +215,24 @@ export class StaffService {
       },
       select: staffSelect,
     });
+
+    if (
+      existing.roleId === ROLES.ANI_ACCOUNTANT &&
+      input.verificationStatus !== undefined &&
+      input.verificationStatus !== existing.verificationStatus
+    ) {
+      if (input.verificationStatus === 'VERIFIED') {
+        notifyAccountantApproved({
+          userId: user.id,
+          firstName: user.firstName,
+        }).catch(() => undefined);
+      } else if (input.verificationStatus === 'REJECTED') {
+        notifyAccountantRejected({
+          userId: user.id,
+          firstName: user.firstName,
+        }).catch(() => undefined);
+      }
+    }
 
     return formatStaffUser(user);
   }

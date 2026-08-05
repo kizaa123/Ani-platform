@@ -30,6 +30,7 @@ import {
   notifyHandlerDropped,
   notifyNewFarmerJoined,
   notifyAdminsPendingAccountant,
+  notifyAccountantRegistrationSubmitted,
 } from './notification.service';
 
 const phoneInputSchema = z.preprocess(normalizePhone, z.string().min(1, 'Enter your phone number'));
@@ -575,6 +576,10 @@ export class AuthService {
         accountantName: `${user.firstName} ${user.lastName}`.trim(),
         email: user.email,
       }).catch(() => undefined);
+      notifyAccountantRegistrationSubmitted({
+        userId: user.id,
+        firstName: user.firstName,
+      }).catch(() => undefined);
     }
 
     const fullUser = await prisma.user.findUnique({
@@ -1099,6 +1104,10 @@ export class AuthService {
         accountantUserId: updated.id,
         accountantName: `${updated.firstName} ${updated.lastName}`.trim(),
         email: updated.email,
+      }).catch(() => undefined);
+      notifyAccountantRegistrationSubmitted({
+        userId: updated.id,
+        firstName: updated.firstName,
       }).catch(() => undefined);
     }
 

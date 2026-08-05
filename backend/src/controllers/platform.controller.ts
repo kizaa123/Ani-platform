@@ -306,6 +306,24 @@ export class AdminController {
     }
   };
 
+  listClients = async (req: AuthRequest, res: Response) => {
+    try {
+      ApiResponse.success(res, await adminService.listClients(req.user!.userId));
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
+  notifyClient = async (req: AuthRequest, res: Response) => {
+    try {
+      const result = await adminService.notifyClient(req.user!.userId, req.body);
+      await createAuditLog(req, 'ADMIN_NOTIFY_USER', 'users', { clientId: req.body.clientId });
+      ApiResponse.success(res, result);
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
+
   pendingUsers = async (_req: AuthRequest, res: Response) => {
     try {
       ApiResponse.success(res, await adminService.getPendingUsers());

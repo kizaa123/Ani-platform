@@ -14,8 +14,13 @@ import {
 import {
   notifyInternationalVerification,
   notifyUserVerified,
+  createNotification,
 } from './notification.service';
 import { publicationPlatformShareAmount } from '../utils/distributionFinancials';
+import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
+import { formatVerificationTags, verificationTagSelect } from '../utils/verificationTags';
+import { PORTAL_DIRECTORY_ROLES, portalDirectoryRoleLabel } from '../constants/roles';
+import { notifyClientSchema } from './farm.service';
 
 const CHART_MONTHS = 6;
 
@@ -689,6 +694,71 @@ export class AdminService {
       orderBy: { createdAt: 'desc' },
       take: limit,
     });
+  }
+
+  async listClients(adminUserId: string) {
+    const clients = await prisma.user.findMany({
+      where: {
+        roleId: { in: [...PORTAL_DIRECTORY_ROLES] },
+        id: { not: adminUserId },
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        profilePicture: true,
+        city: true,
+        region: true,
+        country: true,
+        roleId: true,
+        verificationStatus: true,
+        verificationTags: { select: verificationTagSelect },
+      },
+      orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
+    });
+
+    return clients.map((c) => ({
+      id: c.id,
+      firstName: c.firstName,
+      lastName: c.lastName,
+      profilePicture: normalizePublicAssetUrl(c.profilePicture),
+      city: c.city,
+      region: c.region,
+      country: c.country,
+      roleId: c.roleId,
+      roleLabel: portalDirectoryRoleLabel(c.roleId),
+      verificationStatus: c.verificationStatus,
+      verificationTags: formatVerificationTags(c.verificationTags),
+    }));
+  }
+
+  async notifyClient(adminUserId: string, data: z.infer<typeof notifyClientSchema>) {
+    const client = assertFound(
+      await prisma.user.findFirst({
+        where: { id: data.clientId, roleId: { in: [...PORTAL_DIRECTORY_ROLES] } },
+        select: { id: true },
+      }),
+      'User not found'
+    );
+
+    const body =
+      data.message?.trim() ||
+      'You have a new message from the ANI platform team. Open the platform for updates.';
+
+    await createNotification({
+      userId: client.id,
+      actorId: adminUserId,
+      type: 'CHAT_MESSAGE',
+      title: 'Message from ANI Platform',
+      body,
+      link: '/dashboard',
+      metadata: {
+        actionUrl: '/dashboard',
+        actionLabel: 'Open dashboard',
+      },
+    });
+
+    return { success: true };
   }
 }
 

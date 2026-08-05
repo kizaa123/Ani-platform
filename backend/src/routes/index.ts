@@ -365,6 +365,14 @@ router.get(
   adminController.dashboardCharts
 );
 router.get('/admin/financial-statement', authenticate, requirePermission(PERMISSIONS.MANAGE_PAYMENTS), adminController.financialStatement);
+router.get('/admin/clients', authenticate, requirePermission(PERMISSIONS.VERIFY_USERS), adminController.listClients);
+router.post(
+  '/admin/notify-client',
+  authenticate,
+  requirePermission(PERMISSIONS.VERIFY_USERS),
+  validateBody(notifyClientSchema),
+  adminController.notifyClient
+);
 router.get('/admin/pending', authenticate, requirePermission(PERMISSIONS.VERIFY_USERS), adminController.pendingUsers);
 router.get('/admin/users', authenticate, requirePermission(PERMISSIONS.VERIFY_USERS), adminController.listUsers);
 router.patch('/admin/users/:id/verify', authenticate, requirePermission(PERMISSIONS.VERIFY_USERS), validateBody(verifyUserSchema), adminController.verifyUser);

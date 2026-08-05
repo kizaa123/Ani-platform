@@ -17,6 +17,7 @@ export const ADMIN_NAV_LINKS: PortalNavLink[] = [
     match: (p) => p.startsWith("/connections"),
   },
   { href: "/admin", label: "Admin", icon: "shield", match: (p) => p === "/admin" },
+  { href: "/admin/clients", label: "Clients", icon: "users", match: (p) => p.startsWith("/admin/clients") },
   { href: "/admin/staff", label: "ANI Team", icon: "users", match: (p) => p.startsWith("/admin/staff") },
   { href: "/admin/ads", label: "Internal Ads", icon: "leaf", match: (p) => p.startsWith("/admin/ads") },
   { href: "/admin/financials", label: "Financials", icon: "chart", match: (p) => p.startsWith("/admin/financials") },

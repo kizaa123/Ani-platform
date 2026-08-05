@@ -561,6 +561,12 @@ class ApiClient {
       this.request<import("./types").AdminDashboardCharts>("/admin/dashboard-charts"),
     financialStatement: () =>
       this.request<import("./types").PlatformFinancialStatement>("/admin/financial-statement"),
+    clients: () => this.request<import("./types").FarmClient[]>("/admin/clients"),
+    notifyClient: (body: { clientId: string; message?: string }) =>
+      this.request<{ success: boolean }>("/admin/notify-client", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
     pending: () => this.request<import("./types").PendingVerificationUser[]>("/admin/pending"),
     users: (params?: { status?: string; roleId?: number }) => {
       const q = new URLSearchParams();

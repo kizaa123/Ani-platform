@@ -316,6 +316,10 @@ export const NOTIFICATION_ICONS: Record<string, IconName> = {
   ORDER_PAYMENT_RELEASED: "coins",
   MONEY_DISTRIBUTED: "coins",
   HANDLER_DROPPED: "users",
+  NEW_ACCOUNTANT_REGISTRATION: "users",
+  ACCOUNTANT_REGISTRATION_SUBMITTED: "clock",
+  ACCOUNTANT_APPROVED: "check-circle",
+  ACCOUNTANT_REJECTED: "x",
   USER_VERIFIED: "check-circle",
   INTERNATIONAL_VERIFICATION: "check-circle",
 };

@@ -62,6 +62,9 @@ export type NotificationTypeValue =
   | 'HANDLER_DROPPED'
   | 'FARM_PRODUCTS_AVAILABLE'
   | 'NEW_ACCOUNTANT_REGISTRATION'
+  | 'ACCOUNTANT_REGISTRATION_SUBMITTED'
+  | 'ACCOUNTANT_APPROVED'
+  | 'ACCOUNTANT_REJECTED'
   | 'USER_VERIFIED'
   | 'INTERNATIONAL_VERIFICATION';
 
@@ -687,7 +690,11 @@ export async function notifyOrderPaymentReleased(order: {
     select: { agentId: true },
   });
   const staff = await prisma.user.findMany({
-    where: { roleId: { in: [...STAFF_ROLES] } },
+    where: {
+      roleId: ROLES.ANI_ACCOUNTANT,
+      isActive: true,
+      verificationStatus: 'VERIFIED',
+    },
     select: { id: true },
   });
 
@@ -699,8 +706,8 @@ export async function notifyOrderPaymentReleased(order: {
   for (const handler of buyerHandlers) {
     await notifyReleased(handler.agentId, `/agents/buyer/${order.buyerId}/orders`, order.buyerId);
   }
-  for (const member of staff) {
-    await notifyReleased(member.id, '/accountant/receipts');
+  for (const accountant of staff) {
+    await notifyReleased(accountant.id, '/accountant/receipts');
   }
 }
 
@@ -1261,8 +1268,8 @@ export async function notifyAdminsPendingAccountant(params: {
         userId: admin.id,
         actorId: params.accountantUserId,
         type: 'NEW_ACCOUNTANT_REGISTRATION',
-        title: 'Accountant registration pending',
-        body: `${params.accountantName} (${params.email}) registered as ANI Accountant and awaits your approval.`,
+        title: 'New ANI Accountant registration',
+        body: `${params.accountantName} (${params.email}) registered as ANI Accountant and is awaiting approval on ANI Team.`,
         link: '/admin/staff',
         metadata: {
           actionUrl: '/admin/staff',
@@ -1271,4 +1278,49 @@ export async function notifyAdminsPendingAccountant(params: {
       }).catch(() => undefined)
     )
   );
+}
+
+export async function notifyAccountantRegistrationSubmitted(params: {
+  userId: string;
+  firstName: string;
+}) {
+  await createNotification({
+    userId: params.userId,
+    type: 'ACCOUNTANT_REGISTRATION_SUBMITTED',
+    title: 'Registration submitted',
+    body: `Hello ${params.firstName}, your ANI Accountant registration was received. A platform administrator will review your account before you can access the financial portal.`,
+    link: '/dashboard',
+    metadata: {
+      actionUrl: '/dashboard',
+      actionLabel: 'View dashboard',
+    },
+  }).catch((err) => logNotificationError('ACCOUNTANT_REGISTRATION_SUBMITTED', err));
+}
+
+export async function notifyAccountantApproved(params: { userId: string; firstName: string }) {
+  await createNotification({
+    userId: params.userId,
+    type: 'ACCOUNTANT_APPROVED',
+    title: 'ANI Accountant account approved',
+    body: `Congratulations ${params.firstName}, your ANI Accountant registration has been approved. You can now access the financial portal.`,
+    link: '/accountant',
+    metadata: {
+      actionUrl: '/accountant',
+      actionLabel: 'Open financial portal',
+    },
+  }).catch((err) => logNotificationError('ACCOUNTANT_APPROVED', err));
+}
+
+export async function notifyAccountantRejected(params: { userId: string; firstName: string }) {
+  await createNotification({
+    userId: params.userId,
+    type: 'ACCOUNTANT_REJECTED',
+    title: 'ANI Accountant registration declined',
+    body: `Hello ${params.firstName}, your ANI Accountant registration was not approved. Contact a platform administrator if you believe this was a mistake.`,
+    link: '/profile',
+    metadata: {
+      actionUrl: '/profile',
+      actionLabel: 'View profile',
+    },
+  }).catch((err) => logNotificationError('ACCOUNTANT_REJECTED', err));
 }

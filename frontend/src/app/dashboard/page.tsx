@@ -76,6 +76,7 @@ export default function DashboardPage() {
     { href: "/admin/staff", title: "ANI Team", desc: "Manage staff accounts & roles", icon: "users", show: isAdmin(user.roleId) },
     { href: "/admin/ads", title: "Internal Ads", desc: "Manage banner promotions", icon: "leaf", show: isAdmin(user.roleId) },
     { href: "/admin/financials", title: "Financial Statement", desc: "Platform-wide revenue (read-only)", icon: "chart", show: isAdmin(user.roleId) },
+    { href: "/admin/clients", title: "Clients", desc: "Browse & notify platform users", icon: "users", show: isAdmin(user.roleId) },
     { href: "/accountant", title: "Financial Overview", desc: "Access income, order share & balances", icon: "chart", show: isAccountant(user.roleId) && isAccountantApproved(user) },
     { href: "/accountant/transactions", title: "Access Ledger", desc: "Production & publication access payments", icon: "credit-card", show: isAccountant(user.roleId) && isAccountantApproved(user) },
     { href: "/accountant/withdrawals", title: "Order Shared & Withdrawals", desc: "Distribute orders & record withdrawals", icon: "coins", show: isAccountant(user.roleId) && isAccountantApproved(user) },
