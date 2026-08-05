@@ -26,8 +26,7 @@ import { isFarmer, isHandler, isBuyer, isStaff, isResearcher, isStudent } from "
 
 
 
-const PUBLIC_PATHS = ["/", "/login", "/register"];
-
+const PUBLIC_PATHS = ["/", "/login", "/register", "/complete-profile"];
 const REGISTRATION_PATHS = ["/complete-profile"];
 
 function isRegistrationFlow(pathname: string) {
