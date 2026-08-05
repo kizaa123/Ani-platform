@@ -150,6 +150,7 @@ export class OrderService {
       listingId: listing.id,
       buyerCountry,
       farmerCountry,
+      orderId: txResult.order.id,
     });
     await notifyProductPurchase(
       buyerId,

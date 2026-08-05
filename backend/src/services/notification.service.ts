@@ -40,6 +40,8 @@ export type NotificationMetadata = {
   commodities?: string[] | null;
   customProducts?: string[] | null;
   farmerName?: string | null;
+  orderId?: string | null;
+  ownerId?: string | null;
 };
 
 export type NotificationTypeValue =
@@ -466,6 +468,7 @@ export async function notifyNewOrder(
     listingId?: string;
     buyerCountry?: string;
     farmerCountry?: string;
+    orderId?: string;
   }
 ) {
   const buyerCountry = orderDetails?.buyerCountry ?? 'Ghana';
@@ -527,7 +530,12 @@ export async function notifyNewOrder(
       title: 'New order for your farmer',
       body,
       link,
-      metadata: { ...handlerMeta, actionUrl: link },
+      metadata: {
+        ...handlerMeta,
+        actionUrl: link,
+        orderId: orderDetails?.orderId ?? null,
+        ownerId: farmerId,
+      },
     }).catch(() => undefined);
   }
 
@@ -565,7 +573,12 @@ export async function notifyNewOrder(
       title: 'New order from your client',
       body: `Your client ${buyerName} ordered ${productName} - ${buyerAmountLabel} held in escrow until buyer confirms delivery.`,
       link,
-      metadata: { ...handlerMeta, actionUrl: link },
+      metadata: {
+        ...handlerMeta,
+        actionUrl: link,
+        orderId: orderDetails?.orderId ?? null,
+        ownerId: buyerId,
+      },
     }).catch(() => undefined);
   }
 }
@@ -622,7 +635,11 @@ export async function notifyOrderPaymentReleased(order: {
   const imageUrl = firstListingImage(order.listing.images, order.listing.media);
   const listingId = order.listing.id;
 
-  const notifyReleased = async (userId: string, link: string) => {
+  const notifyReleased = async (
+    userId: string,
+    link: string,
+    ownerId?: string | null
+  ) => {
     const recipient = await prisma.user.findUnique({
       where: { id: userId },
       select: { country: true },
@@ -652,7 +669,12 @@ export async function notifyOrderPaymentReleased(order: {
       body,
       userId,
       link,
-      metadata: { ...orderMeta, actionUrl: link },
+      metadata: {
+        ...orderMeta,
+        actionUrl: link,
+        orderId: order.id,
+        ownerId: ownerId ?? null,
+      },
     }).catch(() => undefined);
   };
 
@@ -672,10 +694,10 @@ export async function notifyOrderPaymentReleased(order: {
   await notifyReleased(order.buyerId, '/orders');
   await notifyReleased(order.farmerId, '/farm/orders');
   for (const handler of farmerHandlers) {
-    await notifyReleased(handler.agentId, `/agents/farm/${order.farmerId}/orders`);
+    await notifyReleased(handler.agentId, `/agents/farm/${order.farmerId}/orders`, order.farmerId);
   }
   for (const handler of buyerHandlers) {
-    await notifyReleased(handler.agentId, `/agents/buyer/${order.buyerId}/orders`);
+    await notifyReleased(handler.agentId, `/agents/buyer/${order.buyerId}/orders`, order.buyerId);
   }
   for (const member of staff) {
     await notifyReleased(member.id, '/accountant/receipts');
@@ -696,6 +718,7 @@ export async function notifyOrderTracked(
     listingId?: string;
     buyerCountry?: string;
     farmerCountry?: string;
+    orderId?: string;
   }
 ) {
   const buyerCountry = orderDetails?.buyerCountry ?? 'Ghana';
@@ -745,7 +768,12 @@ export async function notifyOrderTracked(
       userId: farmerHandler.agentId,
       title: 'Order update for your farmer',
       link,
-      metadata: { ...baseInput.metadata, actionUrl: link },
+      metadata: {
+        ...baseInput.metadata,
+        actionUrl: link,
+        orderId: orderDetails?.orderId ?? null,
+        ownerId: farmerId,
+      },
     }).catch(() => undefined);
   }
 
@@ -756,7 +784,12 @@ export async function notifyOrderTracked(
       userId: buyerHandler.agentId,
       title: 'Order update for your client',
       link,
-      metadata: { ...baseInput.metadata, actionUrl: link },
+      metadata: {
+        ...baseInput.metadata,
+        actionUrl: link,
+        orderId: orderDetails?.orderId ?? null,
+        ownerId: buyerId,
+      },
     }).catch(() => undefined);
   }
 }
@@ -947,6 +980,8 @@ export async function notifyMoneyDistributed(
     totalAmount?: number;
     buyerCountry?: string;
     farmerCountry?: string;
+    orderId?: string;
+    ownerId?: string;
   }
 ) {
   const recipient = await prisma.user.findUnique({
@@ -988,6 +1023,8 @@ export async function notifyMoneyDistributed(
       ...orderMeta,
       price: amount,
       priceLabel: formatted,
+      orderId: orderDetails?.orderId ?? null,
+      ownerId: orderDetails?.ownerId ?? null,
     },
   }).catch(() => undefined);
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { ProductImage } from "@/components/FarmerAvatar";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
@@ -459,6 +460,11 @@ export function OrderDetailModal({
     createOrderMoneyFormatter(perspective, user?.country ?? "Ghana", format);
   const [updatingTrack, setUpdatingTrack] = useState(false);
   const [trackError, setTrackError] = useState("");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -495,31 +501,36 @@ export function OrderDetailModal({
     }
   };
 
-  return (
+  if (!mounted) return null;
+
+  const modal = (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
+      className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
       onClick={onClose}
       role="presentation"
     >
       <div
-        className="flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl bg-white shadow-xl sm:max-h-[90vh] sm:rounded-2xl"
+        className="flex max-h-[min(90dvh,100%)] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl bg-white shadow-xl sm:max-h-[90vh] sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby="order-modal-title"
       >
-        <div className="relative z-10 flex shrink-0 items-center justify-between gap-3 border-b border-brand-100 bg-white px-4 py-3.5 sm:px-5 sm:py-4">
-          <h2 id="order-modal-title" className="min-w-0 flex-1 truncate text-lg font-bold text-brand-900">
-            Order details
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 active:bg-gray-200"
-            aria-label="Close"
-          >
-            <Icon name="x" className="h-5 w-5" />
-          </button>
+        <div className="shrink-0 border-b border-brand-100 bg-white pt-[env(safe-area-inset-top,0px)] sm:pt-0">
+          <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-gray-300 sm:hidden" aria-hidden />
+          <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-5 sm:py-4">
+            <h2 id="order-modal-title" className="min-w-0 flex-1 truncate text-lg font-bold text-brand-900">
+              Order details
+            </h2>
+            <button
+              type="button"
+              onClick={onClose}
+              className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 active:bg-gray-200 sm:flex"
+              aria-label="Close"
+            >
+              <Icon name="x" className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto scrollbar-hide [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -702,9 +713,17 @@ export function OrderDetailModal({
           </p>
         </div>
         </div>
+
+        <div className="shrink-0 border-t border-brand-100 bg-white px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:hidden">
+          <button type="button" onClick={onClose} className="btn-primary w-full py-3 text-sm font-semibold">
+            Close
+          </button>
+        </div>
       </div>
     </div>
   );
+
+  return createPortal(modal, document.body);
 }
 
 export function BuyerOrdersTable({ items }: { items: BuyerOrderLineItem[] }) {

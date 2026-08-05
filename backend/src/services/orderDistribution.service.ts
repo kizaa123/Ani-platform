@@ -534,6 +534,13 @@ export class OrderDistributionService {
         listingId: order.listing.id,
         buyerCountry: order.buyer.country ?? 'Ghana',
         farmerCountry: order.farmer.country ?? 'Ghana',
+        orderId: order.id,
+        ownerId:
+          line.role === 'FARMER_HANDLER'
+            ? order.farmerId
+            : line.role === 'BUYER_HANDLER'
+              ? order.buyerId
+              : undefined,
       }
     );
 

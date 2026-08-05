@@ -66,7 +66,7 @@ export function HandlerAssignmentIdentity({
   showPhone?: boolean;
   compact?: boolean;
 }) {
-  const resolvedAvatarSize = compact ? 36 : avatarSize;
+  const resolvedAvatarSize = compact ? 48 : avatarSize;
   const gapClass = compact ? "gap-2" : "gap-2.5";
   const nameClass = compact
     ? "line-clamp-1 break-words text-xs font-semibold leading-snug text-brand-900"
@@ -186,7 +186,7 @@ export function HandlerAssignmentsPreviewCard({
         {loading ? (
           Array.from({ length: 2 }).map((_, i) => (
             <div key={i} className="flex items-center gap-2">
-              <div className="h-9 w-9 shrink-0 animate-pulse rounded-full bg-gray-200" />
+              <div className="h-12 w-12 shrink-0 animate-pulse rounded-full bg-gray-200" />
               <div className="min-w-0 flex-1 space-y-1">
                 <div className="h-3 w-2/3 animate-pulse rounded bg-gray-200" />
                 <div className="h-2.5 w-1/2 animate-pulse rounded bg-gray-100" />

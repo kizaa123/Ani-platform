@@ -668,6 +668,8 @@ export interface NotificationMetadata {
   commodities?: string[] | null;
   customProducts?: string[] | null;
   farmerName?: string | null;
+  orderId?: string | null;
+  ownerId?: string | null;
 }
 
 export interface AppNotification {

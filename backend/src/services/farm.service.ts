@@ -248,6 +248,7 @@ export class FarmService {
         listingId: listing?.id,
         buyerCountry: updatedOrder.buyer.country ?? 'Ghana',
         farmerCountry: farmerUser?.country ?? 'Ghana',
+        orderId: updatedOrder.id,
       }
     );
 

@@ -1,4 +1,5 @@
 import { formatDate } from "./format";
+import { isHandler } from "./types";
 import type { AppNotification } from "./types";
 
 export const HANDLER_ORDER_NOTIFICATION_TYPES = new Set([
@@ -19,6 +20,22 @@ export const HANDLER_ORDER_TYPE_LABELS: Record<string, string> = {
 
 export function isHandlerOrderNotification(notification: AppNotification): boolean {
   return HANDLER_ORDER_NOTIFICATION_TYPES.has(notification.type);
+}
+
+export function getNotificationDestination(
+  notification: AppNotification,
+  roleId?: number
+): string | null {
+  const fallback = notification.metadata?.actionUrl ?? notification.link ?? null;
+  if (roleId === undefined || !isHandler(roleId) || !isHandlerOrderNotification(notification)) {
+    return fallback;
+  }
+
+  if (notification.type === "MONEY_DISTRIBUTED") {
+    return fallback ?? "/agents/financials";
+  }
+
+  return "/agents/order-notifications";
 }
 
 export function sortHandlerOrderNotifications(notifications: AppNotification[]): AppNotification[] {

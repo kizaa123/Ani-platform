@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import { AppNotification } from "@/lib/types";
+import { getNotificationDestination } from "@/lib/handlerOrderNotifications";
 import { formatDate } from "@/lib/format";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { Icon, NOTIFICATION_ICONS } from "@/components/icons";
@@ -27,11 +28,14 @@ function isRichNotification(type: string) {
   return type === "NEW_PRODUCT" || type === "NEW_FARMER" || type === "NEW_PUBLICATION";
 }
 
-function notificationAction(n: AppNotification) {
+function notificationAction(n: AppNotification, destination: string | null) {
   const label = n.metadata?.actionLabel;
-  const url = n.metadata?.actionUrl ?? n.link;
-  if (!label || !url) return null;
-  return { label, url };
+  if (!label || !destination) return null;
+  return { label, url: destination };
+}
+
+function linkTextClass(hasDestination: boolean) {
+  return hasDestination ? "text-brand-800 hover:text-brand-900 hover:underline" : "text-gray-600";
 }
 
 function NotificationThumbnail({ n }: { n: AppNotification }) {
@@ -68,8 +72,15 @@ function NotificationThumbnail({ n }: { n: AppNotification }) {
   );
 }
 
-function RichNotificationContent({ n }: { n: AppNotification }) {
-  const action = notificationAction(n);
+function RichNotificationContent({
+  n,
+  destination,
+}: {
+  n: AppNotification;
+  destination: string | null;
+}) {
+  const action = notificationAction(n, destination);
+  const bodyClass = linkTextClass(Boolean(destination));
 
   return (
     <>
@@ -107,12 +118,12 @@ function RichNotificationContent({ n }: { n: AppNotification }) {
       )}
 
       {n.body && (
-        <p className="mt-1 text-sm leading-snug text-gray-600">{n.body}</p>
+        <p className={`mt-1 text-sm leading-snug ${bodyClass}`}>{n.body}</p>
       )}
 
       {action && (
         <span className="mt-2 inline-flex rounded-lg bg-brand-700 px-3 py-1 text-xs font-semibold text-white">
-          {action.label}
+          {destination?.startsWith("/agents/order-notifications") ? "View update" : action.label}
         </span>
       )}
 
@@ -121,8 +132,15 @@ function RichNotificationContent({ n }: { n: AppNotification }) {
   );
 }
 
-function StandardNotificationContent({ n }: { n: AppNotification }) {
-  const action = notificationAction(n);
+function StandardNotificationContent({
+  n,
+  destination,
+}: {
+  n: AppNotification;
+  destination: string | null;
+}) {
+  const action = notificationAction(n, destination);
+  const bodyClass = linkTextClass(Boolean(destination));
 
   return (
     <>
@@ -130,10 +148,10 @@ function StandardNotificationContent({ n }: { n: AppNotification }) {
         <p className="font-semibold text-brand-900">{n.title}</p>
         {!n.read && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-brand-600" />}
       </div>
-      <p className="mt-1 text-sm leading-snug text-gray-600">{n.body}</p>
+      <p className={`mt-1 text-sm leading-snug ${bodyClass}`}>{n.body}</p>
       {action && (
         <span className="mt-2 inline-flex rounded-lg bg-brand-700 px-3 py-1 text-xs font-semibold text-white">
-          {action.label}
+          {destination?.startsWith("/agents/order-notifications") ? "View update" : action.label}
         </span>
       )}
       <p className="mt-2 text-[10px] text-gray-400">{formatDate(n.createdAt)}</p>
@@ -218,7 +236,7 @@ export function NotificationBell({ className = "" }: { className?: string }) {
       }
     }
     setOpen(false);
-    const destination = n.metadata?.actionUrl ?? n.link;
+    const destination = getNotificationDestination(n, user.roleId);
     if (destination) router.push(destination);
   };
 
@@ -291,20 +309,22 @@ export function NotificationBell({ className = "" }: { className?: string }) {
                   <ul className="divide-y divide-brand-50">
                     {items.map((n) => {
                       const rich = isRichNotification(n.type);
+                      const destination = getNotificationDestination(n, user.roleId);
+                      const navigable = Boolean(destination);
                       return (
                         <li key={n.id}>
                           <button
                             type="button"
                             onClick={() => openNotification(n)}
-                            className={`flex w-full gap-3 px-5 py-4 text-left transition hover:bg-brand-50/60 ${
-                              !n.read ? "bg-brand-50/40" : ""
-                            }`}
+                            className={`flex w-full gap-3 px-5 py-4 text-left transition ${
+                              navigable ? "cursor-pointer hover:bg-brand-50/60" : "cursor-default"
+                            } ${!n.read ? "bg-brand-50/40" : ""}`}
                           >
                             {rich ? (
                               <>
                                 <NotificationThumbnail n={n} />
                                 <div className="min-w-0 flex-1">
-                                  <RichNotificationContent n={n} />
+                                  <RichNotificationContent n={n} destination={destination} />
                                 </div>
                               </>
                             ) : (
@@ -314,7 +334,7 @@ export function NotificationBell({ className = "" }: { className?: string }) {
                                   className="mt-0.5 h-5 w-5 shrink-0 text-brand-700"
                                 />
                                 <div className="min-w-0 flex-1">
-                                  <StandardNotificationContent n={n} />
+                                  <StandardNotificationContent n={n} destination={destination} />
                                 </div>
                               </>
                             )}

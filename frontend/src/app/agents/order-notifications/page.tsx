@@ -25,14 +25,14 @@ export default function HandlerOrderNotificationsPage() {
   }, [user, loading, router]);
 
   if (loading || !user) {
-    return <PageContentSkeleton maxWidth="max-w-md" />;
+    return <PageContentSkeleton maxWidth="max-w-3xl" />;
   }
 
   const isFlo = isFarmerHandler(user.roleId);
   const entityLabel = isFlo ? "fellows" : "clients";
 
   return (
-    <div className="mx-auto max-w-md px-4 py-10">
+    <div className="mx-auto max-w-3xl px-4 py-10">
       <Link
         href="/dashboard"
         className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:underline"
@@ -41,7 +41,10 @@ export default function HandlerOrderNotificationsPage() {
         Back to dashboard
       </Link>
 
-      <HandlerOrderNotificationsPanel entityLabel={entityLabel} />
+      <HandlerOrderNotificationsPanel
+        entityLabel={entityLabel}
+        orderPerspective={isFlo ? "farmer" : "buyer"}
+      />
     </div>
   );
 }
