@@ -143,6 +143,105 @@ function localFileMissingMessage(): string {
   return 'Publication file is not available.';
 }
 
+type ParsedCloudinaryUrl = {
+  resourceType: 'image' | 'video' | 'raw';
+  deliveryType: 'upload' | 'private' | 'authenticated';
+  publicId: string;
+};
+
+/** Parse a Cloudinary delivery URL into resource type + public_id. */
+function parseCloudinaryDeliveryUrl(url: string): ParsedCloudinaryUrl | null {
+  try {
+    const parsed = new URL(url);
+    if (!parsed.hostname.endsWith('res.cloudinary.com')) return null;
+
+    const parts = parsed.pathname.split('/').filter(Boolean);
+    // /{cloud}/{resourceType}/{deliveryType}/[s--sig--/][transforms/][v123/]{publicId}
+    if (parts.length < 4) return null;
+
+    const resourceType = parts[1];
+    const deliveryType = parts[2];
+    if (!['image', 'video', 'raw'].includes(resourceType)) return null;
+    if (!['upload', 'private', 'authenticated'].includes(deliveryType)) return null;
+
+    let rest = parts.slice(3);
+    if (rest[0]?.startsWith('s--')) rest = rest.slice(1);
+    // Skip common transformation segments until we hit version or public id
+    while (
+      rest.length > 1 &&
+      !/^v\d+$/.test(rest[0]) &&
+      /[_=,:]/.test(rest[0])
+    ) {
+      rest = rest.slice(1);
+    }
+    if (rest[0] && /^v\d+$/.test(rest[0])) rest = rest.slice(1);
+
+    const publicId = decodeURIComponent(rest.join('/'));
+    if (!publicId) return null;
+
+    return {
+      resourceType: resourceType as ParsedCloudinaryUrl['resourceType'],
+      deliveryType: deliveryType as ParsedCloudinaryUrl['deliveryType'],
+      publicId,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function splitPublicIdFormat(publicId: string): { id: string; format?: string } {
+  const slash = publicId.lastIndexOf('/');
+  const dot = publicId.lastIndexOf('.');
+  if (dot > slash && dot < publicId.length - 1) {
+    return { id: publicId.slice(0, dot), format: publicId.slice(dot + 1) };
+  }
+  return { id: publicId };
+}
+
+/**
+ * Download via Cloudinary's signed API download URL.
+ * Needed when public CDN delivery of PDF/raw is blocked (common on free plans / restricted media).
+ */
+async function fetchCloudinaryViaSignedDownload(parsed: ParsedCloudinaryUrl): Promise<Buffer | null> {
+  if (!isCloudStorageEnabled()) return null;
+  ensureCloudinaryConfig();
+
+  const { id, format } = splitPublicIdFormat(parsed.publicId);
+  const attempts: Array<{ publicId: string; format: string | undefined }> = [
+    { publicId: parsed.publicId, format: format || undefined },
+    { publicId: id, format: format || undefined },
+    { publicId: parsed.publicId, format: undefined },
+    { publicId: id, format: undefined },
+  ];
+
+  const seen = new Set<string>();
+  for (const attempt of attempts) {
+    const key = `${attempt.publicId}|${attempt.format ?? ''}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    try {
+      const downloadUrl = cloudinary.utils.private_download_url(
+        attempt.publicId,
+        attempt.format ?? '',
+        {
+          resource_type: parsed.resourceType,
+          type: parsed.deliveryType,
+          attachment: false,
+        }
+      );
+      const res = await fetch(downloadUrl);
+      if (res.ok) {
+        return Buffer.from(await res.arrayBuffer());
+      }
+    } catch {
+      /* try next candidate */
+    }
+  }
+
+  return null;
+}
+
 /** Fetch an uploaded file as a buffer for authenticated streaming (local disk or remote URL). */
 export async function fetchUploadedFileBuffer(storedUrl: string): Promise<Buffer> {
   const normalized = normalizePublicAssetUrl(storedUrl) ?? storedUrl;
@@ -157,20 +256,31 @@ export async function fetchUploadedFileBuffer(storedUrl: string): Promise<Buffer
   }
 
   if (isRemoteStorageUrl(normalized)) {
-    let res: Response;
+    let directStatus: number | null = null;
     try {
-      res = await fetch(normalized);
+      const res = await fetch(normalized);
+      directStatus = res.status;
+      if (res.ok) {
+        return Buffer.from(await res.arrayBuffer());
+      }
     } catch {
-      throw new AppError(502, 'Could not retrieve publication file from storage', 'STORAGE_FETCH_FAILED');
+      directStatus = null;
     }
-    if (!res.ok) {
-      throw new AppError(
-        404,
-        res.status === 404 ? 'Publication file not found in storage' : 'Could not retrieve publication file from storage',
-        'NOT_FOUND'
-      );
+
+    const parsedCloud = parseCloudinaryDeliveryUrl(normalized);
+    if (parsedCloud) {
+      const viaApi = await fetchCloudinaryViaSignedDownload(parsedCloud);
+      if (viaApi) return viaApi;
     }
-    return Buffer.from(await res.arrayBuffer());
+
+    if (directStatus === 404) {
+      throw new AppError(404, 'Publication file not found in storage', 'NOT_FOUND');
+    }
+    throw new AppError(
+      502,
+      'Could not retrieve publication file from storage',
+      'STORAGE_FETCH_FAILED'
+    );
   }
 
   throw new AppError(404, 'Publication file URL is invalid or unsupported', 'NOT_FOUND');
