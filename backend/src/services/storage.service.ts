@@ -176,21 +176,22 @@ export async function fetchUploadedFileBuffer(storedUrl: string): Promise<Buffer
   throw new AppError(404, 'Publication file URL is invalid or unsupported', 'NOT_FOUND');
 }
 
-export type PublicationDocumentResult =
-  | { kind: 'redirect'; url: string }
-  | { kind: 'buffer'; buffer: Buffer; filename: string };
+export type PublicationDocumentResult = {
+  kind: 'buffer';
+  buffer: Buffer;
+  filename: string;
+};
 
-/** Resolve a stored publication file for authenticated download (redirect to Cloudinary when possible). */
+/**
+ * Resolve a stored publication file for authenticated in-app reading.
+ * Always proxy as a buffer — never 302 to Cloudinary/remote URLs. Browser
+ * fetch follows redirects and can see a remote 401, which the frontend
+ * mistakenly treats as session expiry and kicks the user to /login.
+ */
 export async function resolvePublicationDocument(
   storedUrl: string,
   filename: string
 ): Promise<PublicationDocumentResult> {
-  const normalized = normalizePublicAssetUrl(storedUrl) ?? storedUrl;
-
-  if (isRemoteStorageUrl(normalized)) {
-    return { kind: 'redirect', url: normalized };
-  }
-
-  const buffer = await fetchUploadedFileBuffer(normalized);
+  const buffer = await fetchUploadedFileBuffer(storedUrl);
   return { kind: 'buffer', buffer, filename };
 }

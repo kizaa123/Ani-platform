@@ -199,10 +199,6 @@ export class ResearcherController {
         req.user!.userId,
         req.params.id as string
       );
-      if (result.kind === 'redirect') {
-        res.redirect(302, result.url);
-        return;
-      }
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `inline; filename="${result.filename}"`);
       res.setHeader('Cache-Control', 'no-store');

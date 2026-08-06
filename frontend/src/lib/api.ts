@@ -96,13 +96,26 @@ class ApiClient {
     return json.data as T;
   }
 
+  /** Only our API's JSON 401 means the session needs refresh — not remote PDF hosts. */
+  private isApiUnauthorized(res: Response): boolean {
+    if (res.status !== 401) return false;
+    const contentType = res.headers.get("content-type") || "";
+    return contentType.includes("application/json");
+  }
+
   private async fetchPdfResponse(path: string): Promise<Response> {
     const headers: Record<string, string> = {};
     if (this.accessToken) headers.Authorization = `Bearer ${this.accessToken}`;
 
-    let res = await fetch(`${API}${path}`, { headers });
+    // Never follow redirects — document endpoints must stream the PDF from our API.
+    // Following a 302 to Cloudinary can yield a non-API 401 that looked like logout.
+    let res = await fetch(`${API}${path}`, { headers, redirect: "manual" });
 
-    if (res.status === 401 && this.refreshToken) {
+    if (res.type === "opaqueredirect" || (res.status >= 300 && res.status < 400)) {
+      throw new Error("Could not load PDF (unexpected redirect). Please try again.");
+    }
+
+    if (this.isApiUnauthorized(res) && this.refreshToken) {
       const refreshRes = await fetch(`${API}/auth/refresh`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -113,7 +126,10 @@ class ApiClient {
         this.accessToken = json.data.accessToken;
         localStorage.setItem("accessToken", json.data.accessToken);
         headers.Authorization = `Bearer ${this.accessToken}`;
-        res = await fetch(`${API}${path}`, { headers });
+        res = await fetch(`${API}${path}`, { headers, redirect: "manual" });
+        if (res.type === "opaqueredirect" || (res.status >= 300 && res.status < 400)) {
+          throw new Error("Could not load PDF (unexpected redirect). Please try again.");
+        }
       } else {
         this.clearTokens();
         if (typeof window !== "undefined") window.location.href = "/login";
