@@ -125,7 +125,7 @@ const ROLE_CARDS: { icon: IconName; label: string; desc: string; image: string }
   {
     icon: "book",
     label: "Researcher",
-    desc: "Access research data, publish field research, and connect with fellows and clients.",
+    desc: "Discover knowledge, publish with confidence, and collaborate across disciplines to solve real-world challenges.",
     image: ROLE_CARD_IMAGES.researcher,
   },
   {
