@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Icon, type IconName } from "@/components/icons";
 import { PortalNavCard } from "@/components/PortalNavCard";
-import { PlatformBrandTitle } from "@/components/PlatformBrandTitle";
+import { BrandHeroCopy } from "@/components/BrandHeroCopy";
 import { AnimatedStat } from "@/components/AnimatedStat";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
@@ -160,47 +160,26 @@ export default function HomePage() {
 
         <div className="relative z-10 mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
           <div className="max-w-2xl">
-            <ScrollReveal trigger="mount" delay={0} duration={500} direction="fade-up">
-              <PlatformBrandTitle
-                theme="light"
-                size="hero"
-                motto="The Premier Commodity Exchange Platform"
-                className="mb-6 sm:mb-8"
-              />
-            </ScrollReveal>
-
-            <ScrollReveal trigger="mount" delay={scrollStagger(2, 100)} duration={550} direction="fade-up">
-              <h1 className="mb-6 text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl">
-                Where Fellows{" "}
-                <span className="bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-300 bg-clip-text text-transparent">
-                  Meet Markets
-                </span>
-              </h1>
-            </ScrollReveal>
-
-            <ScrollReveal trigger="mount" delay={scrollStagger(3, 100)} duration={500} direction="fade-up">
-              <p className="mb-10 text-xl font-light leading-relaxed text-brand-100 md:text-2xl">
-                Connecting verified fellows with clients. Secure commodity trading with full privacy protection.
-              </p>
-            </ScrollReveal>
-
-            <ScrollReveal trigger="mount" delay={scrollStagger(4, 100)} duration={500} direction="fade-up">
-              <div className="flex flex-wrap gap-4">
-                <Link
-                  href="/register"
-                  className="inline-flex items-center gap-2 rounded-2xl bg-yellow-400 px-8 py-4 text-base font-bold text-brand-900 shadow-lg transition-all hover:scale-105 hover:bg-yellow-300"
-                >
-                  <Icon name="sprout" className="h-5 w-5" />
-                  Join ANI
-                </Link>
-                <Link
-                  href="/login"
-                  className="inline-flex items-center gap-2 rounded-2xl border-2 border-white/30 px-8 py-4 text-base font-semibold text-white backdrop-blur-sm transition-all hover:border-white/60 hover:bg-white/10"
-                >
-                  Sign In
-                </Link>
-              </div>
-            </ScrollReveal>
+            <BrandHeroCopy
+              size="hero"
+              actions={
+                <div className="flex w-full max-w-xl flex-col gap-3 sm:flex-row sm:gap-4">
+                  <Link
+                    href="/register"
+                    className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-2xl bg-yellow-400 px-8 py-4 text-base font-bold text-brand-900 shadow-lg transition-all hover:scale-[1.02] hover:bg-yellow-300 sm:min-w-[12rem]"
+                  >
+                    <Icon name="sprout" className="h-5 w-5" />
+                    Join ANI
+                  </Link>
+                  <Link
+                    href="/login"
+                    className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-2xl border-2 border-white/30 px-8 py-4 text-base font-semibold text-white backdrop-blur-sm transition-all hover:border-white/60 hover:bg-white/10 sm:min-w-[12rem]"
+                  >
+                    Sign In
+                  </Link>
+                </div>
+              }
+            />
           </div>
         </div>
       </section>

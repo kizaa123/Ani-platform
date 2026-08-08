@@ -9,17 +9,36 @@ import { Icon } from "@/components/icons";
 import { PasswordInput } from "@/components/PasswordInput";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { AuthHeroPanel } from "@/components/AuthHeroPanel";
+import { AuthDivider, GoogleSignInButton } from "@/components/GoogleSignInButton";
+import { api } from "@/lib/api";
+
+const GOOGLE_DEV_MODE = process.env.NEXT_PUBLIC_GOOGLE_DEV_MODE === "true";
 
 function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [devLoading, setDevLoading] = useState(false);
   const { login } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const queryError = searchParams.get("error");
+
+  const routeAfterAuth = (profile: {
+    profileComplete?: boolean;
+    roleId: number;
+    verificationStatus?: string;
+  }) => {
+    if (profile.profileComplete === false) {
+      router.push("/complete-profile");
+    } else if (isAccountant(profile.roleId) && isAccountantApproved(profile)) {
+      router.push("/accountant");
+    } else {
+      router.push("/dashboard");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,17 +46,33 @@ function LoginForm() {
     setLoading(true);
     try {
       const profile = await login(email, password);
-      if (profile.profileComplete === false) {
-        router.push("/complete-profile");
-      } else if (isAccountant(profile.roleId) && isAccountantApproved(profile)) {
-        router.push("/accountant");
-      } else {
-        router.push("/dashboard");
-      }
+      routeAfterAuth(profile);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDevGoogle = async () => {
+    setError("");
+    setDevLoading(true);
+    try {
+      const result = await api.auth.googleDevSignIn({
+        email: email || "google.dev@ani.gh",
+        firstName: "Google",
+        lastName: "User",
+      });
+      api.setTokens(result.accessToken, result.refreshToken);
+      if (result.needsProfile) {
+        window.location.href = "/complete-profile";
+      } else {
+        window.location.href = "/dashboard";
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Google sign-in failed");
+    } finally {
+      setDevLoading(false);
     }
   };
 
@@ -63,6 +98,15 @@ function LoginForm() {
               <span>{error || queryError}</span>
             </div>
           )}
+
+          <GoogleSignInButton
+            label="Sign in with Google"
+            disabled={loading || devLoading}
+            showDev={GOOGLE_DEV_MODE}
+            onDevSignIn={handleDevGoogle}
+            devLoading={devLoading}
+          />
+          <AuthDivider text="or sign in with email" />
 
           <form onSubmit={handleSubmit} className="auth-form">
             <div className="auth-field">
