@@ -151,7 +151,7 @@ function RegisterActionButton({
   onBlocked,
   onClick,
   children,
-  className = "btn-primary auth-nav-btn",
+  className = "btn-cta auth-nav-btn",
 }: {
   blocked: boolean;
   blockingItems: string[];
@@ -547,16 +547,19 @@ function RegisterForm() {
       <ScrollReveal trigger="mount" delay={120} duration={500} direction="fade-up">
         <div className="space-y-6">
           <header className="text-center">
-            <div className="flex items-center justify-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-brand-200 bg-gradient-to-br from-brand-50 to-brand-100/70 text-brand-700 shadow-xs">
-                <Icon name="user" className="h-5 w-5 text-brand-700" />
-              </div>
-              <h1 className="text-2xl font-bold tracking-tight text-brand-900 sm:text-3xl">
-                Create Account
-              </h1>
-            </div>
-            <p className="auth-subtitle mt-2 text-sm text-gray-500">
-              Step {step} of {totalSteps} - {stepLabels[step - 1]}
+            <span className="auth-badge">
+              <span className="auth-badge-dot" />
+              Join the Network
+            </span>
+            <h1 className="text-2xl font-black tracking-tight text-brand-900 sm:text-3xl">
+              Create Your{" "}
+              <span className="bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent">
+                Account
+              </span>
+            </h1>
+            <div className="auth-heading-underline" aria-hidden="true" />
+            <p className="auth-subtitle mt-3 text-sm leading-relaxed text-gray-500">
+              Step {step} of {totalSteps} — {stepLabels[step - 1]}
             </p>
           </header>
 

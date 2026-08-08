@@ -56,8 +56,12 @@ export const AuthHeroPanel = forwardRef<HTMLDivElement, AuthHeroPanelProps>(func
 
           <div
             ref={ref}
-            className="auth-hero-form-card w-full overflow-y-auto rounded-2xl border border-white/20 bg-white p-6 shadow-[0_4px_24px_-4px_rgba(27,67,50,0.12),0_12px_48px_-8px_rgba(27,67,50,0.18)] sm:p-8 lg:max-h-[min(72vh,720px)] lg:p-7 xl:p-8"
+            className="auth-hero-form-card w-full overflow-y-auto rounded-3xl border border-white/20 bg-white p-6 shadow-[0_4px_24px_-4px_rgba(27,67,50,0.12),0_12px_48px_-8px_rgba(27,67,50,0.18)] ring-1 ring-brand-900/5 sm:p-8 lg:max-h-[min(72vh,720px)] lg:p-7 xl:p-8"
           >
+            <div
+              className="mx-auto mb-5 h-1 w-16 rounded-full bg-gradient-to-r from-yellow-400/0 via-yellow-400 to-yellow-400/0"
+              aria-hidden="true"
+            />
             {children}
           </div>
         </div>

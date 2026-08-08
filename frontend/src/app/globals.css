@@ -33,6 +33,11 @@ html {
     @apply rounded-xl border border-brand-300 bg-white px-4 py-2.5 text-sm font-semibold text-brand-900 transition hover:bg-brand-50;
   }
 
+  /* Gold call-to-action — matches the homepage hero buttons */
+  .btn-cta {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl bg-yellow-400 px-6 py-3 text-sm font-bold text-brand-900 shadow-[0_8px_30px_rgba(250,204,21,0.28)] transition-all hover:scale-[1.01] hover:bg-yellow-300;
+  }
+
   .auth-page {
     @apply mx-auto flex w-full max-w-md items-start justify-center px-4 py-10 sm:py-14;
   }
@@ -195,7 +200,21 @@ html {
   }
 
   .auth-google-btn {
-    @apply flex w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 hover:shadow;
+    @apply flex w-full items-center justify-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm transition hover:border-brand-200 hover:bg-brand-50/40 hover:shadow;
+  }
+
+  /* Centered badge pill above auth form headings — mirrors homepage section badges */
+  .auth-badge {
+    @apply mb-3 inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-100/80 px-4 py-1 text-[11px] font-bold uppercase tracking-widest text-brand-700;
+  }
+
+  .auth-badge-dot {
+    @apply h-1.5 w-1.5 rounded-full bg-brand-600;
+  }
+
+  /* Small gradient underline under auth headings — mirrors homepage section underline */
+  .auth-heading-underline {
+    @apply mx-auto mt-3 h-1 w-12 rounded-full bg-gradient-to-r from-brand-500/0 via-brand-500 to-brand-500/0;
   }
 
   /* White form card on auth hero (login/register desktop) */

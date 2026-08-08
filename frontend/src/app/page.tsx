@@ -162,7 +162,7 @@ function SectionHeader({
         {badge}
       </span>
       <h2
-        className={`text-3xl font-black tracking-tight sm:text-4xl lg:text-[2.75rem] ${
+        className={`text-2xl font-bold tracking-tight sm:text-4xl sm:font-black lg:text-[2.75rem] ${
           isDark ? "text-white" : "text-brand-900"
         }`}
       >
@@ -191,7 +191,7 @@ export default function HomePage() {
     <div className="overflow-x-hidden">
 
       {/* ── HERO ── */}
-      <section className="relative flex min-h-[min(100dvh,720px)] items-end overflow-hidden bg-brand-900 sm:min-h-[85vh] sm:items-center lg:min-h-[92vh]">
+      <section className="relative flex min-h-[min(100dvh,720px)] items-start overflow-hidden bg-brand-900 sm:min-h-[85vh] lg:min-h-[92vh]">
         <div className="absolute inset-0 z-0">
           <Image
             src="/edited flag for the ani bag.jpg"
@@ -210,7 +210,7 @@ export default function HomePage() {
           <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-brand-950 to-transparent" />
         </div>
 
-        <div className="relative z-10 mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+        <div className="relative z-10 mx-auto w-full max-w-6xl px-4 pt-10 pb-16 sm:px-6 sm:pt-16 sm:pb-24 lg:pt-20">
           <div className="max-w-3xl">
             <BrandHeroCopy
               size="hero"
@@ -423,7 +423,7 @@ export default function HomePage() {
             <span className="h-1.5 w-1.5 rounded-full bg-yellow-400" />
             Get Started Today
           </span>
-          <h2 className="mb-5 text-4xl font-black leading-tight tracking-tight md:text-5xl">
+          <h2 className="mb-5 text-[1.75rem] font-bold leading-tight tracking-tight sm:text-4xl sm:font-black md:text-5xl">
             Ready to Transform{" "}
             <span className="bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-300 bg-clip-text text-transparent">
               How You Trade?
