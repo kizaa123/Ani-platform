@@ -1,12 +1,10 @@
 import type { ReactNode } from "react";
-import { PlatformBrandTitle } from "@/components/PlatformBrandTitle";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
 
+const MOTTO = "The Premier Commodity Exchange Platform";
 const SUPPORTING =
   "Connecting verified fellows with clients. Secure commodity trading with full privacy protection.";
-
-const MOTTO = "The Premier Commodity Exchange Platform";
 
 type BrandHeroCopyProps = {
   /** Larger type for the homepage hero; panel matches login/register side branding */
@@ -14,20 +12,47 @@ type BrandHeroCopyProps = {
   /** Optional CTAs under the copy (Join / Sign In on home) */
   actions?: ReactNode;
   className?: string;
-  /** When false, skip ScrollReveal wrappers (e.g. already wrapped) */
-  animate?: boolean;
 };
 
-function FellowsMeetMarkets({ size }: { size: "hero" | "panel" }) {
-  const headingClass =
-    size === "hero"
-      ? "text-3xl font-bold leading-[1.15] tracking-tight text-white sm:text-4xl md:text-5xl lg:text-[3.25rem]"
-      : "text-3xl font-bold leading-[1.15] tracking-tight text-white xl:text-4xl 2xl:text-[2.75rem]";
+const SIZE = {
+  hero: {
+    brand:
+      "text-[1.35rem] font-black leading-snug tracking-tight text-white sm:text-3xl md:text-4xl lg:text-[2.65rem]",
+    motto:
+      "text-sm font-semibold tracking-[0.04em] text-gold sm:text-base md:text-lg",
+    headline:
+      "text-2xl font-bold leading-snug tracking-tight text-white sm:text-3xl md:text-4xl lg:text-5xl",
+    support:
+      "max-w-xl text-base font-light leading-relaxed text-brand-100/95 sm:text-lg md:text-xl",
+    stack: "gap-3 sm:gap-4",
+  },
+  panel: {
+    brand:
+      "text-2xl font-black leading-snug tracking-tight text-white lg:text-3xl xl:text-[2.35rem]",
+    motto: "text-sm font-semibold tracking-[0.04em] text-gold lg:text-base xl:text-lg",
+    headline:
+      "text-2xl font-bold leading-snug tracking-tight text-white xl:text-3xl 2xl:text-4xl",
+    support: "max-w-xl text-base font-light leading-relaxed text-brand-100/90 xl:text-lg",
+    stack: "gap-3 xl:gap-4",
+  },
+} as const;
 
-  const Tag = size === "hero" ? "h1" : "h2";
-
+/** Brand line: full name flows; "— ANI" never orphans alone. */
+function BrandLine({ className }: { className: string }) {
   return (
-    <Tag className={`${headingClass} text-balance`}>
+    <p className={className}>
+      Agricess Network International
+      <span className="whitespace-nowrap">
+        {" "}
+        — <span className="text-gold">ANI</span>
+      </span>
+    </p>
+  );
+}
+
+function Headline({ className, as: Tag }: { className: string; as: "h1" | "h2" }) {
+  return (
+    <Tag className={className}>
       Where Fellows{" "}
       <span className="whitespace-nowrap bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-300 bg-clip-text text-transparent">
         Meet Markets
@@ -37,45 +62,42 @@ function FellowsMeetMarkets({ size }: { size: "hero" | "panel" }) {
 }
 
 /**
- * Shared brand stack for home, login, and register:
- * Brand name → motto → headline → supporting line → optional actions.
+ * Shared brand stack for home, login, and register — same order & style:
+ * 1. Agricess Network International — ANI
+ * 2. The Premier Commodity Exchange Platform
+ * 3. Where Fellows Meet Markets
+ * 4. Supporting sentence
+ * 5. Optional actions
  */
 export function BrandHeroCopy({
   size = "hero",
   actions,
   className = "",
-  animate = true,
 }: BrandHeroCopyProps) {
-  const supportClass =
-    size === "hero"
-      ? "text-lg font-light leading-relaxed text-brand-100 sm:text-xl md:text-2xl"
-      : "max-w-xl text-lg font-light leading-relaxed text-brand-100/90 xl:text-xl";
-
-  const stack = (
-    <div className={`flex flex-col gap-5 sm:gap-6 ${className}`}>
-      <PlatformBrandTitle theme="light" size={size} motto={MOTTO} />
-      <FellowsMeetMarkets size={size} />
-      <p className={`${supportClass} text-pretty`}>{SUPPORTING}</p>
-      {actions ? <div className="pt-1">{actions}</div> : null}
-    </div>
-  );
-
-  if (!animate) return stack;
+  const s = SIZE[size];
+  const HeadingTag = size === "hero" ? "h1" : "h2";
 
   return (
-    <div className={`flex flex-col gap-5 sm:gap-6 ${className}`}>
-      <ScrollReveal trigger="mount" delay={scrollStagger(0, 80)} duration={500} direction="fade-up">
-        <PlatformBrandTitle theme="light" size={size} motto={MOTTO} />
+    <div className={`flex flex-col ${s.stack} ${className}`}>
+      <ScrollReveal trigger="mount" delay={scrollStagger(0, 70)} duration={480} direction="fade-up">
+        <BrandLine className={s.brand} />
       </ScrollReveal>
-      <ScrollReveal trigger="mount" delay={scrollStagger(1, 80)} duration={550} direction="fade-up">
-        <FellowsMeetMarkets size={size} />
+
+      <ScrollReveal trigger="mount" delay={scrollStagger(1, 70)} duration={480} direction="fade-up">
+        <p className={s.motto}>{MOTTO}</p>
       </ScrollReveal>
-      <ScrollReveal trigger="mount" delay={scrollStagger(2, 80)} duration={500} direction="fade-up">
-        <p className={`${supportClass} text-pretty`}>{SUPPORTING}</p>
+
+      <ScrollReveal trigger="mount" delay={scrollStagger(2, 70)} duration={520} direction="fade-up">
+        <Headline className={s.headline} as={HeadingTag} />
       </ScrollReveal>
+
+      <ScrollReveal trigger="mount" delay={scrollStagger(3, 70)} duration={480} direction="fade-up">
+        <p className={s.support}>{SUPPORTING}</p>
+      </ScrollReveal>
+
       {actions ? (
-        <ScrollReveal trigger="mount" delay={scrollStagger(3, 80)} duration={500} direction="fade-up">
-          <div className="pt-1">{actions}</div>
+        <ScrollReveal trigger="mount" delay={scrollStagger(4, 70)} duration={480} direction="fade-up">
+          <div className="pt-2 sm:pt-3">{actions}</div>
         </ScrollReveal>
       ) : null}
     </div>

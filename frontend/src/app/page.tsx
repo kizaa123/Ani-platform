@@ -1,4 +1,5 @@
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Icon, type IconName } from "@/components/icons";
@@ -136,6 +137,55 @@ const ROLE_CARDS: { icon: IconName; label: string; desc: string; image: string }
   },
 ];
 
+function SectionHeader({
+  badge,
+  title,
+  subtitle,
+  theme = "light",
+}: {
+  badge: string;
+  title: ReactNode;
+  subtitle: string;
+  theme?: "light" | "dark";
+}) {
+  const isDark = theme === "dark";
+  return (
+    <ScrollReveal className="mb-14 text-center" duration={500} direction="fade-up">
+      <span
+        className={`mb-4 inline-flex items-center gap-2 rounded-full px-5 py-1.5 text-xs font-bold uppercase tracking-widest ${
+          isDark
+            ? "border border-brand-600/50 bg-brand-800/60 text-yellow-400 backdrop-blur-sm"
+            : "border border-brand-200 bg-brand-100/80 text-brand-700"
+        }`}
+      >
+        <span className={`h-1.5 w-1.5 rounded-full ${isDark ? "bg-yellow-400" : "bg-brand-600"}`} />
+        {badge}
+      </span>
+      <h2
+        className={`text-3xl font-black tracking-tight sm:text-4xl lg:text-[2.75rem] ${
+          isDark ? "text-white" : "text-brand-900"
+        }`}
+      >
+        {title}
+      </h2>
+      <div
+        className={`mx-auto mt-4 h-1 w-16 rounded-full bg-gradient-to-r ${
+          isDark
+            ? "from-yellow-400/0 via-yellow-400 to-yellow-400/0"
+            : "from-brand-500/0 via-brand-500 to-brand-500/0"
+        }`}
+      />
+      <p
+        className={`mx-auto mt-5 max-w-xl text-base leading-relaxed ${
+          isDark ? "text-brand-300" : "text-gray-500"
+        }`}
+      >
+        {subtitle}
+      </p>
+    </ScrollReveal>
+  );
+}
+
 export default function HomePage() {
   return (
     <div className="overflow-x-hidden">
@@ -156,24 +206,26 @@ export default function HomePage() {
             aria-hidden="true"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-brand-900/90 via-brand-900/75 to-brand-900/60 sm:bg-gradient-to-r sm:from-brand-950/95 sm:via-brand-900/80 sm:to-brand-800/30" />
+          {/* Smooth fade into the stats band */}
+          <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-brand-950 to-transparent" />
         </div>
 
         <div className="relative z-10 mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
-          <div className="max-w-2xl">
+          <div className="max-w-3xl">
             <BrandHeroCopy
               size="hero"
               actions={
-                <div className="flex w-full max-w-xl flex-col gap-3 sm:flex-row sm:gap-4">
+                <div className="flex w-full max-w-xl flex-row gap-3 sm:gap-4">
                   <Link
                     href="/register"
-                    className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-2xl bg-yellow-400 px-8 py-4 text-base font-bold text-brand-900 shadow-lg transition-all hover:scale-[1.02] hover:bg-yellow-300 sm:min-w-[12rem]"
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-yellow-400 px-4 py-4 text-sm font-bold text-brand-900 shadow-[0_8px_30px_rgba(250,204,21,0.35)] transition-all hover:scale-[1.02] hover:bg-yellow-300 sm:px-8 sm:text-base sm:min-w-[12rem]"
                   >
-                    <Icon name="sprout" className="h-5 w-5" />
+                    <Icon name="sprout" className="h-5 w-5 shrink-0" />
                     Join ANI
                   </Link>
                   <Link
                     href="/login"
-                    className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-2xl border-2 border-white/30 px-8 py-4 text-base font-semibold text-white backdrop-blur-sm transition-all hover:border-white/60 hover:bg-white/10 sm:min-w-[12rem]"
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl border-2 border-white/30 bg-white/5 px-4 py-4 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:border-white/60 hover:bg-white/10 sm:px-8 sm:text-base sm:min-w-[12rem]"
                   >
                     Sign In
                   </Link>
@@ -182,38 +234,53 @@ export default function HomePage() {
             />
           </div>
         </div>
+
+        {/* Scroll cue */}
+        <div className="pointer-events-none absolute bottom-5 left-1/2 z-10 hidden -translate-x-1/2 sm:block">
+          <div className="flex h-9 w-6 items-start justify-center rounded-full border-2 border-white/25 p-1.5">
+            <span className="h-2 w-1 animate-bounce rounded-full bg-yellow-400" />
+          </div>
+        </div>
       </section>
 
       {/* ── STATS BAR ── */}
-      <section className="bg-brand-800 py-8">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="grid grid-cols-3 gap-6">
+      <section className="relative bg-brand-950 py-12">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-yellow-400/40 to-transparent" />
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="grid grid-cols-3 divide-x divide-white/10">
             {STATS.map((s, i) => (
               <ScrollReveal key={s.label} delay={scrollStagger(i, 90)} duration={450} direction="fade-up">
-                <div className="text-center">
-                  <p className="text-3xl font-black tabular-nums text-yellow-400">
+                <div className="px-3 text-center sm:px-6">
+                  <p className="text-3xl font-black tabular-nums text-yellow-400 sm:text-4xl lg:text-[2.75rem]">
                     <AnimatedStat value={s.value} delay={scrollStagger(i, 90)} />
                   </p>
-                  <p className="mt-1 text-sm font-medium text-brand-200">{s.label}</p>
+                  <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-300 sm:text-xs">
+                    {s.label}
+                  </p>
                 </div>
               </ScrollReveal>
             ))}
           </div>
         </div>
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       </section>
 
       {/* ── WHO IS IT FOR ── */}
-      <section className="bg-brand-50 py-20">
-        <div className="mx-auto max-w-6xl px-6">
-          <ScrollReveal className="mb-12 text-center" duration={500} direction="fade-up">
-            <span className="mb-3 inline-block rounded-full bg-brand-100 px-4 py-1 text-xs font-bold uppercase tracking-widest text-brand-700">
-              Built for Everyone
-            </span>
-            <h2 className="text-4xl font-black text-brand-900">One Platform, Many Roles</h2>
-            <p className="mx-auto mt-4 max-w-xl text-gray-500">
-              Whether you produce it, buy it, or broker it - ANI has a tailored experience designed for your role.
-            </p>
-          </ScrollReveal>
+      <section className="relative bg-brand-50 py-24">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/60 to-transparent" />
+        <div className="relative mx-auto max-w-6xl px-6">
+          <SectionHeader
+            badge="Built for Everyone"
+            title={
+              <>
+                One Platform,{" "}
+                <span className="bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent">
+                  Many Roles
+                </span>
+              </>
+            }
+            subtitle="Whether you produce it, buy it, or broker it — ANI has a tailored experience designed for your role."
+          />
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {ROLE_CARDS.map((r, i) => (
               <ScrollReveal key={r.label} delay={scrollStagger(i, 100)} duration={500} direction="fade-up">
@@ -233,19 +300,22 @@ export default function HomePage() {
       {/* ── HOW IT WORKS ── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-6xl px-6">
-          <ScrollReveal className="mb-14 text-center" duration={500} direction="fade-up">
-            <span className="mb-3 inline-block rounded-full bg-brand-100 px-4 py-1 text-xs font-bold uppercase tracking-widest text-brand-700">
-              Simple Process
-            </span>
-            <h2 className="text-4xl font-black text-brand-900">How It Works</h2>
-            <p className="mx-auto mt-4 max-w-xl text-gray-500">
-              Four simple steps from registration to closed deal - all protected by our secure escrow system.
-            </p>
-          </ScrollReveal>
+          <SectionHeader
+            badge="Simple Process"
+            title={
+              <>
+                How It{" "}
+                <span className="bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent">
+                  Works
+                </span>
+              </>
+            }
+            subtitle="Four simple steps from registration to closed deal — all protected by our secure escrow system."
+          />
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {HOW_IT_WORKS.map((item, i) => (
               <ScrollReveal key={item.step} delay={scrollStagger(i, 100)} duration={500} direction="fade-up">
-                <div className="card-elevated group flex h-full flex-col overflow-hidden rounded-2xl bg-white">
+                <div className="group flex h-full flex-col overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-brand-200 hover:shadow-xl">
                   <div className="relative h-44 w-full overflow-hidden">
                     <Image
                       src={item.image}
@@ -254,14 +324,17 @@ export default function HomePage() {
                       className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-brand-900/70 via-brand-900/25 to-transparent" />
+                    <span className="absolute bottom-3 left-4 flex h-9 w-9 items-center justify-center rounded-full bg-yellow-400 text-sm font-black text-brand-900 shadow-lg ring-2 ring-white/60">
+                      {item.step}
+                    </span>
                   </div>
                   <div className="flex flex-1 flex-col gap-2 p-5">
-                    <div className="flex items-center gap-2.5">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white shadow-sm">
-                        {item.step}
-                      </span>
-                      <h3 className="font-bold text-brand-900">{item.title}</h3>
-                    </div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-500">
+                      Step {item.step} of 4
+                    </p>
+                    <h3 className="text-lg font-bold text-brand-900 transition-colors group-hover:text-brand-700">
+                      {item.title}
+                    </h3>
                     <p className="text-sm leading-relaxed text-gray-500">{item.desc}</p>
                   </div>
                 </div>
@@ -279,23 +352,19 @@ export default function HomePage() {
         <div className="pointer-events-none absolute left-1/2 top-0 h-[500px] w-[900px] -translate-x-1/2 rounded-full bg-brand-700/20 blur-[120px]" />
 
         <div className="relative z-10 mx-auto max-w-6xl px-6">
-          {/* Section header */}
-          <ScrollReveal className="mb-16 text-center" duration={500} direction="fade-up">
-            <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-brand-600/50 bg-brand-800/60 px-5 py-1.5 text-xs font-bold uppercase tracking-widest text-yellow-400 backdrop-blur-sm">
-              <span className="h-1.5 w-1.5 rounded-full bg-yellow-400" />
-              The People Behind It
-            </span>
-            <h2 className="mt-4 text-4xl font-black text-white sm:text-5xl">
-              Meet Our{" "}
-              <span className="bg-gradient-to-r from-yellow-300 to-yellow-500 bg-clip-text text-transparent">
-                Team
-              </span>
-            </h2>
-            <div className="mx-auto mt-4 h-1 w-16 rounded-full bg-gradient-to-r from-yellow-400/0 via-yellow-400 to-yellow-400/0" />
-            <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-brand-300">
-              A passionate team of industry and technology experts committed to transforming trade across Africa and beyond.
-            </p>
-          </ScrollReveal>
+          <SectionHeader
+            theme="dark"
+            badge="The People Behind It"
+            title={
+              <>
+                Meet Our{" "}
+                <span className="bg-gradient-to-r from-yellow-300 to-yellow-500 bg-clip-text text-transparent">
+                  Team
+                </span>
+              </>
+            }
+            subtitle="A passionate team of industry and technology experts committed to transforming trade across Africa and beyond."
+          />
 
           {/* Team cards grid */}
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
@@ -344,30 +413,43 @@ export default function HomePage() {
 
 
       {/* ── FINAL CTA ── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-brand-700 via-brand-600 to-brand-500 py-24 text-white">
+      <section className="relative overflow-hidden bg-gradient-to-br from-brand-800 via-brand-700 to-brand-600 py-28 text-white">
         <div className="absolute inset-0 bg-[url('/login_cover.png')] bg-cover bg-center opacity-10" />
+        <div className="pointer-events-none absolute left-1/2 top-0 h-[400px] w-[800px] -translate-x-1/2 rounded-full bg-yellow-400/10 blur-[120px]" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-yellow-400/40 to-transparent" />
+
         <ScrollReveal className="relative z-10 mx-auto max-w-3xl px-6 text-center" duration={550} direction="fade-up">
-          <h2 className="mb-4 text-4xl font-black leading-tight md:text-5xl">
-            Ready to Transform How You Trade?
+          <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-1.5 text-xs font-bold uppercase tracking-widest text-yellow-300 backdrop-blur-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-yellow-400" />
+            Get Started Today
+          </span>
+          <h2 className="mb-5 text-4xl font-black leading-tight tracking-tight md:text-5xl">
+            Ready to Transform{" "}
+            <span className="bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-300 bg-clip-text text-transparent">
+              How You Trade?
+            </span>
           </h2>
-          <p className="mb-10 text-xl leading-relaxed text-brand-100">
+          <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-brand-100 md:text-xl">
             Join fellows, clients, and liaison officers using ANI to trade commodities safely and efficiently across Africa and beyond.
           </p>
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="mx-auto flex w-full max-w-xl flex-col justify-center gap-3 sm:flex-row sm:gap-4">
             <Link
               href="/register"
-              className="inline-flex items-center gap-2 rounded-2xl bg-yellow-400 px-8 py-4 text-base font-bold text-brand-900 shadow-lg transition-all hover:scale-105 hover:bg-yellow-300"
+              className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-2xl bg-yellow-400 px-8 py-4 text-base font-bold text-brand-900 shadow-[0_8px_30px_rgba(250,204,21,0.35)] transition-all hover:scale-[1.02] hover:bg-yellow-300 sm:min-w-[13rem]"
             >
               <Icon name="sprout" className="h-5 w-5" />
               Create Free Account
             </Link>
             <Link
               href="/marketplace"
-              className="inline-flex items-center gap-2 rounded-2xl border-2 border-white/40 px-8 py-4 text-base font-semibold text-white transition-all hover:bg-white/10"
+              className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-2xl border-2 border-white/40 bg-white/5 px-8 py-4 text-base font-semibold text-white backdrop-blur-sm transition-all hover:border-white/70 hover:bg-white/10 sm:min-w-[13rem]"
             >
               Browse Marketplace
             </Link>
           </div>
+          <p className="mt-6 text-sm text-brand-200">
+            Free to join · Verified community · Secure escrow payments
+          </p>
         </ScrollReveal>
       </section>
 

@@ -47,7 +47,11 @@ export const AuthHeroPanel = forwardRef<HTMLDivElement, AuthHeroPanelProps>(func
 
         <div className={`w-full shrink-0 ${formWidthClass}`}>
           <div className="mb-5 text-center lg:hidden">
-            <PlatformBrandTitle theme="dark" size="compact" />
+            <PlatformBrandTitle
+              theme="dark"
+              size="compact"
+              motto="The Premier Commodity Exchange Platform"
+            />
           </div>
 
           <div

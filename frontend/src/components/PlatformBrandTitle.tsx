@@ -15,20 +15,20 @@ interface PlatformBrandTitleProps {
 const sizeStyles = {
   hero: {
     primary:
-      "text-2xl font-black leading-[1.15] tracking-tight sm:text-3xl md:text-4xl lg:text-[2.75rem]",
-    motto: "mt-2 text-base font-semibold tracking-wide sm:text-lg md:text-xl",
+      "text-[1.35rem] font-black leading-snug tracking-tight sm:text-3xl md:text-4xl lg:text-[2.65rem]",
+    motto: "mt-2 text-sm font-semibold tracking-[0.04em] sm:text-base md:text-lg",
     icon: "h-12 w-auto shrink-0 sm:h-14 md:h-16 lg:h-[4.5rem]",
     gap: "gap-3 sm:gap-4",
   },
   panel: {
-    primary: "text-2xl font-black leading-[1.15] tracking-tight lg:text-3xl xl:text-[2.35rem]",
-    motto: "mt-2 text-sm font-semibold tracking-wide lg:text-base xl:text-lg",
+    primary: "text-2xl font-black leading-snug tracking-tight lg:text-3xl xl:text-[2.35rem]",
+    motto: "mt-2 text-sm font-semibold tracking-[0.04em] lg:text-base xl:text-lg",
     icon: "h-12 w-auto shrink-0 lg:h-14",
     gap: "gap-3",
   },
   compact: {
-    primary: "text-lg font-black leading-[1.2] tracking-tight sm:text-xl",
-    motto: "mt-1.5 text-xs font-semibold tracking-wide",
+    primary: "text-base font-black leading-snug tracking-tight sm:text-lg",
+    motto: "mt-1.5 text-xs font-semibold tracking-[0.04em]",
     icon: "h-10 w-auto shrink-0",
     gap: "gap-2",
   },
@@ -36,7 +36,7 @@ const sizeStyles = {
 
 const DEFAULT_MOTTO = "The Premier Commodity Exchange Platform";
 
-/** Brand line that keeps "— ANI" with the name (no orphaned ANI / mid-word breaks). */
+/** Brand line that keeps "— ANI" with the name (no orphaned ANI). */
 export function BrandNameLine({
   className = "",
   aniClassName = "text-gold",
@@ -45,11 +45,11 @@ export function BrandNameLine({
   aniClassName?: string;
 }) {
   return (
-    <span className={`text-balance ${className}`}>
+    <span className={className}>
       Agricess Network International
       <span className="whitespace-nowrap">
-        <span aria-hidden="true"> — </span>
-        <span className={aniClassName}>ANI</span>
+        {" "}
+        — <span className={aniClassName}>ANI</span>
       </span>
     </span>
   );
@@ -74,7 +74,7 @@ export function PlatformBrandTitle({
   );
 
   const mottoEl = showMotto ? (
-    <p className={`${styles.motto} ${mottoColor} text-pretty`}>{motto}</p>
+    <p className={`${styles.motto} ${mottoColor}`}>{motto}</p>
   ) : null;
 
   return (
