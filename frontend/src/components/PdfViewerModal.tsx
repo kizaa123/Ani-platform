@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Icon } from "@/components/icons";
 import { SpinnerLabel } from "@/components/LoadingPrimitives";
+import { PdfCanvasViewer, needsCanvasPdfRenderer } from "@/components/PdfCanvasViewer";
 
 type PdfViewerModalProps = {
   title: string;
@@ -25,6 +26,11 @@ export function PdfViewerModal({
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Mobile browsers can't render PDFs inside iframes (Android Chrome has no
+  // inline PDF viewer; iOS Safari freezes on the first page), so we draw the
+  // document onto canvases with PDF.js there instead.
+  const useCanvasRenderer = useMemo(() => needsCanvasPdfRenderer(), []);
 
   const close = useCallback(() => {
     setUrl((prev) => {
@@ -138,11 +144,15 @@ export function PdfViewerModal({
           </div>
         )}
         {url && !loading && !error && (
-          <iframe
-            title={title}
-            src={`${url}#toolbar=${allowDownload ? 1 : 0}&navpanes=0`}
-            className="h-full w-full border-0 bg-white"
-          />
+          useCanvasRenderer ? (
+            <PdfCanvasViewer url={url} title={title} />
+          ) : (
+            <iframe
+              title={title}
+              src={`${url}#toolbar=${allowDownload ? 1 : 0}&navpanes=0`}
+              className="h-full w-full border-0 bg-white"
+            />
+          )
         )}
       </div>
     </div>

@@ -217,25 +217,15 @@ html {
     @apply mx-auto mt-3 h-1 w-12 rounded-full bg-gradient-to-r from-brand-500/0 via-brand-500 to-brand-500/0;
   }
 
-  /* White form card on auth hero (login/register desktop) */
+  /* White form card on auth hero (login/register desktop).
+     Content stays scrollable but the scrollbar itself is hidden. */
   .auth-hero-form-card {
-    scrollbar-gutter: stable;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* legacy Edge/IE */
   }
 
   .auth-hero-form-card::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  .auth-hero-form-card::-webkit-scrollbar-track {
-    @apply rounded-full bg-transparent;
-  }
-
-  .auth-hero-form-card::-webkit-scrollbar-thumb {
-    @apply rounded-full bg-brand-200/80;
-  }
-
-  .auth-hero-form-card::-webkit-scrollbar-thumb:hover {
-    @apply bg-brand-300;
+    display: none; /* Chrome, Safari */
   }
 
   /* Subtle elevation for white-surface cards (homepage roles, portal nav, panels). */

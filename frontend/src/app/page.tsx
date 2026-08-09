@@ -191,7 +191,7 @@ export default function HomePage() {
     <div className="overflow-x-hidden">
 
       {/* ── HERO ── */}
-      <section className="relative flex min-h-[min(100dvh,720px)] items-start overflow-hidden bg-brand-900 sm:min-h-[85vh] lg:min-h-[92vh]">
+      <section className="relative flex min-h-[70dvh] items-center overflow-hidden bg-brand-900 sm:min-h-[85vh] sm:items-start lg:min-h-[92vh]">
         <div className="absolute inset-0 z-0">
           <Image
             src="/edited flag for the ani bag.jpg"
@@ -210,7 +210,7 @@ export default function HomePage() {
           <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-brand-950 to-transparent" />
         </div>
 
-        <div className="relative z-10 mx-auto w-full max-w-6xl px-4 pt-10 pb-16 sm:px-6 sm:pt-16 sm:pb-24 lg:pt-20">
+        <div className="relative z-10 mx-auto w-full max-w-6xl px-4 py-12 sm:px-6 sm:pt-16 sm:pb-24 lg:pt-20">
           <div className="max-w-3xl">
             <BrandHeroCopy
               size="hero"

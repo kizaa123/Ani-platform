@@ -152,23 +152,23 @@ export default function PublisherLibraryPage() {
         </Link>
 
         {publisher && (
-          <div className="mt-4 flex items-center gap-4 rounded-2xl border border-brand-100 bg-white p-5 shadow-sm">
+          <div className="mt-4 flex items-center gap-3 rounded-2xl border border-brand-100 bg-white p-4 shadow-sm">
             <AvatarWithVerification
               src={publisher.profilePicture}
               name={publisher.name}
-              size="lg"
+              size="md"
               verificationStatus={publisher.verificationStatus}
               verificationTags={publisher.verificationTags}
               tagPlacement="none"
             />
             <div className="min-w-0 flex-1">
-              <h1 className="text-xl font-extrabold text-brand-900 sm:text-2xl">
+              <h1 className="text-base font-bold text-brand-900 sm:text-lg">
                 <InlineNameWithVerificationTags
                   name={publisher.name}
                   verificationTags={publisher.verificationTags}
                   verificationStatus={publisher.verificationStatus}
-                  nameClassName="font-extrabold text-brand-900"
-                  tagSize="md"
+                  nameClassName="font-bold text-brand-900"
+                  tagSize="sm"
                 />
               </h1>
             </div>
