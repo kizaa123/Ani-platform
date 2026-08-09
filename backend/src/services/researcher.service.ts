@@ -220,13 +220,23 @@ export class ResearcherService {
     );
   }
 
+  /** Platform admins never pay access fees anywhere on the platform. */
+  private async userIsPlatformAdmin(userId: string): Promise<boolean> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { roleId: true },
+    });
+    return user?.roleId === ROLES.ADMIN;
+  }
+
   private async userHasPublicationAccess(
     userId: string,
     pub: { id: string; researcherId: string; isFree: boolean; price?: number | null }
   ) {
+    if (publicationIsFreeAccess(pub)) return true;
+    if (await this.userIsPlatformAdmin(userId)) return true;
     const researcherProfile = await prisma.researcherProfile.findUnique({ where: { userId } });
     if (researcherProfile?.id === pub.researcherId) return true;
-    if (publicationIsFreeAccess(pub)) return true;
     const purchase = await prisma.researchPurchase.findFirst({
       where: { studentId: userId, publicationId: pub.id, status: 'COMPLETED' },
     });
@@ -401,7 +411,10 @@ export class ResearcherService {
     ]);
 
     const purchasedIds = new Set(purchases.map((p) => p.publicationId));
-    const researcherProfile = await prisma.researcherProfile.findUnique({ where: { userId } });
+    const [researcherProfile, isPlatformAdmin] = await Promise.all([
+      prisma.researcherProfile.findUnique({ where: { userId } }),
+      this.userIsPlatformAdmin(userId),
+    ]);
     const pubIds = publications.map((p) => p.id);
     const [likedIds, commentCounts] = await Promise.all([
       this.getLikedPublicationIds(userId, pubIds),
@@ -410,7 +423,8 @@ export class ResearcherService {
 
     return publications.map((p) => {
       const isOwner = researcherProfile?.id === p.researcherId;
-      const hasAccess = isOwner || publicationIsFreeAccess(p) || purchasedIds.has(p.id);
+      const hasAccess =
+        isPlatformAdmin || isOwner || publicationIsFreeAccess(p) || purchasedIds.has(p.id);
       return formatPublication(p, {
         hasAccess,
         isOwner,
@@ -551,12 +565,13 @@ export class ResearcherService {
       throw new AppError(404, 'Publisher not found');
     }
 
-    const [purchases, researcherProfile] = await Promise.all([
+    const [purchases, researcherProfile, isPlatformAdmin] = await Promise.all([
       prisma.researchPurchase.findMany({
         where: { studentId: userId, status: 'COMPLETED' },
         select: { publicationId: true },
       }),
       prisma.researcherProfile.findUnique({ where: { userId } }),
+      this.userIsPlatformAdmin(userId),
     ]);
 
     const purchasedIds = new Set(purchases.map((p) => p.publicationId));
@@ -568,7 +583,8 @@ export class ResearcherService {
     ]);
 
     const formattedPublications = publications.map((p) => {
-      const hasAccess = isOwner || publicationIsFreeAccess(p) || purchasedIds.has(p.id);
+      const hasAccess =
+        isPlatformAdmin || isOwner || publicationIsFreeAccess(p) || purchasedIds.has(p.id);
       return formatPublication(p, {
         hasAccess,
         isOwner,

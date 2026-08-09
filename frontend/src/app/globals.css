@@ -597,3 +597,63 @@ body {
     opacity: 1;
   }
 }
+
+/* ── Mobile table polish ──────────────────────────────────────────────
+   Every data table on the platform lives inside a `div.overflow-x-auto`
+   wrapper. On small screens we tighten typography and spacing, style the
+   horizontal scrollbar, and paint scroll-edge shadows so users can see
+   there is more content to swipe to. Kept outside @layer so these rules
+   win over Tailwind utility classes. */
+@media (max-width: 767px) {
+  div.overflow-x-auto:has(table) {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(27, 67, 50, 0.25) transparent;
+    /* Scroll shadows: white covers hide the shadow at rest, the radial
+       shadows peek out only when content overflows in that direction. */
+    background:
+      linear-gradient(to right, #fff 40%, rgba(255, 255, 255, 0)) left / 28px 100%,
+      linear-gradient(to left, #fff 40%, rgba(255, 255, 255, 0)) right / 28px 100%,
+      radial-gradient(farthest-side at 0 50%, rgba(27, 67, 50, 0.16), transparent) left / 14px 100%,
+      radial-gradient(farthest-side at 100% 50%, rgba(27, 67, 50, 0.16), transparent) right / 14px 100%;
+    background-repeat: no-repeat;
+    background-attachment: local, local, scroll, scroll;
+  }
+
+  div.overflow-x-auto:has(table)::-webkit-scrollbar {
+    height: 5px;
+  }
+
+  div.overflow-x-auto:has(table)::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  div.overflow-x-auto:has(table)::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background: rgba(27, 67, 50, 0.22);
+  }
+
+  div.overflow-x-auto:has(table) table {
+    font-size: 0.75rem;
+    line-height: 1.35;
+  }
+
+  div.overflow-x-auto:has(table) thead th {
+    font-size: 0.65rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  div.overflow-x-auto:has(table) th,
+  div.overflow-x-auto:has(table) td {
+    padding-top: 0.55rem;
+    padding-bottom: 0.55rem;
+    padding-left: 0.65rem;
+    padding-right: 0.65rem;
+  }
+
+  div.overflow-x-auto:has(table) tbody tr {
+    border-bottom: 1px solid rgba(27, 67, 50, 0.06);
+  }
+}
