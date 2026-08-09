@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import { BuyerFinancialStatement, canPurchaseFromMarketplace } from "@/lib/types";
 import { BuyerOrdersTable } from "@/components/ProductOrdersList";
-import { formatDate, formatGhc, orderStatusStyle } from "@/lib/format";
+import { formatDate, formatGhc, formatGhcPlain, orderStatusStyle } from "@/lib/format";
 
 export default function BuyerFinancialsPage() {
   const { user, loading } = useAuth();
@@ -135,7 +135,7 @@ export default function BuyerFinancialsPage() {
                 <tr className="border-b border-brand-50 bg-brand-50/50 text-left text-xs font-semibold uppercase text-gray-500">
                   <th className="px-6 py-3">Date</th>
                   <th className="px-4 py-3">Fellow / Farm</th>
-                  <th className="px-4 py-3 text-right">Amount</th>
+                  <th className="whitespace-nowrap px-4 py-3 text-right">Amount (GHC)</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-6 py-3">Payment</th>
                 </tr>
@@ -150,8 +150,8 @@ export default function BuyerFinancialsPage() {
                       <p className="font-medium text-brand-900">{item.farmerName}</p>
                       {item.farmName && <p className="text-xs text-brand-700">{item.farmName}</p>}
                     </td>
-                    <td className="px-4 py-3 text-right font-semibold text-brand-900">
-                      {formatGhc(item.amount)}
+                    <td className="px-4 py-3 text-right font-semibold tabular-nums text-brand-900">
+                      {formatGhcPlain(item.amount)}
                     </td>
                     <td className="px-4 py-3">
                       <span
@@ -171,7 +171,7 @@ export default function BuyerFinancialsPage() {
                   <td colSpan={2} className="px-6 py-4 text-right">
                     Total farm access fees
                   </td>
-                  <td className="px-4 py-4 text-right">{formatGhc(summary.totalFarmAccessSpend)}</td>
+                  <td className="px-4 py-4 text-right tabular-nums">{formatGhcPlain(summary.totalFarmAccessSpend)}</td>
                   <td colSpan={2} />
                 </tr>
               </tfoot>

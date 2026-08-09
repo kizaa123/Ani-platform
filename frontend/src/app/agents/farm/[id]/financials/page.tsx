@@ -16,6 +16,11 @@ function formatGhc(amount: number) {
   return `GHC ${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+/** Number only — the column header carries the GHC code. */
+function formatGhcPlain(amount: number) {
+  return amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, {
     year: "numeric",
@@ -169,8 +174,8 @@ export default function HandlerClientFinancialsPage() {
                   <th className="px-4 py-3">Product</th>
                   <th className="px-4 py-3">Commodity</th>
                   <th className="px-4 py-3 text-right">Qty</th>
-                  <th className="px-4 py-3 text-right">Unit price</th>
-                  <th className="px-4 py-3 text-right">Total</th>
+                  <th className="whitespace-nowrap px-4 py-3 text-right">Unit price (GHC)</th>
+                  <th className="whitespace-nowrap px-4 py-3 text-right">Total (GHC)</th>
                   <th className="px-6 py-3">Status</th>
                 </tr>
               </thead>
@@ -188,11 +193,11 @@ export default function HandlerClientFinancialsPage() {
                     <td className="px-4 py-3 text-right text-gray-700">
                       {item.quantity} {item.unit}
                     </td>
-                    <td className="px-4 py-3 text-right text-gray-700">
-                      {formatGhc(item.unitPrice)}/{item.unit}
+                    <td className="px-4 py-3 text-right tabular-nums text-gray-700">
+                      {formatGhcPlain(item.unitPrice)}/{item.unit}
                     </td>
-                    <td className="px-4 py-3 text-right font-semibold text-brand-900">
-                      {formatGhc(item.totalValue)}
+                    <td className="px-4 py-3 text-right font-semibold tabular-nums text-brand-900">
+                      {formatGhcPlain(item.totalValue)}
                     </td>
                     <td className="px-6 py-3">
                       <span

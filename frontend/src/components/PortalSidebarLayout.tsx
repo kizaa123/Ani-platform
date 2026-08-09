@@ -70,12 +70,13 @@ function SidebarContent({
           verificationTags={user.verificationTags}
           tagPlacement="none"
         />
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <RolePrefixedName
             user={user}
             verificationTags={user.verificationTags}
-            className="text-sm font-semibold"
+            className="w-full text-sm font-semibold"
             nameClassName="text-brand-900 font-semibold"
+            wrap={false}
           />
           {getSubtitle && (
             <p className="truncate text-xs text-brand-500">{getSubtitle(user)}</p>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { PlatformFinancialStatement } from "@/lib/types";
-import { formatDate, formatGhc, orderStatusStyle } from "@/lib/format";
+import { formatDate, formatGhc, formatGhcPlain, orderStatusStyle } from "@/lib/format";
 
 type LineItemType = PlatformFinancialStatement["lineItems"][number]["type"];
 type FinancialFilter = LineItemType | "ALL";
@@ -118,7 +118,7 @@ export function PlatformTransactionsTable({
                   <th className="px-4 py-2.5">Type</th>
                   <th className="px-4 py-2.5">Description</th>
                   <th className="px-4 py-2.5">Parties</th>
-                  <th className="px-4 py-2.5 text-right">Amount</th>
+                  <th className="whitespace-nowrap px-4 py-2.5 text-right">Amount (GHC)</th>
                   <th className="px-5 py-2.5">Status</th>
                   {showStatementColumn && <th className="px-5 py-2.5">Receipt</th>}
                 </tr>
@@ -130,11 +130,11 @@ export function PlatformTransactionsTable({
                     <td className="px-4 py-2.5 text-gray-600">{typeLabel(item.type)}</td>
                     <td className="px-4 py-2.5 font-medium text-brand-900">{item.description}</td>
                     <td className="px-4 py-2.5 text-gray-600">{item.partyName}</td>
-                    <td className="px-4 py-2.5 text-right font-semibold text-brand-900">
-                      {formatGhc(item.amount)}
+                    <td className="px-4 py-2.5 text-right font-semibold tabular-nums text-brand-900">
+                      {formatGhcPlain(item.amount)}
                       {item.type === "RESEARCH_SALE" && item.grossAmount != null && item.grossAmount !== item.amount ? (
                         <span className="mt-0.5 block text-[10px] font-normal text-gray-500">
-                          of {formatGhc(item.grossAmount)} gross
+                          of {formatGhcPlain(item.grossAmount)} gross
                         </span>
                       ) : null}
                     </td>
@@ -183,8 +183,8 @@ export function PlatformTransactionsTable({
                   <td colSpan={4} className="px-5 py-3 text-right text-xs">
                     {activeFilter === "ALL" ? "Total" : `${filterLabel(activeFilter)} total`}
                   </td>
-                  <td className="px-4 py-3 text-right text-xs">
-                    {formatGhc(activeFilter === "ALL" ? summary.totalRevenue : filteredTotal)}
+                  <td className="px-4 py-3 text-right text-xs tabular-nums">
+                    {formatGhcPlain(activeFilter === "ALL" ? summary.totalRevenue : filteredTotal)}
                   </td>
                   <td colSpan={showStatementColumn ? 2 : 1} />
                 </tr>
@@ -255,7 +255,7 @@ export function OrderReceiptsTable({
                 <th className="px-5 py-2.5">Date</th>
                 <th className="px-4 py-2.5">Order</th>
                 <th className="px-4 py-2.5">Parties</th>
-                <th className="px-4 py-2.5 text-right">Amount</th>
+                <th className="whitespace-nowrap px-4 py-2.5 text-right">Amount (GHC)</th>
                 <th className="px-5 py-2.5">Receipt status</th>
                 <th className="px-5 py-2.5">Action</th>
               </tr>
@@ -270,11 +270,11 @@ export function OrderReceiptsTable({
                     <td className="whitespace-nowrap px-5 py-2.5 text-gray-600">{formatDate(item.date)}</td>
                     <td className="px-4 py-2.5 font-medium text-brand-900">{item.description}</td>
                     <td className="px-4 py-2.5 text-gray-600">{item.partyName}</td>
-                    <td className="px-4 py-2.5 text-right font-semibold text-brand-900">
-                      {formatGhc(item.amount)}
+                    <td className="px-4 py-2.5 text-right font-semibold tabular-nums text-brand-900">
+                      {formatGhcPlain(item.amount)}
                       {item.type === "RESEARCH_SALE" && item.grossAmount != null && item.grossAmount !== item.amount ? (
                         <span className="mt-0.5 block text-[10px] font-normal text-gray-500">
-                          of {formatGhc(item.grossAmount)} gross
+                          of {formatGhcPlain(item.grossAmount)} gross
                         </span>
                       ) : null}
                     </td>

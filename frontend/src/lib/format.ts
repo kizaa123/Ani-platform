@@ -1,7 +1,12 @@
-import { formatForViewer } from "./currency";
+import { formatForViewer, formatAmountNumberForCountry } from "./currency";
 
 export function formatGhc(amount: number, viewerCountry?: string | null) {
   return formatForViewer(amount, viewerCountry ?? "Ghana");
+}
+
+/** Amount without the currency code — for table cells where the header shows it, e.g. "Amount (GHC)". */
+export function formatGhcPlain(amount: number, viewerCountry?: string | null) {
+  return formatAmountNumberForCountry(amount, viewerCountry ?? "Ghana");
 }
 
 /** Compact axis label for currency charts - no prefix, abbreviated at scale. */

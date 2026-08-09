@@ -13,7 +13,7 @@ import {
   ProductOrderLineItem,
   isHandler,
 } from "@/lib/types";
-import { formatDate, formatGhc, orderStatusStyle } from "@/lib/format";
+import { formatDate, formatGhc, formatGhcPlain, orderStatusStyle } from "@/lib/format";
 import { OrderDetailModal, OrderListPerspective } from "@/components/ProductOrdersList";
 
 type OrderListItem = ProductOrderLineItem | BuyerOrderLineItem;
@@ -154,7 +154,7 @@ export default function HandlerFinancialsPage() {
                 <tr className="border-b border-amber-50 bg-amber-50/50 text-left text-[10px] font-semibold uppercase text-gray-500">
                   <th className="px-5 py-2.5">Order</th>
                   <th className="px-4 py-2.5">Related party</th>
-                  <th className="px-4 py-2.5 text-right">Share amount</th>
+                  <th className="whitespace-nowrap px-4 py-2.5 text-right">Share amount (GHC)</th>
                   <th className="px-4 py-2.5">Order date</th>
                   <th className="px-4 py-2.5">Status</th>
                   <th className="px-5 py-2.5">Details</th>
@@ -170,8 +170,8 @@ export default function HandlerFinancialsPage() {
                         {item.counterpartyName}
                       </span>
                     </td>
-                    <td className="px-4 py-2.5 text-right font-semibold text-amber-700">
-                      {formatGhc(item.shareAmount)}
+                    <td className="px-4 py-2.5 text-right font-semibold tabular-nums text-amber-700">
+                      {formatGhcPlain(item.shareAmount)}
                     </td>
                     <td className="px-4 py-2.5 whitespace-nowrap text-gray-600">
                       {formatDate(item.date)}
@@ -222,7 +222,7 @@ export default function HandlerFinancialsPage() {
                   <th className="px-5 py-2.5">Date</th>
                   <th className="px-4 py-2.5">Client</th>
                   <th className="px-4 py-2.5">Order</th>
-                  <th className="px-4 py-2.5 text-right">Commission</th>
+                  <th className="whitespace-nowrap px-4 py-2.5 text-right">Commission (GHC)</th>
                   <th className="px-4 py-2.5">Status</th>
                   <th className="px-5 py-2.5">Details</th>
                 </tr>
@@ -242,8 +242,8 @@ export default function HandlerFinancialsPage() {
                         {item.counterpartyName}
                       </span>
                     </td>
-                    <td className="px-4 py-2.5 text-right font-semibold text-green-700">
-                      {formatGhc(item.amount)}
+                    <td className="px-4 py-2.5 text-right font-semibold tabular-nums text-green-700">
+                      {formatGhcPlain(item.amount)}
                     </td>
                     <td className="px-4 py-2.5">
                       <span

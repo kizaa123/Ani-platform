@@ -12,6 +12,11 @@ function formatGhc(amount: number) {
   return `GHC ${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+/** Number only — the column header carries the GHC code. */
+function formatGhcPlain(amount: number) {
+  return amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, {
     year: "numeric",
@@ -106,7 +111,7 @@ export default function ResearcherFinancialsPage() {
                   <th className="px-4 py-3">Publication</th>
                   <th className="px-4 py-3">Student</th>
                   <th className="px-4 py-3">Payment</th>
-                  <th className="px-6 py-3 text-right">Your share (90%)</th>
+                  <th className="whitespace-nowrap px-6 py-3 text-right">Your 90% share (GHC)</th>
                 </tr>
               </thead>
               <tbody>
@@ -119,11 +124,11 @@ export default function ResearcherFinancialsPage() {
                       <EmailText email={item.studentEmail} className="block text-gray-400" />
                     </td>
                     <td className="px-4 py-3 text-gray-600 capitalize">{item.paymentMethod.replace("_", " ")}</td>
-                    <td className="px-6 py-3 text-right font-semibold text-green-700">
-                      {formatGhc(item.amount)}
+                    <td className="px-6 py-3 text-right font-semibold tabular-nums text-green-700">
+                      {formatGhcPlain(item.amount)}
                       {item.grossAmount != null && item.grossAmount !== item.amount ? (
                         <span className="mt-0.5 block text-[10px] font-normal text-gray-500">
-                          of {formatGhc(item.grossAmount)} paid
+                          of {formatGhcPlain(item.grossAmount)} paid
                         </span>
                       ) : null}
                     </td>
@@ -135,7 +140,7 @@ export default function ResearcherFinancialsPage() {
                   <td colSpan={4} className="px-6 py-4 text-right">
                     Total earned
                   </td>
-                  <td className="px-6 py-4 text-right">{formatGhc(summary.totalEarnings)}</td>
+                  <td className="px-6 py-4 text-right tabular-nums">{formatGhcPlain(summary.totalEarnings)}</td>
                 </tr>
               </tfoot>
             </table>
@@ -158,7 +163,7 @@ export default function ResearcherFinancialsPage() {
                   <th className="px-4 py-3">Title</th>
                   <th className="px-4 py-3">Type</th>
                   <th className="px-4 py-3 text-right">Views</th>
-                  <th className="px-6 py-3 text-right">Price</th>
+                  <th className="whitespace-nowrap px-6 py-3 text-right">Price (GHC)</th>
                 </tr>
               </thead>
               <tbody>
@@ -168,8 +173,8 @@ export default function ResearcherFinancialsPage() {
                     <td className="px-4 py-3 font-medium text-brand-900">{item.title}</td>
                     <td className="px-4 py-3">{item.isFree ? "Free" : "Paid"}</td>
                     <td className="px-4 py-3 text-right text-gray-700">{item.viewCount}</td>
-                    <td className="px-6 py-3 text-right font-semibold text-brand-900">
-                      {item.isFree ? "Free" : formatGhc(item.price ?? 0)}
+                    <td className="px-6 py-3 text-right font-semibold tabular-nums text-brand-900">
+                      {item.isFree ? "Free" : formatGhcPlain(item.price ?? 0)}
                     </td>
                   </tr>
                 ))}

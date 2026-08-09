@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import { PlatformFinancialStatement, isAdmin } from "@/lib/types";
-import { formatDate, formatGhc, orderStatusStyle } from "@/lib/format";
+import { formatDate, formatGhc, formatGhcPlain, orderStatusStyle } from "@/lib/format";
 
 type LineItemType = PlatformFinancialStatement["lineItems"][number]["type"];
 type FinancialFilter = LineItemType | "ALL";
@@ -183,7 +183,7 @@ export default function AdminFinancialsPage() {
                   <th className="px-4 py-2.5">Type</th>
                   <th className="px-4 py-2.5">Description</th>
                   <th className="px-4 py-2.5">Parties</th>
-                  <th className="px-4 py-2.5 text-right">Amount</th>
+                  <th className="whitespace-nowrap px-4 py-2.5 text-right">Amount (GHC)</th>
                   <th className="px-5 py-2.5">Status</th>
                   <th className="px-5 py-2.5">Statement</th>
                 </tr>
@@ -202,8 +202,8 @@ export default function AdminFinancialsPage() {
                     <td className="px-4 py-2.5 text-gray-600">{typeLabel(item.type)}</td>
                     <td className="px-4 py-2.5 font-medium text-brand-900">{item.description}</td>
                     <td className="px-4 py-2.5 text-gray-600">{item.partyName}</td>
-                    <td className="px-4 py-2.5 text-right font-semibold text-brand-900">
-                      {formatGhc(item.amount)}
+                    <td className="px-4 py-2.5 text-right font-semibold tabular-nums text-brand-900">
+                      {formatGhcPlain(item.amount)}
                     </td>
                     <td className="px-5 py-2.5">
                       <span
@@ -243,8 +243,8 @@ export default function AdminFinancialsPage() {
                   <td colSpan={4} className="px-5 py-3 text-right text-xs">
                     {activeFilter === "ALL" ? "Total platform earnings" : `${filterLabel(activeFilter)} total`}
                   </td>
-                  <td className="px-4 py-3 text-right text-xs">
-                    {formatGhc(activeFilter === "ALL" ? summary.totalRevenue : filteredTotal)}
+                  <td className="px-4 py-3 text-right text-xs tabular-nums">
+                    {formatGhcPlain(activeFilter === "ALL" ? summary.totalRevenue : filteredTotal)}
                   </td>
                   <td colSpan={2} />
                 </tr>

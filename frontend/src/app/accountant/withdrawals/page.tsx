@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import { fullName, isAccountant, type AccountantOverview, type PlatformFinancialStatement, type PlatformWithdrawal } from "@/lib/types";
-import { formatDate, formatGhc } from "@/lib/format";
+import { formatDate, formatGhc, formatGhcPlain } from "@/lib/format";
 import { OrderDistributionPanel } from "@/components/accountant/OrderDistributionPanel";
 import { DistributionSplitBreakdown } from "@/components/accountant/DistributionSplitBreakdown";
 import { AniPlatformShareCard } from "@/components/accountant/AniPlatformShareCard";
@@ -250,7 +250,7 @@ export default function AccountantWithdrawalsPage() {
               <thead>
                 <tr className="border-b border-brand-50 bg-brand-50/50 text-left text-[10px] font-semibold uppercase text-gray-500">
                   <th className="px-5 py-2.5">Date</th>
-                  <th className="px-4 py-2.5 text-right">Amount</th>
+                  <th className="whitespace-nowrap px-4 py-2.5 text-right">Amount (GHC)</th>
                   <th className="px-4 py-2.5">Status</th>
                   <th className="px-4 py-2.5">Recorded by</th>
                   <th className="px-4 py-2.5">Notes</th>
@@ -263,8 +263,8 @@ export default function AccountantWithdrawalsPage() {
                     <td className="whitespace-nowrap px-5 py-2.5 text-gray-600">
                       {formatDate(row.createdAt)}
                     </td>
-                    <td className="px-4 py-2.5 text-right font-semibold text-brand-900">
-                      {formatGhc(row.amount)}
+                    <td className="px-4 py-2.5 text-right font-semibold tabular-nums text-brand-900">
+                      {formatGhcPlain(row.amount)}
                     </td>
                     <td className="px-4 py-2.5">
                       <span

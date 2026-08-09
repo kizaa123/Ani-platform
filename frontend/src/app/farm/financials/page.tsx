@@ -11,7 +11,7 @@ import {
   ProductOrderLineItem,
   isFarmer,
 } from "@/lib/types";
-import { formatDate, formatGhc, orderStatusStyle } from "@/lib/format";
+import { formatDate, formatGhc, formatGhcPlain, orderStatusStyle } from "@/lib/format";
 import { OrderDetailModal, SalesOrdersTable } from "@/components/ProductOrdersList";
 
 type FarmerOrderLineItem = ProductOrderLineItem & { orderId?: string };
@@ -182,7 +182,7 @@ export default function FinancialStatementPage() {
                 <tr className="border-b border-amber-50 bg-amber-50/50 text-left text-xs font-semibold uppercase text-gray-500">
                   <th className="px-6 py-3">Order</th>
                   <th className="px-4 py-3">Client</th>
-                  <th className="px-4 py-3 text-right">Share amount</th>
+                  <th className="whitespace-nowrap px-4 py-3 text-right">Share amount (GHC)</th>
                   <th className="px-4 py-3">Order date</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-6 py-3">Details</th>
@@ -193,8 +193,8 @@ export default function FinancialStatementPage() {
                   <tr key={item.id} className="border-b border-amber-50 hover:bg-amber-50/30">
                     <td className="px-6 py-3 font-medium text-brand-900">{item.orderName}</td>
                     <td className="px-4 py-3 text-gray-700">{item.buyerName}</td>
-                    <td className="px-4 py-3 text-right font-semibold text-amber-700">
-                      {formatGhc(item.shareAmount)}
+                    <td className="px-4 py-3 text-right font-semibold tabular-nums text-amber-700">
+                      {formatGhcPlain(item.shareAmount)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-gray-600">
                       {formatDate(item.date)}
@@ -267,8 +267,8 @@ export default function FinancialStatementPage() {
                   <th className="px-4 py-3">Product</th>
                   <th className="px-4 py-3">Commodity</th>
                   <th className="px-4 py-3 text-right">Qty</th>
-                  <th className="px-4 py-3 text-right">Unit price</th>
-                  <th className="px-4 py-3 text-right">Total</th>
+                  <th className="whitespace-nowrap px-4 py-3 text-right">Unit price (GHC)</th>
+                  <th className="whitespace-nowrap px-4 py-3 text-right">Total (GHC)</th>
                   <th className="px-6 py-3">Status</th>
                 </tr>
               </thead>
@@ -284,11 +284,11 @@ export default function FinancialStatementPage() {
                     <td className="px-4 py-3 text-right text-gray-700">
                       {item.quantity} {item.unit}
                     </td>
-                    <td className="px-4 py-3 text-right text-gray-700">
-                      {formatGhc(item.unitPrice)}/{item.unit}
+                    <td className="px-4 py-3 text-right tabular-nums text-gray-700">
+                      {formatGhcPlain(item.unitPrice)}/{item.unit}
                     </td>
-                    <td className="px-4 py-3 text-right font-semibold text-brand-900">
-                      {formatGhc(item.totalValue)}
+                    <td className="px-4 py-3 text-right font-semibold tabular-nums text-brand-900">
+                      {formatGhcPlain(item.totalValue)}
                     </td>
                     <td className="px-6 py-3">
                       <span className={`rounded-full px-2 py-0.5 text-xs font-semibold capitalize ${statusStyle(item.status)}`}>
@@ -303,7 +303,7 @@ export default function FinancialStatementPage() {
                   <td colSpan={5} className="px-6 py-4 text-right">
                     Total listed value
                   </td>
-                  <td className="px-4 py-4 text-right">{formatGhc(summary.totalListedValue)}</td>
+                  <td className="px-4 py-4 text-right tabular-nums">{formatGhcPlain(summary.totalListedValue)}</td>
                   <td />
                 </tr>
               </tfoot>

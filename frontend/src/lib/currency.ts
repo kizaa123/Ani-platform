@@ -224,6 +224,16 @@ export function formatAmountForCountry(amountGhc: number, country?: string | nul
   return formatMoneyLocalized(converted, currency);
 }
 
+/** Number only, no currency code — for table cells whose header carries the code, e.g. "Amount (GHC)". */
+export function formatAmountNumberForCountry(amountGhc: number, country?: string | null): string {
+  const currency = getCurrencyForCountry(country);
+  const converted = convertGhcToCurrency(amountGhc, currency);
+  return converted.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
 export function formatPricePerUnit(amountGhc: number, unit: string, country?: string | null): string {
   return `${formatAmountForCountry(amountGhc, country)}/${unit}`;
 }

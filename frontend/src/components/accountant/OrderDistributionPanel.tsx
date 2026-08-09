@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api";
-import { formatGhc } from "@/lib/format";
+import { formatGhc, formatGhcPlain } from "@/lib/format";
 import type { OrderDistributionLine, OrderMoneyDistributionSnapshot } from "@/lib/types";
 import { DistributionSplitBreakdown } from "@/components/accountant/DistributionSplitBreakdown";
 import { PaymentResultOverlay } from "@/components/PaymentResultOverlay";
@@ -222,7 +222,7 @@ export function OrderDistributionPanel({
                     <tr className="border-b border-brand-50 text-left text-[10px] font-semibold uppercase text-gray-500">
                       <th className="py-2 pr-3">Recipient</th>
                       <th className="px-3 py-2 text-right">Share</th>
-                      <th className="px-3 py-2 text-right">Amount</th>
+                      <th className="whitespace-nowrap px-3 py-2 text-right">Amount (GHC)</th>
                       <th className="px-3 py-2">Status</th>
                       <th className="py-2 pl-3">Actions</th>
                     </tr>
@@ -242,7 +242,7 @@ export function OrderDistributionPanel({
                             {line.percentage > 0 ? `${line.percentage.toFixed(2)}%` : "-"}
                           </td>
                           <td className="px-3 py-2.5 text-right font-semibold tabular-nums text-brand-900">
-                            {formatGhc(line.amount)}
+                            {formatGhcPlain(line.amount)}
                           </td>
                           <td className="px-3 py-2.5">
                             <span

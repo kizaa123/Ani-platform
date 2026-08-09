@@ -48,6 +48,11 @@ interface RolePrefixedNameProps {
   tagSize?: "xs" | "sm" | "md";
   showTagLabels?: boolean;
   hideVerificationTags?: boolean;
+  /**
+   * When false, the tags never wrap below the name: long names truncate with
+   * an ellipsis and the tags stay on the same row (e.g. narrow sidebars).
+   */
+  wrap?: boolean;
 }
 
 function InlineVerificationTags({
@@ -86,6 +91,7 @@ export function RolePrefixedName({
   tagSize = "sm",
   showTagLabels = false,
   hideVerificationTags = false,
+  wrap = true,
 }: RolePrefixedNameProps) {
   const resolvedTags = verificationTags ?? user.verificationTags;
   const config = getRoleNamePrefix(user.roleId);
@@ -109,18 +115,19 @@ export function RolePrefixedName({
 
   const nameLabel = config ? (
     <span className="inline-flex min-w-0 items-baseline">
-      <span className={prefixClassName}>{config.prefix}</span>
+      <span className={`shrink-0 ${prefixClassName}`}>{config.prefix}</span>
       <span aria-hidden="true">&nbsp;</span>
-      <span className={nameClassName}>{name}</span>
+      <span className={`${wrap ? "" : "truncate"} ${nameClassName}`}>{name}</span>
     </span>
   ) : (
-    <span className={`min-w-0 ${nameClassName}`}>{name}</span>
+    <span className={`min-w-0 ${wrap ? "" : "truncate"} ${nameClassName}`}>{name}</span>
   );
 
   return (
     <span
       className={[
-        "inline-flex max-w-full flex-wrap items-center gap-x-0.5 gap-y-0.5",
+        "inline-flex max-w-full items-center gap-x-0.5 gap-y-0.5",
+        wrap ? "flex-wrap" : "min-w-0 flex-nowrap",
         className,
       ]
         .filter(Boolean)
