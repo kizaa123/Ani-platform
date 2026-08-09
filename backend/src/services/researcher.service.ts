@@ -680,6 +680,12 @@ export class ResearcherService {
     if (isResearcherRole(roleId)) {
       throw new AppError(403, 'Researchers cannot purchase publications');
     }
+    if (roleId === ROLES.ADMIN) {
+      throw new AppError(
+        400,
+        'Platform admins already have free access to every publication — use Read Now instead.'
+      );
+    }
     assertAuthorized(
       canPurchasePublication(roleId),
       'Your account type cannot purchase publications'
