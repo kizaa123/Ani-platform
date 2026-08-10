@@ -1,7 +1,13 @@
 import { z } from 'zod';
 import prisma from '../database/prisma';
 import { AppError, assertFound, assertAuthorized } from '../utils/errors';
-import { ROLES, isResearcherRole, PORTAL_DIRECTORY_ROLES, canPurchasePublication } from '../constants/roles';
+import {
+  ROLES,
+  isResearcherRole,
+  PORTAL_DIRECTORY_ROLES,
+  canPurchasePublication,
+  getFullName,
+} from '../constants/roles';
 import { listPortalDirectoryClients } from './farm.service';
 import { getPaymentProvider } from './payment.provider';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
@@ -10,6 +16,8 @@ import {
   notifyResearchPurchase,
   notifyNewPublication,
   notifyResearchPublicationsAvailable,
+  notifyPublicationLiked,
+  notifyPublicationCommented,
 } from './notification.service';
 import { resolvePublicationDocument } from './storage.service';
 import {
@@ -874,7 +882,7 @@ export class ResearcherService {
   }
 
   async toggleLike(publicationId: string, userId: string) {
-    await this.getActivePublication(publicationId);
+    const pub = await this.getActivePublication(publicationId);
 
     const existing = await prisma.researchPublicationLike.findUnique({
       where: { publicationId_userId: { publicationId, userId } },
@@ -900,6 +908,28 @@ export class ResearcherService {
       }),
     ]);
     const updated = await prisma.researchPublication.findUnique({ where: { id: publicationId } });
+
+    const [actor, researcher] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: { firstName: true, lastName: true },
+      }),
+      prisma.researcherProfile.findUnique({
+        where: { id: pub.researcherId },
+        select: { userId: true },
+      }),
+    ]);
+    if (actor && researcher) {
+      await notifyPublicationLiked({
+        researcherUserId: researcher.userId,
+        actorId: userId,
+        actorName: getFullName(actor.firstName, actor.lastName),
+        publicationId: pub.id,
+        publicationTitle: pub.title,
+        coverImage: pub.coverImage,
+      });
+    }
+
     return { liked: true, likesCount: updated?.likesCount ?? 0 };
   }
 
@@ -938,13 +968,14 @@ export class ResearcherService {
   }
 
   async addComment(publicationId: string, userId: string, data: z.infer<typeof commentSchema>) {
-    await this.assertPublicationAccess(userId, publicationId);
+    const pub = await this.assertPublicationAccess(userId, publicationId);
+    const content = data.content.trim();
 
     const comment = await prisma.researchComment.create({
       data: {
         publicationId,
         userId,
-        content: data.content.trim(),
+        content,
       },
       include: {
         user: {
@@ -959,6 +990,22 @@ export class ResearcherService {
         },
       },
     });
+
+    const researcher = await prisma.researcherProfile.findUnique({
+      where: { id: pub.researcherId },
+      select: { userId: true },
+    });
+    if (researcher) {
+      await notifyPublicationCommented({
+        researcherUserId: researcher.userId,
+        actorId: userId,
+        actorName: getFullName(comment.user.firstName, comment.user.lastName),
+        publicationId: pub.id,
+        publicationTitle: pub.title,
+        commentSnippet: content,
+        coverImage: pub.coverImage,
+      });
+    }
 
     return formatComment(comment);
   }

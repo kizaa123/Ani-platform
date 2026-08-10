@@ -66,7 +66,10 @@ export type NotificationTypeValue =
   | 'ACCOUNTANT_APPROVED'
   | 'ACCOUNTANT_REJECTED'
   | 'USER_VERIFIED'
-  | 'INTERNATIONAL_VERIFICATION';
+  | 'INTERNATIONAL_VERIFICATION'
+  | 'PRODUCT_LIKE'
+  | 'PUBLICATION_LIKE'
+  | 'PUBLICATION_COMMENT';
 
 export type CreateNotificationInput = {
   userId: string;
@@ -1323,4 +1326,103 @@ export async function notifyAccountantRejected(params: { userId: string; firstNa
       actionLabel: 'View profile',
     },
   }).catch((err) => logNotificationError('ACCOUNTANT_REJECTED', err));
+}
+
+/** Notify the fellow (and FLO) when someone likes a product media item. */
+export async function notifyProductLiked(params: {
+  farmerUserId: string;
+  actorId: string;
+  actorName: string;
+  productTitle: string;
+  listingId: string;
+  imageUrl?: string | null;
+}) {
+  const { farmerUserId, actorId, actorName, productTitle, listingId, imageUrl } = params;
+  if (farmerUserId === actorId) return;
+
+  await notifyFarmerTeam(farmerUserId, {
+    actorId,
+    type: 'PRODUCT_LIKE',
+    title: 'Someone liked your product',
+    body: `${actorName} liked "${productTitle}".`,
+    link: '/farm',
+    metadata: {
+      farmerUserId,
+      listingId,
+      imageUrl: imageUrl ? normalizePublicAssetUrl(imageUrl) : null,
+      actionUrl: '/farm',
+      actionLabel: 'View products',
+    },
+  }).catch((err) => logNotificationError('PRODUCT_LIKE', err));
+}
+
+/** Notify the researcher when someone likes their publication. */
+export async function notifyPublicationLiked(params: {
+  researcherUserId: string;
+  actorId: string;
+  actorName: string;
+  publicationId: string;
+  publicationTitle: string;
+  coverImage?: string | null;
+}) {
+  const { researcherUserId, actorId, actorName, publicationId, publicationTitle, coverImage } =
+    params;
+  if (researcherUserId === actorId) return;
+
+  const libraryLink = `/library/publisher/${researcherUserId}`;
+  await createNotification({
+    userId: researcherUserId,
+    actorId,
+    type: 'PUBLICATION_LIKE',
+    title: 'Someone liked your publication',
+    body: `${actorName} liked "${publicationTitle}".`,
+    link: libraryLink,
+    metadata: {
+      publicationId,
+      imageUrl: coverImage ? normalizePublicAssetUrl(coverImage) : null,
+      actionUrl: libraryLink,
+      actionLabel: 'View publication',
+    },
+  }).catch((err) => logNotificationError('PUBLICATION_LIKE', err));
+}
+
+/** Notify the researcher when someone comments on their publication. */
+export async function notifyPublicationCommented(params: {
+  researcherUserId: string;
+  actorId: string;
+  actorName: string;
+  publicationId: string;
+  publicationTitle: string;
+  commentSnippet: string;
+  coverImage?: string | null;
+}) {
+  const {
+    researcherUserId,
+    actorId,
+    actorName,
+    publicationId,
+    publicationTitle,
+    commentSnippet,
+    coverImage,
+  } = params;
+  if (researcherUserId === actorId) return;
+
+  const libraryLink = `/library/publisher/${researcherUserId}`;
+  const preview = snippet(commentSnippet);
+  await createNotification({
+    userId: researcherUserId,
+    actorId,
+    type: 'PUBLICATION_COMMENT',
+    title: 'New comment on your publication',
+    body: preview
+      ? `${actorName} commented on "${publicationTitle}": ${preview}`
+      : `${actorName} commented on "${publicationTitle}".`,
+    link: libraryLink,
+    metadata: {
+      publicationId,
+      imageUrl: coverImage ? normalizePublicAssetUrl(coverImage) : null,
+      actionUrl: libraryLink,
+      actionLabel: 'View comments',
+    },
+  }).catch((err) => logNotificationError('PUBLICATION_COMMENT', err));
 }

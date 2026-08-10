@@ -1,8 +1,9 @@
 import prisma from '../database/prisma';
 import { assertFound, assertAuthorized, AppError } from '../utils/errors';
-import { isFarmerRole } from '../constants/roles';
+import { isFarmerRole, getFullName } from '../constants/roles';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import { ProductMediaType } from '@prisma/client';
+import { notifyProductLiked } from './notification.service';
 
 export const MAX_PRODUCT_MEDIA = 5;
 export const MAX_VIDEO_DURATION_SEC = 60;
@@ -167,7 +168,19 @@ export class ProductMediaService {
 
   async toggleLike(mediaId: string, buyerId: string) {
     const media = assertFound(
-      await prisma.productMedia.findUnique({ where: { id: mediaId } }),
+      await prisma.productMedia.findUnique({
+        where: { id: mediaId },
+        include: {
+          listing: {
+            select: {
+              id: true,
+              title: true,
+              images: true,
+              farmer: { select: { userId: true } },
+            },
+          },
+        },
+      }),
       'Media not found'
     );
 
@@ -195,6 +208,25 @@ export class ProductMediaService {
       }),
     ]);
     const updated = await prisma.productMedia.findUnique({ where: { id: mediaId } });
+
+    const actor = await prisma.user.findUnique({
+      where: { id: buyerId },
+      select: { firstName: true, lastName: true },
+    });
+    if (actor) {
+      const listingImages = Array.isArray(media.listing.images)
+        ? (media.listing.images as string[])
+        : [];
+      await notifyProductLiked({
+        farmerUserId: media.listing.farmer.userId,
+        actorId: buyerId,
+        actorName: getFullName(actor.firstName, actor.lastName),
+        productTitle: media.listing.title,
+        listingId: media.listing.id,
+        imageUrl: media.url || listingImages[0] || null,
+      });
+    }
+
     return { liked: true, likesCount: updated?.likesCount ?? 0 };
   }
 

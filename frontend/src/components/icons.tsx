@@ -322,4 +322,7 @@ export const NOTIFICATION_ICONS: Record<string, IconName> = {
   ACCOUNTANT_REJECTED: "x",
   USER_VERIFIED: "check-circle",
   INTERNATIONAL_VERIFICATION: "check-circle",
+  PRODUCT_LIKE: "heart",
+  PUBLICATION_LIKE: "heart",
+  PUBLICATION_COMMENT: "comment",
 };
