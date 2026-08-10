@@ -15,6 +15,7 @@ import { CardGridSkeleton, PageContentSkeleton } from "@/components/LoadingPrimi
 import { Icon } from "@/components/icons";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { InlineNameWithVerificationTags } from "@/components/VerificationTagBadge";
+import { QualificationBadges } from "@/components/QualificationBadges";
 import { scrollStagger } from "@/lib/scrollStagger";
 
 export default function PublisherLibraryPage() {
@@ -171,6 +172,7 @@ export default function PublisherLibraryPage() {
                   tagSize="sm"
                 />
               </h1>
+              <QualificationBadges qualifications={publisher.qualifications} className="mt-1.5" />
             </div>
           </div>
         )}
