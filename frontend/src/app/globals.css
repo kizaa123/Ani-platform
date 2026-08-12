@@ -690,12 +690,44 @@ body {
   }
 }
 
+@keyframes notification-toast-in-bottom {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes notification-toast-out-bottom {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+}
+
 .notification-toast-enter {
   animation: notification-toast-in 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .notification-toast-exit {
   animation: notification-toast-out 260ms ease forwards;
+}
+
+@media (min-width: 1024px) {
+  .notification-toast-enter {
+    animation-name: notification-toast-in-bottom;
+  }
+
+  .notification-toast-exit {
+    animation-name: notification-toast-out-bottom;
+  }
 }
 
 .notification-bell-active {

@@ -10,6 +10,20 @@ import type { NotificationToastItem } from "@/context/NotificationProvider";
 const DEFAULT_AUTO_DISMISS_MS = 4000;
 const SWIPE_DISMISS_PX = 56;
 
+function useMinWidth(query: string): boolean {
+  const [matches, setMatches] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    const update = () => setMatches(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, [query]);
+
+  return matches;
+}
+
 function ToastThumbnail({ n }: { n: AppNotification }) {
   const imageUrl = n.metadata?.imageUrl;
   const iconName = NOTIFICATION_ICONS[n.type] ?? "bell";
@@ -54,6 +68,7 @@ function NotificationToast({
   onDismiss: (toastId: string) => void;
 }) {
   const { toastId, notification: n, autoDismissMs = DEFAULT_AUTO_DISMISS_MS } = item;
+  const isLaptop = useMinWidth("(min-width: 1024px)");
   const [entered, setEntered] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
@@ -100,8 +115,8 @@ function NotificationToast({
     setDragOffset(0);
   };
 
-  const opacity = leaving ? 0 : Math.max(0.35, 1 + dragOffset / 120);
-  const translateY = leaving ? -24 : dragOffset;
+  const opacity = leaving ? 0 : Math.max(0.35, 1 - Math.abs(dragOffset) / 120);
+  const translateY = leaving ? (isLaptop ? 24 : -24) : dragOffset;
 
   return (
     <div
@@ -177,7 +192,7 @@ export function NotificationToastStack({
 
   return createPortal(
     <div
-      className="pointer-events-none fixed inset-x-0 top-3 z-[85] flex flex-col items-center gap-2 px-4 sm:top-4"
+      className="pointer-events-none fixed inset-x-0 top-3 z-[85] flex flex-col items-center gap-2 px-4 sm:top-4 lg:inset-x-auto lg:left-auto lg:right-5 lg:top-auto lg:bottom-5 lg:flex-col-reverse lg:items-end lg:px-0 lg:pb-[max(1.25rem,env(safe-area-inset-bottom))]"
       aria-label="Live notifications"
     >
       {toasts.map((item) => (
