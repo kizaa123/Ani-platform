@@ -142,25 +142,60 @@ ANI PLATFORM/
 
 The `PaymentProvider` interface in `backend/src/services/payment.provider.ts` abstracts payment gateways. Swap `MockPaymentProvider` for Paystack, Stripe, or MTN MoMo in production.
 
-## Render deployment
+## Deployment (Vercel + Render)
 
-Both frontend and backend are defined in `render.yaml`:
+| Part | Host | Config |
+|------|------|--------|
+| Frontend (Next.js) | **Vercel** | Root directory: `frontend` |
+| Backend (API) | **Render** | `render.yaml` → `concordiaorbis-api` |
+| Database | **Render Postgres** | `ani-platform-db` |
 
-| Service | URL |
-|---------|-----|
-| `concordiaorbis-web` | `https://concordiaorbis-web.onrender.com` |
-| `concordiaorbis-api` | `https://concordiaorbis-api.onrender.com` |
+### 1. Render (backend only)
 
-1. Push to the branch linked to your Render Blueprint.
-2. Render Dashboard → Blueprints → **Manual Sync** (if auto-sync is off).
-3. `BACKEND_URL` and `FRONTEND_URL` are linked automatically between the two services.
-4. Set secrets on Render (backend): `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, Cloudinary keys.
-5. If you already had a separate frontend service on Render, remove or rename the old one to avoid duplicates after sync.
-6. Test:
-   - Site: `https://concordiaorbis-web.onrender.com`
-   - API: `https://concordiaorbis-api.onrender.com/api/health`
+1. Push to GitHub, then Render Dashboard → Blueprints → **Manual Sync**.
+2. API URL: `https://concordiaorbis-api.onrender.com`
+3. Set in Render → **concordiaorbis-api** → **Environment**:
+   ```
+   FRONTEND_URL=https://YOUR-APP.vercel.app
+   GOOGLE_CLIENT_ID=...
+   GOOGLE_CLIENT_SECRET=...
+   CLOUDINARY_CLOUD_NAME=...
+   CLOUDINARY_API_KEY=...
+   CLOUDINARY_API_SECRET=...
+   ```
+4. Test: `https://concordiaorbis-api.onrender.com/api/health`
 
-See `backend/.env.example` and `frontend/.env.example` for local development variables.
+To change the Render API subdomain: **Settings → Name** → `concordiaorbis-api` → Save.
+
+### 2. Vercel (frontend)
+
+1. Import the GitHub repo in [Vercel](https://vercel.com).
+2. **Root Directory:** `frontend`
+3. **Framework:** Next.js (auto-detected)
+4. Set **Environment Variables** (Production):
+   ```
+   BACKEND_URL=https://concordiaorbis-api.onrender.com
+   NEXT_PUBLIC_SITE_URL=https://YOUR-APP.vercel.app
+   NEXT_PUBLIC_API_URL=https://concordiaorbis-api.onrender.com
+   NEXT_PUBLIC_GOOGLE_DEV_MODE=false
+   ```
+5. Deploy. Your site URL is the Vercel domain (or add a custom domain in Vercel → Domains).
+
+`next.config.ts` proxies `/api/*` to `BACKEND_URL`, so the browser stays on your Vercel URL.
+
+### 3. Google OAuth
+
+Add authorized redirect URI:
+```
+https://concordiaorbis-api.onrender.com/api/auth/google/callback
+```
+
+Add authorized JavaScript origin:
+```
+https://YOUR-APP.vercel.app
+```
+
+See `backend/.env.example` and `frontend/.env.example` for local development.
 
 ## License
 
