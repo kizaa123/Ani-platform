@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import { createApp } from './app';
 import { isCloudStorageEnabled } from './services/storage.service';
+import { PLATFORM_NAME } from './constants/platform';
 
 dotenv.config();
 
@@ -9,7 +10,7 @@ const HOST = process.env.HOST || (process.env.NODE_ENV === 'production' ? '0.0.0
 const app = createApp();
 
 app.listen(PORT, HOST, () => {
-  console.log(`ANI Platform API → http://${HOST}:${PORT}`);
+  console.log(`${PLATFORM_NAME} API → http://${HOST}:${PORT}`);
   console.log(
     isCloudStorageEnabled()
       ? 'Upload storage: Cloudinary (persistent)'

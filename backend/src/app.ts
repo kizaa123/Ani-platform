@@ -1,4 +1,5 @@
 import express from 'express';
+import { PLATFORM_NAME } from './constants/platform';
 import cors from 'cors';
 import helmet from 'helmet';
 import path from 'path';
@@ -60,7 +61,7 @@ export function createApp() {
       success: true,
       data: {
         status: 'ok',
-        platform: 'ANI Commodity Exchange Platform',
+        platform: PLATFORM_NAME,
         features: ['research-library'],
       },
     });

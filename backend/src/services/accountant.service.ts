@@ -3,7 +3,7 @@ import { WithdrawalStatus } from '@prisma/client';
 import prisma from '../database/prisma';
 import { AppError, assertFound } from '../utils/errors';
 import {
-  aniPlatformShareAmount,
+  platformShareAmount,
   orderShareRecognizedAt,
   publicationPlatformShareAmount,
 } from '../utils/distributionFinancials';
@@ -126,7 +126,7 @@ export class AccountantService {
     });
 
     const orderShareRevenue = releasedOrders.reduce(
-      (sum, order) => sum + aniPlatformShareAmount(order.totalAmount),
+      (sum, order) => sum + platformShareAmount(order.totalAmount),
       0
     );
 
@@ -162,7 +162,7 @@ export class AccountantService {
     };
   }
 
-  /** ANI platform income: access fees + order-share remainder from released orders. */
+  /** Platform income: access fees + order-share remainder from released orders. */
   async getPlatformIncome() {
     return this.revenueTotals();
   }
@@ -234,7 +234,7 @@ export class AccountantService {
     const orderShareRows = releasedOrders
       .map((order) => ({
         createdAt: orderShareRecognizedAt(order),
-        amount: aniPlatformShareAmount(order.totalAmount),
+        amount: platformShareAmount(order.totalAmount),
       }))
       .filter((row) => row.createdAt >= startDate);
 

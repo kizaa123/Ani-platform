@@ -1,3 +1,5 @@
+import { PLATFORM_NAME } from '../constants/platform';
+
 type SmsSendResult =
   | { sent: true; provider: 'twilio' | 'hubtel' | 'custom' }
   | { sent: false; devMode: true; devCode: string };
@@ -96,7 +98,7 @@ async function sendViaHubtel(toPhone: string, message: string): Promise<boolean>
 async function sendViaCustomGateway(toPhone: string, message: string): Promise<boolean> {
   const smsApiKey = process.env.SMS_API_KEY?.trim();
   const smsApiUrl = process.env.SMS_API_URL?.trim();
-  const smsSenderId = process.env.SMS_SENDER_ID?.trim() || 'ANI Platform';
+  const smsSenderId = process.env.SMS_SENDER_ID?.trim() || PLATFORM_NAME;
 
   if (!smsApiKey || !smsApiUrl) {
     return false;
@@ -127,7 +129,7 @@ async function sendViaCustomGateway(toPhone: string, message: string): Promise<b
 
 export async function sendSmsOtp(toPhone: string, code: number): Promise<SmsSendResult> {
   const formattedCode = String(code).padStart(4, '0');
-  const message = `Your ANI Platform verification code is: ${formattedCode}. Expires in 15 minutes.`;
+  const message = `Your ${PLATFORM_NAME} verification code is: ${formattedCode}. Expires in 15 minutes.`;
 
   const providers: Array<{ name: 'hubtel' | 'twilio' | 'custom'; send: () => Promise<boolean> }> = [
     { name: 'hubtel', send: () => sendViaHubtel(toPhone, message) },

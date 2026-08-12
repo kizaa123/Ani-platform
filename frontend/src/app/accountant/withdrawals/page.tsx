@@ -9,7 +9,8 @@ import { fullName, isAccountant, type AccountantOverview, type PlatformFinancial
 import { formatDate, formatGhc, formatGhcPlain } from "@/lib/format";
 import { OrderDistributionPanel } from "@/components/accountant/OrderDistributionPanel";
 import { DistributionSplitBreakdown } from "@/components/accountant/DistributionSplitBreakdown";
-import { AniPlatformShareCard } from "@/components/accountant/AniPlatformShareCard";
+import { PlatformShareCard } from "@/components/accountant/PlatformShareCard";
+import { PLATFORM_NAME } from "@/lib/site";
 
 function statusStyle(status: PlatformWithdrawal["status"]) {
   switch (status) {
@@ -137,7 +138,7 @@ export default function AccountantWithdrawalsPage() {
         </Link>
         <h1 className="mt-2 text-xl font-bold text-brand-900">Order share</h1>
         <p className="text-xs text-gray-500">
-          Distribute released order escrow, track ANI order-share income, and record withdrawals
+          Distribute released order escrow, track {PLATFORM_NAME} order-share income, and record withdrawals
         </p>
       </div>
 
@@ -167,11 +168,11 @@ export default function AccountantWithdrawalsPage() {
           <div className="border-b border-brand-100 bg-brand-50/40 px-5 py-4">
             <h3 className="text-sm font-semibold text-brand-900">Order shared distribution</h3>
             <p className="mt-1 text-xs text-gray-500">
-              Split released escrow to Fellow, liaison officers, and ANI order share
+              Split released escrow to Fellow, liaison officers, and {PLATFORM_NAME} order share
             </p>
             <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,16rem)] lg:items-start">
               <DistributionSplitBreakdown hidePlatformShare className="max-w-md" />
-              <AniPlatformShareCard orderAmounts={releasedOrders.map((order) => order.amount)} />
+              <PlatformShareCard orderAmounts={releasedOrders.map((order) => order.amount)} />
             </div>
           </div>
           <div className="space-y-3 p-5">

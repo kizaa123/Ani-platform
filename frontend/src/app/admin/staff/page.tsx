@@ -13,6 +13,7 @@ import {
   type StaffMember,
 } from "@/lib/types";
 import { VerificationBadge } from "@/components/VerificationBadge";
+import { PLATFORM_ACCOUNTANT_LABEL, PLATFORM_TEAM_LABEL } from "@/lib/site";
 import { DEFAULT_COUNTRY } from "@/lib/africanCountries";
 import {
   isValidPhone,
@@ -167,7 +168,7 @@ export default function AdminStaffPage() {
   };
 
   const pendingAccountants = staff.filter(
-    (member) => member.roleId === ROLES.ANI_ACCOUNTANT && member.verificationStatus === "PENDING"
+    (member) => member.roleId === ROLES.PLATFORM_ACCOUNTANT && member.verificationStatus === "PENDING"
   );
 
   const reviewAccountant = async (member: StaffMember, status: "VERIFIED" | "REJECTED") => {
@@ -194,7 +195,7 @@ export default function AdminStaffPage() {
           <Link href="/admin" className="text-xs font-semibold text-brand-600 hover:underline">
             Admin Dashboard
           </Link>
-          <h1 className="mt-2 text-3xl font-bold text-brand-900">ANI Team</h1>
+          <h1 className="mt-2 text-3xl font-bold text-brand-900">{PLATFORM_TEAM_LABEL}</h1>
           <p className="mt-1 text-sm text-gray-500">
             Manage platform staff - accountants, admins, CTO, and communications
           </p>
@@ -236,7 +237,7 @@ export default function AdminStaffPage() {
           <div className="border-b border-brand-100 bg-amber-50/80 px-4 py-3 sm:px-6">
             <h2 className="text-lg font-bold text-brand-900">Pending accountant registrations</h2>
             <p className="mt-1 text-sm text-gray-500">
-              Self-registered ANI Accountants cannot access the financial portal until approved.
+              Self-registered {PLATFORM_ACCOUNTANT_LABEL}s cannot access the financial portal until approved.
             </p>
           </div>
           <div className="overflow-x-auto p-4 sm:p-6">
@@ -438,7 +439,7 @@ export default function AdminStaffPage() {
                           >
                             {member.isActive ? "Active" : "Inactive"}
                           </span>
-                          {member.roleId === ROLES.ANI_ACCOUNTANT && (
+                          {member.roleId === ROLES.PLATFORM_ACCOUNTANT && (
                             <VerificationBadge adminView status={member.verificationStatus} />
                           )}
                         </div>

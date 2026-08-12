@@ -8,6 +8,7 @@ import { AccountantPendingApproval } from "@/components/AccountantPendingApprova
 import { PortalNavCard, PortalNavCardSkeleton } from "@/components/PortalNavCard";
 import { PageContentSkeleton } from "@/components/LoadingPrimitives";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { PLATFORM_TEAM_LABEL } from "@/lib/site";
 import { scrollStagger } from "@/lib/scrollStagger";
 import { getPortalNavImage } from "@/lib/portalNavImages";
 import { FarmerHandlerDashboardCards, FarmerHandlerDashboardHint } from "@/components/FarmerHandlerDashboardCards";
@@ -73,7 +74,7 @@ export default function DashboardPage() {
     { href: "/student/settings", title: "Profile", desc: "Account & contact details", icon: "user", show: isStudent(user.roleId) },
     { href: "/connections", title: "Connections", desc: "Manage client-fellow requests", icon: "handshake", show: !isResearcher(user.roleId) && !isLiaison },
     { href: "/admin", title: "Admin Panel", desc: "Analytics, verification & moderation", icon: "shield", show: isAdmin(user.roleId) },
-    { href: "/admin/staff", title: "ANI Team", desc: "Manage staff accounts & roles", icon: "users", show: isAdmin(user.roleId) },
+    { href: "/admin/staff", title: PLATFORM_TEAM_LABEL, desc: "Manage staff accounts & roles", icon: "users", show: isAdmin(user.roleId) },
     { href: "/admin/ads", title: "Internal Ads", desc: "Manage banner promotions", icon: "leaf", show: isAdmin(user.roleId) },
     { href: "/admin/financials", title: "Financial Statement", desc: "Platform-wide revenue (read-only)", icon: "chart", show: isAdmin(user.roleId) },
     { href: "/admin/clients", title: "Clients", desc: "Browse & notify platform users", icon: "users", show: isAdmin(user.roleId) },

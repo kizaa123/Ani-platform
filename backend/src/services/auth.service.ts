@@ -459,7 +459,7 @@ export class AuthService {
           emailVerified: true,
           phoneVerified: isPhoneSmsVerificationEnabled(),
           profileComplete: true,
-          ...(input.roleId === ROLES.ANI_ACCOUNTANT
+          ...(input.roleId === ROLES.PLATFORM_ACCOUNTANT
             ? { verificationStatus: 'PENDING' as const }
             : {}),
         },
@@ -570,7 +570,7 @@ export class AuthService {
       }).catch(() => undefined);
     }
 
-    if (input.roleId === ROLES.ANI_ACCOUNTANT) {
+    if (input.roleId === ROLES.PLATFORM_ACCOUNTANT) {
       notifyAdminsPendingAccountant({
         accountantUserId: user.id,
         accountantName: `${user.firstName} ${user.lastName}`.trim(),
@@ -993,7 +993,7 @@ export class AuthService {
           roleId: input.roleId,
           profileComplete: true,
           phoneVerified: isPhoneSmsVerificationEnabled() ? (user as any).phoneVerified : false,
-          ...(input.roleId === ROLES.ANI_ACCOUNTANT
+          ...(input.roleId === ROLES.PLATFORM_ACCOUNTANT
             ? { verificationStatus: 'PENDING' as const }
             : {}),
         },
@@ -1099,7 +1099,7 @@ export class AuthService {
       }).catch(() => undefined);
     }
 
-    if (input.roleId === ROLES.ANI_ACCOUNTANT) {
+    if (input.roleId === ROLES.PLATFORM_ACCOUNTANT) {
       notifyAdminsPendingAccountant({
         accountantUserId: updated.id,
         accountantName: `${updated.firstName} ${updated.lastName}`.trim(),

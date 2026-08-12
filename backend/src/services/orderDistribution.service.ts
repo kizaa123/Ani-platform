@@ -11,13 +11,13 @@ import {
   calculateDistributionAmounts,
   FARMER_SHARE_PERCENT,
   handlerSharePercentOfTotal,
-  aniPlatformSharePercentOfTotal,
+  platformSharePercentOfTotal,
   orderListingLabels,
 } from '../utils/distributionFinancials';
+import { PLATFORM_NAME } from '../constants/platform';
 
 const PAGE_MARGIN = 45;
 const CONTENT_WIDTH = 505;
-const PLATFORM_NAME = 'Agricess Network International - ANI';
 const KEY_VALUE_LABEL_WIDTH = 155;
 const KEY_VALUE_GAP = 28;
 const KEY_VALUE_VALUE_X = PAGE_MARGIN + KEY_VALUE_LABEL_WIDTH + KEY_VALUE_GAP;
@@ -64,13 +64,11 @@ function drawPlatformNameWatermark(doc: PDFKit.PDFDocument): void {
   doc.opacity(0.05);
   doc.translate(pageWidth / 2, pageHeight / 2);
   doc.rotate(-35);
-  doc.font('Helvetica-Bold').fontSize(26).fillColor(PDF_COLORS.accent);
-  doc.text('Agricess Network International', -textWidth / 2, 130, {
+  doc.font('Helvetica-Bold').fontSize(28).fillColor(PDF_COLORS.accent);
+  doc.text(PLATFORM_NAME, -textWidth / 2, 145, {
     width: textWidth,
     align: 'center',
   });
-  doc.font('Helvetica-Bold').fontSize(22).fillColor(PDF_COLORS.accent);
-  doc.text('- ANI', -textWidth / 2, 162, { width: textWidth, align: 'center' });
   doc.restore();
 }
 
@@ -131,7 +129,7 @@ function formatDistributionMessage(
   orderName: string
 ): string {
   const formatted = amount.toFixed(2);
-  return `Dear ${recipientFirstName}, you have received GHC ${formatted} from ANI for the successful delivery of "${orderName}" (${buyerName} order).`;
+  return `Dear ${recipientFirstName}, you have received GHC ${formatted} from ${PLATFORM_NAME} for the successful delivery of "${orderName}" (${buyerName} order).`;
 }
 
 type DistributionMessagePdfInput = {
@@ -346,14 +344,14 @@ function buildLineSeeds(
       recipientName: buyerHandlerName,
     },
     {
-      role: 'ANI_PLATFORM',
-      percentage: aniPlatformSharePercentOfTotal(totalAmount, {
+      role: 'PLATFORM',
+      percentage: platformSharePercentOfTotal(totalAmount, {
         hasFarmerHandler,
         hasBuyerHandler,
       }),
-      amount: amounts.aniPlatform,
+      amount: amounts.platformShare,
       recipientUserId: null,
-      recipientName: 'ANI',
+      recipientName: PLATFORM_NAME,
     },
   ];
 }
@@ -369,8 +367,8 @@ function roleLabel(
       return 'Fellow Liaison Officer';
     case 'BUYER_HANDLER':
       return 'Client Liaison Officer';
-    case 'ANI_PLATFORM':
-      return 'ANI';
+    case 'PLATFORM':
+      return PLATFORM_NAME;
     default:
       return role;
   }
@@ -449,7 +447,7 @@ export class OrderDistributionService {
                 : `${line.recipient.firstName} ${line.recipient.lastName}`
           : seed?.recipientName ?? 'Unassigned',
         recipientEmail: line.recipient?.email ?? null,
-        canDistribute: line.role !== 'ANI_PLATFORM' && Boolean(line.recipientUserId),
+        canDistribute: line.role !== 'PLATFORM' && Boolean(line.recipientUserId),
       };
     });
 
@@ -462,7 +460,7 @@ export class OrderDistributionService {
       farmerName: `${order.farmer.firstName} ${order.farmer.lastName}`,
       totalAmount: distribution.totalAmount,
       allDistributed: lineDetails.every(
-        (l) => l.status === 'DISTRIBUTED' || l.role === 'ANI_PLATFORM' || !l.canDistribute
+        (l) => l.status === 'DISTRIBUTED' || l.role === 'PLATFORM' || !l.canDistribute
       ),
       lines: lineDetails,
     };
@@ -487,8 +485,8 @@ export class OrderDistributionService {
       'Distribution line not found'
     );
 
-    if (line.role === 'ANI_PLATFORM') {
-      throw new AppError(400, 'ANI platform share is retained automatically');
+    if (line.role === 'PLATFORM') {
+      throw new AppError(400, `${PLATFORM_NAME} platform share is retained automatically`);
     }
     if (!line.recipientUserId || !line.recipient) {
       throw new AppError(400, 'No recipient assigned for this distribution line');
@@ -575,8 +573,8 @@ export class OrderDistributionService {
       'Distribution line not found'
     );
 
-    if (line.role === 'ANI_PLATFORM') {
-      throw new AppError(400, 'No recipient message for ANI platform share');
+    if (line.role === 'PLATFORM') {
+      throw new AppError(400, `No recipient message for ${PLATFORM_NAME} platform share`);
     }
 
     const recipientFirstName = line.recipient?.firstName ?? 'Recipient';

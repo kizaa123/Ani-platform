@@ -16,24 +16,24 @@ export const DISTRIBUTION_SHARES = {
   PLATFORM_POOL: roundGhc(100 - 66.66),
   /** Handlers combined share of the platform pool. */
   HANDLER_POOL: 20,
-  /** ANI share of the platform pool when both handlers are assigned. */
-  ANI_POOL: 80,
+  /** Platform share of the platform pool when both handlers are assigned. */
+  PLATFORM_RETAINED_POOL: 80,
   /** Each assigned handler receives this % of the platform pool. */
   HANDLER_OF_POOL: 10,
   /** Each assigned handler's share of order total. */
   HANDLER_OF_TOTAL: roundGhc((roundGhc(100 - 66.66) * 10) / 100),
 } as const;
 
-/** ANI share of order total when both handlers are assigned. */
-export const ANI_PLATFORM_SHARE_PERCENT = roundGhc(
-  (DISTRIBUTION_SHARES.PLATFORM_POOL * DISTRIBUTION_SHARES.ANI_POOL) / 100
+/** Platform share of order total when both handlers are assigned. */
+export const PLATFORM_SHARE_PERCENT = roundGhc(
+  (DISTRIBUTION_SHARES.PLATFORM_POOL * DISTRIBUTION_SHARES.PLATFORM_RETAINED_POOL) / 100
 );
 
 export type DistributionAmounts = {
   farmer: number;
   farmerHandler: number;
   buyerHandler: number;
-  aniPlatform: number;
+  platformShare: number;
   remainder: number;
 };
 
@@ -47,8 +47,8 @@ export function distributionShareAmount(totalAmount: number, percentage: number)
 }
 
 /**
- * Fellow first (66.66%); platform pool (33.34%) splits 20% to handlers / 80% to ANI.
- * Each assigned handler receives 10% of the platform pool; unassigned shares go to ANI.
+ * Fellow first (66.66%); platform pool (33.34%) splits 20% to handlers / 80% to platform.
+ * Each assigned handler receives 10% of the platform pool; unassigned shares go to platform.
  */
 export function calculateDistributionAmounts(
   totalAmount: number,
@@ -65,16 +65,16 @@ export function calculateDistributionAmounts(
   const buyerHandler = hasBuyerHandler
     ? distributionShareAmount(remainder, DISTRIBUTION_SHARES.HANDLER_OF_POOL)
     : 0;
-  const aniPlatform = roundGhc(totalAmount - farmer - farmerHandler - buyerHandler);
+  const platformShare = roundGhc(totalAmount - farmer - farmerHandler - buyerHandler);
 
-  return { farmer, farmerHandler, buyerHandler, aniPlatform, remainder };
+  return { farmer, farmerHandler, buyerHandler, platformShare, remainder };
 }
 
-export function aniPlatformShareAmount(
+export function platformShareAmount(
   totalAmount: number,
   options?: DistributionHandlerOptions
 ): number {
-  return calculateDistributionAmounts(totalAmount, options).aniPlatform;
+  return calculateDistributionAmounts(totalAmount, options).platformShare;
 }
 
 /** Policy rate of order total for an assigned handler. */
@@ -91,14 +91,14 @@ export function handlerSharePercentOfTotal(
 }
 
 /** Policy rate of order total - not derived from rounded GHC amounts. */
-export function aniPlatformSharePercentOfTotal(
+export function platformSharePercentOfTotal(
   _totalAmount: number,
   options: DistributionHandlerOptions = {}
 ): number {
   const hasFarmerHandler = options.hasFarmerHandler ?? true;
   const hasBuyerHandler = options.hasBuyerHandler ?? true;
 
-  let percent = ANI_PLATFORM_SHARE_PERCENT;
+  let percent = PLATFORM_SHARE_PERCENT;
   if (!hasFarmerHandler) percent += DISTRIBUTION_SHARES.HANDLER_OF_TOTAL;
   if (!hasBuyerHandler) percent += DISTRIBUTION_SHARES.HANDLER_OF_TOTAL;
   return roundGhc(percent);

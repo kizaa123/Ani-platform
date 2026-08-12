@@ -7,7 +7,7 @@ export function AppFooter() {
         <span className="block sm:inline">Connecting verified Fellows with Markets.</span>
       </p>
       <p className="mt-0.5 text-[10px] leading-snug text-brand-300 sm:mt-1 sm:text-xs sm:leading-normal">
-        © {new Date().getFullYear()} Agricess Network International - ANI. All rights reserved.
+        © {new Date().getFullYear()} ConcordiaOrbis. All rights reserved.
       </p>
     </footer>
   );

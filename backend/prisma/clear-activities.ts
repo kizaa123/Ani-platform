@@ -1,4 +1,5 @@
 import { Prisma, PrismaClient } from '@prisma/client';
+import { PLATFORM_NAME } from '../src/constants/platform';
 
 const prisma = new PrismaClient();
 
@@ -193,7 +194,7 @@ async function main() {
   const isRemote =
     /neon\.tech|render\.com|supabase\.co|amazonaws\.com|railway\.app/i.test(dbUrl);
 
-  console.log('🧹 ANI Platform — clear activity data (preserve demo accounts)');
+  console.log(`🧹 ${PLATFORM_NAME} — clear activity data (preserve demo accounts)`);
   if (dryRun) console.log('   Mode: dry-run (no changes)');
 
   if (isRemote && !dryRun && !skipConfirm) {

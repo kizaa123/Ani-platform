@@ -25,6 +25,7 @@ import { Icon } from "@/components/icons";
 import { HandlerPhoneLink } from "@/components/HandlerAssignmentCards";
 import { EmailText } from "@/components/EmailText";
 import { floDisplayName, cloDisplayName } from "@/lib/handlerDisplayName";
+import { PLATFORM_ACCOUNTANT_LABEL } from "@/lib/site";
 
 export type OrderListPerspective = "farmer" | "buyer";
 type OrderListItem = ProductOrderLineItem | BuyerOrderLineItem;
@@ -213,7 +214,7 @@ function OrderEscrowPanel({
     setSuccess("");
     try {
       const result = await api.orders.release(statementId, otp);
-      setSuccess("Payment released to ANI Accountant.");
+      setSuccess(`Payment released to ${PLATFORM_ACCOUNTANT_LABEL}.`);
       setOtp("");
       onUpdated?.({
         escrowStatus: result.escrowStatus,
@@ -254,8 +255,8 @@ function OrderEscrowPanel({
       {canRelease && (
         <div className="mt-3 space-y-2">
           <p className="text-xs text-gray-600">
-            Enter your 4-digit code after you receive your order to release payment to the ANI
-            Accountant.
+            Enter your 4-digit code after you receive your order to release payment to the{" "}
+            {PLATFORM_ACCOUNTANT_LABEL}.
           </p>
           <div className="flex gap-2">
             <input

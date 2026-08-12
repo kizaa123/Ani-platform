@@ -38,6 +38,7 @@ import {
   type FieldErrors,
   type RegisterField,
 } from "@/lib/registerValidation";
+import { PLATFORM_ACCOUNTANT_LABEL } from "@/lib/site";
 
 const GOOGLE_DEV_MODE = process.env.NEXT_PUBLIC_GOOGLE_DEV_MODE === "true";
 
@@ -50,7 +51,7 @@ const ALL_ROLES = [
   { group: "Research & Commerce",      id: ROLES.BUYER,            label: "Client" },
   { group: "Support & Operations",     id: ROLES.FARMER_HANDLER,   label: "Fellow Liaison Officer" },
   { group: "Support & Operations",     id: ROLES.BUYER_HANDLER,    label: "Client Liaison Officer" },
-  { group: "Support & Operations",     id: ROLES.ANI_ACCOUNTANT,   label: "ANI Accountant" },
+  { group: "Support & Operations",     id: ROLES.PLATFORM_ACCOUNTANT,   label: PLATFORM_ACCOUNTANT_LABEL },
 ];
 
 const ROLE_GROUPS_FOR_SELECT = [

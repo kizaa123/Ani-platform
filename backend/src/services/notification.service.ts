@@ -21,6 +21,7 @@ import {
   portalDirectoryRoleLabel,
   profileSettingsPath,
 } from '../constants/roles';
+import { PLATFORM_NAME, PLATFORM_ACCOUNTANT_LABEL, PLATFORM_TEAM_LABEL } from '../constants/platform';
 
 export type NotificationMetadata = {
   imageUrl?: string | null;
@@ -656,7 +657,7 @@ export async function notifyOrderPaymentReleased(order: {
       buyerCountry,
       recipientCountry
     );
-    const body = `${buyerName} confirmed delivery for "${orderName}" - ${amountLabel} released to ANI Accountant.`;
+    const body = `${buyerName} confirmed delivery for "${orderName}" - ${amountLabel} released to ${PLATFORM_ACCOUNTANT_LABEL}.`;
     const orderMeta = buildOrderNotificationMetadata({
       productName: orderName,
       totalAmount: order.totalAmount,
@@ -694,7 +695,7 @@ export async function notifyOrderPaymentReleased(order: {
   });
   const staff = await prisma.user.findMany({
     where: {
-      roleId: ROLES.ANI_ACCOUNTANT,
+      roleId: ROLES.PLATFORM_ACCOUNTANT,
       isActive: true,
       verificationStatus: 'VERIFIED',
     },
@@ -813,7 +814,7 @@ export async function notifyConnectionRequest(
     actorId: buyerId,
     type: 'CONNECTION_REQUEST',
     title: 'New farm access request',
-    body: `${buyerName} requested access to your farm. ANI admin will review the request - no action needed from you.`,
+    body: `${buyerName} requested access to your farm. ${PLATFORM_NAME} admin will review the request - no action needed from you.`,
     link: '/connections',
     metadata: {
       actionUrl: '/connections',
@@ -858,7 +859,7 @@ export async function notifyConnectionApproved(
     actorId: farmerId,
     type: 'CONNECTION_APPROVED',
     title: 'Farm access approved',
-    body: `ANI approved your access to ${farmerName}'s farm. You can now browse products and message them.`,
+    body: `${PLATFORM_NAME} approved your access to ${farmerName}'s farm. You can now browse products and message them.`,
     link: '/marketplace',
     metadata: {
       farmerUserId: farmerId,
@@ -879,7 +880,7 @@ export async function notifyConnectionDeclined(
     actorId: farmerId,
     type: 'CONNECTION_DECLINED',
     title: 'Farm access declined',
-    body: `Your access request for ${farmerName}'s farm was declined by ANI.`,
+    body: `Your access request for ${farmerName}'s farm was declined by ${PLATFORM_NAME}.`,
     link: '/marketplace',
     metadata: {
       farmerUserId: farmerId,
@@ -1026,8 +1027,8 @@ export async function notifyMoneyDistributed(
   await createNotification({
     userId: recipientId,
     type: 'MONEY_DISTRIBUTED',
-    title: 'Payment received from ANI',
-    body: `Dear ${recipientFirstName}, you have received ${formatted} from ANI for the successful delivery of "${orderName}" (${buyerName} order).`,
+    title: `Payment received from ${PLATFORM_NAME}`,
+    body: `Dear ${recipientFirstName}, you have received ${formatted} from ${PLATFORM_NAME} for the successful delivery of "${orderName}" (${buyerName} order).`,
     link,
     metadata: {
       ...orderMeta,
@@ -1217,7 +1218,7 @@ export async function notifyUserVerified(params: {
     userId: params.userId,
     type: 'USER_VERIFIED',
     title: 'Account verified',
-    body: `Congratulations ${params.firstName}, you have been verified as a ${roleLabel} on the ANI platform. ${verifiedAccountClosing(params.roleId)}`,
+    body: `Congratulations ${params.firstName}, you have been verified as a ${roleLabel} on ${PLATFORM_NAME}. ${verifiedAccountClosing(params.roleId)}`,
     link,
     metadata: {
       actionUrl: link,
@@ -1271,8 +1272,8 @@ export async function notifyAdminsPendingAccountant(params: {
         userId: admin.id,
         actorId: params.accountantUserId,
         type: 'NEW_ACCOUNTANT_REGISTRATION',
-        title: 'New ANI Accountant registration',
-        body: `${params.accountantName} (${params.email}) registered as ANI Accountant and is awaiting approval on ANI Team.`,
+        title: `New ${PLATFORM_ACCOUNTANT_LABEL} registration`,
+        body: `${params.accountantName} (${params.email}) registered as ${PLATFORM_ACCOUNTANT_LABEL} and is awaiting approval on ${PLATFORM_TEAM_LABEL}.`,
         link: '/admin/staff',
         metadata: {
           actionUrl: '/admin/staff',
@@ -1291,7 +1292,7 @@ export async function notifyAccountantRegistrationSubmitted(params: {
     userId: params.userId,
     type: 'ACCOUNTANT_REGISTRATION_SUBMITTED',
     title: 'Registration submitted',
-    body: `Hello ${params.firstName}, your ANI Accountant registration was received. A platform administrator will review your account before you can access the financial portal.`,
+    body: `Hello ${params.firstName}, your ${PLATFORM_ACCOUNTANT_LABEL} registration was received. A platform administrator will review your account before you can access the financial portal.`,
     link: '/dashboard',
     metadata: {
       actionUrl: '/dashboard',
@@ -1304,8 +1305,8 @@ export async function notifyAccountantApproved(params: { userId: string; firstNa
   await createNotification({
     userId: params.userId,
     type: 'ACCOUNTANT_APPROVED',
-    title: 'ANI Accountant account approved',
-    body: `Congratulations ${params.firstName}, your ANI Accountant registration has been approved. You can now access the financial portal.`,
+    title: `${PLATFORM_ACCOUNTANT_LABEL} account approved`,
+    body: `Congratulations ${params.firstName}, your ${PLATFORM_ACCOUNTANT_LABEL} registration has been approved. You can now access the financial portal.`,
     link: '/accountant',
     metadata: {
       actionUrl: '/accountant',
@@ -1318,8 +1319,8 @@ export async function notifyAccountantRejected(params: { userId: string; firstNa
   await createNotification({
     userId: params.userId,
     type: 'ACCOUNTANT_REJECTED',
-    title: 'ANI Accountant registration declined',
-    body: `Hello ${params.firstName}, your ANI Accountant registration was not approved. Contact a platform administrator if you believe this was a mistake.`,
+    title: `${PLATFORM_ACCOUNTANT_LABEL} registration declined`,
+    body: `Hello ${params.firstName}, your ${PLATFORM_ACCOUNTANT_LABEL} registration was not approved. Contact a platform administrator if you believe this was a mistake.`,
     link: '/profile',
     metadata: {
       actionUrl: '/profile',

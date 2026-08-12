@@ -1,4 +1,5 @@
 import { LogoIcon } from "@/components/Logo";
+import { PLATFORM_NAME } from "@/lib/site";
 
 interface PlatformBrandTitleProps {
   /** "light" = white text on dark backgrounds; "dark" = dark text on light backgrounds */
@@ -36,23 +37,15 @@ const sizeStyles = {
 
 const DEFAULT_MOTTO = "The Premier Commodity Exchange Platform";
 
-/** Brand line that keeps "— ANI" with the name (no orphaned ANI). */
+/** Primary platform brand name. */
 export function BrandNameLine({
   className = "",
-  aniClassName = "text-gold",
 }: {
   className?: string;
+  /** @deprecated No longer used — kept for call-site compatibility. */
   aniClassName?: string;
 }) {
-  return (
-    <span className={className}>
-      Agricess Network International
-      <span className="whitespace-nowrap">
-        {" "}
-        — <span className={aniClassName}>ANI</span>
-      </span>
-    </span>
-  );
+  return <span className={className}>{PLATFORM_NAME}</span>;
 }
 
 export function PlatformBrandTitle({

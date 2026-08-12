@@ -736,7 +736,7 @@ enum DistributionRecipientRole {
   FARMER
   FARMER_HANDLER
   BUYER_HANDLER
-  ANI_PLATFORM
+  PLATFORM @map("ANI_PLATFORM")
 }
 
 enum DistributionLineStatus {

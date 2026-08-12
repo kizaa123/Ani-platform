@@ -1,10 +1,11 @@
 import {
   DISTRIBUTION_SHARES,
-  aniPlatformSharePercentOfTotal,
+  platformSharePercentOfTotal,
   calculateDistributionAmounts,
   handlerSharePercentOfTotal,
 } from "@/lib/handlerDisplayName";
 import { formatGhc } from "@/lib/format";
+import { PLATFORM_NAME } from "@/lib/site";
 
 export interface DistributionSplitLine {
   label: string;
@@ -23,7 +24,7 @@ function formatSplitValue({ percentage, amount }: Pick<DistributionSplitLine, "p
 function buildDefaultSplitLines(orderAmount?: number): DistributionSplitLine[] {
   if (orderAmount != null && orderAmount > 0) {
     const amounts = calculateDistributionAmounts(orderAmount);
-    const aniPercent = aniPlatformSharePercentOfTotal(orderAmount);
+    const platformPercent = platformSharePercentOfTotal(orderAmount);
 
     return [
       { label: "Fellow", percentage: DISTRIBUTION_SHARES.FARMER, amount: amounts.farmer },
@@ -38,10 +39,10 @@ function buildDefaultSplitLines(orderAmount?: number): DistributionSplitLine[] {
         amount: amounts.buyerHandler,
       },
       {
-        label: "ANI",
-        percentage: aniPercent,
-        amount: amounts.aniPlatform,
-        note: `${DISTRIBUTION_SHARES.ANI_POOL}% of platform share (${DISTRIBUTION_SHARES.PLATFORM_POOL}% after Fellow)`,
+        label: PLATFORM_NAME,
+        percentage: platformPercent,
+        amount: amounts.platformShare,
+        note: `${DISTRIBUTION_SHARES.PLATFORM_RETAINED_POOL}% of platform share (${DISTRIBUTION_SHARES.PLATFORM_POOL}% after Fellow)`,
       },
     ];
   }
@@ -57,9 +58,9 @@ function buildDefaultSplitLines(orderAmount?: number): DistributionSplitLine[] {
       percentage: handlerSharePercentOfTotal({ role: "BUYER_HANDLER" }),
     },
     {
-      label: "ANI",
-      percentage: aniPlatformSharePercentOfTotal(100),
-      note: `${DISTRIBUTION_SHARES.ANI_POOL}% of platform share (${DISTRIBUTION_SHARES.PLATFORM_POOL}% after Fellow)`,
+      label: PLATFORM_NAME,
+      percentage: platformSharePercentOfTotal(100),
+      note: `${DISTRIBUTION_SHARES.PLATFORM_RETAINED_POOL}% of platform share (${DISTRIBUTION_SHARES.PLATFORM_POOL}% after Fellow)`,
     },
   ];
 }
@@ -87,7 +88,7 @@ interface DistributionSplitBreakdownProps {
   fellowName?: string;
   /** Example order amount - shows GHC amounts alongside percentages. */
   orderAmount?: number;
-  /** Hide ANI platform row - use AniPlatformShareCard for consolidated platform totals. */
+  /** Hide platform share row - use PlatformShareCard for consolidated platform totals. */
   hidePlatformShare?: boolean;
   className?: string;
 }
@@ -101,7 +102,7 @@ export function DistributionSplitBreakdown({
 }: DistributionSplitBreakdownProps) {
   const baseLines = lines ?? buildDefaultSplitLines(orderAmount);
   const resolvedLines = baseLines
-    .filter((line) => !(hidePlatformShare && line.label === "ANI"))
+    .filter((line) => !(hidePlatformShare && line.label === PLATFORM_NAME))
     .map((line) =>
       line.label === "Fellow" && fellowName ? { ...line, label: fellowName } : line
     );
@@ -115,4 +116,4 @@ export function DistributionSplitBreakdown({
   );
 }
 
-export { aniPlatformShareAmount } from "@/lib/handlerDisplayName";
+export { platformShareAmount } from "@/lib/handlerDisplayName";

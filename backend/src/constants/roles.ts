@@ -1,10 +1,12 @@
+import { PLATFORM_ACCOUNTANT_LABEL } from './platform';
+
 export const ROLES = {
   CROP_FARMER: 1,
   LIVESTOCK_FARMER: 2,
   FARMER_HANDLER: 3,
   BUYER: 4,
   BUYER_HANDLER: 5,
-  ANI_ACCOUNTANT: 6,
+  PLATFORM_ACCOUNTANT: 6,
   ADMIN: 7,
   RESEARCHER: 8,
   STUDENT: 9,
@@ -19,7 +21,7 @@ export const ROLE_NAMES: Record<number, string> = {
   3: 'Farmer Handler',
   4: 'Buyer',
   5: 'Buyer Handler',
-  6: 'ANI Accountant',
+  6: PLATFORM_ACCOUNTANT_LABEL,
   7: 'Admin',
   8: 'Researcher',
   9: 'Student',
@@ -78,7 +80,7 @@ export const RESEARCHER_CLIENT_ROLES = [...FARMER_ROLES, ROLES.BUYER, ROLES.STUD
 
 export const AGENT_ROLES = [ROLES.FARMER_HANDLER, ROLES.BUYER_HANDLER];
 export const STAFF_ROLES = [
-  ROLES.ANI_ACCOUNTANT,
+  ROLES.PLATFORM_ACCOUNTANT,
   ROLES.ADMIN,
   ROLES.CTO,
   ROLES.COMMUNICATION_OFFICER,
@@ -86,7 +88,7 @@ export const STAFF_ROLES = [
 
 /** Staff roles an admin may assign when creating or updating team members. */
 export const MANAGEABLE_STAFF_ROLE_IDS = [
-  ROLES.ANI_ACCOUNTANT,
+  ROLES.PLATFORM_ACCOUNTANT,
   ROLES.ADMIN,
   ROLES.CTO,
   ROLES.COMMUNICATION_OFFICER,
@@ -101,7 +103,7 @@ export const REGISTERABLE_ROLE_IDS = [
   ROLES.FARMER_HANDLER,
   ROLES.BUYER,
   ROLES.BUYER_HANDLER,
-  ROLES.ANI_ACCOUNTANT,
+  ROLES.PLATFORM_ACCOUNTANT,
   ROLES.RESEARCHER,
 ] as const;
 
@@ -137,11 +139,11 @@ export function isClientRole(roleId: number): boolean {
 }
 
 export function isStaffRole(roleId: number): boolean {
-  return STAFF_ROLES.includes(roleId as typeof ROLES.ANI_ACCOUNTANT);
+  return STAFF_ROLES.includes(roleId as typeof ROLES.PLATFORM_ACCOUNTANT);
 }
 
 export function isAccountantRole(roleId: number): boolean {
-  return roleId === ROLES.ANI_ACCOUNTANT;
+  return roleId === ROLES.PLATFORM_ACCOUNTANT;
 }
 
 /** Self-registered accountants need admin approval before portal access. */

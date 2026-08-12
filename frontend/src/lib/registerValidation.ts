@@ -1,6 +1,7 @@
 import { isValidPhone, PHONE_VALIDATION_MESSAGE } from "./phone";
 import { ROLES } from "./types";
 import { SMS_PHONE_VERIFICATION_ENABLED } from "./smsVerification";
+import { PLATFORM_ACCOUNTANT_LABEL } from "./site";
 
 /** Fields that can show inline registration errors */
 export type RegisterField =
@@ -285,8 +286,8 @@ export function roleSummaryLabel(roleId: number): string {
       return "Fellow Liaison Officer";
     case ROLES.BUYER_HANDLER:
       return "Client Liaison Officer";
-    case ROLES.ANI_ACCOUNTANT:
-      return "ANI Accountant";
+    case ROLES.PLATFORM_ACCOUNTANT:
+      return PLATFORM_ACCOUNTANT_LABEL;
     default:
       return "Select a role";
   }

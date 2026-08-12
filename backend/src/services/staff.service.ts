@@ -8,6 +8,7 @@ import {
   MANAGEABLE_STAFF_ROLE_IDS,
   STAFF_ROLES,
 } from '../constants/roles';
+import { PLATFORM_ACCOUNTANT_LABEL } from '../constants/platform';
 import {
   notifyAccountantApproved,
   notifyAccountantRejected,
@@ -197,9 +198,9 @@ export class StaffService {
 
     if (
       input.verificationStatus !== undefined &&
-      existing.roleId !== ROLES.ANI_ACCOUNTANT
+      existing.roleId !== ROLES.PLATFORM_ACCOUNTANT
     ) {
-      throw new AppError(400, 'Approval status can only be updated for ANI Accountant accounts');
+      throw new AppError(400, `Approval status can only be updated for ${PLATFORM_ACCOUNTANT_LABEL} accounts`);
     }
 
     const user = await prisma.user.update({
@@ -217,7 +218,7 @@ export class StaffService {
     });
 
     if (
-      existing.roleId === ROLES.ANI_ACCOUNTANT &&
+      existing.roleId === ROLES.PLATFORM_ACCOUNTANT &&
       input.verificationStatus !== undefined &&
       input.verificationStatus !== existing.verificationStatus
     ) {

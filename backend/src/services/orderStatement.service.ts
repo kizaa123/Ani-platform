@@ -18,6 +18,7 @@ import {
 } from '../utils/counterpartHandler';
 import { listingCommodityName, listingCommodityCategory } from '../utils/listingDisplay';
 import { formatOrderAmountForStatement } from '../utils/currency';
+import { PLATFORM_NAME, PLATFORM_ACCOUNTANT_LABEL } from '../constants/platform';
 
 type OrderForStatement = NonNullable<Awaited<ReturnType<typeof loadOrderForStatement>>>;
 
@@ -27,8 +28,7 @@ export type StatementViewerPerspective = 'sender' | 'receiver' | 'admin';
 const PAGE_MARGIN = 45;
 const CONTENT_WIDTH = 505;
 
-const PLATFORM_NAME = 'Agricess Network International - ANI';
-const PLATFORM_SHORT_NAME = 'Agricess Network International - ANI';
+const PLATFORM_SHORT_NAME = PLATFORM_NAME;
 
 /** Fixed label column + gap before values for readable alignment. */
 const KEY_VALUE_LABEL_WIDTH = 155;
@@ -85,13 +85,11 @@ function drawPlatformNameWatermark(doc: PDFKit.PDFDocument): void {
   doc.translate(centerX, centerY);
   doc.rotate(-35);
 
-  doc.font('Helvetica-Bold').fontSize(26).fillColor(COLORS.accent);
-  doc.text('Agricess Network International', -textWidth / 2, 130, {
+  doc.font('Helvetica-Bold').fontSize(28).fillColor(COLORS.accent);
+  doc.text(PLATFORM_NAME, -textWidth / 2, 145, {
     width: textWidth,
     align: 'center',
   });
-  doc.font('Helvetica-Bold').fontSize(22).fillColor(COLORS.accent);
-  doc.text('- ANI', -textWidth / 2, 162, { width: textWidth, align: 'center' });
 
   doc.restore();
 }
@@ -217,7 +215,7 @@ function formatPaymentMethod(method: string): string {
 }
 
 function formatEscrowStatus(status: string): string {
-  if (status === 'RELEASED') return 'Released to ANI Accountant';
+  if (status === 'RELEASED') return `Released to ${PLATFORM_ACCOUNTANT_LABEL}`;
   if (status === 'HELD') return 'Held in escrow';
   return status.replace(/_/g, ' ');
 }

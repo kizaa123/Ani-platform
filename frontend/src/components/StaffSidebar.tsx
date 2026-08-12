@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthProvider";
 import { PortalSidebarLayout, type PortalNavLink } from "@/components/PortalSidebarLayout";
 import { AccountantPendingApproval } from "@/components/AccountantPendingApproval";
 import { ROLES, isAdmin, isAccountantApproved, type UserProfile } from "@/lib/types";
+import { PLATFORM_TEAM_LABEL } from "@/lib/site";
 
 export const ADMIN_NAV_LINKS: PortalNavLink[] = [
   { href: "/dashboard", label: "Dashboard", icon: "home", match: (p) => p === "/dashboard" },
@@ -18,7 +19,7 @@ export const ADMIN_NAV_LINKS: PortalNavLink[] = [
   },
   { href: "/admin", label: "Admin", icon: "shield", match: (p) => p === "/admin" },
   { href: "/admin/clients", label: "Clients", icon: "users", match: (p) => p.startsWith("/admin/clients") },
-  { href: "/admin/staff", label: "ANI Team", icon: "users", match: (p) => p.startsWith("/admin/staff") },
+  { href: "/admin/staff", label: PLATFORM_TEAM_LABEL, icon: "users", match: (p) => p.startsWith("/admin/staff") },
   { href: "/admin/ads", label: "Internal Ads", icon: "leaf", match: (p) => p.startsWith("/admin/ads") },
   { href: "/admin/financials", label: "Financials", icon: "chart", match: (p) => p.startsWith("/admin/financials") },
   { href: "/profile", label: "Profile", icon: "user", match: (p) => p.startsWith("/profile") },
@@ -72,7 +73,7 @@ export const STAFF_GENERAL_NAV_LINKS: PortalNavLink[] = [
 
 function staffPortalTitle(roleId: number) {
   if (roleId === ROLES.ADMIN) return "Admin Portal";
-  if (roleId === ROLES.ANI_ACCOUNTANT) return "Accountant Portal";
+  if (roleId === ROLES.PLATFORM_ACCOUNTANT) return "Accountant Portal";
   if (roleId === ROLES.CTO) return "CTO Portal";
   if (roleId === ROLES.COMMUNICATION_OFFICER) return "Communications Portal";
   return "Staff Portal";
@@ -80,7 +81,7 @@ function staffPortalTitle(roleId: number) {
 
 function navLinksForRole(roleId: number, approved: boolean): PortalNavLink[] {
   if (isAdmin(roleId)) return ADMIN_NAV_LINKS;
-  if (roleId === ROLES.ANI_ACCOUNTANT) {
+  if (roleId === ROLES.PLATFORM_ACCOUNTANT) {
     return approved ? ACCOUNTANT_NAV_LINKS : ACCOUNTANT_PENDING_NAV_LINKS;
   }
   return STAFF_GENERAL_NAV_LINKS;
@@ -92,7 +93,7 @@ export function StaffPortalLayout({ children }: { children: React.ReactNode }) {
   const approved = user ? isAccountantApproved(user) : true;
   const isAccountantRoute = pathname.startsWith("/accountant");
   const showPendingGate =
-    user?.roleId === ROLES.ANI_ACCOUNTANT && !approved && isAccountantRoute;
+    user?.roleId === ROLES.PLATFORM_ACCOUNTANT && !approved && isAccountantRoute;
   const portalTitle = user ? staffPortalTitle(user.roleId) : "Staff Portal";
   const navLinks = user ? navLinksForRole(user.roleId, approved) : ADMIN_NAV_LINKS;
 

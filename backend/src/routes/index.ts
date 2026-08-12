@@ -381,7 +381,7 @@ router.post('/admin/users/:id/verification-tags', authenticate, requirePermissio
 router.delete('/admin/users/:id/verification-tags/:tagType', authenticate, requirePermission(PERMISSIONS.VERIFY_USERS), adminController.removeVerificationTag);
 router.get('/admin/audit-logs', authenticate, requirePermission(PERMISSIONS.VIEW_AUDIT_LOGS), adminController.auditLogs);
 
-// Admin staff management (ANI team)
+// Admin staff management (platform team)
 router.get('/admin/staff', authenticate, requirePermission(PERMISSIONS.MANAGE_USERS), adminController.listStaff);
 router.post('/admin/staff', authenticate, requirePermission(PERMISSIONS.MANAGE_USERS), validateBody(createStaffSchema), adminController.createStaff);
 router.patch('/admin/staff/:id', authenticate, requirePermission(PERMISSIONS.MANAGE_USERS), validateBody(updateStaffSchema), adminController.updateStaff);

@@ -8,6 +8,7 @@ import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
 import { RolePrefixedName, splitDisplayName } from "@/components/RolePrefixedName";
 import { Icon } from "@/components/icons";
+import { PLATFORM_NAME } from "@/lib/site";
 
 interface FarmerDetailModalProps {
   farmer: FarmerBrowseCard;
@@ -149,7 +150,7 @@ export function FarmerDetailModal({
             ) : farmer.hasFarmAccess && farmer.connectionStatus === "PENDING" ? (
               <>
                 <span className="block w-full rounded-xl bg-amber-100 py-2.5 text-center text-sm font-semibold text-amber-900">
-                  ⏳ Awaiting ANI admin approval
+                  ⏳ Awaiting {PLATFORM_NAME} admin approval
                 </span>
                 <Link
                   href={pendingStatusHref}

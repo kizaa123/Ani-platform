@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { ProductMediaItem } from "@/lib/types";
 import { assetUrl } from "@/lib/assetUrl";
 import { Icon } from "@/components/icons";
+import { PLATFORM_NAME } from "@/lib/site";
 
 interface ProductMediaGalleryProps {
   listingId: string;
@@ -35,7 +36,7 @@ function ShareMenu({
   onShare: () => void;
   onClose: () => void;
 }) {
-  const text = encodeURIComponent(`Check out ${productTitle} on ANI`);
+  const text = encodeURIComponent(`Check out ${productTitle} on ${PLATFORM_NAME}`);
   const url = encodeURIComponent(shareUrl);
 
   const options = [

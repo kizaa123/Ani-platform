@@ -9,6 +9,7 @@ import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { RolePrefixedName, getRoleNamePrefix } from "@/components/RolePrefixedName";
 import { NotificationBell } from "@/components/NotificationBell";
 import { Logo, LogoIcon } from "@/components/Logo";
+import { PLATFORM_NAME } from "@/lib/site";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard" },
@@ -106,7 +107,7 @@ export function Navbar() {
             <Link href="/" className="flex items-center gap-2 sm:gap-3 transition-opacity hover:opacity-85">
               <LogoIcon className="h-8 w-auto flex-shrink-0 sm:h-11 lg:h-14" theme="dark" />
               <span className="text-sm font-extrabold leading-tight tracking-tight text-gray-900 sm:text-base lg:text-lg">
-                Agricess Network International
+                {PLATFORM_NAME}
               </span>
             </Link>
             <div className="flex gap-1.5 sm:gap-3">

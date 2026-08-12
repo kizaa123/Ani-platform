@@ -4,6 +4,7 @@ import { AppError, assertFound, assertAuthorized } from '../utils/errors';
 import { isFarmerRole, isStaffRole, isMarketplaceBuyerRole, isFarmerHandler, isBuyerHandler } from '../constants/roles';
 import { normalizePublicAssetUrl } from '../middleware/upload.middleware';
 import { formatVerificationTags } from '../utils/verificationTags';
+import { PLATFORM_NAME } from '../constants/platform';
 import {
   notifyConnectionApproved,
   notifyConnectionDeclined,
@@ -113,7 +114,7 @@ export class ConnectionService {
         );
       }
       if (existing.status === 'PENDING') {
-        throw new AppError(409, 'Access request already pending - wait for ANI admin approval');
+        throw new AppError(409, `Access request already pending - wait for ${PLATFORM_NAME} admin approval`);
       }
       throw new AppError(409, 'Farm access was declined - you cannot request again');
     }
@@ -263,7 +264,7 @@ export class ConnectionService {
       'Connection request not found'
     );
 
-    assertAuthorized(isStaffRole(roleId), 'Only ANI staff can approve or reject farm access requests');
+    assertAuthorized(isStaffRole(roleId), `Only ${PLATFORM_NAME} staff can approve or reject farm access requests`);
 
     const updated = await prisma.connectionRequest.update({
       where: { id: requestId },

@@ -13,24 +13,24 @@ export const FARMER_SHARE_PERCENT = 66.66;
 export const PLATFORM_POOL_PERCENT = roundGhc(100 - FARMER_SHARE_PERCENT);
 /** Handlers combined receive this % of the platform pool. */
 export const HANDLER_POOL_SHARE_PERCENT = 20;
-/** ANI receives this % of the platform pool when both handlers are assigned. */
-export const ANI_POOL_SHARE_PERCENT = 80;
+/** Platform receives this % of the platform pool when both handlers are assigned. */
+export const PLATFORM_RETAINED_POOL_PERCENT = 80;
 /** Each assigned handler receives this % of the platform pool (equal split of handler allocation). */
 export const HANDLER_REMAINDER_SHARE_PERCENT = 10;
 /** Each assigned handler's share of order total (10% of platform pool). */
 export const HANDLER_SHARE_OF_TOTAL_PERCENT = roundGhc(
   (PLATFORM_POOL_PERCENT * HANDLER_REMAINDER_SHARE_PERCENT) / 100
 );
-/** ANI share of order total when both handlers are assigned (80% of platform pool). */
-export const ANI_PLATFORM_SHARE_PERCENT = roundGhc(
-  (PLATFORM_POOL_PERCENT * ANI_POOL_SHARE_PERCENT) / 100
+/** Platform share of order total when both handlers are assigned (80% of platform pool). */
+export const PLATFORM_SHARE_PERCENT = roundGhc(
+  (PLATFORM_POOL_PERCENT * PLATFORM_RETAINED_POOL_PERCENT) / 100
 );
 /** @deprecated Use HANDLER_REMAINDER_SHARE_PERCENT - kept for distribution line labels. */
 export const FARMER_HANDLER_SHARE_PERCENT = HANDLER_REMAINDER_SHARE_PERCENT;
 /** @deprecated Use HANDLER_REMAINDER_SHARE_PERCENT - kept for distribution line labels. */
 export const BUYER_HANDLER_SHARE_PERCENT = HANDLER_REMAINDER_SHARE_PERCENT;
 
-/** Buyer pays listed price X; ANI retains 10% of publication sales. */
+/** Buyer pays listed price X; platform retains 10% of publication sales. */
 export const PUBLICATION_PLATFORM_SHARE_PERCENT = 10;
 /** Researcher receives the remainder after the platform cut (90%). */
 export const PUBLICATION_RESEARCHER_SHARE_PERCENT = 90;
@@ -47,8 +47,8 @@ export type DistributionAmounts = {
   farmer: number;
   farmerHandler: number;
   buyerHandler: number;
-  aniPlatform: number;
-  /** Post-Fellow pool before handler and ANI splits. */
+  platformShare: number;
+  /** Post-Fellow pool before handler and platform splits. */
   remainder: number;
 };
 
@@ -64,9 +64,9 @@ export function distributionShareAmount(totalAmount: number, percentage: number)
 /**
  * Released-order split:
  * 1. Fellow receives 66.66% of order total.
- * 2. The remaining 33.34% is ANI's platform pool.
- * 3. From that pool: handlers share 20% (10% each when both assigned); ANI keeps 80%.
- * 4. Unassigned handler shares flow to ANI; amounts are rounded to GHC.
+ * 2. The remaining 33.34% is the platform pool.
+ * 3. From that pool: handlers share 20% (10% each when both assigned); platform keeps 80%.
+ * 4. Unassigned handler shares flow to platform; amounts are rounded to GHC.
  */
 export function calculateDistributionAmounts(
   totalAmount: number,
@@ -83,16 +83,16 @@ export function calculateDistributionAmounts(
   const buyerHandler = hasBuyerHandler
     ? distributionShareAmount(remainder, HANDLER_REMAINDER_SHARE_PERCENT)
     : 0;
-  const aniPlatform = roundGhc(totalAmount - farmer - farmerHandler - buyerHandler);
+  const platformShare = roundGhc(totalAmount - farmer - farmerHandler - buyerHandler);
 
-  return { farmer, farmerHandler, buyerHandler, aniPlatform, remainder };
+  return { farmer, farmerHandler, buyerHandler, platformShare, remainder };
 }
 
-export function aniPlatformShareAmount(
+export function platformShareAmount(
   totalAmount: number,
   options?: DistributionHandlerOptions
 ): number {
-  return calculateDistributionAmounts(totalAmount, options).aniPlatform;
+  return calculateDistributionAmounts(totalAmount, options).platformShare;
 }
 
 /** Policy rate of order total for an assigned handler - not derived from rounded GHC amounts. */
@@ -109,14 +109,14 @@ export function handlerSharePercentOfTotal(
 }
 
 /** Policy rate of order total - not derived from rounded GHC amounts. */
-export function aniPlatformSharePercentOfTotal(
+export function platformSharePercentOfTotal(
   _totalAmount: number,
   options: DistributionHandlerOptions = {}
 ): number {
   const hasFarmerHandler = options.hasFarmerHandler ?? true;
   const hasBuyerHandler = options.hasBuyerHandler ?? true;
 
-  let percent = ANI_PLATFORM_SHARE_PERCENT;
+  let percent = PLATFORM_SHARE_PERCENT;
   if (!hasFarmerHandler) percent += HANDLER_SHARE_OF_TOTAL_PERCENT;
   if (!hasBuyerHandler) percent += HANDLER_SHARE_OF_TOTAL_PERCENT;
   return roundGhc(percent);

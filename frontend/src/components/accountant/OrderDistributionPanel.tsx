@@ -7,6 +7,7 @@ import type { OrderDistributionLine, OrderMoneyDistributionSnapshot } from "@/li
 import { DistributionSplitBreakdown } from "@/components/accountant/DistributionSplitBreakdown";
 import { PaymentResultOverlay } from "@/components/PaymentResultOverlay";
 import { PdfViewerModal } from "@/components/PdfViewerModal";
+import { PLATFORM_NAME } from "@/lib/site";
 
 interface OrderDistributionPanelProps {
   orderId: string;
@@ -126,14 +127,14 @@ export function OrderDistributionPanel({
       });
       setSnapshot(data);
       const paidLines = data.lines.filter(
-        (line) => line.role !== "ANI_PLATFORM" && line.status === "DISTRIBUTED"
+        (line) => line.role !== "PLATFORM" && line.status === "DISTRIBUTED"
       );
       const paidTotal = paidLines.reduce((sum, line) => sum + line.amount, 0);
       setPaymentResult({
         title: "Distribution complete",
         message: `${paidLines.length} recipient share${paidLines.length === 1 ? "" : "s"} (${formatGhc(paidTotal)}) sent for "${orderLabel}".`,
         hint: data.allDistributed
-          ? "All assigned recipients have been paid. ANI platform share is retained automatically."
+          ? `All assigned recipients have been paid. ${PLATFORM_NAME} platform share is retained automatically.`
           : undefined,
       });
     } catch (err) {
@@ -229,7 +230,7 @@ export function OrderDistributionPanel({
                   </thead>
                   <tbody>
                     {snapshot.lines
-                      .filter((line) => line.role !== "ANI_PLATFORM")
+                      .filter((line) => line.role !== "PLATFORM")
                       .map((line) => {
                       return (
                         <tr key={line.id} className="border-b border-brand-50">

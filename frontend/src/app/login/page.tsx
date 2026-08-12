@@ -11,6 +11,7 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 import { AuthHeroPanel } from "@/components/AuthHeroPanel";
 import { AuthDivider, GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { api } from "@/lib/api";
+import { PLATFORM_NAME } from "@/lib/site";
 
 const GOOGLE_DEV_MODE = process.env.NEXT_PUBLIC_GOOGLE_DEV_MODE === "true";
 
@@ -88,7 +89,7 @@ function LoginForm() {
             <h1 className="text-2xl font-black tracking-tight text-brand-900 sm:text-3xl">
               Sign In to{" "}
               <span className="bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent">
-                ANI
+                {PLATFORM_NAME}
               </span>
             </h1>
             <div className="auth-heading-underline" aria-hidden="true" />

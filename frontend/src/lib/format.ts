@@ -1,4 +1,5 @@
 import { formatForViewer, formatAmountNumberForCountry } from "./currency";
+import { PLATFORM_ACCOUNTANT_LABEL } from "./site";
 
 export function formatGhc(amount: number, viewerCountry?: string | null) {
   return formatForViewer(amount, viewerCountry ?? "Ghana");
@@ -70,7 +71,7 @@ export function escrowStatusStyle(status: string) {
 export function escrowStatusLabel(status: string) {
   switch (status) {
     case "RELEASED":
-      return "Released to ANI Accountant";
+      return `Released to ${PLATFORM_ACCOUNTANT_LABEL}`;
     case "HELD":
       return "Held in escrow";
     default:

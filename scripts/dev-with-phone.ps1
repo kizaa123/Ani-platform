@@ -1,10 +1,10 @@
-# ANI Platform — laptop on localhost, phone on public tunnel link
+# ConcordiaOrbis — laptop on localhost, phone on public tunnel link
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $backend = Join-Path $root "backend"
 $frontend = Join-Path $root "frontend"
 
 Write-Host ""
-Write-Host "Starting ANI Platform for laptop + phone..." -ForegroundColor Cyan
+Write-Host "Starting ConcordiaOrbis for laptop + phone..." -ForegroundColor Cyan
 Write-Host ""
 
 Start-Process powershell -ArgumentList @(

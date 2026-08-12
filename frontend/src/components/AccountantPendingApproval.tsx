@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Icon } from "@/components/icons";
+import { PLATFORM_ACCOUNTANT_LABEL } from "@/lib/site";
 
 type AccountantPendingApprovalProps = {
   status: string;
@@ -24,8 +25,8 @@ export function AccountantPendingApproval({ status }: AccountantPendingApprovalP
       </h1>
       <p className="mt-3 max-w-lg text-sm leading-relaxed text-gray-600 sm:text-base">
         {rejected
-          ? "Your ANI Accountant registration was reviewed and not approved. Contact a platform administrator if you believe this was a mistake."
-          : "Your ANI Accountant account has been created. A platform administrator must approve your registration before you can access the financial portal."}
+          ? `Your ${PLATFORM_ACCOUNTANT_LABEL} registration was reviewed and not approved. Contact a platform administrator if you believe this was a mistake.`
+          : `Your ${PLATFORM_ACCOUNTANT_LABEL} account has been created. A platform administrator must approve your registration before you can access the financial portal.`}
       </p>
       {!rejected && (
         <p className="mt-2 text-sm text-gray-500">

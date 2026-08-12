@@ -1,5 +1,8 @@
-export const SITE_NAME = "ANI Commodity Exchange Platform";
-export const SITE_SHORT_NAME = "ANI";
+export const PLATFORM_NAME = "ConcordiaOrbis";
+export const SITE_NAME = PLATFORM_NAME;
+export const SITE_SHORT_NAME = PLATFORM_NAME;
+export const PLATFORM_ACCOUNTANT_LABEL = `${PLATFORM_NAME} Accountant`;
+export const PLATFORM_TEAM_LABEL = `${PLATFORM_NAME} Team`;
 export const SITE_DESCRIPTION =
   "Connect fellows, clients, and liaison officers across Africa and beyond";
 

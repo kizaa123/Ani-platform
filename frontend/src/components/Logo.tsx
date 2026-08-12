@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { PLATFORM_NAME } from "@/lib/site";
 
 interface LogoProps {
-  /** "full" = Icon + ANI + Tagline, "mark" = Icon only, "compact" = Icon + ANI only */
+  /** "full" = Icon + name + tagline, "mark" = Icon only, "compact" = Icon + name only */
   variant?: "full" | "mark" | "compact";
   /** "dark" = for light backgrounds (dark text), "light" = for dark/green backgrounds (white text) */
   theme?: "dark" | "light";
@@ -57,11 +58,11 @@ export function Logo({
     lg: "h-14 w-auto flex-shrink-0",
   };
 
-  // "ANI" - the brand mark
+  // Platform name — sidebar, nav, and auth headers
   const brandSizes = {
-    sm: "text-xl font-extrabold tracking-tight leading-none",
-    md: "text-2xl font-extrabold tracking-tight leading-none",
-    lg: "text-4xl font-extrabold tracking-tight leading-none",
+    sm: "text-base font-extrabold tracking-tight leading-none",
+    md: "text-lg font-extrabold tracking-tight leading-none",
+    lg: "text-2xl font-extrabold tracking-tight leading-none",
   };
 
   // Platform subtitle - compact form for nav & sidebars
@@ -79,10 +80,10 @@ export function Logo({
       <LogoIcon className={iconSizes[size]} theme={theme} />
       {variant !== "mark" && (
         <div className="flex flex-col justify-center">
-          <span className={`${brandSizes[size]} ${brandColor}`}>ANI</span>
+          <span className={`${brandSizes[size]} ${brandColor}`}>{PLATFORM_NAME}</span>
           {(showTagline || variant === "full") && (
             <span className={`${taglineSizes[size]} ${taglineColor}`}>
-              Agricess Network International
+              The Premier Commodity Exchange Platform
             </span>
           )}
         </div>

@@ -13,6 +13,7 @@ import {
 } from "@/lib/types";
 import { formatDate, formatGhc, formatGhcPlain, orderStatusStyle } from "@/lib/format";
 import { OrderDetailModal, SalesOrdersTable } from "@/components/ProductOrdersList";
+import { PLATFORM_ACCOUNTANT_LABEL } from "@/lib/site";
 
 type FarmerOrderLineItem = ProductOrderLineItem & { orderId?: string };
 
@@ -230,7 +231,7 @@ export default function FinancialStatementPage() {
             <div>
               <h3 className="text-base font-semibold text-brand-900">Payments received</h3>
               <p className="text-sm text-gray-500">
-                Funds distributed by ANI Accountant after successful delivery
+                Funds distributed by {PLATFORM_ACCOUNTANT_LABEL} after successful delivery
               </p>
             </div>
             <Link href="/farm/orders" className="text-sm font-semibold text-brand-700 hover:underline">
@@ -329,7 +330,7 @@ export default function FinancialStatementPage() {
       )}
 
       <p className="mt-4 text-xs text-gray-400 text-center">
-        Totals show payments distributed by ANI Accountant. Listed values reflect products currently for sale.
+        Totals show payments distributed by {PLATFORM_ACCOUNTANT_LABEL}. Listed values reflect products currently for sale.
       </p>
     </div>
   );

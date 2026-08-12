@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
+import { PLATFORM_NAME, SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
 
 export const alt = SITE_NAME;
 export const size = { width: 1200, height: 630 };
@@ -45,23 +45,13 @@ export default function Image() {
         <div
           style={{
             marginTop: 40,
-            fontSize: 72,
+            fontSize: 64,
             fontWeight: 800,
             color: "#111827",
-            letterSpacing: "-0.04em",
+            letterSpacing: "-0.03em",
           }}
         >
-          ANI
-        </div>
-        <div
-          style={{
-            marginTop: 12,
-            fontSize: 28,
-            fontWeight: 600,
-            color: "#059669",
-          }}
-        >
-          Agricess Network International
+          {PLATFORM_NAME}
         </div>
         <div
           style={{

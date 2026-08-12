@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { LogoIcon } from "@/components/Logo";
+import { PLATFORM_NAME } from "@/lib/site";
 
 export function useCancelRegistration() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export function RegistrationTopBar() {
         <Link href="/" className="flex items-center gap-2 sm:gap-3 transition-opacity hover:opacity-85">
           <LogoIcon className="h-8 w-auto shrink-0 sm:h-11 lg:h-14" theme="dark" />
           <span className="text-sm font-extrabold leading-tight tracking-tight text-gray-900 sm:text-base lg:text-lg">
-            Agricess Network International
+            {PLATFORM_NAME}
           </span>
         </Link>
       </div>

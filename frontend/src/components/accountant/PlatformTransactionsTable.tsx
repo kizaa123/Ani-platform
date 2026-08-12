@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { PlatformFinancialStatement } from "@/lib/types";
 import { formatDate, formatGhc, formatGhcPlain, orderStatusStyle } from "@/lib/format";
+import { PLATFORM_NAME } from "@/lib/site";
 
 type LineItemType = PlatformFinancialStatement["lineItems"][number]["type"];
 type FinancialFilter = LineItemType | "ALL";
@@ -14,7 +15,7 @@ function typeLabel(type: LineItemType) {
     case "FARM_ACCESS":
       return "Farm access payment";
     case "RESEARCH_SALE":
-      return "Publication sale (ANI 10%)";
+      return `Publication sale (${PLATFORM_NAME} 10%)`;
     default:
       return type;
   }
@@ -27,7 +28,7 @@ function filterLabel(filter: FinancialFilter) {
     case "FARM_ACCESS":
       return "Farm access payments";
     case "RESEARCH_SALE":
-      return "Publication sales (ANI share)";
+      return `Publication sales (${PLATFORM_NAME} share)`;
     default:
       return "All payments";
   }

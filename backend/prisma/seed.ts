@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import PDFDocument from 'pdfkit';
 import { dedupeAgentAssignments } from './dedupe-agent-assignments';
+import { PLATFORM_NAME, PLATFORM_ACCOUNTANT_LABEL } from '../src/constants/platform';
 
 const prisma = new PrismaClient();
 
@@ -21,7 +22,7 @@ async function ensureSamplePublicationPdf(filename: string, title: string) {
     doc.pipe(stream);
     doc.fontSize(18).text(title, { align: 'center' });
     doc.moveDown();
-    doc.fontSize(12).text('Sample publication for the ANI Platform Research Library.');
+    doc.fontSize(12).text(`Sample publication for the ${PLATFORM_NAME} Research Library.`);
     doc.end();
   });
 }
@@ -32,7 +33,7 @@ const ROLES = [
   { id: 3, roleName: 'Farmer Handler' },
   { id: 4, roleName: 'Buyer' },
   { id: 5, roleName: 'Buyer Handler' },
-  { id: 6, roleName: 'ANI Accountant' },
+  { id: 6, roleName: PLATFORM_ACCOUNTANT_LABEL },
   { id: 7, roleName: 'Admin' },
   { id: 8, roleName: 'Researcher' },
   { id: 9, roleName: 'Student' },
@@ -67,7 +68,7 @@ const ROLE_PERMS: Record<number, string[]> = {
 };
 
 async function main() {
-  console.log('🌱 Seeding ANI Platform...');
+  console.log(`🌱 Seeding ${PLATFORM_NAME}...`);
   await dedupeAgentAssignments();
 
   const legacyStudents = await prisma.user.findMany({ where: { roleId: 9 } });
@@ -493,7 +494,7 @@ async function main() {
     await prisma.ad.createMany({
       data: [
         {
-          title: 'Grow with ANI Marketplace',
+          title: `Grow with ${PLATFORM_NAME} Marketplace`,
           description: 'Connect with verified fellows and discover fresh produce across Ghana.',
           imageUrl: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=1200&h=400&fit=crop',
           linkUrl: 'https://ani-platform.example/marketplace',
@@ -505,7 +506,7 @@ async function main() {
         },
         {
           title: 'Research Library - New Publications',
-          description: 'Browse the latest crop and livestock research from ANI fellows.',
+          description: `Browse the latest crop and livestock research from ${PLATFORM_NAME} fellows.`,
           imageUrl: 'https://images.unsplash.com/photo-1507842217343-583bb7270def?w=1200&h=400&fit=crop',
           linkUrl: 'https://ani-platform.example/library',
           ctaLabel: 'Browse library',

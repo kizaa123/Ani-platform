@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import { PlatformFinancialStatement, isAdmin } from "@/lib/types";
 import { formatDate, formatGhc, formatGhcPlain, orderStatusStyle } from "@/lib/format";
+import { PLATFORM_NAME } from "@/lib/site";
 
 type LineItemType = PlatformFinancialStatement["lineItems"][number]["type"];
 type FinancialFilter = LineItemType | "ALL";
@@ -113,7 +114,7 @@ export default function AdminFinancialsPage() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-600">
-              ANI
+              {PLATFORM_NAME}
             </p>
             <h2 className="text-base font-bold text-brand-900">Money overview</h2>
             <p className="text-xs text-gray-500">Generated {formatDate(statement.generatedAt)}</p>

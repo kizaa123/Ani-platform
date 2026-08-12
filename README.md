@@ -1,4 +1,4 @@
-# ANI Agricultural Exchange Platform
+# ConcordiaOrbis Agricultural Exchange Platform
 
 Production-ready agricultural marketplace connecting **farmers**, **buyers**, and **agents** across Ghana.
 
@@ -34,7 +34,7 @@ Production-ready agricultural marketplace connecting **farmers**, **buyers**, an
 
 ### User Roles (RBAC)
 
-1. Crop Farmer · 2. Livestock Farmer · 3. Farmer Handler · 4. Buyer · 5. Buyer Handler · 6. ANI Accountant · 7. Admin
+1. Crop Farmer · 2. Livestock Farmer · 3. Farmer Handler · 4. Buyer · 5. Buyer Handler · 6. ConcordiaOrbis Accountant · 7. Admin
 
 ### Data Visibility
 
@@ -91,7 +91,7 @@ Password for all: `Password123!`
 | ama@buyer.gh | Buyer |
 | yaw@handler.gh | Farmer Handler |
 | kofi@handler.gh | Buyer Handler |
-| accountant@ani.gh | ANI Accountant |
+| accountant@ani.gh | ConcordiaOrbis Accountant |
 | admin@ani.gh | Admin |
 
 ## Project Structure
@@ -144,4 +144,4 @@ The `PaymentProvider` interface in `backend/src/services/payment.provider.ts` ab
 
 ## License
 
-Proprietary — ANI Platform
+Proprietary — ConcordiaOrbis

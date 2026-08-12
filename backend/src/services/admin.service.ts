@@ -11,6 +11,7 @@ import {
   isFarmerHandler,
   isBuyerHandler,
 } from '../constants/roles';
+import { PLATFORM_NAME } from '../constants/platform';
 import {
   notifyInternationalVerification,
   notifyUserVerified,
@@ -85,7 +86,7 @@ const ROLE_CHART_LABELS: Record<number, string> = {
   [ROLES.FARMER_HANDLER]: 'Fellow Liaison Officer',
   [ROLES.BUYER]: 'Client',
   [ROLES.BUYER_HANDLER]: 'Client Liaison Officer',
-  [ROLES.ANI_ACCOUNTANT]: 'Accountants',
+  [ROLES.PLATFORM_ACCOUNTANT]: 'Accountants',
   [ROLES.ADMIN]: 'Admins',
   [ROLES.CTO]: 'CTO',
   [ROLES.COMMUNICATION_OFFICER]: 'Communications',
@@ -283,7 +284,7 @@ export class AdminService {
       prisma.connectionRequest.count({ where: { status: 'PENDING' } }),
       prisma.user.count({
         where: {
-          roleId: ROLES.ANI_ACCOUNTANT,
+          roleId: ROLES.PLATFORM_ACCOUNTANT,
           verificationStatus: 'PENDING',
         },
       }),
@@ -711,13 +712,13 @@ export class AdminService {
 
     const body =
       data.message?.trim() ||
-      'You have a new message from the ANI platform team. Open the platform for updates.';
+      `You have a new message from the ${PLATFORM_NAME} team. Open the platform for updates.`;
 
     await createNotification({
       userId: client.id,
       actorId: adminUserId,
       type: 'CHAT_MESSAGE',
-      title: 'Message from ANI Platform',
+      title: 'Message from ConcordiaOrbis',
       body,
       link: '/dashboard',
       metadata: {

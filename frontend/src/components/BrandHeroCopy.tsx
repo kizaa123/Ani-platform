@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
+import { PLATFORM_NAME } from "@/lib/site";
 
 const MOTTO = "The Premier Commodity Exchange Platform";
 const SUPPORTING =
@@ -37,17 +38,9 @@ const SIZE = {
   },
 } as const;
 
-/** Brand line: full name flows; "— ANI" never orphans alone. */
+/** Primary brand line shown on home, login, and register. */
 function BrandLine({ className }: { className: string }) {
-  return (
-    <p className={className}>
-      Agricess Network International
-      <span className="whitespace-nowrap">
-        {" "}
-        — <span className="text-gold">ANI</span>
-      </span>
-    </p>
-  );
+  return <p className={className}>{PLATFORM_NAME}</p>;
 }
 
 function Headline({ className, as: Tag }: { className: string; as: "h1" | "h2" }) {
@@ -63,7 +56,7 @@ function Headline({ className, as: Tag }: { className: string; as: "h1" | "h2" }
 
 /**
  * Shared brand stack for home, login, and register — same order & style:
- * 1. Agricess Network International — ANI
+ * 1. ConcordiaOrbis
  * 2. The Premier Commodity Exchange Platform
  * 3. Where Fellows Meet Markets
  * 4. Supporting sentence

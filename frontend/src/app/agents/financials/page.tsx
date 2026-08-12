@@ -15,6 +15,7 @@ import {
 } from "@/lib/types";
 import { formatDate, formatGhc, formatGhcPlain, orderStatusStyle } from "@/lib/format";
 import { OrderDetailModal, OrderListPerspective } from "@/components/ProductOrdersList";
+import { PLATFORM_ACCOUNTANT_LABEL } from "@/lib/site";
 
 type OrderListItem = ProductOrderLineItem | BuyerOrderLineItem;
 
@@ -138,7 +139,7 @@ export default function HandlerFinancialsPage() {
         <div className="border-b border-amber-100 bg-amber-50/40 px-5 py-3">
           <h3 className="text-sm font-semibold text-brand-900">Undistributed payments</h3>
           <p className="text-xs text-gray-500">
-            Your 10% commission share awaiting ANI Accountant distribution after order release
+            Your 10% commission share awaiting {PLATFORM_ACCOUNTANT_LABEL} distribution after order release
           </p>
         </div>
 
@@ -205,7 +206,7 @@ export default function HandlerFinancialsPage() {
         <div className="border-b border-brand-100 bg-brand-50/40 px-5 py-3">
           <h3 className="text-sm font-semibold text-brand-900">Payments received</h3>
           <p className="text-xs text-gray-500">
-            Your liaison commission after ANI Accountant distributes order funds
+            Your liaison commission after {PLATFORM_ACCOUNTANT_LABEL} distributes order funds
           </p>
         </div>
 

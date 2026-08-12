@@ -11,7 +11,7 @@ import { NotifyClientModal } from "@/components/NotifyClientModal";
 import { PageContentSkeleton } from "@/components/LoadingPrimitives";
 
 const ADMIN_NOTIFY_MESSAGE =
-  "Important update from ANI Platform — please open your dashboard for details.";
+  "Important update from ConcordiaOrbis — please open your dashboard for details.";
 
 function formatLocation(client: FarmClient): string {
   return [client.city, client.region, client.country].filter(Boolean).join(", ");

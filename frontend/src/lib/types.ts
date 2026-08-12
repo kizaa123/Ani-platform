@@ -1,3 +1,5 @@
+import { PLATFORM_ACCOUNTANT_LABEL } from "./site";
+
 export interface HandlerProfile {
   id: string;
   firstName: string;
@@ -713,7 +715,7 @@ export const ROLES = {
   FARMER_HANDLER: 3,
   BUYER: 4,
   BUYER_HANDLER: 5,
-  ANI_ACCOUNTANT: 6,
+  PLATFORM_ACCOUNTANT: 6,
   ADMIN: 7,
   RESEARCHER: 8,
   STUDENT: 9,
@@ -724,7 +726,7 @@ export const ROLES = {
 
 export const STAFF_ROLE_OPTIONS = [
   { id: ROLES.ADMIN, label: "Admin" },
-  { id: ROLES.ANI_ACCOUNTANT, label: "ANI Accountant" },
+  { id: ROLES.PLATFORM_ACCOUNTANT, label: PLATFORM_ACCOUNTANT_LABEL },
   { id: ROLES.CTO, label: "CTO" },
   { id: ROLES.COMMUNICATION_OFFICER, label: "Communication Officer" },
 ] as const;
@@ -852,7 +854,7 @@ export function isBuyerAssignment(a: AgentAssignment) {
 
 export function isStaff(roleId: number) {
   return (
-    roleId === ROLES.ANI_ACCOUNTANT ||
+    roleId === ROLES.PLATFORM_ACCOUNTANT ||
     roleId === ROLES.ADMIN ||
     roleId === ROLES.CTO ||
     roleId === ROLES.COMMUNICATION_OFFICER
@@ -864,7 +866,7 @@ export function isAdmin(roleId: number) {
 }
 
 export function isAccountant(roleId: number) {
-  return roleId === ROLES.ANI_ACCOUNTANT;
+  return roleId === ROLES.PLATFORM_ACCOUNTANT;
 }
 
 export function isAccountantApproved(user: {
@@ -1011,7 +1013,7 @@ export interface AdminStats {
   pendingAccountantApprovals?: number;
   /** Farm access, publication access, and legacy access fees. */
   accessIncome: number;
-  /** ANI remainder from released order distributions (post-Fellow, post-handler pool). */
+  /** Platform remainder from released order distributions (post-Fellow, post-handler pool). */
   orderShareIncome: number;
   /** accessIncome + orderShareIncome. */
   totalPlatformIncome: number;
@@ -1356,7 +1358,7 @@ export const AD_TARGET_ROLE_OPTIONS: { id: number; label: string }[] = [
   { id: ROLES.BUYER, label: "Buyer" },
   { id: ROLES.BUYER_HANDLER, label: "Buyer Handler" },
   { id: ROLES.RESEARCHER, label: "Researcher" },
-  { id: ROLES.ANI_ACCOUNTANT, label: "ANI Accountant" },
+  { id: ROLES.PLATFORM_ACCOUNTANT, label: PLATFORM_ACCOUNTANT_LABEL },
   { id: ROLES.ADMIN, label: "Admin" },
   { id: ROLES.CTO, label: "CTO" },
   { id: ROLES.COMMUNICATION_OFFICER, label: "Communication Officer" },

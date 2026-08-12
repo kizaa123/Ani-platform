@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import { AppError } from '../utils/errors';
+import { PLATFORM_NAME } from '../constants/platform';
 
 function getFormattedFrom(): string {
   const userEmail = process.env.SMTP_USER?.trim() || process.env.GMAIL_USER?.trim();
@@ -7,15 +8,15 @@ function getFormattedFrom(): string {
   if (envFrom) {
     const match = envFrom.match(/^(?:"?([^"<]+)"?\s+)?<([^>]+)>$/);
     if (match) {
-      const name = match[1] ? match[1].trim() : 'ANI Platform';
+      const name = match[1] ? match[1].trim() : PLATFORM_NAME;
       const address = match[2].trim();
       return `"${name}" <${address}>`;
     }
   }
   if (userEmail) {
-    return `"ANI Platform" <${userEmail}>`;
+    return `"${PLATFORM_NAME}" <${userEmail}>`;
   }
-  return '"ANI Platform" <noreply@ani-platform.local>';
+  return `"${PLATFORM_NAME}" <noreply@ani-platform.local>`;
 }
 
 function getTransports() {
@@ -74,10 +75,10 @@ function getTransports() {
 export async function sendVerificationCodeEmail(to: string, code: number) {
   const from = getFormattedFrom();
   const formattedCode = String(code).padStart(4, '0');
-  const subject = `Your ANI Platform Verification Code: ${formattedCode}`;
+  const subject = `Your ${PLATFORM_NAME} Verification Code: ${formattedCode}`;
 
   const text = [
-    'Verify your email address on ANI Platform.',
+    `Verify your email address on ${PLATFORM_NAME}.`,
     '',
     `Your 4-digit verification code is: ${formattedCode}`,
     '',
@@ -88,7 +89,7 @@ export async function sendVerificationCodeEmail(to: string, code: number) {
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff;">
-      <h2 style="color: #065f46; font-size: 20px; font-weight: bold; margin-top: 0; text-align: center;">ANI Platform Email Verification</h2>
+      <h2 style="color: #065f46; font-size: 20px; font-weight: bold; margin-top: 0; text-align: center;">${PLATFORM_NAME} Email Verification</h2>
       <p style="font-size: 15px; color: #334155; line-height: 1.5; margin-bottom: 20px; text-align: center;">
         Use the 4-digit code below to verify your email address:
       </p>

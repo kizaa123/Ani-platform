@@ -9,6 +9,7 @@ import { AnimatedStat } from "@/components/AnimatedStat";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
 import { HOW_IT_WORKS_IMAGES } from "@/lib/homepageImages";
+import { PLATFORM_NAME } from "@/lib/site";
 
 const STATS = [
   { value: "1,000+", label: "Verified Users" },
@@ -114,7 +115,7 @@ const ROLE_CARDS: { icon: IconName; label: string; desc: string; image: string }
   {
     icon: "book",
     label: "Student",
-    desc: "Access the Research Library, purchase and read publications, and learn from verified field research published by ANI researchers.",
+    desc: "Access the Research Library, purchase and read publications, and learn from verified field research published by ConcordiaOrbis researchers.",
     image: ROLE_CARD_IMAGES.student,
   },
   {
@@ -132,7 +133,7 @@ const ROLE_CARDS: { icon: IconName; label: string; desc: string; image: string }
   {
     icon: "users",
     label: "Organization",
-    desc: "Register as an institution or cooperative to source commodities, manage procurement, and coordinate trade through ANI liaison officers.",
+    desc: "Register as an institution or cooperative to source commodities, manage procurement, and coordinate trade through ConcordiaOrbis liaison officers.",
     image: ROLE_CARD_IMAGES.organization,
   },
 ];
@@ -221,7 +222,7 @@ export default function HomePage() {
                     className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-yellow-400 px-4 py-4 text-sm font-bold text-brand-900 shadow-[0_8px_30px_rgba(250,204,21,0.35)] transition-all hover:scale-[1.02] hover:bg-yellow-300 sm:px-8 sm:text-base sm:min-w-[12rem]"
                   >
                     <Icon name="sprout" className="h-5 w-5 shrink-0" />
-                    Join ANI
+                    Join {PLATFORM_NAME}
                   </Link>
                   <Link
                     href="/login"
@@ -279,7 +280,7 @@ export default function HomePage() {
                 </span>
               </>
             }
-            subtitle="Whether you produce it, buy it, or broker it — ANI has a tailored experience designed for your role."
+            subtitle={`Whether you produce it, buy it, or broker it — ${PLATFORM_NAME} has a tailored experience designed for your role.`}
           />
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {ROLE_CARDS.map((r, i) => (
@@ -430,7 +431,7 @@ export default function HomePage() {
             </span>
           </h2>
           <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-brand-100 md:text-xl">
-            Join fellows, clients, and liaison officers using ANI to trade commodities safely and efficiently across Africa and beyond.
+            Join fellows, clients, and liaison officers using {PLATFORM_NAME} to trade commodities safely and efficiently across Africa and beyond.
           </p>
           <div className="mx-auto flex w-full max-w-xl flex-col justify-center gap-3 sm:flex-row sm:gap-4">
             <Link

@@ -1,15 +1,15 @@
-import { aniPlatformShareAmount, aniPlatformSharePercentOfTotal, DISTRIBUTION_SHARES } from "@/lib/handlerDisplayName";
+import { platformShareAmount, platformSharePercentOfTotal, DISTRIBUTION_SHARES } from "@/lib/handlerDisplayName";
 import { formatGhc } from "@/lib/format";
 
-interface AniPlatformShareCardProps {
+interface PlatformShareCardProps {
   orderAmounts: number[];
   className?: string;
 }
 
-export function AniPlatformShareCard({ orderAmounts, className = "" }: AniPlatformShareCardProps) {
-  const totalAniShare = orderAmounts.reduce((sum, amount) => sum + aniPlatformShareAmount(amount), 0);
+export function PlatformShareCard({ orderAmounts, className = "" }: PlatformShareCardProps) {
+  const totalPlatformShare = orderAmounts.reduce((sum, amount) => sum + platformShareAmount(amount), 0);
   const referenceAmount = orderAmounts[0] ?? 100;
-  const referencePercent = aniPlatformSharePercentOfTotal(referenceAmount);
+  const referencePercent = platformSharePercentOfTotal(referenceAmount);
 
   return (
     <div
@@ -20,8 +20,8 @@ export function AniPlatformShareCard({ orderAmounts, className = "" }: AniPlatfo
         .filter(Boolean)
         .join(" ")}
     >
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-600">ANI</p>
-      <p className="mt-1 text-2xl font-bold tabular-nums text-brand-900">{formatGhc(totalAniShare)}</p>
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-600">ConcordiaOrbis</p>
+      <p className="mt-1 text-2xl font-bold tabular-nums text-brand-900">{formatGhc(totalPlatformShare)}</p>
       <p className="mt-1 text-xs tabular-nums font-semibold text-brand-800">
         ~{referencePercent.toFixed(2)}% of each order
       </p>

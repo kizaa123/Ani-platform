@@ -11,6 +11,7 @@ import { HandlerClientNav } from "@/components/HandlerClientNav";
 import { SalesOrdersTable } from "@/components/ProductOrdersList";
 import { EmailText } from "@/components/EmailText";
 import { ProductOrderLineItem } from "@/lib/types";
+import { PLATFORM_ACCOUNTANT_LABEL, PLATFORM_NAME } from "@/lib/site";
 
 function formatGhc(amount: number) {
   return `GHC ${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -128,7 +129,7 @@ export default function HandlerClientFinancialsPage() {
       <div className="mb-6 rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">ANI Exchange</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">{PLATFORM_NAME}</p>
             <h2 className="text-lg font-bold text-brand-900">{statement.farmName}</h2>
             <p className="text-brand-700">{statement.farmerName}</p>
             <EmailText email={statement.email} className="block" />
@@ -151,7 +152,7 @@ export default function HandlerClientFinancialsPage() {
         <div className="mb-6 overflow-hidden rounded-2xl border border-green-100 bg-white shadow-sm">
           <div className="border-b border-green-100 bg-green-50/50 px-6 py-4">
             <h3 className="text-base font-semibold text-brand-900">Payments received</h3>
-            <p className="text-sm text-gray-500">Funds distributed by ANI Accountant after successful delivery</p>
+            <p className="text-sm text-gray-500">Funds distributed by {PLATFORM_ACCOUNTANT_LABEL} after successful delivery</p>
           </div>
           <SalesOrdersTable items={salesOrders} />
         </div>

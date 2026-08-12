@@ -11,7 +11,8 @@ import { AnimatedStat } from "@/components/AnimatedStat";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { scrollStagger } from "@/lib/scrollStagger";
 import { PageContentSkeleton, Skeleton } from "@/components/LoadingPrimitives";
-import { aniPlatformSharePercentOfTotal } from "@/lib/handlerDisplayName";
+import { platformSharePercentOfTotal } from "@/lib/handlerDisplayName";
+import { PLATFORM_NAME } from "@/lib/site";
 
 function OverviewSkeleton() {
   return (
@@ -84,7 +85,7 @@ export default function AccountantOverviewPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-brand-900">Financial Overview</h1>
         <p className="mt-1 text-sm text-gray-500">
-          ANI earns through access fees, publication platform share (10%), and order-share remainder
+          {PLATFORM_NAME} earns through access fees, publication platform share (10%), and order-share remainder
         </p>
       </div>
 
@@ -136,7 +137,7 @@ export default function AccountantOverviewPage() {
                 label: "Order share income",
                 value: formatMoney(overview.orderShareRevenue),
                 prefix: "GHC ",
-                sub: `${overview.orderShareCount} released order(s) · ~${aniPlatformSharePercentOfTotal(100).toFixed(2)}% each`,
+                sub: `${overview.orderShareCount} released order(s) · ~${platformSharePercentOfTotal(100).toFixed(2)}% each`,
                 valueClass: "text-lg font-bold text-brand-800",
                 href: "/accountant/withdrawals",
               },
