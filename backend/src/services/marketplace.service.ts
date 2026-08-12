@@ -477,6 +477,8 @@ export class MarketplaceService {
         ? true
         : hasValidFarmAccess && connectionStatus === 'ACCEPTED';
 
+      const canViewProducts = canViewFarm;
+
       const hasAccess = isStaffRole(roleId)
         ? true
         : canViewFarm && hasAvailableProduct;
@@ -489,25 +491,26 @@ export class MarketplaceService {
 
       const registeredCommodities = this.buildRegisteredCommodities(profile.farmerCommodities);
 
-      const products = hasValidFarmAccess
-        ? profile.listings.map((listing) =>
-            this.formatListing(
-              {
-                ...listing,
-                farmer: {
-                  farmName: profile.farmName,
-                  farmSize: profile.farmSize,
-                  experienceYears: profile.experienceYears,
-                  user: profile.user,
-                  farmerCommodities: profile.farmerCommodities,
+      const products =
+        isStaffRole(roleId) || hasValidFarmAccess
+          ? profile.listings.map((listing) =>
+              this.formatListing(
+                {
+                  ...listing,
+                  farmer: {
+                    farmName: profile.farmName,
+                    farmSize: profile.farmSize,
+                    experienceYears: profile.experienceYears,
+                    user: profile.user,
+                    farmerCommodities: profile.farmerCommodities,
+                  },
                 },
-              },
-              access,
-              mediaMap.get(listing.id) ?? [],
-              viewerCountry
+                access,
+                mediaMap.get(listing.id) ?? [],
+                viewerCountry
+              )
             )
-          )
-        : [];
+          : [];
 
       const requiresFarmAccessPayment =
         isPurchaserRole && hasAvailableProduct && !hasValidFarmAccess;
@@ -534,7 +537,7 @@ export class MarketplaceService {
         hasAvailableProduct,
         farmAccessExpired,
         requiresFarmAccessPayment,
-        canViewProducts: canViewFarm,
+        canViewProducts,
         farmAccessFee: FARM_ACCESS_PRICE_GHC,
         farmAccessPriceLabel: farmAccessPriceLabel,
         products,

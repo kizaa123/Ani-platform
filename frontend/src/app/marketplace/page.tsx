@@ -95,6 +95,12 @@ export default function MarketplacePage() {
   };
 
   const handleViewFarm = (farmer: FarmerBrowseCard) => {
+    if (farmer.canViewProducts) {
+      const product = firstOrderableProduct(farmer);
+      setPurchaseFarmer(farmer);
+      setActiveListingId(product?.id ?? null);
+      return;
+    }
     if (farmer.farmAccessExpired || farmer.requiresFarmAccessPayment) {
       setPayFarmer(farmer);
       return;

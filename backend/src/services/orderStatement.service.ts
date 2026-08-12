@@ -18,7 +18,7 @@ import {
 } from '../utils/counterpartHandler';
 import { listingCommodityName, listingCommodityCategory } from '../utils/listingDisplay';
 import { formatOrderAmountForStatement } from '../utils/currency';
-import { PLATFORM_NAME, PLATFORM_ACCOUNTANT_LABEL } from '../constants/platform';
+import { PLATFORM_NAME, PLATFORM_ACCOUNTANT_LABEL, PLATFORM_FILE_PREFIX } from '../constants/platform';
 
 type OrderForStatement = NonNullable<Awaited<ReturnType<typeof loadOrderForStatement>>>;
 
@@ -421,7 +421,7 @@ export async function generateOrderStatementPdf(
 
   const perspective = resolveStatementViewerPerspective(userId, roleId, order);
   const buffer = await buildOrderStatementPdf(order, perspective);
-  const filename = `ani-order-${orderId.slice(0, 8)}.pdf`;
+  const filename = `${PLATFORM_FILE_PREFIX}-order-${orderId.slice(0, 8)}.pdf`;
   return { buffer, filename };
 }
 

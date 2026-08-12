@@ -14,13 +14,17 @@ interface MarketplaceFarmerCardProps {
   onViewFarm: (farmer: FarmerBrowseCard) => void;
 }
 
+function canViewProduction(farmer: FarmerBrowseCard): boolean {
+  return farmer.canViewProducts;
+}
+
 function FarmActionButton({
   farmer,
   accessPriceLabel,
   onPayToAccess,
   onViewFarm,
 }: MarketplaceFarmerCardProps) {
-  if (farmer.canViewProducts) {
+  if (canViewProduction(farmer)) {
     return (
       <button
         type="button"
@@ -32,18 +36,35 @@ function FarmActionButton({
     );
   }
 
-  if (farmer.hasAvailableProduct === false) {
-    return (
-      <span className="block w-full rounded-xl bg-gray-100 py-2.5 text-center text-sm font-semibold text-gray-600">
-        Product not available
-      </span>
-    );
-  }
-
   if (farmer.hasFarmAccess && farmer.connectionStatus === "PENDING") {
     return (
       <span className="block w-full rounded-xl bg-amber-100 py-2.5 text-center text-sm font-semibold text-amber-900">
         Pending approval
+      </span>
+    );
+  }
+
+  if (farmer.farmAccessExpired || farmer.requiresFarmAccessPayment) {
+    const label = farmer.farmAccessPriceLabel ?? accessPriceLabel;
+    const payLabel = farmer.farmAccessExpired ? "Renew access" : "Pay to access";
+
+    return (
+      <button
+        type="button"
+        onClick={() => onPayToAccess(farmer)}
+        className="btn-gold inline-flex w-full items-center justify-center gap-2 py-2.5 text-sm"
+      >
+        <Icon name="lock" className="h-4 w-4 shrink-0" />
+        {payLabel}
+        {label ? ` (${label})` : ""}
+      </button>
+    );
+  }
+
+  if (farmer.hasAvailableProduct === false) {
+    return (
+      <span className="block w-full rounded-xl bg-gray-100 py-2.5 text-center text-sm font-semibold text-gray-600">
+        Product not available
       </span>
     );
   }
@@ -185,7 +206,7 @@ export function MarketplaceFarmerCard({
         )}
       </div>
 
-      {farmer.canViewProducts && (
+      {canViewProduction(farmer) && (
         <div className="mt-3">
           <DetailTile label="Products" value={productCountLabel} />
         </div>

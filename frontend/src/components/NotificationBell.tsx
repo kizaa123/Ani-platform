@@ -1,11 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
-import { api } from "@/lib/api";
+import { useNotifications } from "@/context/NotificationProvider";
 import { AppNotification } from "@/lib/types";
 import { getNotificationDestination } from "@/lib/notificationNavigation";
 import { formatDate } from "@/lib/format";
@@ -201,93 +200,41 @@ function StandardNotificationContent({
 
 export function NotificationBell({ className = "" }: { className?: string }) {
   const { user, loading } = useAuth();
-  const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const {
+    items,
+    unread,
+    busy,
+    panelOpen,
+    setPanelOpen,
+    markAllRead,
+    openNotification,
+  } = useNotifications();
   const [mounted, setMounted] = useState(false);
-  const [items, setItems] = useState<AppNotification[]>([]);
-  const [unread, setUnread] = useState(0);
-  const [busy, setBusy] = useState(false);
-
-  const refresh = useCallback(async () => {
-    if (!user) return;
-    try {
-      const [list, countRes] = await Promise.all([
-        api.notifications.list(),
-        api.notifications.unreadCount(),
-      ]);
-      setItems(list);
-      setUnread(countRes.count);
-    } catch {
-      /* ignore polling errors */
-    }
-  }, [user]);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
-    if (!user || loading) return;
-    refresh();
-    const timer = setInterval(refresh, 25000);
-    return () => clearInterval(timer);
-  }, [user, loading, refresh]);
-
-  useEffect(() => {
-    if (!open) return;
-    document.body.style.overflow = "hidden";
-    refresh();
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [open, refresh]);
-
-  useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") setPanelOpen(false);
     };
-    if (open) document.addEventListener("keydown", onKey);
+    if (panelOpen) document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, [panelOpen, setPanelOpen]);
 
   if (loading || !user) return null;
-
-  const markAllRead = async () => {
-    setBusy(true);
-    try {
-      await api.notifications.markAllRead();
-      setItems((prev) => prev.map((n) => ({ ...n, read: true })));
-      setUnread(0);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const openNotification = async (n: AppNotification) => {
-    if (!n.read) {
-      try {
-        await api.notifications.markRead(n.id);
-        setItems((prev) =>
-          prev.map((item) => (item.id === n.id ? { ...item, read: true } : item))
-        );
-        setUnread((c) => Math.max(0, c - 1));
-      } catch {
-        /* continue navigation */
-      }
-    }
-    setOpen(false);
-    const destination = getNotificationDestination(n, user.roleId);
-    if (destination) router.push(destination);
-  };
 
   return (
     <>
       <button
         type="button"
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={() => setPanelOpen(!panelOpen)}
         aria-label="Notifications"
-        aria-expanded={open}
-        className={`relative flex h-10 w-10 items-center justify-center rounded-xl border border-brand-200 text-brand-800 transition hover:bg-brand-50 ${className}`}
+        aria-expanded={panelOpen}
+        className={`relative flex h-10 w-10 items-center justify-center rounded-xl border border-brand-200 text-brand-800 transition hover:bg-brand-50 ${className} ${
+          unread > 0 ? "notification-bell-active" : ""
+        }`}
       >
         <BellIcon />
         {unread > 0 && (
@@ -298,14 +245,14 @@ export function NotificationBell({ className = "" }: { className?: string }) {
       </button>
 
       {mounted &&
-        open &&
+        panelOpen &&
         createPortal(
           <>
             <button
               type="button"
               aria-label="Close notifications"
               className="fixed inset-0 z-[60] bg-black/40"
-              onClick={() => setOpen(false)}
+              onClick={() => setPanelOpen(false)}
             />
 
             <aside
@@ -321,7 +268,7 @@ export function NotificationBell({ className = "" }: { className?: string }) {
                 </div>
                 <button
                   type="button"
-                  onClick={() => setOpen(false)}
+                  onClick={() => setPanelOpen(false)}
                   className="rounded-lg px-2 py-1 text-sm font-semibold text-gray-600 hover:bg-gray-100"
                   aria-label="Close"
                 >
@@ -390,7 +337,7 @@ export function NotificationBell({ className = "" }: { className?: string }) {
               <div className="border-t border-brand-100 p-4 text-center">
                 <Link
                   href="/dashboard"
-                  onClick={() => setOpen(false)}
+                  onClick={() => setPanelOpen(false)}
                   className="text-xs font-semibold text-brand-700 hover:underline"
                 >
                   Back to dashboard

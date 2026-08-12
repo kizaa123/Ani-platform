@@ -219,9 +219,8 @@ export default function HomePage() {
                 <div className="flex w-full max-w-xl flex-row gap-3 sm:gap-4">
                   <Link
                     href="/register"
-                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-yellow-400 px-4 py-4 text-sm font-bold text-brand-900 shadow-[0_8px_30px_rgba(250,204,21,0.35)] transition-all hover:scale-[1.02] hover:bg-yellow-300 sm:px-8 sm:text-base sm:min-w-[12rem]"
+                    className="inline-flex flex-1 items-center justify-center rounded-2xl bg-yellow-400 px-4 py-4 text-sm font-bold text-brand-900 shadow-[0_8px_30px_rgba(250,204,21,0.35)] transition-all hover:scale-[1.02] hover:bg-yellow-300 sm:px-8 sm:text-base sm:min-w-[12rem]"
                   >
-                    <Icon name="sprout" className="h-5 w-5 shrink-0" />
                     Join {PLATFORM_NAME}
                   </Link>
                   <Link

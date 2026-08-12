@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
 import { BuyerOrderLineItem, canPurchaseFromMarketplace } from "@/lib/types";
-import { ProductOrdersList } from "@/components/ProductOrdersList";
+import { ProductOrdersList, RecentOrdersPanel } from "@/components/ProductOrdersList";
 import { useMoneyFormat } from "@/hooks/useMoneyFormat";
 import { Icon } from "@/components/icons";
 
@@ -131,10 +131,12 @@ export default function BuyerOrdersPage() {
 
       {servedOrders.length > 0 && (
         <div className="mt-10">
-          <ProductOrdersList
+          <RecentOrdersPanel
             perspective="buyer"
             orders={servedOrders}
-            sectionTitle="Completed orders"
+            title="Completed orders"
+            subtitle="Delivered orders from your fellows"
+            emptyMessage="No completed orders yet."
           />
         </div>
       )}

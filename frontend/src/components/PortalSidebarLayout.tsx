@@ -8,6 +8,7 @@ import { type UserProfile } from "@/lib/types";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { RolePrefixedName } from "@/components/RolePrefixedName";
 import { NotificationBell } from "@/components/NotificationBell";
+import { useEnableNotificationToasts } from "@/context/NotificationProvider";
 import { Icon, type IconName } from "@/components/icons";
 import { MobileBottomNav, MOBILE_BOTTOM_NAV_PADDING } from "@/components/MobileBottomNav";
 import { Logo } from "@/components/Logo";
@@ -52,12 +53,14 @@ function SidebarContent({
 
   return (
     <>
-      <div className="flex items-center justify-between border-b border-brand-100 p-5">
-        <div>
-          <Logo href="/dashboard" size="sm" />
-          <p className="mt-1 text-xs font-medium text-brand-600">{portalTitle}</p>
+      <div className="border-b border-brand-100 p-5">
+        <Logo href="/dashboard" size="sm" />
+        <div className="mt-1 flex items-center justify-between gap-2">
+          <p className="min-w-0 flex-1 text-xs font-medium text-brand-600">{portalTitle}</p>
+          {showNotificationBell && (
+            <NotificationBell className="h-8 w-8 shrink-0 [&_svg]:h-4 [&_svg]:w-4" />
+          )}
         </div>
-        {showNotificationBell && <NotificationBell />}
       </div>
 
       <div className="flex items-center gap-2 border-b border-brand-100 px-5 py-4">
@@ -208,6 +211,8 @@ export function PortalSidebarLayout({
 }: PortalSidebarLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
+
+  useEnableNotificationToasts();
 
   useEffect(() => {
     setMobileOpen(false);

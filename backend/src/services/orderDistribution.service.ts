@@ -14,7 +14,7 @@ import {
   platformSharePercentOfTotal,
   orderListingLabels,
 } from '../utils/distributionFinancials';
-import { PLATFORM_NAME } from '../constants/platform';
+import { PLATFORM_NAME, PLATFORM_FILE_PREFIX } from '../constants/platform';
 
 const PAGE_MARGIN = 45;
 const CONTENT_WIDTH = 505;
@@ -615,7 +615,7 @@ export class OrderDistributionService {
       messageBody,
     });
 
-    const filename = `ani-distribution-${orderId.slice(0, 8)}-${lineId.slice(0, 8)}.pdf`;
+    const filename = `${PLATFORM_FILE_PREFIX}-distribution-${orderId.slice(0, 8)}-${lineId.slice(0, 8)}.pdf`;
     return { buffer, filename };
   }
 }

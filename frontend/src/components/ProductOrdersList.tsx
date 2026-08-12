@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { ProductImage } from "@/components/FarmerAvatar";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
@@ -20,12 +20,14 @@ import { formatOrderAmountForRecipient } from "@/lib/currency";
 import { useMoneyFormat } from "@/hooks/useMoneyFormat";
 import { useAuth } from "@/context/AuthProvider";
 import { OrderTrackStage } from "@/lib/orderTrack";
-import { BuyerOrderLineItem, CounterpartHandlerContact, formatListingUnit, ProductOrderLineItem, ROLES } from "@/lib/types";
+import { BuyerOrderLineItem, CounterpartHandlerContact, formatListingUnit, ProductOrderLineItem, ROLES, type UserProfile } from "@/lib/types";
 import { Icon } from "@/components/icons";
 import { HandlerPhoneLink } from "@/components/HandlerAssignmentCards";
 import { EmailText } from "@/components/EmailText";
 import { floDisplayName, cloDisplayName } from "@/lib/handlerDisplayName";
 import { PLATFORM_ACCOUNTANT_LABEL } from "@/lib/site";
+import { formatProfileLocation } from "@/components/ProfileIdentityHeader";
+import { formatRelativeTime, groupByRelativeDate } from "@/lib/handlerOrderNotifications";
 
 export type OrderListPerspective = "farmer" | "buyer";
 type OrderListItem = ProductOrderLineItem | BuyerOrderLineItem;
@@ -56,6 +58,44 @@ function fellowDisplay(order: OrderListItem) {
     verificationStatus: order.farmerVerificationStatus,
     verificationTags: order.farmerVerificationTags,
   };
+}
+
+function clientDisplay(
+  order: OrderListItem,
+  options: {
+    perspective: OrderListPerspective;
+    viewer?: UserProfile | null;
+    handlerOwnerId?: string;
+  }
+) {
+  if (!isBuyerOrder(order)) {
+    return {
+      name: order.buyerName ?? "Client",
+      location: order.buyerLocation ?? "-",
+      profilePicture: order.buyerProfilePicture,
+      verificationStatus: order.buyerVerificationStatus,
+      verificationTags: order.buyerVerificationTags,
+    };
+  }
+
+  if (options.perspective === "buyer" && !options.handlerOwnerId && options.viewer) {
+    const name = `${options.viewer.firstName} ${options.viewer.lastName}`.trim() || "Client";
+    return {
+      name,
+      location:
+        formatProfileLocation(
+          options.viewer.country,
+          options.viewer.region,
+          options.viewer.city,
+          options.viewer.address
+        ) ?? "-",
+      profilePicture: options.viewer.profilePicture,
+      verificationStatus: options.viewer.verificationStatus,
+      verificationTags: options.viewer.verificationTags,
+    };
+  }
+
+  return null;
 }
 
 type OrderMoneyFormatter = (amountGhc: number, order: OrderListItem) => string;
@@ -312,6 +352,207 @@ function OrderEscrowPanel({
   );
 }
 
+
+function orderSortTimestamp(order: OrderListItem): string {
+  return order.trackUpdatedAt ?? order.date;
+}
+
+function orderRowSubtitle(order: OrderListItem, perspective: OrderListPerspective): string {
+  if (perspective === "buyer" && isBuyerOrder(order)) {
+    return order.farmName ? `${order.farmerName} · ${order.farmName}` : order.farmerName;
+  }
+  if (!isBuyerOrder(order)) {
+    return order.buyerName ?? "Client";
+  }
+  return "Order update";
+}
+
+function OrderListThumbnail({ order }: { order: OrderListItem }) {
+  if (order.productImage) {
+    return (
+      <ProductImage
+        src={order.productImage}
+        alt={order.productName}
+        className="h-14 w-14 shrink-0 rounded-xl border border-brand-100 object-cover"
+      />
+    );
+  }
+
+  return (
+    <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-brand-100 bg-brand-50 text-brand-700">
+      <Icon name="store" className="h-5 w-5" />
+    </span>
+  );
+}
+
+function CompactOrderAlertRow({
+  order,
+  perspective,
+  onView,
+  formatOrderMoney,
+}: {
+  order: OrderListItem;
+  perspective: OrderListPerspective;
+  onView: () => void;
+  formatOrderMoney: OrderMoneyFormatter;
+}) {
+  const served = isOrderServed(order);
+  const subtitle = orderRowSubtitle(order, perspective);
+  const when = orderSortTimestamp(order);
+
+  return (
+    <div
+      className={`flex items-start gap-3 rounded-lg px-3 py-2.5 ${
+        served ? "bg-emerald-50/40" : "bg-amber-50/40"
+      }`}
+    >
+      <OrderListThumbnail order={order} />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-start gap-1.5">
+          <p className="line-clamp-1 flex-1 text-sm font-semibold text-brand-900">
+            {order.productName}
+          </p>
+          {served && (
+            <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" aria-hidden />
+          )}
+        </div>
+        <p className="mt-0.5 line-clamp-1 text-xs text-gray-500">{subtitle}</p>
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-gray-500">
+          <span
+            className={`rounded px-1 py-0.5 font-semibold ${
+              served ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
+            }`}
+          >
+            {served ? "Served" : "Unserved"}
+          </span>
+          <span className="font-semibold text-brand-700">
+            {formatOrderMoney(order.totalAmount, order)}
+          </span>
+          <span>{formatRelativeTime(when)}</span>
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={onView}
+        className="shrink-0 rounded-lg bg-brand-700 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-brand-800"
+      >
+        View
+      </button>
+    </div>
+  );
+}
+
+export function RecentOrdersPanel({
+  orders: initialOrders,
+  perspective = "buyer",
+  title,
+  subtitle,
+  handlerOwnerId,
+  emptyMessage = "No orders yet.",
+}: {
+  orders: OrderListItem[];
+  perspective?: OrderListPerspective;
+  title: string;
+  subtitle?: string;
+  handlerOwnerId?: string;
+  emptyMessage?: string;
+}) {
+  const { user } = useAuth();
+  const { format } = useMoneyFormat();
+  const formatOrderMoney = createOrderMoneyFormatter(
+    perspective,
+    user?.country ?? "Ghana",
+    format
+  );
+  const [orders, setOrders] = useState(initialOrders);
+  const [selected, setSelected] = useState<OrderListItem | null>(null);
+
+  useEffect(() => {
+    setOrders(initialOrders);
+  }, [initialOrders]);
+
+  const sorted = useMemo(
+    () =>
+      [...orders].sort(
+        (a, b) => new Date(orderSortTimestamp(b)).getTime() - new Date(orderSortTimestamp(a)).getTime()
+      ),
+    [orders]
+  );
+
+  const grouped = useMemo(
+    () => groupByRelativeDate(sorted, orderSortTimestamp),
+    [sorted]
+  );
+
+  return (
+    <>
+      <article className="card-elevated overflow-hidden rounded-xl">
+        <div className="border-b border-brand-100 bg-brand-50/50 px-3 py-2.5">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-brand-700 shadow-sm ring-1 ring-brand-100">
+              <Icon name="check-circle" className="h-3.5 w-3.5" />
+            </span>
+            <div className="min-w-0">
+              <h2 className="truncate text-sm font-bold text-brand-900">{title}</h2>
+              {subtitle && (
+                <p className="truncate text-[11px] text-gray-500">{subtitle}</p>
+              )}
+            </div>
+            {orders.length > 0 && (
+              <span className="ml-auto shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold tabular-nums text-emerald-800">
+                {orders.length}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="p-3">
+          {orders.length === 0 ? (
+            <p className="py-6 text-center text-xs text-gray-500">{emptyMessage}</p>
+          ) : (
+            grouped.map((group) => (
+              <div key={group.label} className="mb-2 last:mb-0">
+                <p className="px-1 py-1 text-[10px] font-bold uppercase tracking-wide text-brand-700">
+                  {group.label}
+                </p>
+                <div className="space-y-1">
+                  {group.items.map((order) => (
+                    <CompactOrderAlertRow
+                      key={orderListKey(order)}
+                      order={order}
+                      perspective={perspective}
+                      onView={() => setSelected(order)}
+                      formatOrderMoney={formatOrderMoney}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </article>
+
+      {selected && (
+        <OrderDetailModal
+          order={selected}
+          perspective={perspective}
+          handlerOwnerId={handlerOwnerId}
+          formatOrderMoney={formatOrderMoney}
+          onClose={() => setSelected(null)}
+          onTrackUpdated={(updated) => {
+            const updatedKey = orderListKey(updated);
+            setOrders((prev) =>
+              prev.map((item) => (orderListKey(item) === updatedKey ? { ...item, ...updated } : item))
+            );
+            setSelected((prev) =>
+              prev && orderListKey(prev) === updatedKey ? { ...prev, ...updated } : prev
+            );
+          }}
+        />
+      )}
+    </>
+  );
+}
 
 export function ProductOrdersList({
   orders: initialOrders,
@@ -653,37 +894,61 @@ export function OrderDetailModal({
           <div className="mt-5 rounded-xl border border-brand-100 p-4 space-y-4">
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">From (Client)</p>
-              <div className="flex items-center gap-3">
-                <AvatarWithVerification
-                  src={!isBuyerOrder(order) ? order.buyerProfilePicture : undefined}
-                  name={!isBuyerOrder(order) ? (order.buyerName ?? "Client") : "Client"}
-                  size={48}
-                  verificationStatus={!isBuyerOrder(order) ? order.buyerVerificationStatus : undefined}
-                  verificationTags={!isBuyerOrder(order) ? order.buyerVerificationTags : undefined}
-                  tagPlacement="none"
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold text-brand-900">
-                    {!isBuyerOrder(order) ? (
-                      <RolePrefixedName
-                        user={{
-                          roleId: ROLES.BUYER,
-                          ...splitDisplayName(order.buyerName ?? "Client"),
-                          verificationStatus: order.buyerVerificationStatus,
-                        }}
-                        verificationTags={order.buyerVerificationTags}
-                        nameClassName="font-bold text-brand-900"
-                        prefixClassName="font-bold text-brand-900"
-                      />
-                    ) : (
-                      "Client"
-                    )}
-                  </p>
-                  <p className="text-xs text-gray-600">
-                    Location: {!isBuyerOrder(order) ? (order.buyerLocation ?? "-") : "-"}
-                  </p>
-                </div>
-              </div>
+              {(() => {
+                const client = clientDisplay(order, {
+                  perspective,
+                  viewer: user,
+                  handlerOwnerId,
+                });
+
+                if (!client) {
+                  return (
+                    <div className="flex items-center gap-3">
+                      <AvatarWithVerification src={undefined} name="Client" size={48} tagPlacement="none" />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold text-brand-900">Client</p>
+                        <p className="text-xs text-gray-600">Location: -</p>
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="flex items-center gap-3">
+                    <AvatarWithVerification
+                      src={client.profilePicture}
+                      name={client.name}
+                      size={48}
+                      verificationStatus={client.verificationStatus}
+                      verificationTags={client.verificationTags}
+                      tagPlacement="none"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-brand-900">
+                        <span className="inline-flex max-w-full flex-wrap items-center gap-x-0.5 gap-y-0.5">
+                          <RolePrefixedName
+                            user={{
+                              roleId: ROLES.BUYER,
+                              ...splitDisplayName(client.name),
+                              verificationStatus: client.verificationStatus,
+                            }}
+                            hideVerificationTags
+                            nameClassName="font-bold text-brand-900"
+                            prefixClassName="font-bold text-brand-900"
+                          />
+                          <VerificationTags
+                            verificationTags={client.verificationTags}
+                            verificationStatus={client.verificationStatus}
+                            size="sm"
+                            className="inline-flex shrink-0"
+                          />
+                        </span>
+                      </p>
+                      <p className="text-xs text-gray-600">Location: {client.location ?? "-"}</p>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="border-t border-brand-100 pt-3">

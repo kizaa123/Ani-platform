@@ -56,9 +56,17 @@ export type HandlerOrderDateGroup = {
   items: AppNotification[];
 };
 
-export function groupHandlerOrderNotificationsByDate(
-  notifications: AppNotification[]
-): HandlerOrderDateGroup[] {
+export type RelativeDateGroup<T> = {
+  label: string;
+  items: T[];
+};
+
+const RELATIVE_DATE_LABELS = ["Today", "Yesterday", "This week", "Earlier"] as const;
+
+export function groupByRelativeDate<T>(
+  items: T[],
+  getTimestamp: (item: T) => string
+): RelativeDateGroup<T>[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const yesterday = new Date(today);
@@ -66,11 +74,10 @@ export function groupHandlerOrderNotificationsByDate(
   const weekAgo = new Date(today);
   weekAgo.setDate(weekAgo.getDate() - 7);
 
-  const buckets = new Map<string, AppNotification[]>();
-  const order = ["Today", "Yesterday", "This week", "Earlier"];
+  const buckets = new Map<string, T[]>();
 
-  for (const notification of notifications) {
-    const day = new Date(notification.createdAt);
+  for (const item of items) {
+    const day = new Date(getTimestamp(item));
     day.setHours(0, 0, 0, 0);
 
     let label: string;
@@ -80,11 +87,17 @@ export function groupHandlerOrderNotificationsByDate(
     else label = "Earlier";
 
     const list = buckets.get(label) ?? [];
-    list.push(notification);
+    list.push(item);
     buckets.set(label, list);
   }
 
-  return order
-    .filter((label) => (buckets.get(label)?.length ?? 0) > 0)
-    .map((label) => ({ label, items: buckets.get(label)! }));
+  return RELATIVE_DATE_LABELS.filter((label) => (buckets.get(label)?.length ?? 0) > 0).map(
+    (label) => ({ label, items: buckets.get(label)! })
+  );
+}
+
+export function groupHandlerOrderNotificationsByDate(
+  notifications: AppNotification[]
+): HandlerOrderDateGroup[] {
+  return groupByRelativeDate(notifications, (notification) => notification.createdAt);
 }
