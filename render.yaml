@@ -6,6 +6,7 @@ services:
     # Do not append db:setup — build already runs dedupe, push, and seed.
     buildCommand: npm install && npm run build
     startCommand: npm start
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
@@ -20,9 +21,10 @@ services:
       - key: JWT_REFRESH_SECRET
         generateValue: true
       - key: FRONTEND_URL
-        sync: false
-      - key: API_URL
-        sync: false
+        fromService:
+          type: web
+          name: concordiaorbis-web
+          envVarKey: RENDER_EXTERNAL_URL
       - key: GOOGLE_CLIENT_ID
         sync: false
       - key: GOOGLE_CLIENT_SECRET
@@ -35,6 +37,33 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
+
+  - type: web
+    name: concordiaorbis-web
+    runtime: node
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: BACKEND_URL
+        fromService:
+          type: web
+          name: concordiaorbis-api
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: NEXT_PUBLIC_SITE_URL
+        value: https://concordiaorbis-web.onrender.com
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: concordiaorbis-api
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: NEXT_PUBLIC_SMS_PHONE_VERIFICATION_ENABLED
+        sync: false
+      - key: NEXT_PUBLIC_GOOGLE_DEV_MODE
+        value: "false"
 
 databases:
   - name: ani-platform-db
