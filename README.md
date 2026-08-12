@@ -165,7 +165,18 @@ The `PaymentProvider` interface in `backend/src/services/payment.provider.ts` ab
    ```
 4. Test: `https://concordiaorbis-api.onrender.com/api/health`
 
-To change the Render API subdomain: **Settings → Name** → `concordiaorbis-api` → Save.
+### Replace a broken `ani-platform-api` service
+
+If the old API service errors and you want it gone:
+
+1. **Create the new API** — push this repo, then Render → Blueprints → **Manual Sync**  
+   (creates `concordiaorbis-api`, keeps database `ani-platform-db`).
+2. **Copy env vars** from the old service to `concordiaorbis-api` (especially `DATABASE_URL`, JWT, Cloudinary, Google, `FRONTEND_URL`).
+3. **Test** `https://concordiaorbis-api.onrender.com/api/health`.
+4. **Update Vercel** `BACKEND_URL` and `NEXT_PUBLIC_API_URL` to the new URL → Redeploy.
+5. **Delete** the old `ani-platform-api` service: Render → that service → **Settings** → scroll down → **Delete Web Service**.
+
+Do **not** delete `ani-platform-db` unless you intend to wipe all data.
 
 ### 2. Vercel (frontend)
 

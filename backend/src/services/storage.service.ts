@@ -60,7 +60,7 @@ async function uploadToCloudinary(
 ): Promise<{ url: string; duration?: number }> {
   ensureCloudinaryConfig();
   const result = await cloudinary.uploader.upload(filePath, {
-    folder: `ani-platform/${folder}`,
+    folder: `concordiaorbis/${folder}`,
     resource_type: resourceType,
   });
   return {
