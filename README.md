@@ -144,69 +144,57 @@ The `PaymentProvider` interface in `backend/src/services/payment.provider.ts` ab
 
 ## Deployment (Vercel + Render)
 
-| Part | Host | Config |
-|------|------|--------|
-| Frontend (Next.js) | **Vercel** | Root directory: `frontend` |
-| Backend (API) | **Render** | `render.yaml` → `concordiaorbis-api` |
-| Database | **Render Postgres** | `ani-platform-db` |
+| Part | URL |
+|------|-----|
+| **Website (Vercel)** | https://concordiaorbis-platform-one.vercel.app |
+| **API (Render)** | https://concordiaorbis-api.onrender.com |
 
-### 1. Render (backend only)
+Full copy-paste env lists: [`deploy/production-urls.env`](deploy/production-urls.env)
 
-1. Push to GitHub, then Render Dashboard → Blueprints → **Manual Sync**.
-2. API URL: `https://concordiaorbis-api.onrender.com`
-3. Set in Render → **concordiaorbis-api** → **Environment**:
-   ```
-   FRONTEND_URL=https://YOUR-APP.vercel.app
-   GOOGLE_CLIENT_ID=...
-   GOOGLE_CLIENT_SECRET=...
-   CLOUDINARY_CLOUD_NAME=...
-   CLOUDINARY_API_KEY=...
-   CLOUDINARY_API_SECRET=...
-   ```
-4. Test: `https://concordiaorbis-api.onrender.com/api/health`
+### Render (`concordiaorbis-api`)
 
-### Replace a broken `ani-platform-api` service
+`FRONTEND_URL` and `GOOGLE_REDIRECT_URI` are set in **`render.yaml`** — push to GitHub, then **Blueprints → Manual Sync**.
 
-If the old API service errors and you want it gone:
+Copy from the old `ani-platform-api` service (Render → Environment):
 
-1. **Create the new API** — push this repo, then Render → Blueprints → **Manual Sync**  
-   (creates `concordiaorbis-api`, keeps database `ani-platform-db`).
-2. **Copy env vars** from the old service to `concordiaorbis-api` (especially `DATABASE_URL`, JWT, Cloudinary, Google, `FRONTEND_URL`).
-3. **Test** `https://concordiaorbis-api.onrender.com/api/health`.
-4. **Update Vercel** `BACKEND_URL` and `NEXT_PUBLIC_API_URL` to the new URL → Redeploy.
-5. **Delete** the old `ani-platform-api` service: Render → that service → **Settings** → scroll down → **Delete Web Service**.
+- `JWT_SECRET`, `JWT_REFRESH_SECRET`
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
 
-Do **not** delete `ani-platform-db` unless you intend to wipe all data.
+After sync, verify Render shows:
 
-### 2. Vercel (frontend)
-
-1. Import the GitHub repo in [Vercel](https://vercel.com).
-2. **Root Directory:** `frontend`
-3. **Framework:** Next.js (auto-detected)
-4. Set **Environment Variables** (Production):
-   ```
-   BACKEND_URL=https://concordiaorbis-api.onrender.com
-   NEXT_PUBLIC_SITE_URL=https://YOUR-APP.vercel.app
-   NEXT_PUBLIC_API_URL=https://concordiaorbis-api.onrender.com
-   NEXT_PUBLIC_GOOGLE_DEV_MODE=false
-   ```
-5. Deploy. Your site URL is the Vercel domain (or add a custom domain in Vercel → Domains).
-
-`next.config.ts` proxies `/api/*` to `BACKEND_URL`, so the browser stays on your Vercel URL.
-
-### 3. Google OAuth
-
-Add authorized redirect URI:
 ```
-https://concordiaorbis-api.onrender.com/api/auth/google/callback
+FRONTEND_URL=https://concordiaorbis-platform-one.vercel.app
+GOOGLE_REDIRECT_URI=https://concordiaorbis-api.onrender.com/api/auth/google/callback
 ```
 
-Add authorized JavaScript origin:
+Test: https://concordiaorbis-api.onrender.com/api/health
+
+### Vercel (`concordiaorbis-platform-one`)
+
+**Root directory:** `frontend`
+
+**Environment variables (Production):**
+
 ```
-https://YOUR-APP.vercel.app
+BACKEND_URL=https://concordiaorbis-api.onrender.com
+NEXT_PUBLIC_SITE_URL=https://concordiaorbis-platform-one.vercel.app
+NEXT_PUBLIC_API_URL=https://concordiaorbis-api.onrender.com
+NEXT_PUBLIC_GOOGLE_DEV_MODE=false
 ```
 
-See `backend/.env.example` and `frontend/.env.example` for local development.
+Redeploy after saving.
+
+### Google OAuth
+
+- **JavaScript origin:** `https://concordiaorbis-platform-one.vercel.app`
+- **Redirect URI:** `https://concordiaorbis-api.onrender.com/api/auth/google/callback`
+
+Remove the old `ani-platform-api.onrender.com` redirect URI from Google Console.
+
+### Remove old Render API
+
+After `concordiaorbis-api` works: delete **`ani-platform-api`** (Settings → Delete Web Service). Keep **`ani-platform-db`**.
 
 ## License
 

@@ -16,18 +16,18 @@ services:
         fromDatabase:
           name: ani-platform-db
           property: connectionString
+      # Copy JWT values from the old ani-platform-api service — do not regenerate if migrating.
       - key: JWT_SECRET
-        generateValue: true
-      - key: JWT_REFRESH_SECRET
-        generateValue: true
-      # Frontend runs on Vercel — set your live Vercel URL in the Render dashboard.
-      - key: FRONTEND_URL
         sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        value: https://concordiaorbis-platform-one.vercel.app
+      - key: GOOGLE_REDIRECT_URI
+        value: https://concordiaorbis-api.onrender.com/api/auth/google/callback
       - key: GOOGLE_CLIENT_ID
         sync: false
       - key: GOOGLE_CLIENT_SECRET
-        sync: false
-      - key: GOOGLE_REDIRECT_URI
         sync: false
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
