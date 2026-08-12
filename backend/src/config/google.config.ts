@@ -1,4 +1,14 @@
-const API_BASE = process.env.API_URL || `http://localhost:${process.env.PORT || 3001}`;
+function resolveApiBase(): string {
+  const configured = process.env.API_URL?.trim();
+  if (configured) return configured.replace(/\/$/, '');
+
+  const renderUrl = process.env.RENDER_EXTERNAL_URL?.trim();
+  if (renderUrl) return renderUrl.replace(/\/$/, '');
+
+  return `http://localhost:${process.env.PORT || 3001}`;
+}
+
+const API_BASE = resolveApiBase();
 
 export function getGoogleOAuthConfig() {
   const clientId = process.env.GOOGLE_CLIENT_ID?.trim() || '';

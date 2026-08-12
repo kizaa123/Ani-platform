@@ -142,6 +142,23 @@ ANI PLATFORM/
 
 The `PaymentProvider` interface in `backend/src/services/payment.provider.ts` abstracts payment gateways. Swap `MockPaymentProvider` for Paystack, Stripe, or MTN MoMo in production.
 
+## Render deployment
+
+The backend Blueprint is defined in `render.yaml` (service: `concordiaorbis-api`).
+
+1. Push to the branch linked to your Render Blueprint.
+2. Render Dashboard → Blueprints → **Manual Sync** (if auto-sync is off).
+3. New API URL: `https://concordiaorbis-api.onrender.com`
+4. Set backend env vars on Render:
+   - `FRONTEND_URL` — your live frontend URL
+   - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (optional: `GOOGLE_REDIRECT_URI`; otherwise uses `RENDER_EXTERNAL_URL`)
+5. Set frontend env vars:
+   - `BACKEND_URL=https://concordiaorbis-api.onrender.com`
+   - `NEXT_PUBLIC_SITE_URL` — your live site URL
+6. Test: `https://concordiaorbis-api.onrender.com/api/health`
+
+See `backend/.env.example` and `frontend/.env.example` for full variable lists.
+
 ## License
 
 Proprietary — ConcordiaOrbis
