@@ -10,6 +10,7 @@ import { getNotificationDestination } from "@/lib/notificationNavigation";
 import { formatDate } from "@/lib/format";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { Icon, NOTIFICATION_ICONS } from "@/components/icons";
+import { isClientOrderNotification } from "@/lib/clientOrderNotifications";
 
 function BellIcon() {
   return (
@@ -33,8 +34,11 @@ function notificationAction(n: AppNotification, destination: string | null) {
   return { label, url: destination };
 }
 
-function linkTextClass(hasDestination: boolean) {
-  return hasDestination ? "text-brand-800 hover:text-brand-900 hover:underline" : "text-gray-600";
+function linkTextClass(hasDestination: boolean, n: AppNotification) {
+  if (isClientOrderNotification(n)) {
+    return "text-gray-600";
+  }
+  return hasDestination ? "text-brand-800 hover:text-brand-900" : "text-gray-600";
 }
 
 function NotificationThumbnail({ n }: { n: AppNotification }) {
@@ -81,7 +85,8 @@ function RichNotificationContent({
   onNavigate?: () => void;
 }) {
   const action = notificationAction(n, destination);
-  const bodyClass = linkTextClass(Boolean(destination));
+  const bodyClass = linkTextClass(Boolean(destination), n);
+  const orderNotice = isClientOrderNotification(n);
 
   return (
     <>
@@ -121,9 +126,16 @@ function RichNotificationContent({
       {n.body && (
         <p
           className={`mt-1 text-sm leading-snug ${bodyClass}`}
-          onClick={destination && onNavigate ? (e) => { e.stopPropagation(); onNavigate(); } : undefined}
+          onClick={
+            !orderNotice && destination && onNavigate
+              ? (e) => {
+                  e.stopPropagation();
+                  onNavigate();
+                }
+              : undefined
+          }
           onKeyDown={
-            destination && onNavigate
+            !orderNotice && destination && onNavigate
               ? (e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
@@ -133,8 +145,8 @@ function RichNotificationContent({
                 }
               : undefined
           }
-          role={destination ? "link" : undefined}
-          tabIndex={destination ? 0 : undefined}
+          role={!orderNotice && destination ? "link" : undefined}
+          tabIndex={!orderNotice && destination ? 0 : undefined}
         >
           {n.body}
         </p>
@@ -161,7 +173,8 @@ function StandardNotificationContent({
   onNavigate?: () => void;
 }) {
   const action = notificationAction(n, destination);
-  const bodyClass = linkTextClass(Boolean(destination));
+  const bodyClass = linkTextClass(Boolean(destination), n);
+  const orderNotice = isClientOrderNotification(n);
 
   return (
     <>
@@ -171,9 +184,16 @@ function StandardNotificationContent({
       </div>
       <p
         className={`mt-1 text-sm leading-snug ${bodyClass}`}
-        onClick={destination && onNavigate ? (e) => { e.stopPropagation(); onNavigate(); } : undefined}
+        onClick={
+          !orderNotice && destination && onNavigate
+            ? (e) => {
+                e.stopPropagation();
+                onNavigate();
+              }
+            : undefined
+        }
         onKeyDown={
-          destination && onNavigate
+          !orderNotice && destination && onNavigate
             ? (e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
@@ -183,8 +203,8 @@ function StandardNotificationContent({
               }
             : undefined
         }
-        role={destination ? "link" : undefined}
-        tabIndex={destination ? 0 : undefined}
+        role={!orderNotice && destination ? "link" : undefined}
+        tabIndex={!orderNotice && destination ? 0 : undefined}
       >
         {n.body}
       </p>

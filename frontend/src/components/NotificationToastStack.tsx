@@ -7,7 +7,7 @@ import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { Icon, NOTIFICATION_ICONS } from "@/components/icons";
 import type { NotificationToastItem } from "@/context/NotificationProvider";
 
-const AUTO_DISMISS_MS = 5000;
+const DEFAULT_AUTO_DISMISS_MS = 4000;
 const SWIPE_DISMISS_PX = 56;
 
 function ToastThumbnail({ n }: { n: AppNotification }) {
@@ -53,7 +53,7 @@ function NotificationToast({
   onOpen: (n: AppNotification) => void;
   onDismiss: (toastId: string) => void;
 }) {
-  const { toastId, notification: n } = item;
+  const { toastId, notification: n, autoDismissMs = DEFAULT_AUTO_DISMISS_MS } = item;
   const [entered, setEntered] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
@@ -71,12 +71,12 @@ function NotificationToast({
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => setEntered(true));
-    dismissTimer.current = setTimeout(dismiss, AUTO_DISMISS_MS);
+    dismissTimer.current = setTimeout(dismiss, autoDismissMs);
     return () => {
       cancelAnimationFrame(frame);
       if (dismissTimer.current) clearTimeout(dismissTimer.current);
     };
-  }, [dismiss]);
+  }, [dismiss, autoDismissMs]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartY.current = e.touches[0].clientY;
@@ -153,13 +153,6 @@ function NotificationToast({
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-
-        <div className="absolute inset-x-0 bottom-0 h-0.5 bg-brand-100">
-          <div
-            className="notification-toast-progress h-full origin-left bg-brand-500"
-            style={{ animationDuration: `${AUTO_DISMISS_MS}ms` }}
-          />
-        </div>
       </div>
     </div>
   );

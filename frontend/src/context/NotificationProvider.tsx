@@ -11,13 +11,18 @@ import {
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
-import { AppNotification } from "@/lib/types";
+import { AppNotification, BuyerOrderLineItem, canPurchaseFromMarketplace } from "@/lib/types";
 import { getNotificationDestination } from "@/lib/notificationNavigation";
 import { NotificationToastStack } from "@/components/NotificationToastStack";
+import { OrderDetailModal } from "@/components/ProductOrdersList";
+import { isClientOrderNotification } from "@/lib/clientOrderNotifications";
+import { resolveBuyerOrderFromNotification } from "@/lib/buyerOrderFromNotification";
 
 export type NotificationToastItem = {
   toastId: string;
   notification: AppNotification;
+  /** Auto-dismiss duration; catch-up uses 3s, live uses 5s. */
+  autoDismissMs?: number;
 };
 
 type NotificationContextValue = {
@@ -54,7 +59,9 @@ export function useEnableNotificationToasts() {
 
 const POLL_MS = 25000;
 const PORTAL_POLL_MS = 12000;
-const MAX_TOASTS = 3;
+const LIVE_MAX_TOASTS = 3;
+const LIVE_AUTO_DISMISS_MS = 4000;
+const CATCHUP_AUTO_DISMISS_MS = 3000;
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -65,18 +72,86 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const [panelOpen, setPanelOpen] = useState(false);
   const [toasts, setToasts] = useState<NotificationToastItem[]>([]);
   const [toastsEnabled, setToastsEnabledState] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<BuyerOrderLineItem | null>(null);
+  const [orderLoadError, setOrderLoadError] = useState("");
 
   const seenIdsRef = useRef<Set<string>>(new Set());
   const initializedRef = useRef(false);
+  const catchUpQueueRef = useRef<AppNotification[]>([]);
+  const catchUpActiveRef = useRef(false);
+  const catchUpInitializedRef = useRef(false);
+  const catchUpShownRef = useRef<Set<string>>(new Set());
 
-  const setToastsEnabled = useCallback((enabled: boolean) => {
-    setToastsEnabledState(enabled);
-    if (!enabled) setToasts([]);
-  }, []);
+  const makeToastItem = useCallback(
+    (notification: AppNotification, autoDismissMs: number): NotificationToastItem => ({
+      toastId: `${notification.id}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      notification,
+      autoDismissMs,
+    }),
+    []
+  );
 
-  const dismissToast = useCallback((toastId: string) => {
-    setToasts((prev) => prev.filter((t) => t.toastId !== toastId));
-  }, []);
+  const showNextCatchUpToast = useCallback(() => {
+    const next = catchUpQueueRef.current.shift();
+    if (!next) {
+      catchUpActiveRef.current = false;
+      setToasts([]);
+      return;
+    }
+    catchUpShownRef.current.add(next.id);
+    catchUpActiveRef.current = true;
+    setToasts([makeToastItem(next, CATCHUP_AUTO_DISMISS_MS)]);
+  }, [makeToastItem]);
+
+  const enqueueCatchUp = useCallback(
+    (notifications: AppNotification[]) => {
+      const fresh = notifications.filter(
+        (n) => !n.read && !catchUpShownRef.current.has(n.id)
+      );
+      if (fresh.length === 0) return;
+
+      const sorted = [...fresh].sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+
+      const existingIds = new Set(catchUpQueueRef.current.map((n) => n.id));
+      for (const notification of sorted) {
+        if (!existingIds.has(notification.id)) {
+          catchUpQueueRef.current.push(notification);
+          existingIds.add(notification.id);
+        }
+      }
+
+      if (!catchUpActiveRef.current) {
+        showNextCatchUpToast();
+      }
+    },
+    [showNextCatchUpToast]
+  );
+
+  const setToastsEnabled = useCallback(
+    (enabled: boolean) => {
+      setToastsEnabledState(enabled);
+      if (!enabled) {
+        setToasts([]);
+        return;
+      }
+      if (catchUpQueueRef.current.length > 0 && !catchUpActiveRef.current) {
+        showNextCatchUpToast();
+      }
+    },
+    [showNextCatchUpToast]
+  );
+
+  const dismissToast = useCallback(
+    (toastId: string) => {
+      setToasts((prev) => prev.filter((t) => t.toastId !== toastId));
+      if (catchUpActiveRef.current) {
+        window.setTimeout(() => showNextCatchUpToast(), 280);
+      }
+    },
+    [showNextCatchUpToast]
+  );
 
   const refresh = useCallback(async () => {
     if (!user) return;
@@ -98,27 +173,35 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       setItems(list);
       setUnread(countRes.count);
 
-      if (toastsEnabled && newOnes.length > 0) {
-        const sorted = [...newOnes].sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-        setToasts((prev) => {
-          const incoming = sorted.map((notification) => ({
-            toastId: `${notification.id}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-            notification,
-          }));
-          return [...incoming, ...prev].slice(0, MAX_TOASTS);
-        });
+      if (toastsEnabled) {
+        if (catchUpActiveRef.current || catchUpQueueRef.current.length > 0) {
+          const newUnread = newOnes.filter((n) => !n.read);
+          if (newUnread.length > 0) enqueueCatchUp(newUnread);
+        } else if (newOnes.length > 0) {
+          const sorted = [...newOnes].sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+          setToasts((prev) => {
+            const incoming = sorted.map((notification) =>
+              makeToastItem(notification, LIVE_AUTO_DISMISS_MS)
+            );
+            return [...incoming, ...prev].slice(0, LIVE_MAX_TOASTS);
+          });
+        }
       }
     } catch {
       /* ignore polling errors */
     }
-  }, [user, toastsEnabled]);
+  }, [user, toastsEnabled, enqueueCatchUp, makeToastItem]);
 
   useEffect(() => {
     if (!user || loading) {
       seenIdsRef.current = new Set();
       initializedRef.current = false;
+      catchUpQueueRef.current = [];
+      catchUpActiveRef.current = false;
+      catchUpInitializedRef.current = false;
+      catchUpShownRef.current = new Set();
       setItems([]);
       setUnread(0);
       setToasts([]);
@@ -129,6 +212,30 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     const timer = setInterval(refresh, interval);
     return () => clearInterval(timer);
   }, [user, loading, refresh, toastsEnabled]);
+
+  useEffect(() => {
+    if (!toastsEnabled || !user || catchUpInitializedRef.current) return;
+
+    const startCatchUp = (list: AppNotification[]) => {
+      catchUpInitializedRef.current = true;
+      const unreadOnLogin = list.filter((n) => !n.read);
+      if (unreadOnLogin.length > 0) {
+        enqueueCatchUp(unreadOnLogin);
+      }
+    };
+
+    if (items.length > 0) {
+      startCatchUp(items);
+      return;
+    }
+
+    api.notifications
+      .list()
+      .then(startCatchUp)
+      .catch(() => {
+        catchUpInitializedRef.current = true;
+      });
+  }, [toastsEnabled, user, items, enqueueCatchUp]);
 
   useEffect(() => {
     if (!panelOpen) return;
@@ -150,26 +257,54 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
+  const markNotificationRead = useCallback(async (n: AppNotification) => {
+    if (n.read) return;
+    try {
+      await api.notifications.markRead(n.id);
+      setItems((prev) =>
+        prev.map((item) => (item.id === n.id ? { ...item, read: true } : item))
+      );
+      setUnread((c) => Math.max(0, c - 1));
+    } catch {
+      /* continue */
+    }
+  }, []);
+
   const openNotification = useCallback(
     async (n: AppNotification) => {
       if (!user) return;
-      if (!n.read) {
+      await markNotificationRead(n);
+      setPanelOpen(false);
+      setOrderLoadError("");
+
+      if (canPurchaseFromMarketplace(user.roleId) && isClientOrderNotification(n)) {
         try {
-          await api.notifications.markRead(n.id);
-          setItems((prev) =>
-            prev.map((item) => (item.id === n.id ? { ...item, read: true } : item))
-          );
-          setUnread((c) => Math.max(0, c - 1));
+          const order = await resolveBuyerOrderFromNotification(n);
+          if (order) {
+            setSelectedOrder(order);
+            return;
+          }
+          setOrderLoadError("Could not load this order. Opening My Orders instead.");
         } catch {
-          /* continue navigation */
+          setOrderLoadError("Could not load this order. Opening My Orders instead.");
         }
       }
-      setPanelOpen(false);
+
       const destination = getNotificationDestination(n, user.roleId);
       if (destination) router.push(destination);
     },
-    [user, router]
+    [user, router, markNotificationRead]
   );
+
+  const closeOrderModal = useCallback(() => {
+    setSelectedOrder(null);
+  }, []);
+
+  useEffect(() => {
+    if (!orderLoadError) return;
+    const timer = window.setTimeout(() => setOrderLoadError(""), 6000);
+    return () => window.clearTimeout(timer);
+  }, [orderLoadError]);
 
   const value: NotificationContextValue = {
     items,
@@ -191,6 +326,23 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           toasts={toasts}
           onDismiss={dismissToast}
           onOpen={openNotification}
+        />
+      )}
+      {orderLoadError && (
+        <div className="pointer-events-none fixed inset-x-0 top-20 z-[90] flex justify-center px-4">
+          <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-medium text-amber-900 shadow-sm">
+            {orderLoadError}
+          </p>
+        </div>
+      )}
+      {selectedOrder && (
+        <OrderDetailModal
+          order={selectedOrder}
+          perspective="buyer"
+          onClose={closeOrderModal}
+          onTrackUpdated={(updated) => {
+            setSelectedOrder((prev) => (prev ? { ...prev, ...updated } : prev));
+          }}
         />
       )}
     </NotificationContext.Provider>

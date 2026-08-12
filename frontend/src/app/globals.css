@@ -680,15 +680,6 @@ body {
   }
 }
 
-@keyframes notification-progress {
-  from {
-    transform: scaleX(1);
-  }
-  to {
-    transform: scaleX(0);
-  }
-}
-
 @keyframes notification-bell-pulse {
   0%,
   100% {
@@ -705,12 +696,6 @@ body {
 
 .notification-toast-exit {
   animation: notification-toast-out 260ms ease forwards;
-}
-
-.notification-toast-progress {
-  animation-name: notification-progress;
-  animation-timing-function: linear;
-  animation-fill-mode: forwards;
 }
 
 .notification-bell-active {

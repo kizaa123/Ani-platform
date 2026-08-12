@@ -448,6 +448,7 @@ export function RecentOrdersPanel({
   title,
   subtitle,
   handlerOwnerId,
+  trackEditable = false,
   emptyMessage = "No orders yet.",
 }: {
   orders: OrderListItem[];
@@ -455,6 +456,7 @@ export function RecentOrdersPanel({
   title: string;
   subtitle?: string;
   handlerOwnerId?: string;
+  trackEditable?: boolean;
   emptyMessage?: string;
 }) {
   const { user } = useAuth();
@@ -536,6 +538,7 @@ export function RecentOrdersPanel({
         <OrderDetailModal
           order={selected}
           perspective={perspective}
+          trackEditable={trackEditable}
           handlerOwnerId={handlerOwnerId}
           formatOrderMoney={formatOrderMoney}
           onClose={() => setSelected(null)}

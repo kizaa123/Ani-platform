@@ -606,13 +606,14 @@ export async function notifyProductPurchase(
     userId: buyerId,
     actorId: farmerId,
     type: 'PRODUCT_PURCHASE',
-    title: 'Order placed - save your release code',
-    body: `You purchased ${productName} from ${farmerName} for ${amountLabel}. Check My Orders for your 4-digit release code and financial statement PDF.`,
+    title: 'Order placed — save your release code',
+    body: `You have placed an order for "${productName}" from ${farmerName} for ${amountLabel}. Open My Orders to view your 4-digit release code.`,
     link,
     metadata: {
       actionUrl: link,
       actionLabel: 'View order',
       orderName: productName,
+      orderId: orderId ?? null,
       price: totalAmount,
       priceLabel: amountLabel,
     },
@@ -657,7 +658,10 @@ export async function notifyOrderPaymentReleased(order: {
       buyerCountry,
       recipientCountry
     );
-    const body = `${buyerName} confirmed delivery for "${orderName}" - ${amountLabel} released to ${PLATFORM_ACCOUNTANT_LABEL}.`;
+    const body =
+      userId === order.buyerId
+        ? `You have confirmed delivery for "${orderName}". ${amountLabel} has been released to ${PLATFORM_ACCOUNTANT_LABEL}.`
+        : `${buyerName} confirmed delivery for "${orderName}" — ${amountLabel} released to ${PLATFORM_ACCOUNTANT_LABEL}.`;
     const orderMeta = buildOrderNotificationMetadata({
       productName: orderName,
       totalAmount: order.totalAmount,
@@ -672,7 +676,7 @@ export async function notifyOrderPaymentReleased(order: {
     await createNotification({
       actorId: order.buyerId,
       type: 'ORDER_PAYMENT_RELEASED',
-      title: 'Order payment released',
+      title: userId === order.buyerId ? 'Delivery confirmed' : 'Order payment released',
       body,
       userId,
       link,
@@ -702,7 +706,7 @@ export async function notifyOrderPaymentReleased(order: {
     select: { id: true },
   });
 
-  await notifyReleased(order.buyerId, '/orders');
+  await notifyReleased(order.buyerId, `/orders?order=${order.id}`);
   await notifyReleased(order.farmerId, '/farm/orders');
   for (const handler of farmerHandlers) {
     await notifyReleased(handler.agentId, `/agents/farm/${order.farmerId}/orders`, order.farmerId);
@@ -734,7 +738,8 @@ export async function notifyOrderTracked(
 ) {
   const buyerCountry = orderDetails?.buyerCountry ?? 'Ghana';
   const farmerCountry = orderDetails?.farmerCountry ?? 'Ghana';
-  const body = `${farmerName} updated your order for ${productName} - now at "${stageLabel}".`;
+  const buyerBody = `Your order for "${productName}" is now at "${stageLabel}".`;
+  const handlerBody = `${farmerName} updated the order for "${productName}" — now at "${stageLabel}".`;
   const orderMeta = buildOrderNotificationMetadata({
     productName,
     totalAmount: orderDetails?.totalAmount,
@@ -750,15 +755,19 @@ export async function notifyOrderTracked(
     actorId: farmerId,
     type: 'ORDER_TRACKED' as const,
     title: 'Order update',
-    body,
+    body: buyerBody,
     metadata: orderMeta,
   };
 
   await createNotification({
     ...baseInput,
     userId: buyerId,
-    link: '/orders',
-    metadata: { ...baseInput.metadata, actionUrl: '/orders' },
+    link: orderDetails?.orderId ? `/orders?order=${orderDetails.orderId}` : '/orders',
+    metadata: {
+      ...baseInput.metadata,
+      actionUrl: orderDetails?.orderId ? `/orders?order=${orderDetails.orderId}` : '/orders',
+      orderId: orderDetails?.orderId ?? null,
+    },
   }).catch(() => undefined);
 
   const [farmerHandler, buyerHandler] = await Promise.all([
@@ -778,6 +787,7 @@ export async function notifyOrderTracked(
       ...baseInput,
       userId: farmerHandler.agentId,
       title: 'Order update for your farmer',
+      body: handlerBody,
       link,
       metadata: {
         ...baseInput.metadata,
@@ -794,6 +804,7 @@ export async function notifyOrderTracked(
       ...baseInput,
       userId: buyerHandler.agentId,
       title: 'Order update for your client',
+      body: handlerBody,
       link,
       metadata: {
         ...baseInput.metadata,
