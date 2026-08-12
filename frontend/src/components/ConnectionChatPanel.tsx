@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { InlineNameWithVerificationTags } from "@/components/VerificationTagBadge";
 import { api } from "@/lib/api";
+import { useNotifications } from "@/context/NotificationProvider";
 import { Message, fullName, UserVerificationTag } from "@/lib/types";
 
 interface ConnectionChatPanelProps {
@@ -30,6 +31,7 @@ export function ConnectionChatPanel({
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const { showLiveNotifications } = useNotifications();
 
   const load = () =>
     api.messages
@@ -53,6 +55,7 @@ export function ConnectionChatPanel({
       await api.messages.send(partnerId, text.trim());
       setText("");
       await load();
+      void showLiveNotifications();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not send message");
     } finally {

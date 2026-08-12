@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 import { api } from "@/lib/api";
@@ -13,6 +13,28 @@ import { Icon } from "@/components/icons";
 export default function BuyerOrdersPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const highlightOrderId = searchParams.get("order");
+  const clearedOrderUrlRef = useRef(false);
+  const [allowUrlOrderOpen, setAllowUrlOrderOpen] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!highlightOrderId) {
+      setAllowUrlOrderOpen(null);
+      return;
+    }
+    const openedKey = `co-order-url-opened:${highlightOrderId}`;
+    setAllowUrlOrderOpen(
+      sessionStorage.getItem(openedKey) ? null : highlightOrderId
+    );
+  }, [highlightOrderId]);
+
+  const clearOrderFromUrl = useCallback(() => {
+    if (clearedOrderUrlRef.current || !highlightOrderId) return;
+    clearedOrderUrlRef.current = true;
+    sessionStorage.setItem(`co-order-url-opened:${highlightOrderId}`, "1");
+    router.replace("/orders", { scroll: false });
+  }, [highlightOrderId, router]);
   const [orders, setOrders] = useState<BuyerOrderLineItem[]>([]);
   const [error, setError] = useState("");
   const [loaded, setLoaded] = useState(false);
@@ -118,6 +140,8 @@ export default function BuyerOrdersPage() {
       <ProductOrdersList
         perspective="buyer"
         orders={unservedOrders}
+        initialOrderId={allowUrlOrderOpen}
+        onInitialOrderOpened={clearOrderFromUrl}
         emptyMessage={orders.length === 0 ? "No orders yet." : undefined}
         emptyAction={
           orders.length === 0 ? (
@@ -134,6 +158,8 @@ export default function BuyerOrdersPage() {
           <RecentOrdersPanel
             perspective="buyer"
             orders={servedOrders}
+            initialOrderId={allowUrlOrderOpen}
+        onInitialOrderOpened={clearOrderFromUrl}
             title="Completed orders"
             subtitle="Delivered orders from your fellows"
             emptyMessage="No completed orders yet."

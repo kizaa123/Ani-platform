@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
+import { useNotifications } from "@/context/NotificationProvider";
 import { useMoneyFormat } from "@/hooks/useMoneyFormat";
 import { Listing, formatListingUnit, listingCommodityName, ROLES } from "@/lib/types";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
@@ -174,6 +175,7 @@ function PurchaseModalContent({
   onSuccess,
 }: Omit<PurchaseViewProps, "listing" | "farmName" | "farmerId"> & { listing: Listing }) {
   const { format, formatUnitPrice } = useMoneyFormat();
+  const { showLiveNotifications } = useNotifications();
   const maxQty = listing.quantity ?? 0;
   const unitPrice = listing.price ?? 0;
   const unit = listing.unit ?? "bags";
@@ -230,6 +232,7 @@ function PurchaseModalContent({
       const message = `${quantity} ${unitLabel} - ${format(total)} held in escrow until you confirm delivery.`;
       setOrderPlaced(true);
       setResult({ variant: "success", message, releaseOtp: purchaseResult.releaseOtp });
+      void showLiveNotifications();
     } catch (e) {
       setResult({
         variant: "error",

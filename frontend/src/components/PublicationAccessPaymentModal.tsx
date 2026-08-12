@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ResearchPublication, canPurchasePublication, isResearcher } from "@/lib/types";
+import { useNotifications } from "@/context/NotificationProvider";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { PaymentCheckout } from "@/components/PaymentCheckout";
 import { PaymentResultOverlay } from "@/components/PaymentResultOverlay";
@@ -29,6 +30,7 @@ export function PublicationAccessPaymentModal({
   onReadNow,
 }: PublicationAccessPaymentModalProps) {
   const { format } = useMoneyFormat();
+  const { showLiveNotifications } = useNotifications();
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<PaymentResult | null>(null);
 
@@ -42,6 +44,7 @@ export function PublicationAccessPaymentModal({
       await api.research.purchase(publication.id, paymentMethod);
       const updated = await api.research.get(publication.id);
       setResult({ variant: "success", publication: updated });
+      void showLiveNotifications();
       onSuccess(updated);
     } catch (e) {
       setResult({

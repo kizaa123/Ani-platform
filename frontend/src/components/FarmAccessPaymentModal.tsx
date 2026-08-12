@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { FarmerBrowseCard, ROLES } from "@/lib/types";
+import { useNotifications } from "@/context/NotificationProvider";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
 import { CountryBadge } from "@/components/CountrySelect";
 import { PaymentCheckout } from "@/components/PaymentCheckout";
@@ -29,6 +30,7 @@ export function FarmAccessPaymentModal({
 }: FarmAccessPaymentModalProps) {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<PaymentResult | null>(null);
+  const { showLiveNotifications } = useNotifications();
   const { formatFarmAccessFee } = useMoneyFormat();
   const { firstName, lastName } = splitDisplayName(farmer.farmerName);
 
@@ -41,6 +43,7 @@ export function FarmAccessPaymentModal({
     try {
       await api.payments.purchaseFarmAccess(farmer.farmerId, paymentMethod);
       setResult({ variant: "success" });
+      void showLiveNotifications();
       onSuccess();
     } catch (e) {
       setResult({

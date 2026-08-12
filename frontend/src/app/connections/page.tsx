@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
+import { useNotifications } from "@/context/NotificationProvider";
 import { api } from "@/lib/api";
 import { Connection, ConnectionUser, fullName, isFarmer, isStaff, isMarketplaceBuyer, isResearcher, isHandler, ROLES } from "@/lib/types";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
@@ -50,6 +51,7 @@ export default function ConnectionsPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [connections, setConnections] = useState<Connection[]>([]);
+  const { showLiveNotifications } = useNotifications();
 
   const load = () => api.connections.list().then(setConnections).catch(console.error);
 
@@ -63,6 +65,7 @@ export default function ConnectionsPage() {
   const updateStatus = async (id: string, status: string) => {
     await api.connections.updateStatus(id, status);
     load();
+    void showLiveNotifications();
   };
 
   if (loading || !user) return <div className="p-12 text-center">Loading...</div>;

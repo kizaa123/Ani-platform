@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ProductImage } from "@/components/FarmerAvatar";
 import { AvatarWithVerification } from "@/components/AvatarWithVerification";
@@ -19,6 +19,7 @@ import {
 import { formatOrderAmountForRecipient } from "@/lib/currency";
 import { useMoneyFormat } from "@/hooks/useMoneyFormat";
 import { useAuth } from "@/context/AuthProvider";
+import { useNotifications } from "@/context/NotificationProvider";
 import { OrderTrackStage } from "@/lib/orderTrack";
 import { BuyerOrderLineItem, CounterpartHandlerContact, formatListingUnit, ProductOrderLineItem, ROLES, type UserProfile } from "@/lib/types";
 import { Icon } from "@/components/icons";
@@ -208,6 +209,7 @@ function OrderEscrowPanel({
   const [opening, setOpening] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const { showLiveNotifications } = useNotifications();
 
   const statementId = order.orderId ?? order.id;
   const escrowStatus = order.escrowStatus ?? "HELD";
@@ -263,6 +265,7 @@ function OrderEscrowPanel({
         canRelease: false,
         releaseOtp: null,
       });
+      void showLiveNotifications();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Release failed");
     } finally {
@@ -450,6 +453,8 @@ export function RecentOrdersPanel({
   handlerOwnerId,
   trackEditable = false,
   emptyMessage = "No orders yet.",
+  initialOrderId,
+  onInitialOrderOpened,
 }: {
   orders: OrderListItem[];
   perspective?: OrderListPerspective;
@@ -458,6 +463,8 @@ export function RecentOrdersPanel({
   handlerOwnerId?: string;
   trackEditable?: boolean;
   emptyMessage?: string;
+  initialOrderId?: string | null;
+  onInitialOrderOpened?: () => void;
 }) {
   const { user } = useAuth();
   const { format } = useMoneyFormat();
@@ -468,10 +475,22 @@ export function RecentOrdersPanel({
   );
   const [orders, setOrders] = useState(initialOrders);
   const [selected, setSelected] = useState<OrderListItem | null>(null);
+  const openedFromUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     setOrders(initialOrders);
   }, [initialOrders]);
+
+  useEffect(() => {
+    if (!initialOrderId || orders.length === 0) return;
+    if (openedFromUrlRef.current === initialOrderId) return;
+    const match = orders.find((order) => orderListKey(order) === initialOrderId);
+    if (match) {
+      openedFromUrlRef.current = initialOrderId;
+      setSelected(match);
+      onInitialOrderOpened?.();
+    }
+  }, [initialOrderId, orders, onInitialOrderOpened]);
 
   const sorted = useMemo(
     () =>
@@ -565,6 +584,8 @@ export function ProductOrdersList({
   emptyMessage,
   emptyAction,
   sectionTitle,
+  initialOrderId,
+  onInitialOrderOpened,
 }: {
   orders: OrderListItem[];
   perspective?: OrderListPerspective;
@@ -573,6 +594,8 @@ export function ProductOrdersList({
   emptyMessage?: string;
   emptyAction?: React.ReactNode;
   sectionTitle?: string;
+  initialOrderId?: string | null;
+  onInitialOrderOpened?: () => void;
 }) {
   const { user } = useAuth();
   const { format } = useMoneyFormat();
@@ -583,10 +606,22 @@ export function ProductOrdersList({
   );
   const [orders, setOrders] = useState(initialOrders);
   const [selected, setSelected] = useState<OrderListItem | null>(null);
+  const openedFromUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     setOrders(initialOrders);
   }, [initialOrders]);
+
+  useEffect(() => {
+    if (!initialOrderId || orders.length === 0) return;
+    if (openedFromUrlRef.current === initialOrderId) return;
+    const match = orders.find((order) => orderListKey(order) === initialOrderId);
+    if (match) {
+      openedFromUrlRef.current = initialOrderId;
+      setSelected(match);
+      onInitialOrderOpened?.();
+    }
+  }, [initialOrderId, orders, onInitialOrderOpened]);
 
   if (orders.length === 0) {
     if (!emptyMessage) return null;
@@ -723,6 +758,7 @@ export function OrderDetailModal({
   onTrackUpdated?: (updated: OrderListItem) => void;
 }) {
   const { user } = useAuth();
+  const { showLiveNotifications } = useNotifications();
   const { format } = useMoneyFormat();
   const formatOrderMoney =
     formatOrderMoneyProp ??
@@ -763,6 +799,7 @@ export function OrderDetailModal({
             trackStage: nextStage,
           });
       onTrackUpdated?.({ ...order, ...updated });
+      void showLiveNotifications();
     } catch (e) {
       setTrackError(e instanceof Error ? e.message : "Could not update tracking");
     } finally {

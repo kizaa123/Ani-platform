@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
+import { useNotifications } from "@/context/NotificationProvider";
 import { api } from "@/lib/api";
 import { Message, fullName } from "@/lib/types";
 
@@ -13,6 +14,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const { showLiveNotifications } = useNotifications();
 
   const load = () => api.messages.conversation(partnerId).then(setMessages).catch(console.error);
 
@@ -28,6 +30,7 @@ export default function ChatPage() {
     await api.messages.send(partnerId, text);
     setText("");
     load();
+    void showLiveNotifications();
   };
 
   if (loading) return <div className="p-12 text-center">Loading...</div>;
