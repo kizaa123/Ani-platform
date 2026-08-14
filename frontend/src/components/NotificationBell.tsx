@@ -227,6 +227,7 @@ export function NotificationBell({ className = "" }: { className?: string }) {
     panelOpen,
     setPanelOpen,
     markAllRead,
+    clearAll,
     openNotification,
   } = useNotifications();
   const [mounted, setMounted] = useState(false);
@@ -296,15 +297,27 @@ export function NotificationBell({ className = "" }: { className?: string }) {
                 </button>
               </div>
 
-              {unread > 0 && (
-                <div className="border-b border-brand-50 px-5 py-2">
+              {items.length > 0 && (
+                <div className="flex items-center justify-between gap-3 border-b border-brand-50 px-5 py-2">
+                  {unread > 0 ? (
+                    <button
+                      type="button"
+                      onClick={markAllRead}
+                      disabled={busy}
+                      className="text-xs font-semibold text-brand-700 hover:underline disabled:opacity-60"
+                    >
+                      Mark all as read
+                    </button>
+                  ) : (
+                    <span aria-hidden="true" />
+                  )}
                   <button
                     type="button"
-                    onClick={markAllRead}
+                    onClick={clearAll}
                     disabled={busy}
-                    className="text-xs font-semibold text-brand-700 hover:underline disabled:opacity-60"
+                    className="ml-auto text-xs font-semibold text-gray-600 hover:text-red-700 hover:underline disabled:opacity-60"
                   >
-                    Mark all as read
+                    Clear all
                   </button>
                 </div>
               )}

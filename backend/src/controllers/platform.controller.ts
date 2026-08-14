@@ -279,6 +279,14 @@ export class NotificationController {
       ApiResponse.error(res, e);
     }
   };
+
+  clearAll = async (req: AuthRequest, res: Response) => {
+    try {
+      ApiResponse.success(res, await notificationService.clearAll(req.user!.userId));
+    } catch (e) {
+      ApiResponse.error(res, e);
+    }
+  };
 }
 
 export class AdminController {

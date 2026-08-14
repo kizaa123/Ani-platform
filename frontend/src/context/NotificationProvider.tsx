@@ -35,6 +35,7 @@ type NotificationContextValue = {
   /** Fetch latest notifications and show new ones as 4s live toasts (e.g. after placing an order). */
   showLiveNotifications: () => Promise<void>;
   markAllRead: () => Promise<void>;
+  clearAll: () => Promise<void>;
   openNotification: (n: AppNotification) => Promise<void>;
   setToastsEnabled: (enabled: boolean) => void;
 };
@@ -354,6 +355,19 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
+  const clearAll = useCallback(async () => {
+    setBusy(true);
+    try {
+      await api.notifications.clearAll();
+      setItems([]);
+      setUnread(0);
+      setToasts([]);
+      seenIdsRef.current = new Set();
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
   const markNotificationRead = useCallback(async (n: AppNotification) => {
     if (n.read) return;
     try {
@@ -408,6 +422,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     refresh,
     showLiveNotifications,
     markAllRead,
+    clearAll,
     openNotification,
     setToastsEnabled,
   };

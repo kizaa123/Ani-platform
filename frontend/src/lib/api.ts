@@ -564,6 +564,8 @@ class ApiClient {
       this.request(`/notifications/${id}/read`, { method: "PATCH" }),
     markAllRead: () =>
       this.request("/notifications/read-all", { method: "PATCH" }),
+    clearAll: () =>
+      this.request("/notifications", { method: "DELETE" }),
   };
 
   ads = {

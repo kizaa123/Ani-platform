@@ -233,6 +233,13 @@ export class NotificationService {
     });
     return { success: true };
   }
+
+  async clearAll(userId: string) {
+    await prisma.notification.deleteMany({
+      where: { userId },
+    });
+    return { success: true };
+  }
 }
 
 export const notificationService = new NotificationService();
@@ -310,7 +317,7 @@ function buildOrderNotificationMetadata(params: {
   };
 }
 
-export async function notifyNewProductListing(params: {
+export async function notifyNewProductListing(_params: {
   farmerUserId: string;
   farmerName: string;
   listing: {
@@ -322,46 +329,10 @@ export async function notifyNewProductListing(params: {
   };
   media?: { type: string; url: string }[];
 }) {
-  const { farmerUserId, farmerName, listing, media } = params;
-  const imageUrl = firstListingImage(listing.images, media);
-
-  const buyers = await prisma.user.findMany({
-    where: { roleId: { in: [...MARKETPLACE_BUYER_ROLES] } },
-    select: { id: true, country: true },
-  });
-
-  await Promise.all(
-    buyers
-      .filter((b) => b.id !== farmerUserId)
-      .map(async (buyer) => {
-        const accessSet = await buyerFarmAccessSet(buyer.id);
-        const hasAccess = accessSet.has(farmerUserId);
-        const link = '/marketplace';
-        const actionLabel = hasAccess ? 'View product' : 'Pay to access';
-        const priceLabel = formatPricePerUnit(listing.price, listing.unit, buyer.country);
-
-        await createNotification({
-          userId: buyer.id,
-          actorId: farmerUserId,
-          type: 'NEW_PRODUCT',
-          title: listing.title,
-          body: `${farmerName} listed a new product.`,
-          link,
-          metadata: {
-            imageUrl,
-            price: listing.price,
-            priceLabel,
-            farmerUserId,
-            listingId: listing.id,
-            actionUrl: link,
-            actionLabel,
-          },
-        }).catch(() => undefined);
-      })
-  );
+  return;
 }
 
-export async function notifyNewFarmerJoined(params: {
+export async function notifyNewFarmerJoined(_params: {
   farmerUserId: string;
   farmerName: string;
   farmSize?: string | null;
@@ -371,38 +342,7 @@ export async function notifyNewFarmerJoined(params: {
   commodities: string[];
   customProducts?: string[];
 }) {
-  const { farmerUserId, farmerName, farmSize, city, region, country, commodities, customProducts = [] } = params;
-  const location = formatLocation(city, region, country);
-
-  const buyers = await prisma.user.findMany({
-    where: { roleId: { in: [...MARKETPLACE_BUYER_ROLES] } },
-    select: { id: true },
-  });
-
-  await Promise.all(
-    buyers
-      .filter((b) => b.id !== farmerUserId)
-      .map(async (buyer) => {
-        await createNotification({
-          userId: buyer.id,
-          actorId: farmerUserId,
-          type: 'NEW_FARMER',
-          title: `New Fellow: ${farmerName}`,
-          body: 'Browse their farm and request access.',
-          link: '/marketplace',
-          metadata: {
-            farmerUserId,
-            farmerName,
-            farmSize: farmSize ?? null,
-            location,
-            commodities,
-            customProducts,
-            actionUrl: '/marketplace',
-            actionLabel: 'Pay to access',
-          },
-        }).catch(() => undefined);
-      })
-  );
+  return;
 }
 
 export async function notifyNewPublication(params: {
@@ -706,7 +646,6 @@ export async function notifyOrderPaymentReleased(order: {
     select: { id: true },
   });
 
-  await notifyReleased(order.buyerId, `/orders?order=${order.id}`);
   await notifyReleased(order.farmerId, '/farm/orders');
   for (const handler of farmerHandlers) {
     await notifyReleased(handler.agentId, `/agents/farm/${order.farmerId}/orders`, order.farmerId);
@@ -861,24 +800,11 @@ export async function notifyAdminsConnectionRequest(
 }
 
 export async function notifyConnectionApproved(
-  buyerId: string,
-  farmerId: string,
-  farmerName: string
+  _buyerId: string,
+  _farmerId: string,
+  _farmerName: string
 ) {
-  await createNotification({
-    userId: buyerId,
-    actorId: farmerId,
-    type: 'CONNECTION_APPROVED',
-    title: 'Farm access approved',
-    body: `${PLATFORM_NAME} approved your access to ${farmerName}'s farm. You can now browse products and message them.`,
-    link: '/marketplace',
-    metadata: {
-      farmerUserId: farmerId,
-      farmerName,
-      actionUrl: '/marketplace',
-      actionLabel: 'Browse farm',
-    },
-  }).catch(() => undefined);
+  return;
 }
 
 export async function notifyConnectionDeclined(
@@ -911,29 +837,6 @@ export async function notifyFarmAccessPaid(
   autoApproved = false,
   buyerCountry?: string
 ) {
-  const country = buyerCountry ?? 'Ghana';
-  const amountLabel = formatAmountForCountry(amount, country);
-  const statementLink = await financialStatementLink(buyerId);
-  const link = autoApproved ? '/marketplace' : statementLink;
-  await createNotification({
-    userId: buyerId,
-    actorId: farmerId,
-    type: autoApproved ? 'CONNECTION_APPROVED' : 'FARM_ACCESS_PAID',
-    title: autoApproved ? 'Farm access granted' : 'Farm access payment',
-    body: autoApproved
-      ? `You paid ${amountLabel} for access to ${farmerName}. You can now browse products and place orders.`
-      : `You paid ${amountLabel} for access to ${farmerName}. Recorded on your financial statement - access will activate once payment is confirmed.`,
-    link,
-    metadata: {
-      farmerUserId: farmerId,
-      farmerName,
-      price: amount,
-      priceLabel: amountLabel,
-      actionUrl: link,
-      actionLabel: autoApproved ? 'Browse farm' : 'View statement',
-    },
-  }).catch(() => undefined);
-
   if (autoApproved) {
     await notifyFarmerTeam(farmerId, {
       actorId: buyerId,
@@ -948,6 +851,26 @@ export async function notifyFarmAccessPaid(
     });
     return;
   }
+
+  const country = buyerCountry ?? 'Ghana';
+  const amountLabel = formatAmountForCountry(amount, country);
+  const statementLink = await financialStatementLink(buyerId);
+  await createNotification({
+    userId: buyerId,
+    actorId: farmerId,
+    type: 'FARM_ACCESS_PAID',
+    title: 'Farm access payment',
+    body: `You paid ${amountLabel} for access to ${farmerName}. Recorded on your financial statement - access will activate once payment is confirmed.`,
+    link: statementLink,
+    metadata: {
+      farmerUserId: farmerId,
+      farmerName,
+      price: amount,
+      priceLabel: amountLabel,
+      actionUrl: statementLink,
+      actionLabel: 'View statement',
+    },
+  }).catch(() => undefined);
 
   await notifyConnectionRequest(farmerId, buyerId, buyerName);
   await notifyAdminsConnectionRequest(buyerId, buyerName, farmerId, farmerName);
@@ -1341,7 +1264,7 @@ export async function notifyAccountantRejected(params: { userId: string; firstNa
 }
 
 /** Notify the fellow (and FLO) when someone likes a product media item. */
-export async function notifyProductLiked(params: {
+export async function notifyProductLiked(_params: {
   farmerUserId: string;
   actorId: string;
   actorName: string;
@@ -1349,27 +1272,11 @@ export async function notifyProductLiked(params: {
   listingId: string;
   imageUrl?: string | null;
 }) {
-  const { farmerUserId, actorId, actorName, productTitle, listingId, imageUrl } = params;
-  if (farmerUserId === actorId) return;
-
-  await notifyFarmerTeam(farmerUserId, {
-    actorId,
-    type: 'PRODUCT_LIKE',
-    title: 'Someone liked your product',
-    body: `${actorName} liked "${productTitle}".`,
-    link: '/farm',
-    metadata: {
-      farmerUserId,
-      listingId,
-      imageUrl: imageUrl ? normalizePublicAssetUrl(imageUrl) : null,
-      actionUrl: '/farm',
-      actionLabel: 'View products',
-    },
-  }).catch((err) => logNotificationError('PRODUCT_LIKE', err));
+  return;
 }
 
 /** Notify the researcher when someone likes their publication. */
-export async function notifyPublicationLiked(params: {
+export async function notifyPublicationLiked(_params: {
   researcherUserId: string;
   actorId: string;
   actorName: string;
@@ -1377,29 +1284,11 @@ export async function notifyPublicationLiked(params: {
   publicationTitle: string;
   coverImage?: string | null;
 }) {
-  const { researcherUserId, actorId, actorName, publicationId, publicationTitle, coverImage } =
-    params;
-  if (researcherUserId === actorId) return;
-
-  const libraryLink = `/library/publisher/${researcherUserId}`;
-  await createNotification({
-    userId: researcherUserId,
-    actorId,
-    type: 'PUBLICATION_LIKE',
-    title: 'Someone liked your publication',
-    body: `${actorName} liked "${publicationTitle}".`,
-    link: libraryLink,
-    metadata: {
-      publicationId,
-      imageUrl: coverImage ? normalizePublicAssetUrl(coverImage) : null,
-      actionUrl: libraryLink,
-      actionLabel: 'View publication',
-    },
-  }).catch((err) => logNotificationError('PUBLICATION_LIKE', err));
+  return;
 }
 
 /** Notify the researcher when someone comments on their publication. */
-export async function notifyPublicationCommented(params: {
+export async function notifyPublicationCommented(_params: {
   researcherUserId: string;
   actorId: string;
   actorName: string;
@@ -1408,33 +1297,5 @@ export async function notifyPublicationCommented(params: {
   commentSnippet: string;
   coverImage?: string | null;
 }) {
-  const {
-    researcherUserId,
-    actorId,
-    actorName,
-    publicationId,
-    publicationTitle,
-    commentSnippet,
-    coverImage,
-  } = params;
-  if (researcherUserId === actorId) return;
-
-  const libraryLink = `/library/publisher/${researcherUserId}`;
-  const preview = snippet(commentSnippet);
-  await createNotification({
-    userId: researcherUserId,
-    actorId,
-    type: 'PUBLICATION_COMMENT',
-    title: 'New comment on your publication',
-    body: preview
-      ? `${actorName} commented on "${publicationTitle}": ${preview}`
-      : `${actorName} commented on "${publicationTitle}".`,
-    link: libraryLink,
-    metadata: {
-      publicationId,
-      imageUrl: coverImage ? normalizePublicAssetUrl(coverImage) : null,
-      actionUrl: libraryLink,
-      actionLabel: 'View comments',
-    },
-  }).catch((err) => logNotificationError('PUBLICATION_COMMENT', err));
+  return;
 }

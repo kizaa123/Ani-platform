@@ -346,6 +346,7 @@ router.get('/messages/:partnerId', authenticate, chatController.conversation);
 router.get('/notifications', authenticate, notificationController.list);
 router.get('/notifications/unread-count', authenticate, notificationController.unreadCount);
 router.patch('/notifications/read-all', authenticate, notificationController.markAllRead);
+router.delete('/notifications', authenticate, notificationController.clearAll);
 router.patch('/notifications/:id/read', authenticate, notificationController.markRead);
 
 // Internal ads (authenticated users)
